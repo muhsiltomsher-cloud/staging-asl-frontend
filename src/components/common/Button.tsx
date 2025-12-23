@@ -1,14 +1,15 @@
-import { forwardRef } from "react";
+import { forwardRef, Children, isValidElement, cloneElement } from "react";
 import { cn } from "@/lib/utils";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "link";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
+  asChild?: boolean;
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "primary", size = "md", isLoading, disabled, children, ...props }, ref) => {
+  ({ className, variant = "primary", size = "md", isLoading, disabled, children, asChild = false, ...props }, ref) => {
     const baseStyles =
       "inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
 
@@ -26,10 +27,25 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       lg: "h-12 rounded-md px-6 text-base",
     };
 
+    const combinedClassName = cn(baseStyles, variants[variant], sizes[size], className);
+
+    // Handle asChild - render child element with button styles
+    if (asChild) {
+      const child = Children.only(children);
+      if (isValidElement(child)) {
+        return cloneElement(child, {
+          className: cn(combinedClassName, (child.props as { className?: string }).className),
+          "aria-disabled": disabled || isLoading || undefined,
+          ...props,
+        } as React.HTMLAttributes<HTMLElement>);
+      }
+      return null;
+    }
+
     return (
       <button
         ref={ref}
-        className={cn(baseStyles, variants[variant], sizes[size], className)}
+        className={combinedClassName}
         disabled={disabled || isLoading}
         {...props}
       >
