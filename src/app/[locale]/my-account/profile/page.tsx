@@ -6,6 +6,7 @@ import { ArrowLeft, User, Mail, Phone, Save } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
+import { getCustomer, updateCustomer, type Customer } from "@/lib/api/customer";
 
 interface ProfilePageProps {
   params: Promise<{ locale: string }>;
@@ -25,6 +26,8 @@ const translations = {
     saved: "Changes saved successfully",
     notLoggedIn: "Please log in to view your profile",
     login: "Login",
+    error: "Failed to save changes",
+    loading: "Loading profile...",
   },
   ar: {
     profile: "الملف الشخصي",
@@ -39,13 +42,17 @@ const translations = {
     saved: "تم حفظ التغييرات بنجاح",
     notLoggedIn: "يرجى تسجيل الدخول لعرض ملفك الشخصي",
     login: "تسجيل الدخول",
+    error: "فشل في حفظ التغييرات",
+    loading: "جاري تحميل الملف الشخصي...",
   },
 };
 
 export default function ProfilePage({ params }: ProfilePageProps) {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const resolvedParams = use(params);
   const locale = resolvedParams.locale as "en" | "ar";
@@ -60,27 +67,79 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   });
 
   useEffect(() => {
-    if (user) {
-      const nameParts = user.user_display_name?.split(" ") || ["", ""];
-      setFormData({
-        firstName: nameParts[0] || "",
-        lastName: nameParts.slice(1).join(" ") || "",
-        email: user.user_email || "",
-        phone: "",
-      });
+    const fetchCustomer = async () => {
+      if (!user?.user_id) return;
+
+      try {
+        setIsLoading(true);
+        const response = await getCustomer(user.user_id);
+        if (response.success && response.data) {
+          setCustomer(response.data);
+          setFormData({
+            firstName: response.data.first_name || "",
+            lastName: response.data.last_name || "",
+            email: response.data.email || "",
+            phone: response.data.billing?.phone || "",
+          });
+        } else {
+          const nameParts = user.user_display_name?.split(" ") || ["", ""];
+          setFormData({
+            firstName: nameParts[0] || "",
+            lastName: nameParts.slice(1).join(" ") || "",
+            email: user.user_email || "",
+            phone: "",
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch customer:", error);
+        const nameParts = user.user_display_name?.split(" ") || ["", ""];
+        setFormData({
+          firstName: nameParts[0] || "",
+          lastName: nameParts.slice(1).join(" ") || "",
+          email: user.user_email || "",
+          phone: "",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isAuthenticated && user) {
+      fetchCustomer();
+    } else {
+      setIsLoading(false);
     }
-  }, [user]);
+  }, [isAuthenticated, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user?.user_id) return;
+
     setIsSaving(true);
-    setMessage("");
+    setMessage(null);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setMessage(t.saved);
+      const response = await updateCustomer(user.user_id, {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        billing: {
+          ...customer?.billing,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          phone: formData.phone,
+        } as Customer["billing"],
+      });
+
+      if (response.success && response.data) {
+        setCustomer(response.data);
+        setMessage({ type: "success", text: t.saved });
+        setTimeout(() => setMessage(null), 3000);
+      } else {
+        setMessage({ type: "error", text: response.error?.message || t.error });
+      }
     } catch (error) {
       console.error("Failed to save profile:", error);
+      setMessage({ type: "error", text: t.error });
     } finally {
       setIsSaving(false);
     }
@@ -214,7 +273,15 @@ export default function ProfilePage({ params }: ProfilePageProps) {
             </div>
 
             {message && (
-              <p className="text-sm text-green-600">{message}</p>
+              <div
+                className={`rounded-lg p-3 text-sm ${
+                  message.type === "success"
+                    ? "bg-green-50 text-green-800"
+                    : "bg-red-50 text-red-800"
+                }`}
+              >
+                {message.text}
+              </div>
             )}
 
             <Button
