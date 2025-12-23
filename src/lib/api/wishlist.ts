@@ -63,7 +63,8 @@ function getHeaders(): HeadersInit {
 
 export async function getWishlist(): Promise<WishlistOperationResponse> {
   try {
-    const response = await fetch(`${WISHLIST_BASE}/wishlist`, {
+    // Use /lists endpoint to get all wishlists for the user
+    const response = await fetch(`${WISHLIST_BASE}/lists`, {
       method: "GET",
       headers: getHeaders(),
       credentials: "include",
@@ -120,7 +121,8 @@ export async function addToWishlist(
       body.variation_id = variationId;
     }
 
-    const response = await fetch(`${WISHLIST_BASE}/wishlist/add`, {
+    // Use /items endpoint with POST to add item to wishlist
+    const response = await fetch(`${WISHLIST_BASE}/items`, {
       method: "POST",
       headers: getHeaders(),
       credentials: "include",
@@ -160,8 +162,9 @@ export async function removeFromWishlist(
   productId: number
 ): Promise<WishlistOperationResponse> {
   try {
-    const response = await fetch(`${WISHLIST_BASE}/wishlist/remove`, {
-      method: "POST",
+    // Use /items endpoint with DELETE to remove item from wishlist
+    const response = await fetch(`${WISHLIST_BASE}/items`, {
+      method: "DELETE",
       headers: getHeaders(),
       credentials: "include",
       body: JSON.stringify({ product_id: productId }),
