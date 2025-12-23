@@ -117,7 +117,7 @@ export default function OrdersPage({ params }: OrdersPageProps) {
     <div className="container mx-auto px-4 py-8" dir={isRTL ? "rtl" : "ltr"}>
       <div className="mb-8">
         <Link
-          href={`/${locale}/my-account`}
+          href={`/${locale}/account`}
           className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
         >
           <ArrowLeft className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
@@ -178,7 +178,7 @@ export default function OrdersPage({ params }: OrdersPageProps) {
                   </div>
                 </div>
                 <Button asChild variant="outline" size="sm">
-                  <Link href={`/${locale}/my-account/orders/${order.id}`}>
+                  <Link href={`/${locale}/account/orders/${order.id}`}>
                     <Eye className="mr-2 h-4 w-4" />
                     {t.viewOrder}
                   </Link>

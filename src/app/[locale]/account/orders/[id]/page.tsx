@@ -253,7 +253,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           <h3 className="mb-2 text-lg font-semibold text-gray-900">{t.orderNotFound}</h3>
           <p className="mb-8 text-gray-500">{error}</p>
           <Button asChild variant="primary" size="lg">
-            <Link href={`/${locale}/my-account/orders`}>{t.backToOrders}</Link>
+            <Link href={`/${locale}/account/orders`}>{t.backToOrders}</Link>
           </Button>
         </div>
       </div>
@@ -266,7 +266,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
     <div className="container mx-auto px-4 py-8" dir={isRTL ? "rtl" : "ltr"}>
       <div className="mb-8">
         <Link
-          href={`/${locale}/my-account/orders`}
+          href={`/${locale}/account/orders`}
           className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
         >
           <ArrowLeft className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />

@@ -49,27 +49,27 @@ export function AccountDrawer({
     {
       icon: User,
       label: dictionary.profile || "Profile",
-      href: `/${locale}/my-account/profile`,
+      href: `/${locale}/account/profile`,
     },
     {
       icon: Package,
       label: dictionary.orders,
-      href: `/${locale}/my-account/orders`,
+      href: `/${locale}/account/orders`,
     },
     {
       icon: MapPin,
       label: dictionary.addresses,
-      href: `/${locale}/my-account/addresses`,
+      href: `/${locale}/account/addresses`,
     },
     {
       icon: Heart,
       label: dictionary.wishlist,
-      href: `/${locale}/my-account/wishlist`,
+      href: `/${locale}/account/wishlist`,
     },
     {
       icon: Settings,
       label: dictionary.settings,
-      href: `/${locale}/my-account`,
+      href: `/${locale}/account`,
     },
   ];
 

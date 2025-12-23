@@ -417,7 +417,7 @@ export default function AddressesPage({ params }: AddressesPageProps) {
     <div className="container mx-auto px-4 py-8" dir={isRTL ? "rtl" : "ltr"}>
       <div className="mb-8">
         <Link
-          href={`/${locale}/my-account`}
+          href={`/${locale}/account`}
           className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
         >
           <ArrowLeft className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
