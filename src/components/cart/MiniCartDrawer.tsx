@@ -1,10 +1,11 @@
 "use client";
 
-import { X, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/contexts/CartContext";
-import { cn } from "@/lib/utils";
+import { Drawer } from "@/components/common/Drawer";
+import { Button } from "@/components/common/Button";
 
 interface MiniCartDrawerProps {
   locale: string;
@@ -58,168 +59,136 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
     }).format(numPrice);
   };
 
-  return (
-    <>
-      <div
-        className={cn(
-          "fixed inset-0 z-50 bg-black/50 transition-opacity duration-300",
-          isCartOpen ? "opacity-100" : "pointer-events-none opacity-0"
-        )}
-        onClick={() => setIsCartOpen(false)}
-      />
+  const cartFooter = cartItems.length > 0 ? (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <span className="text-gray-600">{dictionary.subtotal}</span>
+        <span className="text-lg font-semibold">
+          {formatPrice(cartSubtotal)}
+        </span>
+      </div>
 
-      <div
-        className={cn(
-          "fixed top-0 z-50 h-full w-full max-w-md bg-white shadow-xl transition-transform duration-300",
-          isRTL ? "left-0" : "right-0",
-          isCartOpen
-            ? "translate-x-0"
-            : isRTL
-            ? "-translate-x-full"
-            : "translate-x-full"
-        )}
-        dir={isRTL ? "rtl" : "ltr"}
-      >
-        <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b p-4">
-            <div className="flex items-center gap-2">
-              <ShoppingBag className="h-5 w-5" />
-              <h2 className="text-lg font-semibold">{dictionary.cart}</h2>
-              {cartItemsCount > 0 && (
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black text-xs text-white">
-                  {cartItemsCount}
-                </span>
+      <div className="flex flex-col gap-3">
+        <Button asChild variant="outline" size="lg" className="w-full">
+          <Link href={`/${locale}/cart`} onClick={() => setIsCartOpen(false)}>
+            {dictionary.viewCart}
+          </Link>
+        </Button>
+        <Button asChild variant="primary" size="lg" className="w-full">
+          <Link href={`/${locale}/checkout`} onClick={() => setIsCartOpen(false)}>
+            {dictionary.checkout}
+          </Link>
+        </Button>
+      </div>
+    </div>
+  ) : undefined;
+
+  const renderEmptyCart = () => (
+    <div className="flex flex-col items-center justify-center p-8 text-center h-full">
+      <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-gray-100 to-gray-200">
+        <ShoppingBag className="h-12 w-12 text-gray-400" />
+      </div>
+      <h3 className="mb-2 text-lg font-semibold text-gray-900">
+        {dictionary.cart}
+      </h3>
+      <p className="mb-8 text-gray-500">{dictionary.emptyCart}</p>
+      <Button asChild variant="primary" size="lg" className="w-full max-w-xs">
+        <Link href={`/${locale}/shop`} onClick={() => setIsCartOpen(false)}>
+          {dictionary.continueShopping}
+        </Link>
+      </Button>
+    </div>
+  );
+
+  const renderCartItems = () => (
+    <ul className="divide-y">
+      {cartItems.map((item) => (
+        <li key={item.item_key} className="p-4">
+          <div className="flex gap-4">
+            <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+              {item.featured_image ? (
+                <Image
+                  src={item.featured_image}
+                  alt={item.name}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                  <ShoppingBag className="h-8 w-8 text-gray-400" />
+                </div>
               )}
             </div>
-            <button
-              onClick={() => setIsCartOpen(false)}
-              className="rounded-full p-2 hover:bg-gray-100"
-              aria-label="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
 
-          <div className="flex-1 overflow-y-auto">
-            {cartItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-8 text-center">
-                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100">
-                  <ShoppingBag className="h-10 w-10 text-gray-400" />
-                </div>
-                <p className="mb-6 text-gray-600">{dictionary.emptyCart}</p>
-                <Link
-                  href={`/${locale}/shop`}
-                  onClick={() => setIsCartOpen(false)}
-                  className="rounded-lg bg-black px-6 py-3 font-medium text-white transition-colors hover:bg-gray-800"
+            <div className="flex flex-1 flex-col">
+              <div className="flex justify-between">
+                <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
+                  {item.name}
+                </h3>
+                <button
+                  onClick={() => handleRemoveItem(item.item_key)}
+                  className="text-gray-400 hover:text-red-500 transition-colors"
+                  aria-label={dictionary.remove}
+                  disabled={isLoading}
                 >
-                  {dictionary.continueShopping}
-                </Link>
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
-            ) : (
-              <ul className="divide-y">
-                {cartItems.map((item) => (
-                  <li key={item.item_key} className="p-4">
-                    <div className="flex gap-4">
-                      <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                        {item.featured_image ? (
-                          <Image
-                            src={item.featured_image}
-                            alt={item.name}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center">
-                            <ShoppingBag className="h-8 w-8 text-gray-400" />
-                          </div>
-                        )}
-                      </div>
 
-                      <div className="flex flex-1 flex-col">
-                        <div className="flex justify-between">
-                          <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
-                            {item.name}
-                          </h3>
-                          <button
-                            onClick={() => handleRemoveItem(item.item_key)}
-                            className="text-gray-400 hover:text-red-500"
-                            aria-label={dictionary.remove}
-                            disabled={isLoading}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
+              <p className="mt-1 text-sm font-medium text-gray-900">
+                {formatPrice(item.totals.total)}
+              </p>
 
-                        <p className="mt-1 text-sm font-medium text-gray-900">
-                          {formatPrice(item.totals.total)}
-                        </p>
-
-                        <div className="mt-2 flex items-center gap-2">
-                          <button
-                            onClick={() =>
-                              handleQuantityChange(
-                                item.item_key,
-                                item.quantity.value - 1
-                              )
-                            }
-                            className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-gray-100 disabled:opacity-50"
-                            disabled={isLoading || item.quantity.value <= 1}
-                          >
-                            <Minus className="h-4 w-4" />
-                          </button>
-                          <span className="w-8 text-center text-sm">
-                            {item.quantity.value}
-                          </span>
-                          <button
-                            onClick={() =>
-                              handleQuantityChange(
-                                item.item_key,
-                                item.quantity.value + 1
-                              )
-                            }
-                            className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-gray-100 disabled:opacity-50"
-                            disabled={isLoading}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {cartItems.length > 0 && (
-            <div className="border-t p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <span className="text-gray-600">{dictionary.subtotal}</span>
-                <span className="text-lg font-semibold">
-                  {formatPrice(cartSubtotal)}
+              <div className="mt-2 flex items-center gap-2">
+                <button
+                  onClick={() =>
+                    handleQuantityChange(
+                      item.item_key,
+                      item.quantity.value - 1
+                    )
+                  }
+                  className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-gray-100 disabled:opacity-50 transition-colors"
+                  disabled={isLoading || item.quantity.value <= 1}
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="w-8 text-center text-sm font-medium">
+                  {item.quantity.value}
                 </span>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <Link
-                  href={`/${locale}/cart`}
-                  onClick={() => setIsCartOpen(false)}
-                  className="w-full rounded-lg border border-gray-300 px-6 py-3 text-center font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                <button
+                  onClick={() =>
+                    handleQuantityChange(
+                      item.item_key,
+                      item.quantity.value + 1
+                    )
+                  }
+                  className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-gray-100 disabled:opacity-50 transition-colors"
+                  disabled={isLoading}
                 >
-                  {dictionary.viewCart}
-                </Link>
-                <Link
-                  href={`/${locale}/checkout`}
-                  onClick={() => setIsCartOpen(false)}
-                  className="w-full rounded-lg bg-black px-6 py-3 text-center font-medium text-white transition-colors hover:bg-gray-800"
-                >
-                  {dictionary.checkout}
-                </Link>
+                  <Plus className="h-4 w-4" />
+                </button>
               </div>
             </div>
-          )}
-        </div>
-      </div>
-    </>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+
+  return (
+    <Drawer
+      isOpen={isCartOpen}
+      onClose={() => setIsCartOpen(false)}
+      position="right"
+      size="md"
+      title={dictionary.cart}
+      titleIcon={<ShoppingBag className="h-5 w-5" />}
+      dir={isRTL ? "rtl" : "ltr"}
+      showCloseButton={true}
+      footer={cartFooter}
+      bodyClassName="p-0"
+    >
+      {cartItems.length === 0 ? renderEmptyCart() : renderCartItems()}
+    </Drawer>
   );
 }
