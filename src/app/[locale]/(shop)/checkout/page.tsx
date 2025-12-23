@@ -16,7 +16,7 @@ interface CheckoutPageProps {
 export default function CheckoutPage({ params }: CheckoutPageProps) {
   const { locale } = params;
   const { formatPrice } = useCurrency();
-  const { cart } = useCart();
+  const { cart, cartItems, cartSubtotal, cartTotal } = useCart();
   const isRTL = locale === "ar";
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -164,12 +164,12 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
 
               {/* Cart Items */}
               <div className="max-h-64 space-y-3 overflow-y-auto border-b pb-4">
-                {cart?.contents?.nodes?.map((item) => (
-                  <div key={item.key} className="flex justify-between text-sm">
+                {cartItems.map((item) => (
+                  <div key={item.item_key} className="flex justify-between text-sm">
                     <span className="text-gray-600">
-                      {item.product?.node?.name} x {item.quantity}
+                      {item.name} x {item.quantity.value}
                     </span>
-                    <span className="font-medium">{formatPrice(item.total)}</span>
+                    <span className="font-medium">{formatPrice(item.totals.total)}</span>
                   </div>
                 ))}
               </div>
@@ -178,17 +178,17 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
               <div className="space-y-3 border-b py-4">
                 <div className="flex justify-between text-gray-600">
                   <span>{isRTL ? "المجموع الفرعي" : "Subtotal"}</span>
-                  <span>{formatPrice(cart?.subtotal || "0")}</span>
+                  <span>{formatPrice(cartSubtotal)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>{isRTL ? "الشحن" : "Shipping"}</span>
-                  <span>{formatPrice(cart?.shippingTotal || "0")}</span>
+                  <span>{formatPrice(cart?.totals?.shipping_total || "0")}</span>
                 </div>
               </div>
 
               <div className="flex justify-between py-4 text-lg font-semibold text-gray-900">
                 <span>{isRTL ? "الإجمالي" : "Total"}</span>
-                <span>{formatPrice(cart?.total || "0")}</span>
+                <span>{formatPrice(cartTotal)}</span>
               </div>
 
               <Button
