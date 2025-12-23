@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useParams } from "next/navigation";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
@@ -11,12 +12,8 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useCart } from "@/contexts/CartContext";
 import type { Locale } from "@/config/site";
 
-interface CartPageProps {
-  params: { locale: string };
-}
-
-export default function CartPage({ params }: CartPageProps) {
-  const { locale } = params;
+export default function CartPage() {
+  const { locale } = useParams<{ locale: string }>();
   const { formatPrice } = useCurrency();
   const {
     cart,

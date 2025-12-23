@@ -7,7 +7,12 @@ const dictionaries = {
 };
 
 export const getDictionary = async (locale: Locale) => {
-  return dictionaries[locale]();
+  const dictionaryLoader = dictionaries[locale];
+  if (!dictionaryLoader) {
+    // Fallback to English if locale is invalid
+    return dictionaries.en();
+  }
+  return dictionaryLoader();
 };
 
 export type Dictionary = Awaited<ReturnType<typeof getDictionary>>;

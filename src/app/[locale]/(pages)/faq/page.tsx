@@ -1,22 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { useParams } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { cn } from "@/lib/utils";
 import type { Locale } from "@/config/site";
-
-interface FAQPageProps {
-  params: { locale: string };
-}
 
 interface FAQItem {
   question: string;
   answer: string;
 }
 
-export default function FAQPage({ params }: FAQPageProps) {
-  const { locale } = params;
+export default function FAQPage() {
+  const { locale } = useParams<{ locale: string }>();
   const isRTL = locale === "ar";
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 

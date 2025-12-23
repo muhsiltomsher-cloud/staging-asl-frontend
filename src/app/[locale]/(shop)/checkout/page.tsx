@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useParams } from "next/navigation";
 import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
 import { Select } from "@/components/common/Select";
@@ -9,12 +10,8 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useCart } from "@/contexts/CartContext";
 import type { Locale } from "@/config/site";
 
-interface CheckoutPageProps {
-  params: { locale: string };
-}
-
-export default function CheckoutPage({ params }: CheckoutPageProps) {
-  const { locale } = params;
+export default function CheckoutPage() {
+  const { locale } = useParams<{ locale: string }>();
   const { formatPrice } = useCurrency();
   const { cart, cartItems, cartSubtotal, cartTotal } = useCart();
   const isRTL = locale === "ar";

@@ -1,18 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useParams } from "next/navigation";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import type { Locale } from "@/config/site";
 
-interface ContactPageProps {
-  params: { locale: string };
-}
-
-export default function ContactPage({ params }: ContactPageProps) {
-  const { locale } = params;
+export default function ContactPage() {
+  const { locale } = useParams<{ locale: string }>();
   const isRTL = locale === "ar";
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
