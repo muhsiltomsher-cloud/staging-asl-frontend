@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CartProvider } from "@/contexts/CartContext";
+import { WishlistProvider } from "@/contexts/WishlistContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
@@ -59,15 +60,17 @@ export default async function LocaleLayout({
                 <ThemeProvider>
                   <AuthProvider>
                     <CurrencyProvider>
-                      <CartProvider>
-                        <JsonLd data={generateOrganizationJsonLd()} />
-                        <div className="flex min-h-screen flex-col">
-                          <Header locale={validLocale} dictionary={dictionary} />
-                          <main className="flex-1">{children}</main>
-                          <Footer locale={validLocale} dictionary={dictionary} />
-                        </div>
-                        <ThemeToggle />
-                      </CartProvider>
+                                            <CartProvider>
+                                              <WishlistProvider>
+                                                <JsonLd data={generateOrganizationJsonLd()} />
+                                                <div className="flex min-h-screen flex-col">
+                                                  <Header locale={validLocale} dictionary={dictionary} />
+                                                  <main className="flex-1">{children}</main>
+                                                  <Footer locale={validLocale} dictionary={dictionary} />
+                                                </div>
+                                                <ThemeToggle />
+                                              </WishlistProvider>
+                                            </CartProvider>
                     </CurrencyProvider>
                   </AuthProvider>
                 </ThemeProvider>

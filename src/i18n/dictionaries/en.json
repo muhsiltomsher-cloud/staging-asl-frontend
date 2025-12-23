@@ -127,15 +127,35 @@
     "notLoggedIn": "Please login to access your account",
     "memberSince": "Member since"
   },
-  "miniCart": {
-    "cart": "Shopping Cart",
-    "emptyCart": "Your cart is empty",
-    "continueShopping": "Continue Shopping",
-    "subtotal": "Subtotal",
-    "viewCart": "View Cart",
-    "checkout": "Checkout",
-    "remove": "Remove"
-  },
+    "miniCart": {
+      "cart": "Shopping Cart",
+      "emptyCart": "Your cart is empty",
+      "continueShopping": "Continue Shopping",
+      "subtotal": "Subtotal",
+      "viewCart": "View Cart",
+      "checkout": "Checkout",
+      "remove": "Remove"
+    },
+    "wishlist": {
+      "title": "My Wishlist",
+      "emptyWishlist": "Your wishlist is empty",
+      "emptyWishlistDesc": "You haven't added any products to your wishlist yet.",
+      "continueShopping": "Continue Shopping",
+      "product": "Product",
+      "price": "Price",
+      "status": "Status",
+      "actions": "Actions",
+      "remove": "Remove",
+      "addToCart": "Add to Cart",
+      "addedToCart": "Added!",
+      "inStock": "In Stock",
+      "outOfStock": "Out of Stock",
+      "backToShop": "Continue Shopping",
+      "items": "items",
+      "addToWishlist": "Add to Wishlist",
+      "removeFromWishlist": "Remove from Wishlist",
+      "added": "Added"
+    },
   "auth": {
     "loginTitle": "Welcome Back",
     "loginSubtitle": "Sign in to your account to continue",

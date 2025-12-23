@@ -127,15 +127,35 @@
     "notLoggedIn": "يرجى تسجيل الدخول للوصول إلى حسابك",
     "memberSince": "عضو منذ"
   },
-  "miniCart": {
-    "cart": "سلة التسوق",
-    "emptyCart": "سلة التسوق فارغة",
-    "continueShopping": "متابعة التسوق",
-    "subtotal": "المجموع الفرعي",
-    "viewCart": "عرض السلة",
-    "checkout": "إتمام الشراء",
-    "remove": "إزالة"
-  },
+    "miniCart": {
+      "cart": "سلة التسوق",
+      "emptyCart": "سلة التسوق فارغة",
+      "continueShopping": "متابعة التسوق",
+      "subtotal": "المجموع الفرعي",
+      "viewCart": "عرض السلة",
+      "checkout": "إتمام الشراء",
+      "remove": "إزالة"
+    },
+    "wishlist": {
+      "title": "قائمة الرغبات",
+      "emptyWishlist": "قائمة الرغبات فارغة",
+      "emptyWishlistDesc": "لم تقم بإضافة أي منتجات إلى قائمة الرغبات بعد.",
+      "continueShopping": "متابعة التسوق",
+      "product": "المنتج",
+      "price": "السعر",
+      "status": "الحالة",
+      "actions": "الإجراءات",
+      "remove": "إزالة",
+      "addToCart": "أضف للسلة",
+      "addedToCart": "تمت الإضافة!",
+      "inStock": "متوفر",
+      "outOfStock": "غير متوفر",
+      "backToShop": "متابعة التسوق",
+      "items": "منتجات",
+      "addToWishlist": "أضف للمفضلة",
+      "removeFromWishlist": "إزالة من المفضلة",
+      "added": "أضيف في"
+    },
   "auth": {
     "loginTitle": "مرحباً بعودتك",
     "loginSubtitle": "سجل دخولك للمتابعة",

@@ -7,6 +7,7 @@ import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/types";
 import type { Locale } from "@/config/site";
@@ -20,11 +21,24 @@ interface ProductCardProps {
 export function ProductCard({ product, locale, className }: ProductCardProps) {
   const { formatPrice } = useCurrency();
   const { addToCart, isLoading } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist, isLoading: isWishlistLoading } = useWishlist();
+
+  const isWishlisted = isInWishlist(product.databaseId);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     await addToCart(product.databaseId);
+  };
+
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isWishlisted) {
+      await removeFromWishlist(product.databaseId);
+    } else {
+      await addToWishlist(product.databaseId);
+    }
   };
 
   const isOutOfStock = product.stockStatus === "OUT_OF_STOCK";
@@ -54,16 +68,23 @@ export function ProductCard({ product, locale, className }: ProductCardProps) {
             {isOutOfStock && <Badge variant="default">Out of Stock</Badge>}
           </div>
 
-          {/* Quick actions */}
-          <div className="absolute right-2 top-2 flex flex-col gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-            <button
-              type="button"
-              className="rounded-full bg-white p-2 shadow-md transition-colors hover:bg-gray-100"
-              aria-label="Add to wishlist"
-            >
-              <Heart className="h-4 w-4" />
-            </button>
-          </div>
+                    {/* Quick actions */}
+                    <div className="absolute right-2 top-2 flex flex-col gap-2">
+                      <button
+                        type="button"
+                        onClick={handleWishlistToggle}
+                        disabled={isWishlistLoading}
+                        className={cn(
+                          "rounded-full p-2 shadow-md transition-colors",
+                          isWishlisted
+                            ? "bg-red-50 text-red-500 hover:bg-red-100"
+                            : "bg-white text-gray-600 hover:bg-gray-100 opacity-0 group-hover:opacity-100"
+                        )}
+                        aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                      >
+                        <Heart className={cn("h-4 w-4", isWishlisted && "fill-current")} />
+                      </button>
+                    </div>
 
           {/* Add to cart button */}
           {!isOutOfStock && (
