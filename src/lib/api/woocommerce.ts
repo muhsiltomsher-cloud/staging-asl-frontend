@@ -64,6 +64,7 @@ export async function getProducts(params?: {
 
   const products = await fetchAPI<WCProduct[]>(endpoint, {
     tags: ["products"],
+    locale: params?.locale,
   });
 
   return {
