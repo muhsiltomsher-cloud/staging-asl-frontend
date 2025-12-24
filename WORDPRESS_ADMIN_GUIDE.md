@@ -28,6 +28,7 @@ The easiest way to set up all settings is to install the ASL Frontend Settings p
 - Exposes settings via REST API at `/wp-json/asl/v1/customizer`
 - Registers Primary and Footer menu locations
 - Adds CORS headers for frontend access
+- Supports bilingual content (English and Arabic)
 
 ## Configuring Settings
 
@@ -41,15 +42,90 @@ After installing the plugin:
 
 | Section | Settings |
 |---------|----------|
+| **Header & Logo** | Sticky header toggle, sticky logo, dark mode logo |
+| **Promotional Top Bar** | Enable/disable, text (EN/AR), link, colors, dismissible option |
+| **SEO Settings** | Meta title (EN/AR), meta description (EN/AR), OG image, robots meta |
+| **Mobile Bottom Bar** | Enable/disable, 5 configurable items with icons, labels (EN/AR), URLs |
 | **Hero Slider** | Enable/disable, autoplay, delay, loop, up to 5 slides with desktop/mobile images |
-| **New Products** | Enable/disable, title, subtitle, product count |
-| **Bestsellers** | Enable/disable, title, subtitle, product count |
-| **Shop by Category** | Enable/disable, title, subtitle, category count |
-| **Featured Products** | Enable/disable, title, subtitle, product count, autoplay |
-| **Collections** | Enable/disable, title, subtitle, up to 6 collection items |
-| **Banners** | Enable/disable, up to 4 banners with desktop/mobile images |
+| **New Products** | Enable/disable, title (EN/AR), subtitle (EN/AR), count, slider/grid toggle, responsive columns |
+| **Bestsellers** | Enable/disable, title (EN/AR), subtitle (EN/AR), count, slider/grid toggle, responsive columns |
+| **Shop by Category** | Enable/disable, title (EN/AR), subtitle (EN/AR), count, responsive columns |
+| **Featured Products** | Enable/disable, title (EN/AR), subtitle (EN/AR), count, autoplay, responsive columns |
+| **Collections** | Enable/disable, title (EN/AR), subtitle (EN/AR), up to 6 items with Arabic support |
+| **Banners** | Enable/disable, up to 4 banners with titles (EN/AR), subtitles (EN/AR) |
 
 4. Click **Publish** to save changes
+
+## New Features in Version 2.0
+
+### Header & Logo Settings
+
+Configure the header appearance:
+
+| Setting | Description |
+|---------|-------------|
+| Enable Sticky Header | Header stays fixed at top when scrolling |
+| Sticky Logo | Different logo to show when header is sticky/scrolled |
+| Dark Mode Logo | Logo for dark mode (if implemented) |
+
+### Promotional Top Bar
+
+Configure the announcement bar at the top of the page:
+
+| Setting | Description |
+|---------|-------------|
+| Enable Promotional Top Bar | Show/hide the top bar |
+| Promotional Text (English) | Main text content in English |
+| Promotional Text (Arabic) | Main text content in Arabic |
+| Link URL | Optional link when clicking the bar |
+| Background Color | Background color of the bar |
+| Text Color | Text color of the bar |
+| Allow users to dismiss | Show close button to hide the bar |
+
+### SEO Settings
+
+Configure SEO meta tags for the home page:
+
+| Setting | Description |
+|---------|-------------|
+| Meta Title (English) | SEO title for English pages |
+| Meta Title (Arabic) | SEO title for Arabic pages |
+| Meta Description (English) | SEO description for English pages (150-160 chars recommended) |
+| Meta Description (Arabic) | SEO description for Arabic pages |
+| Social Share Image (OG Image) | Image for social media sharing (1200x630px recommended) |
+| Robots Meta | Search engine indexing settings |
+
+### Mobile Bottom Bar
+
+Configure the mobile navigation bar (5 items):
+
+| Setting | Description |
+|---------|-------------|
+| Enable Mobile Bottom Bar | Show/hide the mobile bottom navigation |
+| Item X - Enable | Enable/disable individual items |
+| Item X - Icon | Choose icon: home, shop, categories, wishlist, account, cart, search, menu |
+| Item X - Label (English) | Label text in English |
+| Item X - Label (Arabic) | Label text in Arabic |
+| Item X - URL | Link URL for the item |
+
+### Slider/Grid Toggle (New Products & Bestsellers)
+
+Both New Products and Bestsellers sections now support:
+
+| Setting | Description |
+|---------|-------------|
+| Display Mode | Choose between Slider or Grid layout |
+| Enable Slider Autoplay | Auto-scroll when in slider mode |
+| Desktop - Columns/Slides | Number of items per row on desktop (2-6) |
+| Tablet - Columns/Slides | Number of items per row on tablet (2-4) |
+| Mobile - Columns/Slides | Number of items per row on mobile (1-3) |
+
+### Arabic Translation Fields
+
+All text fields now have Arabic versions. The frontend automatically displays the correct language based on the user's locale. Arabic fields use the `_ar` suffix pattern:
+
+- `asl_new_products_title` (English)
+- `asl_new_products_title_ar` (Arabic)
 
 ## Site Identity Settings
 
@@ -213,16 +289,25 @@ Install and activate the **WP REST API Menus** plugin to expose menus via the RE
 
 ## API Endpoints
 
-The frontend fetches data from these WordPress REST API endpoints:
+The ASL Frontend Settings plugin exposes these REST API endpoints:
 
 | Endpoint | Description |
 |----------|-------------|
-| `/wp-json` | WordPress root endpoint - site name, description, logo ID, favicon |
-| `/wp-json/wp/v2/media/{id}` | Media endpoint - fetches logo/image URLs by ID |
-| `/wp-json/asl/v1/customizer` | Custom endpoint for Customizer settings (if configured) |
-| `/wp-json/acf/v3/options/options` | ACF Free options page fields |
-| `/wp-json/acf/v3/options/home-page` | Home page section settings (ACF) |
-| `/wp-json/menus/v1/menus/{slug}` | Navigation menus |
+| `/wp-json/asl/v1/customizer` | All Customizer settings (complete data) |
+| `/wp-json/asl/v1/home-settings` | Home page sections only |
+| `/wp-json/asl/v1/site-settings` | Site identity (name, logo, favicon) |
+| `/wp-json/asl/v1/header-settings` | Header configuration (sticky, logos) |
+| `/wp-json/asl/v1/seo-settings` | SEO meta tags |
+| `/wp-json/asl/v1/topbar` | Promotional top bar settings |
+| `/wp-json/asl/v1/mobile-bar` | Mobile bottom bar configuration |
+| `/wp-json/asl/v1/menu/{location}` | Navigation menu by location (primary, footer) |
+
+**Additional WordPress endpoints:**
+
+| Endpoint | Description |
+|----------|-------------|
+| `/wp-json` | WordPress root endpoint - site name, description |
+| `/wp-json/wp/v2/media/{id}` | Media endpoint - fetches image URLs by ID |
 
 **Note:** The frontend tries multiple endpoints and uses the first available data source. This provides flexibility for different WordPress configurations.
 
