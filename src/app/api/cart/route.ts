@@ -41,7 +41,7 @@ function isAuthError(status: number, data: Record<string, unknown>): boolean {
   if (status !== 401 && status !== 403) return false;
   const code = data.code as string | undefined;
   const message = data.message as string | undefined;
-  return (
+  return Boolean(
     code?.includes("jwt_auth") ||
     code?.includes("rest_forbidden") ||
     message?.toLowerCase().includes("authentication") ||
