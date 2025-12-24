@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { MiniCartDrawer } from "@/components/cart/MiniCartDrawer";
+import { AccountDrawer } from "@/components/account/AccountDrawer";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
@@ -73,6 +74,23 @@ export default async function LocaleLayout({
                 viewCart: dictionary.cart.viewCart,
                 checkout: dictionary.cart.checkout,
                 remove: dictionary.common.remove,
+              }}
+            />
+            <AccountDrawer
+              locale={validLocale}
+              dictionary={{
+                myAccount: dictionary.account.myAccount,
+                orders: dictionary.account.orders,
+                addresses: dictionary.account.addresses,
+                wishlist: dictionary.account.wishlist,
+                settings: dictionary.account.settings,
+                logout: dictionary.account.logout,
+                welcome: dictionary.account.welcome,
+                login: dictionary.account.login,
+                register: dictionary.account.register,
+                notLoggedIn: dictionary.account.notLoggedIn,
+                profile: dictionary.account.profile,
+                more: dictionary.common.more,
               }}
             />
           </WishlistProvider>

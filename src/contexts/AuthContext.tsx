@@ -11,6 +11,8 @@ interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isAccountDrawerOpen: boolean;
+  setIsAccountDrawerOpen: (open: boolean) => void;
   login: (credentials: LoginCredentials) => Promise<LoginResponse>;
   logout: () => void;
 }
@@ -20,6 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAccountDrawerOpen, setIsAccountDrawerOpen] = useState(false);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -80,19 +83,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isLoading,
-        login,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+    return (
+      <AuthContext.Provider
+        value={{
+          user,
+          isAuthenticated: !!user,
+          isLoading,
+          isAccountDrawerOpen,
+          setIsAccountDrawerOpen,
+          login,
+          logout,
+        }}
+      >
+        {children}
+      </AuthContext.Provider>
+    );
 }
 
 export function useAuth() {

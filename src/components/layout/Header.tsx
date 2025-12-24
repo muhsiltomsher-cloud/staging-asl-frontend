@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { Menu, X, ShoppingBag, Search, User, LogOut, Heart } from "lucide-react";
+import { Menu, X, ShoppingBag, Search, User, Heart } from "lucide-react";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 import { CurrencySwitcher } from "@/components/common/CurrencySwitcher";
 import { useCart } from "@/contexts/CartContext";
@@ -24,7 +24,7 @@ interface HeaderProps {
 export function Header({ locale, dictionary, siteSettings, menuItems }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { cartItemsCount, setIsCartOpen } = useCart();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { setIsAccountDrawerOpen } = useAuth();
   const { wishlistItemsCount } = useWishlist();
 
   const defaultNavigation = [
@@ -114,41 +114,14 @@ export function Header({ locale, dictionary, siteSettings, menuItems }: HeaderPr
             >
               <Search className="h-5 w-5" />
             </button>
-                        {isAuthenticated ? (
-                          <div className="flex items-center gap-2">
-                            <Link
-                              href={`/${locale}/account`}
-                              className="hidden items-center gap-1 p-2 text-sm text-gray-700 hover:text-gray-900 md:flex"
-                              aria-label={dictionary.account.myAccount}
-                            >
-                              <User className="h-5 w-5" />
-                              <span className="max-w-[100px] truncate">{user?.user_display_name}</span>
-                            </Link>
-                            <Link
-                              href={`/${locale}/account`}
-                              className="p-2 text-gray-700 hover:text-gray-900 md:hidden"
-                              aria-label={dictionary.account.myAccount}
-                            >
-                              <User className="h-5 w-5" />
-                            </Link>
-                            <button
-                              type="button"
-                              onClick={logout}
-                              className="p-2 text-gray-700 hover:text-gray-900"
-                              aria-label={dictionary.account.logout}
-                            >
-                              <LogOut className="h-5 w-5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <Link
-                            href={`/${locale}/login`}
-                            className="p-2 text-gray-700 hover:text-gray-900"
-                            aria-label={dictionary.account.login}
-                          >
-                            <User className="h-5 w-5" />
-                          </Link>
-                        )}
+            <button
+              type="button"
+              onClick={() => setIsAccountDrawerOpen(true)}
+              className="p-2 text-gray-700 hover:text-gray-900"
+              aria-label={dictionary.account.myAccount}
+            >
+              <User className="h-5 w-5" />
+            </button>
             <Link
               href={`/${locale}/wishlist`}
               className="relative p-2 text-gray-700 hover:text-gray-900"

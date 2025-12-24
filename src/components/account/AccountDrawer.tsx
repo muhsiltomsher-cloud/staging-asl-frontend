@@ -10,8 +10,6 @@ import Typography from "@mui/material/Typography";
 import { Button } from "@/components/common/Button";
 
 interface AccountDrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
   locale: string;
   dictionary: {
     myAccount: string;
@@ -36,13 +34,13 @@ interface MenuItem {
 }
 
 export function AccountDrawer({
-  isOpen,
-  onClose,
   locale,
   dictionary,
 }: AccountDrawerProps) {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isAccountDrawerOpen, setIsAccountDrawerOpen } = useAuth();
   const isRTL = locale === "ar";
+
+  const onClose = () => setIsAccountDrawerOpen(false);
 
   const handleLogout = () => {
     logout();
@@ -155,11 +153,11 @@ export function AccountDrawer({
     </div>
   );
 
-  return (
-    <MuiDrawer
-      anchor={isRTL ? "left" : "right"}
-      open={isOpen}
-      onClose={onClose}
+    return (
+      <MuiDrawer
+        anchor={isRTL ? "left" : "right"}
+        open={isAccountDrawerOpen}
+        onClose={onClose}
       PaperProps={{
         sx: {
           width: { xs: "100%", sm: 320 },
