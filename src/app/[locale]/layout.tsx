@@ -73,8 +73,8 @@ export default async function LocaleLayout({
                   emptyCart: dictionary.cart.emptyCart,
                   continueShopping: dictionary.cart.continueShopping,
                   subtotal: dictionary.cart.subtotal,
-                  viewCart: dictionary.cart.viewCart,
-                  checkout: dictionary.cart.checkout,
+                  viewCart: dictionary.miniCart.viewCart,
+                  checkout: dictionary.miniCart.checkout,
                   remove: dictionary.common.remove,
                 }}
               />
