@@ -1,8 +1,4 @@
-import { siteConfig } from "@/config/site";
 import { getAuthToken } from "./auth";
-
-const API_BASE = siteConfig.apiUrl;
-const WISHLIST_BASE = `${API_BASE}/wp-json/yith/wishlist/v1`;
 
 export interface WishlistItem {
   id: number;
@@ -63,39 +59,28 @@ function getHeaders(): HeadersInit {
 
 export async function getWishlist(): Promise<WishlistOperationResponse> {
   try {
-    // Use /lists endpoint to get all wishlists for the user
-    const response = await fetch(`${WISHLIST_BASE}/lists`, {
+    const response = await fetch("/api/wishlist", {
       method: "GET",
       headers: getHeaders(),
-      credentials: "include",
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (!data.success) {
       return {
         success: false,
         error: {
-          code: data.code || "wishlist_error",
-          message: data.message || "Failed to get wishlist.",
+          code: data.error?.code || "wishlist_error",
+          message: data.error?.message || "Failed to get wishlist.",
           data: { status: response.status },
         },
       };
     }
 
-    if (Array.isArray(data)) {
-      const defaultWishlist = data.find((w: WishlistResponse) => w.is_default) || data[0];
-      return {
-        success: true,
-        wishlist: defaultWishlist,
-        items: defaultWishlist?.items || [],
-      };
-    }
-
     return {
       success: true,
-      wishlist: data,
-      items: data?.items || [],
+      wishlist: data.wishlist,
+      items: data.items || [],
     };
   } catch (error) {
     return {
@@ -121,22 +106,20 @@ export async function addToWishlist(
       body.variation_id = variationId;
     }
 
-    // Use /items endpoint with POST to add item to wishlist
-    const response = await fetch(`${WISHLIST_BASE}/items`, {
+    const response = await fetch("/api/wishlist?action=add", {
       method: "POST",
       headers: getHeaders(),
-      credentials: "include",
       body: JSON.stringify(body),
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (!data.success) {
       return {
         success: false,
         error: {
-          code: data.code || "add_to_wishlist_error",
-          message: data.message || "Failed to add item to wishlist.",
+          code: data.error?.code || "add_to_wishlist_error",
+          message: data.error?.message || "Failed to add item to wishlist.",
           data: { status: response.status },
         },
       };
@@ -144,8 +127,8 @@ export async function addToWishlist(
 
     return {
       success: true,
-      wishlist: data.wishlist || data,
-      items: data.items || data.wishlist?.items || [],
+      wishlist: data.wishlist,
+      items: data.items || [],
     };
   } catch (error) {
     return {
@@ -162,22 +145,20 @@ export async function removeFromWishlist(
   productId: number
 ): Promise<WishlistOperationResponse> {
   try {
-    // Use /items endpoint with DELETE to remove item from wishlist
-    const response = await fetch(`${WISHLIST_BASE}/items`, {
-      method: "DELETE",
+    const response = await fetch("/api/wishlist?action=remove", {
+      method: "POST",
       headers: getHeaders(),
-      credentials: "include",
       body: JSON.stringify({ product_id: productId }),
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (!data.success) {
       return {
         success: false,
         error: {
-          code: data.code || "remove_from_wishlist_error",
-          message: data.message || "Failed to remove item from wishlist.",
+          code: data.error?.code || "remove_from_wishlist_error",
+          message: data.error?.message || "Failed to remove item from wishlist.",
           data: { status: response.status },
         },
       };
@@ -185,8 +166,8 @@ export async function removeFromWishlist(
 
     return {
       success: true,
-      wishlist: data.wishlist || data,
-      items: data.items || data.wishlist?.items || [],
+      wishlist: data.wishlist,
+      items: data.items || [],
     };
   } catch (error) {
     return {
@@ -203,21 +184,20 @@ export async function syncWishlist(
   guestItems: Array<{ product_id: number; variation_id?: number }>
 ): Promise<WishlistOperationResponse> {
   try {
-    const response = await fetch(`${WISHLIST_BASE}/wishlist/sync`, {
+    const response = await fetch("/api/wishlist?action=sync", {
       method: "POST",
       headers: getHeaders(),
-      credentials: "include",
       body: JSON.stringify({ items: guestItems }),
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (!data.success) {
       return {
         success: false,
         error: {
-          code: data.code || "sync_wishlist_error",
-          message: data.message || "Failed to sync wishlist.",
+          code: data.error?.code || "sync_wishlist_error",
+          message: data.error?.message || "Failed to sync wishlist.",
           data: { status: response.status },
         },
       };
@@ -225,8 +205,8 @@ export async function syncWishlist(
 
     return {
       success: true,
-      wishlist: data.wishlist || data,
-      items: data.items || data.wishlist?.items || [],
+      wishlist: data.wishlist,
+      items: data.items || [],
     };
   } catch (error) {
     return {

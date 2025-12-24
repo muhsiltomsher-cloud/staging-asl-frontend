@@ -75,12 +75,12 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
     return {
       success: true,
       user: {
-        token: data.jwt_token || data.token,
-        refresh_token: data.jwt_refresh_token || data.refresh_token,
-        user_id: data.user_id || data.id || 0,
-        user_email: data.user_email || data.email || "",
+        token: data.extras?.jwt_token || data.jwt_token || data.token,
+        refresh_token: data.extras?.jwt_refresh || data.jwt_refresh_token || data.refresh_token,
+        user_id: parseInt(data.user_id) || data.id || 0,
+        user_email: data.email || data.user_email || "",
         user_nicename: data.user_nicename || data.nicename || data.username || "",
-        user_display_name: data.user_display_name || data.display_name || data.username || "",
+        user_display_name: data.display_name || data.user_display_name || data.username || "",
       },
     };
   } catch (error) {
