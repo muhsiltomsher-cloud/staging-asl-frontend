@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation";
 import { ShoppingBag, Heart } from "lucide-react";
 import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
+import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { cn } from "@/lib/utils";
-import { formatWCPrice } from "@/lib/api/woocommerce";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -137,20 +137,24 @@ export function WCProductCard({
           <div className="flex items-center gap-2">
             {product.on_sale ? (
               <>
-                <span className="text-sm font-semibold text-gray-900">
-                  {formatWCPrice(product.prices)}
-                </span>
-                <span className="text-sm text-gray-500 line-through">
-                  {formatWCPrice({
-                    ...product.prices,
-                    price: product.prices.regular_price,
-                  })}
-                </span>
+                <FormattedPrice
+                  price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
+                  className="text-sm font-semibold text-gray-900"
+                  iconSize="xs"
+                />
+                <FormattedPrice
+                  price={parseInt(product.prices.regular_price) / Math.pow(10, product.prices.currency_minor_unit)}
+                  className="text-sm text-gray-500"
+                  iconSize="xs"
+                  strikethrough
+                />
               </>
             ) : (
-              <span className="text-sm font-semibold text-gray-900">
-                {formatWCPrice(product.prices)}
-              </span>
+              <FormattedPrice
+                price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
+                className="text-sm font-semibold text-gray-900"
+                iconSize="xs"
+              />
             )}
           </div>
         </div>
