@@ -2,21 +2,58 @@
 
 This guide explains how to configure the home page sections, logo, and menu from the WordPress admin panel.
 
-## Prerequisites
+## Quick Start - Install the ASL Plugin
 
-1. WordPress with WooCommerce installed
-2. Advanced Custom Fields (ACF) Free plugin installed
-3. ACF to REST API plugin installed (to expose ACF fields via REST API)
+The easiest way to set up all settings is to install the ASL Frontend Settings plugin:
 
-## Site Settings (Appearance > Customize)
+### Installation Steps
 
-The site logo, favicon, and basic site identity are configured through the WordPress Customizer:
+1. Download the file `wordpress/asl-frontend-settings.php` from this repository
+2. Upload it to your WordPress site using one of these methods:
 
-### Setting Up Site Identity
+**Method A: MU-Plugin (Recommended)**
+- Upload to: `wp-content/mu-plugins/asl-frontend-settings.php`
+- Create the `mu-plugins` folder if it doesn't exist
+- The plugin activates automatically
+
+**Method B: Regular Plugin**
+- Upload to: `wp-content/plugins/asl-frontend-settings.php`
+- Go to **Plugins** in WordPress admin
+- Activate "ASL Frontend Settings"
+
+### What the Plugin Does
+
+- Adds **Appearance > Customize** menu item (hidden in block themes like Twenty Twenty-Five)
+- Creates **ASL Frontend Settings** panel in the Customizer with all home page sections
+- Exposes settings via REST API at `/wp-json/asl/v1/customizer`
+- Registers Primary and Footer menu locations
+- Adds CORS headers for frontend access
+
+## Configuring Settings
+
+After installing the plugin:
 
 1. Go to **Appearance > Customize** in WordPress admin
-2. Click on **Site Identity**
-3. Configure the following:
+2. Click on **ASL Frontend Settings** panel
+3. Configure each section:
+
+### Available Sections
+
+| Section | Settings |
+|---------|----------|
+| **Hero Slider** | Enable/disable, autoplay, delay, loop, up to 5 slides with desktop/mobile images |
+| **New Products** | Enable/disable, title, subtitle, product count |
+| **Bestsellers** | Enable/disable, title, subtitle, product count |
+| **Shop by Category** | Enable/disable, title, subtitle, category count |
+| **Featured Products** | Enable/disable, title, subtitle, product count, autoplay |
+| **Collections** | Enable/disable, title, subtitle, up to 6 collection items |
+| **Banners** | Enable/disable, up to 4 banners with desktop/mobile images |
+
+4. Click **Publish** to save changes
+
+## Site Identity Settings
+
+Configure logo and favicon in **Appearance > Customize > Site Identity**:
 
 | Setting | Description |
 |---------|-------------|
@@ -25,85 +62,9 @@ The site logo, favicon, and basic site identity are configured through the WordP
 | Logo | Upload your site logo (recommended: PNG with transparent background, max width 200px) |
 | Site Icon | Upload favicon (recommended: 512x512px PNG) |
 
-4. Click **Publish** to save changes
+## Alternative: Manual Setup (Without Plugin)
 
-The frontend automatically fetches these settings from the WordPress REST API.
-
-## Setting Up ACF Fields (Free Version)
-
-With ACF Free, you can create field groups attached to an Options page. The frontend will fetch these from `/wp-json/acf/v3/options/options`.
-
-### 1. Create Options Page (requires code)
-
-Add this to your theme's `functions.php` or a custom plugin:
-
-```php
-// Register ACF Options Page
-if( function_exists('acf_add_options_page') ) {
-    acf_add_options_page(array(
-        'page_title'    => 'Home Page Settings',
-        'menu_title'    => 'Home Page',
-        'menu_slug'     => 'home-page',
-        'capability'    => 'edit_posts',
-        'redirect'      => false
-    ));
-}
-```
-
-### 2. Alternative: Use Theme Customizer Sections
-
-You can also add custom sections to the WordPress Customizer. Add this to your theme's `functions.php`:
-
-```php
-function asl_customize_register( $wp_customize ) {
-    // Add Home Page Section
-    $wp_customize->add_section( 'asl_home_page', array(
-        'title'    => __( 'Home Page Settings', 'asl' ),
-        'priority' => 30,
-    ));
-    
-    // Hero Slider Toggle
-    $wp_customize->add_setting( 'hero_slider_enabled', array(
-        'default'   => true,
-        'transport' => 'refresh',
-    ));
-    
-    $wp_customize->add_control( 'hero_slider_enabled', array(
-        'label'    => __( 'Enable Hero Slider', 'asl' ),
-        'section'  => 'asl_home_page',
-        'type'     => 'checkbox',
-    ));
-    
-    // Add more settings as needed...
-}
-add_action( 'customize_register', 'asl_customize_register' );
-```
-
-### 3. Expose Customizer Settings via REST API
-
-Create a custom REST endpoint to expose customizer settings. Add to `functions.php`:
-
-```php
-// Register REST API endpoint for customizer settings
-add_action( 'rest_api_init', function () {
-    register_rest_route( 'asl/v1', '/customizer', array(
-        'methods'  => 'GET',
-        'callback' => 'asl_get_customizer_settings',
-        'permission_callback' => '__return_true',
-    ));
-});
-
-function asl_get_customizer_settings() {
-    return array(
-        'site_title'           => get_bloginfo( 'name' ),
-        'site_tagline'         => get_bloginfo( 'description' ),
-        'hero_slider_enabled'  => get_theme_mod( 'hero_slider_enabled', true ),
-        'hero_autoplay'        => get_theme_mod( 'hero_autoplay', true ),
-        'hero_autoplay_delay'  => get_theme_mod( 'hero_autoplay_delay', 5000 ),
-        // Add more settings as needed...
-    );
-}
-```
+If you prefer to add the code manually, you can add the following to your theme's `functions.php` or create a custom plugin. See the complete code in `wordpress/asl-frontend-settings.php`.
 
 ## ACF Field Groups
 
