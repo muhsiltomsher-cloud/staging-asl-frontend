@@ -198,6 +198,7 @@ export default function RegisterPage({ params }: RegisterPageProps) {
               error={errors.username}
               autoComplete="username"
               dir={isRTL ? "rtl" : "ltr"}
+              required
             />
 
             <Input
@@ -210,6 +211,7 @@ export default function RegisterPage({ params }: RegisterPageProps) {
               error={errors.email}
               autoComplete="email"
               dir={isRTL ? "rtl" : "ltr"}
+              required
             />
 
             <Input
@@ -222,6 +224,7 @@ export default function RegisterPage({ params }: RegisterPageProps) {
               error={errors.password}
               autoComplete="new-password"
               dir={isRTL ? "rtl" : "ltr"}
+              required
             />
 
             <Input
@@ -234,6 +237,7 @@ export default function RegisterPage({ params }: RegisterPageProps) {
               error={errors.confirmPassword}
               autoComplete="new-password"
               dir={isRTL ? "rtl" : "ltr"}
+              required
             />
 
             <Button
