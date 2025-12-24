@@ -148,6 +148,33 @@ export async function getProductsByCategory(
   });
 }
 
+// Get related products by category
+export async function getRelatedProducts(
+  product: WCProduct,
+  params?: {
+    per_page?: number;
+    locale?: Locale;
+  }
+): Promise<WCProduct[]> {
+  const categoryId = product.categories?.[0]?.id;
+  
+  if (!categoryId) {
+    return [];
+  }
+
+  try {
+    const { products } = await getProducts({
+      category: categoryId.toString(),
+      per_page: params?.per_page || 8,
+      locale: params?.locale,
+    });
+
+    return products.filter((p) => p.id !== product.id);
+  } catch {
+    return [];
+  }
+}
+
 // Helper function to format price from WooCommerce
 export function formatWCPrice(prices: WCProduct["prices"]): string {
   const price = parseInt(prices.price) / Math.pow(10, prices.currency_minor_unit);

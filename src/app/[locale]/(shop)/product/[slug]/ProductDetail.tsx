@@ -8,6 +8,8 @@ import { Button } from "@/components/common/Button";
 import { Badge } from "@/components/common/Badge";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { QuantitySelector } from "@/components/shop/QuantitySelector";
+import { ProductTabs } from "@/components/shop/ProductTabs";
+import { RelatedProducts } from "@/components/shop/RelatedProducts";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
@@ -18,9 +20,10 @@ import type { Locale } from "@/config/site";
 interface ProductDetailProps {
   product: WCProduct;
   locale: Locale;
+  relatedProducts?: WCProduct[];
 }
 
-export function ProductDetail({ product, locale }: ProductDetailProps) {
+export function ProductDetail({ product, locale, relatedProducts = [] }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -247,20 +250,22 @@ export function ProductDetail({ product, locale }: ProductDetailProps) {
             </div>
           </div>
 
-          {/* Description */}
-          {product.description && (
-            <div className="border-t border-amber-100 pt-6">
-              <h2 className="mb-4 text-lg font-semibold text-amber-900">
-                {isRTL ? "الوصف" : "Description"}
-              </h2>
-              <div
-                className="prose prose-amber max-w-none prose-headings:text-amber-900 prose-p:text-gray-700 prose-strong:text-amber-800"
-                dangerouslySetInnerHTML={{ __html: product.description }}
-              />
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Product Tabs - Description & Additional Information */}
+      <ProductTabs
+        description={product.description}
+        attributes={product.attributes}
+        isRTL={isRTL}
+      />
+
+      {/* Related Products */}
+      <RelatedProducts
+        products={relatedProducts}
+        currentProductId={product.id}
+        locale={locale}
+      />
     </div>
   );
 }

@@ -32,6 +32,7 @@ export function WCProductCard({
   const { addToWishlist, isInWishlist } = useWishlist();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const isRTL = locale === "ar";
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -71,80 +72,84 @@ export function WCProductCard({
   return (
     <article className={cn("group relative", className)}>
       <Link href={`/${locale}/product/${product.slug}`} className="block">
-        {/* Image container */}
-        <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
+        <div className="relative aspect-square overflow-hidden rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 shadow-sm transition-shadow duration-300 group-hover:shadow-lg">
           {mainImage ? (
             <Image
               src={mainImage.src}
               alt={mainImage.alt || product.name}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              className="object-cover transition-transform duration-500 group-hover:scale-110"
             />
           ) : (
             <div className="flex h-full items-center justify-center">
-              <span className="text-gray-400">No image</span>
+              <span className="text-gray-400">{isRTL ? "لا توجد صورة" : "No image"}</span>
             </div>
           )}
 
-          {/* Badges */}
-          <div className="absolute left-2 top-2 flex flex-col gap-1">
-            {product.on_sale && <Badge variant="error">Sale</Badge>}
-            {isOutOfStock && <Badge variant="default">Out of Stock</Badge>}
+          <div className={cn("absolute top-3 flex flex-col gap-1.5", isRTL ? "right-3" : "left-3")}>
+            {product.on_sale && (
+              <Badge variant="error" className="shadow-sm">
+                {isRTL ? "تخفيض" : "Sale"}
+              </Badge>
+            )}
+            {isOutOfStock && (
+              <Badge variant="default" className="shadow-sm">
+                {isRTL ? "غير متوفر" : "Out of Stock"}
+              </Badge>
+            )}
           </div>
 
-          {/* Quick actions */}
-          <div className="absolute right-2 top-2 flex flex-col gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+          <div className={cn("absolute top-3 flex flex-col gap-2", isRTL ? "left-3" : "right-3")}>
             <button
               type="button"
               onClick={handleAddToWishlist}
               disabled={isAddingToWishlist}
-              className={`rounded-full p-2 shadow-md transition-colors ${
+              className={cn(
+                "rounded-full p-2.5 shadow-lg transition-all duration-300",
                 isInWishlist(product.id)
-                  ? "bg-red-50 text-red-500"
-                  : "bg-white hover:bg-gray-100"
-              } ${isAddingToWishlist ? "opacity-50 cursor-not-allowed" : ""}`}
-              aria-label="Add to wishlist"
+                  ? "bg-red-50 text-red-500 hover:bg-red-100"
+                  : "bg-white/90 backdrop-blur-sm text-gray-600 hover:bg-white opacity-0 group-hover:opacity-100",
+                isAddingToWishlist && "opacity-50 cursor-not-allowed"
+              )}
+              aria-label={isRTL ? "أضف إلى المفضلة" : "Add to wishlist"}
             >
-              <Heart className={`h-4 w-4 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
+              <Heart className={cn("h-4 w-4", isInWishlist(product.id) && "fill-current")} />
             </button>
           </div>
 
-          {/* Add to cart button */}
           {!isOutOfStock && product.is_purchasable && (
-            <div className="absolute bottom-2 left-2 right-2 opacity-0 transition-opacity group-hover:opacity-100">
-              <Button onClick={handleAddToCart} className="w-full" size="sm" isLoading={isAddingToCart}>
-                <ShoppingBag className="mr-2 h-4 w-4" />
-                Add to Cart
+            <div className="absolute bottom-3 left-3 right-3 opacity-0 transition-all duration-300 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0">
+              <Button onClick={handleAddToCart} className="w-full shadow-lg" size="sm" isLoading={isAddingToCart}>
+                <ShoppingBag className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                {isRTL ? "أضف للسلة" : "Add to Cart"}
               </Button>
             </div>
           )}
         </div>
 
-        {/* Product info */}
-        <div className="mt-3 space-y-1">
-          {/* Category */}
+        <div className="mt-4 space-y-2">
           {product.categories?.[0] && (
-            <p className="text-xs text-gray-500">{product.categories[0].name}</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-amber-600">
+              {product.categories[0].name}
+            </p>
           )}
 
-          {/* Name */}
-          <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
+          <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-amber-800 transition-colors">
             {product.name}
           </h3>
 
-          {/* Price */}
           <div className="flex items-center gap-2">
             {product.on_sale ? (
               <>
                 <FormattedPrice
                   price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
-                  className="text-sm font-semibold text-gray-900"
+                  className="text-sm font-bold text-amber-900"
                   iconSize="xs"
                 />
                 <FormattedPrice
                   price={parseInt(product.prices.regular_price) / Math.pow(10, product.prices.currency_minor_unit)}
-                  className="text-sm text-gray-500"
+                  className="text-xs text-gray-400"
                   iconSize="xs"
                   strikethrough
                 />
@@ -152,7 +157,7 @@ export function WCProductCard({
             ) : (
               <FormattedPrice
                 price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
-                className="text-sm font-semibold text-gray-900"
+                className="text-sm font-bold text-amber-900"
                 iconSize="xs"
               />
             )}
