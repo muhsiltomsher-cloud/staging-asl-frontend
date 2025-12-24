@@ -9,6 +9,8 @@ import type {
   FeaturedProductsSettings,
   CollectionsSettings,
   BannersSettings,
+  CustomizerSettings,
+  WPSiteInfo,
 } from "@/types/wordpress";
 
 const WP_API_BASE = `${siteConfig.apiUrl}/wp-json`;
@@ -107,10 +109,12 @@ const defaultSiteSettings: SiteSettings = {
   tagline: siteConfig.description,
 };
 
-// Fetch site settings (logo, favicon, etc.)
+// Fetch site settings from WordPress Customizer (Appearance > Customize)
+// This uses the WordPress root endpoint which includes site identity settings
 export async function getSiteSettings(locale?: Locale): Promise<SiteSettings> {
-  const data = await fetchWPAPI<{ acf: SiteSettings }>(
-    "/acf/v3/options/site-settings",
+  // First try to get site info from WordPress root endpoint
+  const siteInfo = await fetchWPAPI<WPSiteInfo>(
+    "",
     {
       tags: ["site-settings"],
       locale,
@@ -118,7 +122,75 @@ export async function getSiteSettings(locale?: Locale): Promise<SiteSettings> {
     }
   );
 
-  return data?.acf || defaultSiteSettings;
+  // Try to get custom logo URL if logo ID exists
+  let logoUrl: string | null = null;
+  if (siteInfo?.site_logo) {
+    const mediaData = await fetchWPAPI<{ source_url: string }>(
+      `/wp/v2/media/${siteInfo.site_logo}`,
+      {
+        tags: ["site-settings", "logo"],
+        revalidate: 300,
+      }
+    );
+    logoUrl = mediaData?.source_url || null;
+  }
+
+  // Try to get customizer settings from custom endpoint (if available)
+  const customizerData = await fetchWPAPI<CustomizerSettings>(
+    "/asl/v1/customizer",
+    {
+      tags: ["site-settings", "customizer"],
+      locale,
+      revalidate: 300,
+    }
+  );
+
+  // Also try ACF free version endpoint (options stored in regular ACF fields)
+  const acfData = await fetchWPAPI<{ acf: Partial<SiteSettings> }>(
+    "/acf/v3/options/options",
+    {
+      tags: ["site-settings"],
+      locale,
+      revalidate: 300,
+    }
+  );
+
+  // Build site settings from available sources
+  const settings: SiteSettings = {
+    logo: logoUrl ? {
+      id: siteInfo?.site_logo || 0,
+      url: logoUrl,
+      alt: siteInfo?.name || siteConfig.name,
+      title: siteInfo?.name || siteConfig.name,
+      width: 200,
+      height: 60,
+      sizes: {
+        thumbnail: logoUrl,
+        medium: logoUrl,
+        large: logoUrl,
+        full: logoUrl,
+      },
+    } : (acfData?.acf?.logo || null),
+    logo_dark: acfData?.acf?.logo_dark || null,
+    favicon: siteInfo?.site_icon_url ? {
+      id: siteInfo.site_icon || 0,
+      url: siteInfo.site_icon_url,
+      alt: "Favicon",
+      title: "Favicon",
+      width: 32,
+      height: 32,
+      sizes: {
+        thumbnail: siteInfo.site_icon_url,
+        medium: siteInfo.site_icon_url,
+        large: siteInfo.site_icon_url,
+        full: siteInfo.site_icon_url,
+      },
+    } : null,
+    site_name: siteInfo?.name || customizerData?.site_title || siteConfig.name,
+    tagline: siteInfo?.description || customizerData?.site_tagline || siteConfig.description,
+  };
+
+  return settings;
 }
 
 // Fetch home page ACF fields

@@ -5,28 +5,105 @@ This guide explains how to configure the home page sections, logo, and menu from
 ## Prerequisites
 
 1. WordPress with WooCommerce installed
-2. Advanced Custom Fields (ACF) Pro plugin installed
+2. Advanced Custom Fields (ACF) Free plugin installed
 3. ACF to REST API plugin installed (to expose ACF fields via REST API)
 
-## Setting Up ACF Fields
+## Site Settings (Appearance > Customize)
 
-### 1. Create Home Page Options Page
+The site logo, favicon, and basic site identity are configured through the WordPress Customizer:
 
-Go to **ACF > Options Pages** and create a new options page:
+### Setting Up Site Identity
 
-- Page Title: `Home Page Settings`
-- Menu Title: `Home Page`
-- Menu Slug: `home-page-settings`
-- Parent Page: `Settings`
+1. Go to **Appearance > Customize** in WordPress admin
+2. Click on **Site Identity**
+3. Configure the following:
 
-### 2. Create Site Settings Options Page
+| Setting | Description |
+|---------|-------------|
+| Site Title | Your website name (displayed in header if no logo) |
+| Tagline | Short description of your site |
+| Logo | Upload your site logo (recommended: PNG with transparent background, max width 200px) |
+| Site Icon | Upload favicon (recommended: 512x512px PNG) |
 
-Create another options page for site-wide settings:
+4. Click **Publish** to save changes
 
-- Page Title: `Site Settings`
-- Menu Title: `Site Settings`
-- Menu Slug: `site-settings`
-- Parent Page: `Settings`
+The frontend automatically fetches these settings from the WordPress REST API.
+
+## Setting Up ACF Fields (Free Version)
+
+With ACF Free, you can create field groups attached to an Options page. The frontend will fetch these from `/wp-json/acf/v3/options/options`.
+
+### 1. Create Options Page (requires code)
+
+Add this to your theme's `functions.php` or a custom plugin:
+
+```php
+// Register ACF Options Page
+if( function_exists('acf_add_options_page') ) {
+    acf_add_options_page(array(
+        'page_title'    => 'Home Page Settings',
+        'menu_title'    => 'Home Page',
+        'menu_slug'     => 'home-page',
+        'capability'    => 'edit_posts',
+        'redirect'      => false
+    ));
+}
+```
+
+### 2. Alternative: Use Theme Customizer Sections
+
+You can also add custom sections to the WordPress Customizer. Add this to your theme's `functions.php`:
+
+```php
+function asl_customize_register( $wp_customize ) {
+    // Add Home Page Section
+    $wp_customize->add_section( 'asl_home_page', array(
+        'title'    => __( 'Home Page Settings', 'asl' ),
+        'priority' => 30,
+    ));
+    
+    // Hero Slider Toggle
+    $wp_customize->add_setting( 'hero_slider_enabled', array(
+        'default'   => true,
+        'transport' => 'refresh',
+    ));
+    
+    $wp_customize->add_control( 'hero_slider_enabled', array(
+        'label'    => __( 'Enable Hero Slider', 'asl' ),
+        'section'  => 'asl_home_page',
+        'type'     => 'checkbox',
+    ));
+    
+    // Add more settings as needed...
+}
+add_action( 'customize_register', 'asl_customize_register' );
+```
+
+### 3. Expose Customizer Settings via REST API
+
+Create a custom REST endpoint to expose customizer settings. Add to `functions.php`:
+
+```php
+// Register REST API endpoint for customizer settings
+add_action( 'rest_api_init', function () {
+    register_rest_route( 'asl/v1', '/customizer', array(
+        'methods'  => 'GET',
+        'callback' => 'asl_get_customizer_settings',
+        'permission_callback' => '__return_true',
+    ));
+});
+
+function asl_get_customizer_settings() {
+    return array(
+        'site_title'           => get_bloginfo( 'name' ),
+        'site_tagline'         => get_bloginfo( 'description' ),
+        'hero_slider_enabled'  => get_theme_mod( 'hero_slider_enabled', true ),
+        'hero_autoplay'        => get_theme_mod( 'hero_autoplay', true ),
+        'hero_autoplay_delay'  => get_theme_mod( 'hero_autoplay_delay', 5000 ),
+        // Add more settings as needed...
+    );
+}
+```
 
 ## ACF Field Groups
 
@@ -179,9 +256,14 @@ The frontend fetches data from these WordPress REST API endpoints:
 
 | Endpoint | Description |
 |----------|-------------|
-| `/wp-json/acf/v3/options/site-settings` | Site logo and global settings |
-| `/wp-json/acf/v3/options/home-page-settings` | Home page section settings |
+| `/wp-json` | WordPress root endpoint - site name, description, logo ID, favicon |
+| `/wp-json/wp/v2/media/{id}` | Media endpoint - fetches logo/image URLs by ID |
+| `/wp-json/asl/v1/customizer` | Custom endpoint for Customizer settings (if configured) |
+| `/wp-json/acf/v3/options/options` | ACF Free options page fields |
+| `/wp-json/acf/v3/options/home-page` | Home page section settings (ACF) |
 | `/wp-json/menus/v1/menus/{slug}` | Navigation menus |
+
+**Note:** The frontend tries multiple endpoints and uses the first available data source. This provides flexibility for different WordPress configurations.
 
 ## Multilingual Support (WPML/Polylang)
 
