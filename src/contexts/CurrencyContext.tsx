@@ -8,6 +8,7 @@ interface CurrencyContextType {
   currency: Currency;
   setCurrency: (currency: Currency) => void;
   formatPrice: (price: string | number, showCode?: boolean) => string;
+  formatCartPrice: (price: string | number, minorUnit?: number, showCode?: boolean) => string;
   getCurrencySymbol: () => string;
   getCurrencyInfo: () => (typeof currencies)[number];
 }
@@ -66,12 +67,35 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     [getCurrencyInfo]
   );
 
+  const formatCartPrice = useCallback(
+    (price: string | number, minorUnit = 2, showCode = true) => {
+      const currencyInfo = getCurrencyInfo();
+      const numericPrice = typeof price === "string" ? parseFloat(price.replace(/[^0-9.-]+/g, "")) : price;
+
+      if (isNaN(numericPrice)) {
+        return price.toString();
+      }
+
+      const divisor = Math.pow(10, minorUnit);
+      const convertedPrice = numericPrice / divisor;
+
+      const formattedNumber = new Intl.NumberFormat("en-US", {
+        minimumFractionDigits: currencyInfo.decimals,
+        maximumFractionDigits: currencyInfo.decimals,
+      }).format(convertedPrice);
+
+      return showCode ? `${formattedNumber} ${currencyInfo.code}` : `${currencyInfo.symbol}${formattedNumber}`;
+    },
+    [getCurrencyInfo]
+  );
+
   return (
     <CurrencyContext.Provider
       value={{
         currency,
         setCurrency,
         formatPrice,
+        formatCartPrice,
         getCurrencySymbol,
         getCurrencyInfo,
       }}

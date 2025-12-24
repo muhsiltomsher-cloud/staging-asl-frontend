@@ -14,7 +14,7 @@ import type { Locale } from "@/config/site";
 
 export default function CartPage() {
   const { locale } = useParams<{ locale: string }>();
-  const { formatPrice } = useCurrency();
+  const { formatCartPrice } = useCurrency();
   const {
     cart,
     cartItems,
@@ -215,7 +215,7 @@ export default function CartPage() {
 
                       <div className="hidden text-center md:col-span-2 md:block">
                         <span className="font-medium">
-                          {formatPrice(item.price)}
+                          {formatCartPrice(item.price)}
                         </span>
                       </div>
 
@@ -259,7 +259,7 @@ export default function CartPage() {
                           {texts.total}:
                         </span>
                         <span className="font-semibold">
-                          {formatPrice(item.totals.total)}
+                          {formatCartPrice(item.totals.total)}
                         </span>
                       </div>
 
@@ -334,13 +334,13 @@ export default function CartPage() {
               <div className="space-y-3 border-b pb-4">
                 <div className="flex justify-between text-gray-600">
                   <span>{texts.subtotal}</span>
-                  <span>{formatPrice(cartSubtotal)}</span>
+                  <span>{formatCartPrice(cartSubtotal)}</span>
                 </div>
                 {cart?.totals?.discount_total &&
                   parseFloat(cart.totals.discount_total) > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>{texts.discount}</span>
-                      <span>-{formatPrice(cart.totals.discount_total)}</span>
+                      <span>-{formatCartPrice(cart.totals.discount_total)}</span>
                     </div>
                   )}
                 <div className="flex justify-between text-gray-600">
@@ -348,7 +348,7 @@ export default function CartPage() {
                   <span>
                     {cart?.totals?.shipping_total &&
                     parseFloat(cart.totals.shipping_total) > 0
-                      ? formatPrice(cart.totals.shipping_total)
+                      ? formatCartPrice(cart.totals.shipping_total)
                       : texts.calculatedAtCheckout}
                   </span>
                 </div>
@@ -356,7 +356,7 @@ export default function CartPage() {
 
               <div className="flex justify-between py-4 text-lg font-semibold text-gray-900">
                 <span>{texts.orderTotal}</span>
-                <span>{formatPrice(cartTotal)}</span>
+                <span>{formatCartPrice(cartTotal)}</span>
               </div>
 
               <Button className="w-full" size="lg" asChild>

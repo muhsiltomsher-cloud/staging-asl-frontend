@@ -4,6 +4,7 @@ import { Minus, Plus, Trash2, ShoppingBag, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/contexts/CartContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import MuiDrawer from "@mui/material/Drawer";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
@@ -33,6 +34,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
     updateCartItem,
     removeCartItem,
   } = useCart();
+  const { formatCartPrice } = useCurrency();
 
   const isRTL = locale === "ar";
 
@@ -53,20 +55,12 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
     }
   };
 
-  const formatPrice = (price: string) => {
-    const numPrice = parseFloat(price) / 100;
-    return new Intl.NumberFormat(locale === "ar" ? "ar-SA" : "en-SA", {
-      style: "currency",
-      currency: "SAR",
-    }).format(numPrice);
-  };
-
   const cartFooter = cartItems.length > 0 ? (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <span className="text-gray-600">{dictionary.subtotal}</span>
         <span className="text-lg font-semibold">
-          {formatPrice(cartSubtotal)}
+          {formatCartPrice(cartSubtotal)}
         </span>
       </div>
 
@@ -138,7 +132,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
               </div>
 
               <p className="mt-1 text-sm font-medium text-gray-900">
-                {formatPrice(item.totals.total)}
+                {formatCartPrice(item.totals.total)}
               </p>
 
               <div className="mt-2 flex items-center gap-2">
