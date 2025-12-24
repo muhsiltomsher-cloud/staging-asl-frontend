@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { Heart, Truck, Shield, RotateCcw } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { Badge } from "@/components/common/Badge";
+import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { QuantitySelector } from "@/components/shop/QuantitySelector";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
-import { formatWCPrice } from "@/lib/api/woocommerce";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -132,21 +132,25 @@ export function ProductDetail({ product, locale }: ProductDetailProps) {
           <div className="flex items-center gap-3">
             {product.on_sale ? (
               <>
-                <span className="text-2xl font-bold text-gray-900">
-                  {formatWCPrice(product.prices)}
-                </span>
-                <span className="text-lg text-gray-500 line-through">
-                  {formatWCPrice({
-                    ...product.prices,
-                    price: product.prices.regular_price,
-                  })}
-                </span>
+                <FormattedPrice
+                  price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
+                  className="text-2xl font-bold text-amber-900"
+                  iconSize="lg"
+                />
+                <FormattedPrice
+                  price={parseInt(product.prices.regular_price) / Math.pow(10, product.prices.currency_minor_unit)}
+                  className="text-lg text-gray-400"
+                  iconSize="md"
+                  strikethrough
+                />
                 <Badge variant="error">{isRTL ? "تخفيض" : "Sale"}</Badge>
               </>
             ) : (
-              <span className="text-2xl font-bold text-gray-900">
-                {formatWCPrice(product.prices)}
-              </span>
+              <FormattedPrice
+                price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
+                className="text-2xl font-bold text-amber-900"
+                iconSize="lg"
+              />
             )}
           </div>
 
@@ -216,22 +220,28 @@ export function ProductDetail({ product, locale }: ProductDetailProps) {
           )}
 
           {/* Features */}
-          <div className="grid gap-4 border-t pt-6 sm:grid-cols-3">
-            <div className="flex items-center gap-3">
-              <Truck className="h-5 w-5 text-gray-600" />
-              <span className="text-sm text-gray-600">
+          <div className="grid gap-4 border-t border-amber-100 pt-6 sm:grid-cols-3">
+            <div className="flex items-center gap-3 rounded-lg bg-amber-50 p-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+                <Truck className="h-5 w-5 text-amber-700" />
+              </div>
+              <span className="text-sm font-medium text-amber-900">
                 {isRTL ? "شحن مجاني" : "Free Shipping"}
               </span>
             </div>
-            <div className="flex items-center gap-3">
-              <Shield className="h-5 w-5 text-gray-600" />
-              <span className="text-sm text-gray-600">
+            <div className="flex items-center gap-3 rounded-lg bg-amber-50 p-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+                <Shield className="h-5 w-5 text-amber-700" />
+              </div>
+              <span className="text-sm font-medium text-amber-900">
                 {isRTL ? "منتج أصلي" : "Authentic Product"}
               </span>
             </div>
-            <div className="flex items-center gap-3">
-              <RotateCcw className="h-5 w-5 text-gray-600" />
-              <span className="text-sm text-gray-600">
+            <div className="flex items-center gap-3 rounded-lg bg-amber-50 p-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+                <RotateCcw className="h-5 w-5 text-amber-700" />
+              </div>
+              <span className="text-sm font-medium text-amber-900">
                 {isRTL ? "إرجاع سهل" : "Easy Returns"}
               </span>
             </div>
@@ -239,12 +249,12 @@ export function ProductDetail({ product, locale }: ProductDetailProps) {
 
           {/* Description */}
           {product.description && (
-            <div className="border-t pt-6">
-              <h2 className="mb-4 text-lg font-semibold text-gray-900">
+            <div className="border-t border-amber-100 pt-6">
+              <h2 className="mb-4 text-lg font-semibold text-amber-900">
                 {isRTL ? "الوصف" : "Description"}
               </h2>
               <div
-                className="prose prose-gray max-w-none"
+                className="prose prose-amber max-w-none prose-headings:text-amber-900 prose-p:text-gray-700 prose-strong:text-amber-800"
                 dangerouslySetInnerHTML={{ __html: product.description }}
               />
             </div>

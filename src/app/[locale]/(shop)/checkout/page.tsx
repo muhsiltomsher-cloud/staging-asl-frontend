@@ -6,7 +6,7 @@ import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
 import { Select } from "@/components/common/Select";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { useCart } from "@/contexts/CartContext";
 import type { Locale } from "@/config/site";
 
@@ -27,7 +27,6 @@ interface CheckoutFormData {
 export default function CheckoutPage() {
   const { locale } = useParams<{ locale: string }>();
   const router = useRouter();
-  const { formatCartPrice } = useCurrency();
   const { cart, cartItems, cartSubtotal, cartTotal, clearCart } = useCart();
   const isRTL = locale === "ar";
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -272,7 +271,11 @@ export default function CheckoutPage() {
                     <span className="text-gray-600">
                       {item.name} x {item.quantity.value}
                     </span>
-                    <span className="font-medium">{formatCartPrice(item.totals.total)}</span>
+                    <FormattedPrice
+                      price={parseInt(item.totals.total) / 100}
+                      className="font-medium"
+                      iconSize="xs"
+                    />
                   </div>
                 ))}
               </div>
@@ -281,17 +284,26 @@ export default function CheckoutPage() {
               <div className="space-y-3 border-b py-4">
                 <div className="flex justify-between text-gray-600">
                   <span>{isRTL ? "المجموع الفرعي" : "Subtotal"}</span>
-                  <span>{formatCartPrice(cartSubtotal)}</span>
+                  <FormattedPrice
+                    price={parseInt(cartSubtotal) / 100}
+                    iconSize="xs"
+                  />
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>{isRTL ? "الشحن" : "Shipping"}</span>
-                  <span>{formatCartPrice(cart?.totals?.shipping_total || "0")}</span>
+                  <FormattedPrice
+                    price={parseInt(cart?.totals?.shipping_total || "0") / 100}
+                    iconSize="xs"
+                  />
                 </div>
               </div>
 
               <div className="flex justify-between py-4 text-lg font-semibold text-gray-900">
                 <span>{isRTL ? "الإجمالي" : "Total"}</span>
-                <span>{formatCartPrice(cartTotal)}</span>
+                <FormattedPrice
+                  price={parseInt(cartTotal) / 100}
+                  iconSize="sm"
+                />
               </div>
 
               <Button

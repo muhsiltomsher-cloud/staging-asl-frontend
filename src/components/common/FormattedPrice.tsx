@@ -40,12 +40,12 @@ export function FormattedPrice({
   if (showCode) {
     return (
       <span className={cn("inline-flex items-center gap-1", strikethrough && "line-through", className)}>
-        <span>{formattedNumber}</span>
         {isAED ? (
           <AEDIcon size={iconSize} className="flex-shrink-0" />
         ) : (
           <span>{currencyInfo.code}</span>
         )}
+        <span>{formattedNumber}</span>
       </span>
     );
   }

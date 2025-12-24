@@ -12,7 +12,8 @@ import Typography from "@mui/material/Typography";
 import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/config/site";
 import type { WCProduct } from "@/types/woocommerce";
-import { getProducts, formatWCPrice } from "@/lib/api/woocommerce";
+import { getProducts } from "@/lib/api/woocommerce";
+import { FormattedPrice } from "@/components/common/FormattedPrice";
 
 interface SearchDrawerProps {
   isOpen: boolean;
@@ -184,9 +185,11 @@ export function SearchDrawer({
                   )}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-gray-900 truncate">{product.name}</h3>
-                    <p className="text-sm font-semibold text-gray-700">
-                      {formatWCPrice(product.prices)}
-                    </p>
+                    <FormattedPrice
+                      price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
+                      className="text-sm font-semibold text-gray-700"
+                      iconSize="xs"
+                    />
                   </div>
                 </Link>
               ))}

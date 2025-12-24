@@ -5,7 +5,8 @@ import Link from "next/link";
 import { ArrowLeft, Package, Eye } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/common/Button";
-import { getCustomerOrders, formatOrderStatus, getOrderStatusColor, formatPrice, formatDate, type Order } from "@/lib/api/customer";
+import { FormattedPrice } from "@/components/common/FormattedPrice";
+import { getCustomerOrders, formatOrderStatus, getOrderStatusColor, formatDate, type Order } from "@/lib/api/customer";
 
 interface OrdersPageProps {
   params: Promise<{ locale: string }>;
@@ -172,9 +173,11 @@ export default function OrdersPage({ params }: OrdersPageProps) {
                     <span>
                       {order.line_items.length} {t.items}
                     </span>
-                    <span className="font-medium text-gray-900">
-                      {formatPrice(order.total, order.currency_symbol)}
-                    </span>
+                    <FormattedPrice
+                      price={order.total}
+                      className="font-medium text-gray-900"
+                      iconSize="xs"
+                    />
                   </div>
                 </div>
                 <Button asChild variant="outline" size="sm">

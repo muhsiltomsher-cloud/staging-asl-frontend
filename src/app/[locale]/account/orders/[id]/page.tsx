@@ -6,7 +6,8 @@ import Image from "next/image";
 import { ArrowLeft, Package, Truck, CheckCircle, Clock, MapPin } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/common/Button";
-import { getOrder, formatOrderStatus, getOrderStatusColor, formatPrice, formatDate, type Order } from "@/lib/api/customer";
+import { FormattedPrice } from "@/components/common/FormattedPrice";
+import { getOrder, formatOrderStatus, getOrderStatusColor, formatDate, type Order } from "@/lib/api/customer";
 
 interface OrderDetailPageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -316,14 +317,16 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                   </div>
                   <div className="flex flex-1 flex-col justify-center">
                     <h4 className="font-medium text-gray-900">{item.name}</h4>
-                    <p className="text-sm text-gray-500">
-                      Qty: {item.quantity} × {formatPrice(item.price, order.currency_symbol)}
+                    <p className="text-sm text-gray-500 inline-flex items-center gap-1">
+                      Qty: {item.quantity} × <FormattedPrice price={item.price} iconSize="xs" />
                     </p>
                   </div>
                   <div className="flex items-center">
-                    <span className="font-medium text-gray-900">
-                      {formatPrice(item.total, order.currency_symbol)}
-                    </span>
+                    <FormattedPrice
+                      price={item.total}
+                      className="font-medium text-gray-900"
+                      iconSize="xs"
+                    />
                   </div>
                 </div>
               </li>
@@ -332,27 +335,29 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           <div className="border-t bg-gray-50 p-4 space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">{t.subtotal}</span>
-              <span className="text-gray-900">{formatPrice(subtotal, order.currency_symbol)}</span>
+              <FormattedPrice price={subtotal} className="text-gray-900" iconSize="xs" />
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">{t.shipping}</span>
-              <span className="text-gray-900">{formatPrice(order.shipping_total, order.currency_symbol)}</span>
+              <FormattedPrice price={order.shipping_total} className="text-gray-900" iconSize="xs" />
             </div>
             {parseFloat(order.discount_total) > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">{t.discount}</span>
-                <span className="text-green-600">-{formatPrice(order.discount_total, order.currency_symbol)}</span>
+                <span className="text-green-600 inline-flex items-center gap-1">
+                  -<FormattedPrice price={order.discount_total} iconSize="xs" />
+                </span>
               </div>
             )}
             {parseFloat(order.total_tax) > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">{t.tax}</span>
-                <span className="text-gray-900">{formatPrice(order.total_tax, order.currency_symbol)}</span>
+                <FormattedPrice price={order.total_tax} className="text-gray-900" iconSize="xs" />
               </div>
             )}
             <div className="flex justify-between border-t pt-2 text-base font-semibold">
               <span className="text-gray-900">{t.total}</span>
-              <span className="text-gray-900">{formatPrice(order.total, order.currency_symbol)}</span>
+              <FormattedPrice price={order.total} className="text-gray-900" iconSize="sm" />
             </div>
           </div>
         </div>

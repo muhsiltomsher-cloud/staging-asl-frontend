@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Heart, Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCart } from "@/contexts/CartContext";
 import type { Locale } from "@/config/site";
@@ -22,7 +22,6 @@ export default function WishlistPage({ params }: WishlistPageProps) {
     params.then((p) => setLocale(p.locale));
   }, [params]);
 
-  const { formatPrice } = useCurrency();
   const {
     wishlistItems,
     wishlistItemsCount,
@@ -183,9 +182,10 @@ export default function WishlistPage({ params }: WishlistPageProps) {
                     </div>
 
                     <div className="hidden text-center md:col-span-2 md:block">
-                      <span
+                      <FormattedPrice
+                        price={item.product_price}
                         className="font-medium"
-                        dangerouslySetInnerHTML={{ __html: item.product_price_html || formatPrice(item.product_price) }}
+                        iconSize="xs"
                       />
                     </div>
 

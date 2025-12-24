@@ -8,13 +8,12 @@ import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { useCart } from "@/contexts/CartContext";
 import type { Locale } from "@/config/site";
 
 export default function CartPage() {
   const { locale } = useParams<{ locale: string }>();
-  const { formatCartPrice } = useCurrency();
   const {
     cart,
     cartItems,
@@ -214,9 +213,11 @@ export default function CartPage() {
                       </div>
 
                       <div className="hidden text-center md:col-span-2 md:block">
-                        <span className="font-medium">
-                          {formatCartPrice(item.price)}
-                        </span>
+                        <FormattedPrice
+                          price={parseInt(item.price) / 100}
+                          className="font-medium"
+                          iconSize="xs"
+                        />
                       </div>
 
                       <div className="flex items-center justify-between md:col-span-2 md:justify-center">
@@ -258,9 +259,11 @@ export default function CartPage() {
                         <span className="text-sm text-gray-500 md:hidden">
                           {texts.total}:
                         </span>
-                        <span className="font-semibold">
-                          {formatCartPrice(item.totals.total)}
-                        </span>
+                        <FormattedPrice
+                          price={parseInt(item.totals.total) / 100}
+                          className="font-semibold"
+                          iconSize="xs"
+                        />
                       </div>
 
                       <div className="hidden md:col-span-12 md:flex md:justify-end">
@@ -334,13 +337,21 @@ export default function CartPage() {
               <div className="space-y-3 border-b pb-4">
                 <div className="flex justify-between text-gray-600">
                   <span>{texts.subtotal}</span>
-                  <span>{formatCartPrice(cartSubtotal)}</span>
+                  <FormattedPrice
+                    price={parseInt(cartSubtotal) / 100}
+                    iconSize="xs"
+                  />
                 </div>
                 {cart?.totals?.discount_total &&
                   parseFloat(cart.totals.discount_total) > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>{texts.discount}</span>
-                      <span>-{formatCartPrice(cart.totals.discount_total)}</span>
+                      <span className="inline-flex items-center gap-1">
+                        -<FormattedPrice
+                          price={parseInt(cart.totals.discount_total) / 100}
+                          iconSize="xs"
+                        />
+                      </span>
                     </div>
                   )}
                 <div className="flex justify-between text-gray-600">
@@ -348,7 +359,10 @@ export default function CartPage() {
                   <span>
                     {cart?.totals?.shipping_total &&
                     parseFloat(cart.totals.shipping_total) > 0
-                      ? formatCartPrice(cart.totals.shipping_total)
+                      ? <FormattedPrice
+                          price={parseInt(cart.totals.shipping_total) / 100}
+                          iconSize="xs"
+                        />
                       : texts.calculatedAtCheckout}
                   </span>
                 </div>
@@ -356,7 +370,10 @@ export default function CartPage() {
 
               <div className="flex justify-between py-4 text-lg font-semibold text-gray-900">
                 <span>{texts.orderTotal}</span>
-                <span>{formatCartPrice(cartTotal)}</span>
+                <FormattedPrice
+                  price={parseInt(cartTotal) / 100}
+                  iconSize="sm"
+                />
               </div>
 
               <Button className="w-full" size="lg" asChild>
