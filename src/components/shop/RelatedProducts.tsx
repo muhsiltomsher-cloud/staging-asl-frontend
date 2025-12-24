@@ -1,11 +1,15 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useRef } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, FreeMode } from "swiper/modules";
 import { WCProductCard } from "./WCProductCard";
-import { cn } from "@/lib/utils";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
+
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/free-mode";
 
 interface RelatedProductsProps {
   products: WCProduct[];
@@ -18,7 +22,6 @@ export function RelatedProducts({
   currentProductId,
   locale,
 }: RelatedProductsProps) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isRTL = locale === "ar";
 
   const filteredProducts = products.filter((p) => p.id !== currentProductId);
@@ -26,23 +29,6 @@ export function RelatedProducts({
   if (filteredProducts.length === 0) {
     return null;
   }
-
-  const scroll = (direction: "left" | "right") => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = 300;
-      const actualDirection = isRTL
-        ? direction === "left"
-          ? scrollAmount
-          : -scrollAmount
-        : direction === "left"
-          ? -scrollAmount
-          : scrollAmount;
-      scrollContainerRef.current.scrollBy({
-        left: actualDirection,
-        behavior: "smooth",
-      });
-    }
-  };
 
   return (
     <section className="mt-16 border-t border-amber-100 pt-12">
@@ -58,16 +44,14 @@ export function RelatedProducts({
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => scroll("left")}
-            className="rounded-full border border-amber-200 p-2 text-amber-700 transition-colors hover:bg-amber-50 hover:border-amber-300"
+            className="related-slider-prev rounded-full border border-amber-200 p-2 text-amber-700 transition-all duration-300 hover:bg-amber-50 hover:border-amber-300 hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label={isRTL ? "التالي" : "Previous"}
           >
             {isRTL ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
           </button>
           <button
             type="button"
-            onClick={() => scroll("right")}
-            className="rounded-full border border-amber-200 p-2 text-amber-700 transition-colors hover:bg-amber-50 hover:border-amber-300"
+            className="related-slider-next rounded-full border border-amber-200 p-2 text-amber-700 transition-all duration-300 hover:bg-amber-50 hover:border-amber-300 hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label={isRTL ? "السابق" : "Next"}
           >
             {isRTL ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
@@ -75,22 +59,43 @@ export function RelatedProducts({
         </div>
       </div>
 
-      <div
-        ref={scrollContainerRef}
-        className={cn(
-          "flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory",
-          "-mx-4 px-4"
-        )}
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-      >
-        {filteredProducts.slice(0, 8).map((product) => (
-          <div
-            key={product.id}
-            className="w-[calc(50%-12px)] flex-shrink-0 snap-start sm:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)]"
-          >
-            <WCProductCard product={product} locale={locale} />
-          </div>
-        ))}
+      <div className="relative -mx-4 px-4">
+        <Swiper
+          modules={[Navigation, FreeMode]}
+          spaceBetween={24}
+          slidesPerView={2}
+          freeMode={{
+            enabled: true,
+            sticky: false,
+            momentumRatio: 0.5,
+            momentumVelocityRatio: 0.5,
+          }}
+          navigation={{
+            prevEl: ".related-slider-prev",
+            nextEl: ".related-slider-next",
+          }}
+          breakpoints={{
+            640: {
+              slidesPerView: 2,
+              spaceBetween: 16,
+            },
+            768: {
+              slidesPerView: 3,
+              spaceBetween: 20,
+            },
+            1024: {
+              slidesPerView: 4,
+              spaceBetween: 24,
+            },
+          }}
+          className="related-products-slider !overflow-visible"
+        >
+          {filteredProducts.slice(0, 8).map((product) => (
+            <SwiperSlide key={product.id}>
+              <WCProductCard product={product} locale={locale} />
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </div>
     </section>
   );

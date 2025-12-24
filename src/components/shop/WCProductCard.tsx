@@ -72,7 +72,7 @@ export function WCProductCard({
   return (
     <article className={cn("group relative", className)}>
       <Link href={`/${locale}/product/${product.slug}`} className="block">
-        <div className="relative aspect-square overflow-hidden rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 shadow-sm transition-shadow duration-300 group-hover:shadow-lg">
+        <div className="relative aspect-square overflow-hidden rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 shadow-sm transition-all duration-500 ease-out group-hover:shadow-[0_20px_50px_rgba(180,83,9,0.15)] group-hover:-translate-y-1">
           {mainImage ? (
             <Image
               src={mainImage.src}
@@ -119,8 +119,8 @@ export function WCProductCard({
           </div>
 
           {!isOutOfStock && product.is_purchasable && (
-            <div className="absolute bottom-3 left-3 right-3 opacity-0 transition-all duration-300 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0">
-              <Button onClick={handleAddToCart} className="w-full shadow-lg" size="sm" isLoading={isAddingToCart}>
+            <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 translate-y-full transition-all duration-500 ease-out group-hover:opacity-100 group-hover:translate-y-0">
+              <Button onClick={handleAddToCart} className="w-full shadow-lg backdrop-blur-sm" size="sm" isLoading={isAddingToCart}>
                 <ShoppingBag className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
                 {isRTL ? "أضف للسلة" : "Add to Cart"}
               </Button>
