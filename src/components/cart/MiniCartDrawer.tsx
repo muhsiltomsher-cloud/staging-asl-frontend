@@ -132,7 +132,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
               </div>
 
               <p className="mt-1 text-sm font-medium text-gray-900">
-                {formatCartPrice(item.totals.total)}
+                {formatCartPrice(item.price)} x {item.quantity.value}
               </p>
 
               <div className="mt-2 flex items-center gap-2">

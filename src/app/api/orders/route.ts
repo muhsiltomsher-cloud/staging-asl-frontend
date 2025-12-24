@@ -9,6 +9,35 @@ function getBasicAuthParams(): string {
   return `consumer_key=${CONSUMER_KEY}&consumer_secret=${CONSUMER_SECRET}`;
 }
 
+interface OrderLineItem {
+  product_id: number;
+  quantity: number;
+  variation_id?: number;
+}
+
+interface OrderAddress {
+  first_name: string;
+  last_name: string;
+  address_1: string;
+  city: string;
+  state?: string;
+  postcode?: string;
+  country: string;
+  email?: string;
+  phone?: string;
+}
+
+interface CreateOrderRequest {
+  payment_method: string;
+  payment_method_title: string;
+  set_paid: boolean;
+  billing: OrderAddress;
+  shipping: OrderAddress;
+  line_items: OrderLineItem[];
+  customer_note?: string;
+  customer_id?: number;
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const orderId = searchParams.get("orderId");
@@ -59,6 +88,87 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, data });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: "network_error",
+          message: error instanceof Error ? error.message : "Network error occurred",
+        },
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    
+    const orderData: CreateOrderRequest = {
+      payment_method: body.payment_method || "cod",
+      payment_method_title: body.payment_method === "cod" ? "Cash on Delivery" : "Credit Card",
+      set_paid: false,
+      billing: {
+        first_name: body.billing.first_name,
+        last_name: body.billing.last_name,
+        address_1: body.billing.address_1,
+        city: body.billing.city,
+        state: body.billing.state || "",
+        postcode: body.billing.postcode || "",
+        country: body.billing.country,
+        email: body.billing.email,
+        phone: body.billing.phone,
+      },
+      shipping: {
+        first_name: body.shipping?.first_name || body.billing.first_name,
+        last_name: body.shipping?.last_name || body.billing.last_name,
+        address_1: body.shipping?.address_1 || body.billing.address_1,
+        city: body.shipping?.city || body.billing.city,
+        state: body.shipping?.state || body.billing.state || "",
+        postcode: body.shipping?.postcode || body.billing.postcode || "",
+        country: body.shipping?.country || body.billing.country,
+      },
+      line_items: body.line_items,
+      customer_note: body.customer_note || "",
+    };
+
+    if (body.customer_id) {
+      orderData.customer_id = body.customer_id;
+    }
+
+    const url = `${API_BASE}/orders?${getBasicAuthParams()}`;
+    
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(orderData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: data.code || "order_creation_error",
+            message: data.message || "Failed to create order.",
+          },
+        },
+        { status: response.status }
+      );
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      order: data,
+      order_id: data.id,
+      order_key: data.order_key,
+    });
   } catch (error) {
     return NextResponse.json(
       {
