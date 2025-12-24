@@ -1,7 +1,4 @@
-import { siteConfig } from "@/config/site";
 import { getAuthToken } from "./auth";
-
-const API_BASE = siteConfig.apiUrl;
 
 export interface CoCartItem {
   item_key: string;
@@ -130,20 +127,19 @@ function getHeaders(): HeadersInit {
 
 export async function getCart(): Promise<CartOperationResponse> {
   try {
-    const response = await fetch(`${API_BASE}/wp-json/cocart/v2/cart`, {
+    const response = await fetch("/api/cart", {
       method: "GET",
       headers: getHeaders(),
-      credentials: "include",
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (!data.success) {
       return {
         success: false,
         error: {
-          code: data.code || "cart_error",
-          message: data.message || "Failed to get cart.",
+          code: data.error?.code || "cart_error",
+          message: data.error?.message || "Failed to get cart.",
           data: { status: response.status },
         },
       };
@@ -151,7 +147,7 @@ export async function getCart(): Promise<CartOperationResponse> {
 
     return {
       success: true,
-      cart: data,
+      cart: data.cart,
     };
   } catch (error) {
     return {
@@ -184,21 +180,20 @@ export async function addToCart(
       body.variation = variation;
     }
 
-    const response = await fetch(`${API_BASE}/wp-json/cocart/v2/cart/add-item`, {
+    const response = await fetch("/api/cart?action=add", {
       method: "POST",
       headers: getHeaders(),
-      credentials: "include",
       body: JSON.stringify(body),
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (!data.success) {
       return {
         success: false,
         error: {
-          code: data.code || "add_to_cart_error",
-          message: data.message || "Failed to add item to cart.",
+          code: data.error?.code || "add_to_cart_error",
+          message: data.error?.message || "Failed to add item to cart.",
           data: { status: response.status },
         },
       };
@@ -206,7 +201,7 @@ export async function addToCart(
 
     return {
       success: true,
-      cart: data,
+      cart: data.cart,
     };
   } catch (error) {
     return {
@@ -224,21 +219,20 @@ export async function updateCartItem(
   quantity: number
 ): Promise<CartOperationResponse> {
   try {
-    const response = await fetch(`${API_BASE}/wp-json/cocart/v2/cart/item/${itemKey}`, {
+    const response = await fetch(`/api/cart?action=update&item_key=${encodeURIComponent(itemKey)}`, {
       method: "POST",
       headers: getHeaders(),
-      credentials: "include",
       body: JSON.stringify({ quantity: String(quantity) }),
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (!data.success) {
       return {
         success: false,
         error: {
-          code: data.code || "update_cart_error",
-          message: data.message || "Failed to update cart item.",
+          code: data.error?.code || "update_cart_error",
+          message: data.error?.message || "Failed to update cart item.",
           data: { status: response.status },
         },
       };
@@ -246,7 +240,7 @@ export async function updateCartItem(
 
     return {
       success: true,
-      cart: data,
+      cart: data.cart,
     };
   } catch (error) {
     return {
@@ -261,20 +255,19 @@ export async function updateCartItem(
 
 export async function removeCartItem(itemKey: string): Promise<CartOperationResponse> {
   try {
-    const response = await fetch(`${API_BASE}/wp-json/cocart/v2/cart/item/${itemKey}`, {
-      method: "DELETE",
+    const response = await fetch(`/api/cart?action=remove&item_key=${encodeURIComponent(itemKey)}`, {
+      method: "POST",
       headers: getHeaders(),
-      credentials: "include",
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (!data.success) {
       return {
         success: false,
         error: {
-          code: data.code || "remove_cart_error",
-          message: data.message || "Failed to remove cart item.",
+          code: data.error?.code || "remove_cart_error",
+          message: data.error?.message || "Failed to remove cart item.",
           data: { status: response.status },
         },
       };
@@ -282,7 +275,7 @@ export async function removeCartItem(itemKey: string): Promise<CartOperationResp
 
     return {
       success: true,
-      cart: data,
+      cart: data.cart,
     };
   } catch (error) {
     return {
@@ -297,20 +290,19 @@ export async function removeCartItem(itemKey: string): Promise<CartOperationResp
 
 export async function clearCart(): Promise<CartOperationResponse> {
   try {
-    const response = await fetch(`${API_BASE}/wp-json/cocart/v2/cart/clear`, {
+    const response = await fetch("/api/cart?action=clear", {
       method: "POST",
       headers: getHeaders(),
-      credentials: "include",
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (!data.success) {
       return {
         success: false,
         error: {
-          code: data.code || "clear_cart_error",
-          message: data.message || "Failed to clear cart.",
+          code: data.error?.code || "clear_cart_error",
+          message: data.error?.message || "Failed to clear cart.",
           data: { status: response.status },
         },
       };
@@ -318,7 +310,7 @@ export async function clearCart(): Promise<CartOperationResponse> {
 
     return {
       success: true,
-      cart: data,
+      cart: data.cart,
     };
   } catch (error) {
     return {
@@ -333,21 +325,20 @@ export async function clearCart(): Promise<CartOperationResponse> {
 
 export async function applyCoupon(couponCode: string): Promise<CartOperationResponse> {
   try {
-    const response = await fetch(`${API_BASE}/wp-json/cocart/v2/cart/coupon`, {
+    const response = await fetch("/api/cart?action=apply-coupon", {
       method: "POST",
       headers: getHeaders(),
-      credentials: "include",
       body: JSON.stringify({ coupon: couponCode }),
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (!data.success) {
       return {
         success: false,
         error: {
-          code: data.code || "coupon_error",
-          message: data.message || "Failed to apply coupon.",
+          code: data.error?.code || "coupon_error",
+          message: data.error?.message || "Failed to apply coupon.",
           data: { status: response.status },
         },
       };
@@ -355,7 +346,7 @@ export async function applyCoupon(couponCode: string): Promise<CartOperationResp
 
     return {
       success: true,
-      cart: data,
+      cart: data.cart,
     };
   } catch (error) {
     return {
@@ -370,20 +361,19 @@ export async function applyCoupon(couponCode: string): Promise<CartOperationResp
 
 export async function removeCoupon(couponCode: string): Promise<CartOperationResponse> {
   try {
-    const response = await fetch(`${API_BASE}/wp-json/cocart/v2/cart/coupon/${couponCode}`, {
-      method: "DELETE",
+    const response = await fetch(`/api/cart?action=remove-coupon&coupon=${encodeURIComponent(couponCode)}`, {
+      method: "POST",
       headers: getHeaders(),
-      credentials: "include",
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (!data.success) {
       return {
         success: false,
         error: {
-          code: data.code || "coupon_error",
-          message: data.message || "Failed to remove coupon.",
+          code: data.error?.code || "coupon_error",
+          message: data.error?.message || "Failed to remove coupon.",
           data: { status: response.status },
         },
       };
@@ -391,7 +381,7 @@ export async function removeCoupon(couponCode: string): Promise<CartOperationRes
 
     return {
       success: true,
-      cart: data,
+      cart: data.cart,
     };
   } catch (error) {
     return {
