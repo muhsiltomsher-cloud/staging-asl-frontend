@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { MobileBottomBar } from "@/components/layout/MobileBottomBar";
 import { MiniCartDrawer } from "@/components/cart/MiniCartDrawer";
 import { AccountDrawer } from "@/components/account/AccountDrawer";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
@@ -13,6 +14,7 @@ import { getDictionary } from "@/i18n";
 import { siteConfig, localeConfig, type Locale } from "@/config/site";
 import { generateOrganizationJsonLd } from "@/lib/utils/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { getSiteSettings, getHeaderSettings, getMobileBarSettings, getPrimaryMenu } from "@/lib/api/wordpress";
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
@@ -54,6 +56,14 @@ export default async function LocaleLayout({
   const dictionary = await getDictionary(validLocale);
   const { dir } = localeConfig[validLocale];
 
+  // Fetch site settings, header settings, mobile bar settings, and menu in parallel
+  const [siteSettings, headerSettings, mobileBarSettings, menuItems] = await Promise.all([
+    getSiteSettings(validLocale),
+    getHeaderSettings(),
+    getMobileBarSettings(validLocale),
+    getPrimaryMenu(validLocale),
+  ]);
+
   return (
     <AuthProvider>
       <CurrencyProvider>
@@ -62,9 +72,19 @@ export default async function LocaleLayout({
             <WishlistProvider>
               <JsonLd data={generateOrganizationJsonLd()} />
               <div dir={dir} lang={validLocale} className="flex min-h-screen flex-col bg-white">
-                <Header locale={validLocale} dictionary={dictionary} />
+                <Header
+                  locale={validLocale}
+                  dictionary={dictionary}
+                  siteSettings={siteSettings}
+                  headerSettings={headerSettings}
+                  menuItems={menuItems?.items}
+                />
                 <main className="flex-1">{children}</main>
-                <Footer locale={validLocale} dictionary={dictionary} />
+                <Footer locale={validLocale} dictionary={dictionary} siteSettings={siteSettings} />
+                <MobileBottomBar
+                  locale={validLocale}
+                  settings={mobileBarSettings}
+                />
               </div>
               <MiniCartDrawer
                 locale={validLocale}

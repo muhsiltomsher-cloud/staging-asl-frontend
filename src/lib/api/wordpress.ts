@@ -108,6 +108,48 @@ interface WPPluginSiteSettings {
   };
 }
 
+// Type for WordPress Plugin header settings from /asl/v1/header-settings
+interface WPPluginHeaderSettings {
+  sticky: boolean;
+  logo: string;
+  stickyLogo: string;
+  logoDark: string;
+}
+
+// Type for WordPress Plugin mobile bar item
+interface WPPluginMobileBarItem {
+  icon: string;
+  label: string;
+  labelAr: string;
+  url: string;
+}
+
+// Type for WordPress Plugin mobile bar settings from /asl/v1/mobile-bar
+interface WPPluginMobileBarSettings {
+  enabled: boolean;
+  items: WPPluginMobileBarItem[];
+}
+
+// Frontend types for header and mobile bar
+export interface HeaderSettings {
+  sticky: boolean;
+  logo: string | null;
+  stickyLogo: string | null;
+  logoDark: string | null;
+}
+
+export interface MobileBarItem {
+  icon: string;
+  label: string;
+  labelAr: string;
+  url: string;
+}
+
+export interface MobileBarSettings {
+  enabled: boolean;
+  items: MobileBarItem[];
+}
+
 // Helper function to create WPImage from URL string
 function createWPImage(url: string, alt: string = ""): WPImage | null {
   if (!url) return null;
@@ -516,4 +558,71 @@ export async function getPrimaryMenu(locale?: Locale): Promise<WPMenu | null> {
 // Fetch footer menu
 export async function getFooterMenu(locale?: Locale): Promise<WPMenu | null> {
   return getMenu("footer", locale);
+}
+
+// Default mobile bar items when WordPress settings are empty
+const defaultMobileBarItems: MobileBarItem[] = [
+  { icon: "home", label: "Home", labelAr: "الرئيسية", url: "/" },
+  { icon: "grid", label: "Categories", labelAr: "الفئات", url: "/shop" },
+  { icon: "search", label: "Search", labelAr: "بحث", url: "/search" },
+  { icon: "heart", label: "Wishlist", labelAr: "المفضلة", url: "/wishlist" },
+  { icon: "user", label: "Account", labelAr: "حسابي", url: "/account" },
+];
+
+// Fetch header settings from WordPress Plugin API
+export async function getHeaderSettings(): Promise<HeaderSettings> {
+  const data = await fetchWPAPI<WPPluginHeaderSettings>(
+    "/asl/v1/header-settings",
+    {
+      tags: ["header-settings"],
+      revalidate: 60,
+    }
+  );
+
+  return {
+    sticky: data?.sticky ?? true,
+    logo: data?.logo || null,
+    stickyLogo: data?.stickyLogo || null,
+    logoDark: data?.logoDark || null,
+  };
+}
+
+// Fetch mobile bar settings from WordPress Plugin API
+export async function getMobileBarSettings(locale?: Locale): Promise<MobileBarSettings> {
+  const data = await fetchWPAPI<WPPluginMobileBarSettings>(
+    "/asl/v1/mobile-bar",
+    {
+      tags: ["mobile-bar-settings"],
+      locale,
+      revalidate: 60,
+    }
+  );
+
+  // If mobile bar is disabled, return disabled state
+  if (!data?.enabled) {
+    return {
+      enabled: false,
+      items: [],
+    };
+  }
+
+  // Check if all items are empty (no icon, label, or url configured)
+  const hasConfiguredItems = data.items.some(
+    (item) => item.icon || item.label || item.labelAr || item.url
+  );
+
+  // Use default items if no items are configured
+  const items = hasConfiguredItems
+    ? data.items.map((item) => ({
+        icon: item.icon || "",
+        label: item.label || "",
+        labelAr: item.labelAr || "",
+        url: item.url || "",
+      }))
+    : defaultMobileBarItems;
+
+  return {
+    enabled: data.enabled,
+    items,
+  };
 }

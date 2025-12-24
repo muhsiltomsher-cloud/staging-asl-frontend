@@ -13,15 +13,17 @@ import { cn } from "@/lib/utils";
 import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/config/site";
 import type { SiteSettings, WPMenuItem } from "@/types/wordpress";
+import type { HeaderSettings } from "@/lib/api/wordpress";
 
 interface HeaderProps {
   locale: Locale;
   dictionary: Dictionary;
   siteSettings?: SiteSettings | null;
+  headerSettings?: HeaderSettings | null;
   menuItems?: WPMenuItem[] | null;
 }
 
-export function Header({ locale, dictionary, siteSettings, menuItems }: HeaderProps) {
+export function Header({ locale, dictionary, siteSettings, headerSettings, menuItems }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { cartItemsCount, setIsCartOpen } = useCart();
   const { setIsAccountDrawerOpen } = useAuth();
@@ -76,10 +78,10 @@ export function Header({ locale, dictionary, siteSettings, menuItems }: HeaderPr
 
           {/* Logo */}
           <Link href={`/${locale}`} className="flex items-center">
-            {siteSettings?.logo?.url ? (
+            {headerSettings?.logo || siteSettings?.logo?.url ? (
               <Image
-                src={siteSettings.logo.url}
-                alt={siteSettings.logo.alt || siteSettings.site_name || "Logo"}
+                src={headerSettings?.logo || siteSettings?.logo?.url || ""}
+                alt={siteSettings?.logo?.alt || siteSettings?.site_name || "Logo"}
                 width={150}
                 height={40}
                 className="h-8 w-auto md:h-10"

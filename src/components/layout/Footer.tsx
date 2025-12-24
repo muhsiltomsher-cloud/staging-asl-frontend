@@ -1,14 +1,17 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Facebook, Instagram, Twitter } from "lucide-react";
 import { siteConfig, type Locale } from "@/config/site";
 import type { Dictionary } from "@/i18n";
+import type { SiteSettings } from "@/types/wordpress";
 
 interface FooterProps {
   locale: Locale;
   dictionary: Dictionary;
+  siteSettings?: SiteSettings | null;
 }
 
-export function Footer({ locale, dictionary }: FooterProps) {
+export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
@@ -34,12 +37,22 @@ export function Footer({ locale, dictionary }: FooterProps) {
           {/* Brand section */}
           <div className="space-y-4">
             <Link href={`/${locale}`} className="inline-block">
-              <span className="text-xl font-bold tracking-tight text-gray-900">
-                Aromatic Scents Lab
-              </span>
+              {siteSettings?.logo?.url ? (
+                <Image
+                  src={siteSettings.logo.url}
+                  alt={siteSettings.logo.alt || siteSettings.site_name || "Logo"}
+                  width={150}
+                  height={40}
+                  className="h-10 w-auto"
+                />
+              ) : (
+                <span className="text-xl font-bold tracking-tight text-gray-900">
+                  {siteSettings?.site_name || "Aromatic Scents Lab"}
+                </span>
+              )}
             </Link>
             <p className="text-sm text-gray-600">
-              Premium fragrances and aromatic products crafted with care.
+              {siteSettings?.tagline || "Premium fragrances and aromatic products crafted with care."}
             </p>
             <div className="flex gap-4">
               <a
