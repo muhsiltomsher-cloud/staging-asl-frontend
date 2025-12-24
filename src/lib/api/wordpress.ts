@@ -9,11 +9,224 @@ import type {
   FeaturedProductsSettings,
   CollectionsSettings,
   BannersSettings,
-  CustomizerSettings,
   WPSiteInfo,
+  WPImage,
+  WPLink,
+  HeroSlide,
+  Banner,
+  Collection,
 } from "@/types/wordpress";
 
 const WP_API_BASE = `${siteConfig.apiUrl}/wp-json`;
+
+// Types for WordPress Plugin API Response (camelCase format)
+interface WPPluginHeroSlide {
+  image: string;
+  mobileImage: string;
+  link: string;
+}
+
+interface WPPluginHeroSettings {
+  enabled: boolean;
+  autoplay: boolean;
+  autoplayDelay: number;
+  loop: boolean;
+  slides: WPPluginHeroSlide[];
+}
+
+interface WPPluginBannerItem {
+  image: string;
+  mobileImage: string;
+  title: string;
+  titleAr: string;
+  subtitle: string;
+  subtitleAr: string;
+  link: string;
+}
+
+interface WPPluginBannersSettings {
+  enabled: boolean;
+  items: WPPluginBannerItem[];
+}
+
+interface WPPluginCollectionItem {
+  image: string;
+  title: string;
+  titleAr: string;
+  description: string;
+  descriptionAr: string;
+  link: string;
+}
+
+interface WPPluginCollectionsSettings {
+  enabled: boolean;
+  title: string;
+  titleAr: string;
+  subtitle: string;
+  subtitleAr: string;
+  items: WPPluginCollectionItem[];
+}
+
+interface WPPluginProductSectionSettings {
+  enabled: boolean;
+  title: string;
+  titleAr: string;
+  subtitle: string;
+  subtitleAr: string;
+  count: number;
+  display?: string;
+  autoplay?: boolean;
+  responsive?: {
+    desktop: number;
+    tablet: number;
+    mobile: number;
+  };
+}
+
+interface WPPluginHomeSettings {
+  hero: WPPluginHeroSettings;
+  newProducts: WPPluginProductSectionSettings;
+  bestseller: WPPluginProductSectionSettings;
+  categories: WPPluginProductSectionSettings;
+  featured: WPPluginProductSectionSettings;
+  collections: WPPluginCollectionsSettings;
+  banners: WPPluginBannersSettings;
+}
+
+// Type for WordPress Plugin site settings from /asl/v1/site-settings
+interface WPPluginSiteSettings {
+  name: string;
+  description: string;
+  url: string;
+  logo: {
+    id: string | number;
+    url: string;
+  };
+  favicon: {
+    id: string | number;
+    url: string;
+  };
+}
+
+// Helper function to create WPImage from URL string
+function createWPImage(url: string, alt: string = ""): WPImage | null {
+  if (!url) return null;
+  return {
+    id: 0,
+    url,
+    alt,
+    title: alt,
+    width: 0,
+    height: 0,
+    sizes: {
+      thumbnail: url,
+      medium: url,
+      large: url,
+      full: url,
+    },
+  };
+}
+
+// Helper function to create WPLink from URL string
+function createWPLink(url: string, title: string = ""): WPLink | undefined {
+  if (!url) return undefined;
+  return {
+    title,
+    url,
+    target: "_self",
+  };
+}
+
+// Transform WordPress Plugin hero settings to frontend format
+function transformHeroSettings(pluginHero: WPPluginHeroSettings): HeroSliderSettings {
+  const slides: HeroSlide[] = pluginHero.slides
+    .filter(slide => slide.image)
+    .map((slide, index) => ({
+      image: createWPImage(slide.image, `Slide ${index + 1}`) as WPImage,
+      mobile_image: createWPImage(slide.mobileImage, `Slide ${index + 1} Mobile`) || undefined,
+      link: createWPLink(slide.link),
+    }));
+
+  return {
+    enabled: pluginHero.enabled,
+    slides,
+    autoplay: pluginHero.autoplay,
+    autoplay_delay: pluginHero.autoplayDelay,
+    loop: pluginHero.loop,
+  };
+}
+
+// Transform WordPress Plugin banners settings to frontend format
+function transformBannersSettings(pluginBanners: WPPluginBannersSettings, locale?: Locale): BannersSettings {
+  const banners: Banner[] = pluginBanners.items
+    .filter(item => item.image)
+    .map((item, index) => ({
+      image: createWPImage(item.image, item.title || `Banner ${index + 1}`) as WPImage,
+      mobile_image: createWPImage(item.mobileImage, item.title || `Banner ${index + 1} Mobile`) || undefined,
+      link: createWPLink(item.link, item.title),
+      title: locale === "ar" && item.titleAr ? item.titleAr : item.title,
+      subtitle: locale === "ar" && item.subtitleAr ? item.subtitleAr : item.subtitle,
+    }));
+
+  return {
+    enabled: pluginBanners.enabled,
+    banners,
+  };
+}
+
+// Transform WordPress Plugin collections settings to frontend format
+function transformCollectionsSettings(pluginCollections: WPPluginCollectionsSettings, locale?: Locale): CollectionsSettings {
+  const collections: Collection[] = pluginCollections.items
+    .filter(item => item.image || item.title)
+    .map((item, index) => ({
+      title: locale === "ar" && item.titleAr ? item.titleAr : item.title,
+      description: locale === "ar" && item.descriptionAr ? item.descriptionAr : item.description,
+      image: createWPImage(item.image, item.title || `Collection ${index + 1}`) as WPImage,
+      link: createWPLink(item.link, item.title) as WPLink,
+    }));
+
+  return {
+    enabled: pluginCollections.enabled,
+    section_title: locale === "ar" && pluginCollections.titleAr ? pluginCollections.titleAr : pluginCollections.title,
+    section_subtitle: locale === "ar" && pluginCollections.subtitleAr ? pluginCollections.subtitleAr : pluginCollections.subtitle,
+    collections,
+  };
+}
+
+// Transform WordPress Plugin product section settings to frontend format
+function transformProductSectionSettings(pluginSection: WPPluginProductSectionSettings, locale?: Locale): ProductSectionSettings {
+  return {
+    enabled: pluginSection.enabled,
+    section_title: locale === "ar" && pluginSection.titleAr ? pluginSection.titleAr : pluginSection.title,
+    section_subtitle: locale === "ar" && pluginSection.subtitleAr ? pluginSection.subtitleAr : pluginSection.subtitle,
+    products_count: pluginSection.count,
+    show_view_all: true,
+    view_all_link: "/shop",
+  };
+}
+
+// Transform WordPress Plugin category section settings to frontend format
+function transformCategorySectionSettings(pluginSection: WPPluginProductSectionSettings, locale?: Locale): CategorySectionSettings {
+  return {
+    enabled: pluginSection.enabled,
+    section_title: locale === "ar" && pluginSection.titleAr ? pluginSection.titleAr : pluginSection.title,
+    section_subtitle: locale === "ar" && pluginSection.subtitleAr ? pluginSection.subtitleAr : pluginSection.subtitle,
+    categories_count: pluginSection.count,
+    show_view_all: true,
+  };
+}
+
+// Transform WordPress Plugin featured products settings to frontend format
+function transformFeaturedProductsSettings(pluginSection: WPPluginProductSectionSettings, locale?: Locale): FeaturedProductsSettings {
+  return {
+    enabled: pluginSection.enabled,
+    section_title: locale === "ar" && pluginSection.titleAr ? pluginSection.titleAr : pluginSection.title,
+    section_subtitle: locale === "ar" && pluginSection.subtitleAr ? pluginSection.subtitleAr : pluginSection.subtitle,
+    products_count: pluginSection.count,
+    autoplay: pluginSection.autoplay ?? true,
+    autoplay_delay: 4000,
+  };
+}
 
 interface FetchOptions {
   revalidate?: number;
@@ -101,67 +314,56 @@ const defaultBanners: BannersSettings = {
   banners: [],
 };
 
-const defaultSiteSettings: SiteSettings = {
-  logo: null,
-  logo_dark: null,
-  favicon: null,
-  site_name: siteConfig.name,
-  tagline: siteConfig.description,
-};
-
 // Fetch site settings from WordPress Customizer (Appearance > Customize)
-// This uses the WordPress root endpoint which includes site identity settings
+// This uses the WordPress Plugin API and root endpoint for site identity settings
 export async function getSiteSettings(locale?: Locale): Promise<SiteSettings> {
-  // First try to get site info from WordPress root endpoint
+  // First try to get site settings from WordPress Plugin API endpoint
+  const pluginSiteData = await fetchWPAPI<WPPluginSiteSettings>(
+    "/asl/v1/site-settings",
+    {
+      tags: ["site-settings"],
+      locale,
+      revalidate: 60, // Cache for 1 minute for faster updates
+    }
+  );
+
+  // Also get site info from WordPress root endpoint as fallback
   const siteInfo = await fetchWPAPI<WPSiteInfo>(
     "",
     {
       tags: ["site-settings"],
       locale,
-      revalidate: 300, // Cache for 5 minutes
+      revalidate: 60,
     }
   );
 
-  // Try to get custom logo URL if logo ID exists
-  let logoUrl: string | null = null;
-  if (siteInfo?.site_logo) {
+  // Determine logo URL from plugin data or WordPress media
+  let logoUrl: string | null = pluginSiteData?.logo?.url || null;
+  if (!logoUrl && siteInfo?.site_logo) {
     const mediaData = await fetchWPAPI<{ source_url: string }>(
       `/wp/v2/media/${siteInfo.site_logo}`,
       {
         tags: ["site-settings", "logo"],
-        revalidate: 300,
+        revalidate: 60,
       }
     );
     logoUrl = mediaData?.source_url || null;
   }
 
-  // Try to get customizer settings from custom endpoint (if available)
-  const customizerData = await fetchWPAPI<CustomizerSettings>(
-    "/asl/v1/customizer",
-    {
-      tags: ["site-settings", "customizer"],
-      locale,
-      revalidate: 300,
-    }
-  );
+  // Determine favicon URL from plugin data or WordPress site icon
+  const faviconUrl: string | null = pluginSiteData?.favicon?.url || siteInfo?.site_icon_url || null;
 
-  // Also try ACF free version endpoint (options stored in regular ACF fields)
-  const acfData = await fetchWPAPI<{ acf: Partial<SiteSettings> }>(
-    "/acf/v3/options/options",
-    {
-      tags: ["site-settings"],
-      locale,
-      revalidate: 300,
-    }
-  );
+  // Get site name and tagline - prioritize plugin data, then WordPress root endpoint
+  const siteName = pluginSiteData?.name || siteInfo?.name || siteConfig.name;
+  const siteTagline = pluginSiteData?.description || siteInfo?.description || siteConfig.description;
 
   // Build site settings from available sources
   const settings: SiteSettings = {
     logo: logoUrl ? {
-      id: siteInfo?.site_logo || 0,
+      id: pluginSiteData?.logo?.id ? Number(pluginSiteData.logo.id) : (siteInfo?.site_logo || 0),
       url: logoUrl,
-      alt: siteInfo?.name || siteConfig.name,
-      title: siteInfo?.name || siteConfig.name,
+      alt: siteName,
+      title: siteName,
       width: 200,
       height: 60,
       sizes: {
@@ -170,32 +372,56 @@ export async function getSiteSettings(locale?: Locale): Promise<SiteSettings> {
         large: logoUrl,
         full: logoUrl,
       },
-    } : (acfData?.acf?.logo || null),
-    logo_dark: acfData?.acf?.logo_dark || null,
-    favicon: siteInfo?.site_icon_url ? {
-      id: siteInfo.site_icon || 0,
-      url: siteInfo.site_icon_url,
+    } : null,
+    logo_dark: null,
+    favicon: faviconUrl ? {
+      id: pluginSiteData?.favicon?.id ? Number(pluginSiteData.favicon.id) : (siteInfo?.site_icon || 0),
+      url: faviconUrl,
       alt: "Favicon",
       title: "Favicon",
       width: 32,
       height: 32,
       sizes: {
-        thumbnail: siteInfo.site_icon_url,
-        medium: siteInfo.site_icon_url,
-        large: siteInfo.site_icon_url,
-        full: siteInfo.site_icon_url,
+        thumbnail: faviconUrl,
+        medium: faviconUrl,
+        large: faviconUrl,
+        full: faviconUrl,
       },
     } : null,
-    site_name: siteInfo?.name || customizerData?.site_title || siteConfig.name,
-    tagline: siteInfo?.description || customizerData?.site_tagline || siteConfig.description,
+    site_name: siteName,
+    tagline: siteTagline,
   };
 
   return settings;
 }
 
-// Fetch home page ACF fields
+// Fetch home page settings from WordPress Plugin API
 export async function getHomePageSettings(locale?: Locale): Promise<HomePageACF> {
-  const data = await fetchWPAPI<{ acf: Partial<HomePageACF> }>(
+  // First try to fetch from the WordPress Plugin API endpoint
+  const pluginData = await fetchWPAPI<WPPluginHomeSettings>(
+    "/asl/v1/home-settings",
+    {
+      tags: ["home-page-settings"],
+      locale,
+      revalidate: 60,
+    }
+  );
+
+  // If plugin data is available, transform it to the expected format
+  if (pluginData) {
+    return {
+      hero_slider: transformHeroSettings(pluginData.hero),
+      new_products: transformProductSectionSettings(pluginData.newProducts, locale),
+      bestseller_products: transformProductSectionSettings(pluginData.bestseller, locale),
+      shop_by_category: transformCategorySectionSettings(pluginData.categories, locale),
+      featured_products: transformFeaturedProductsSettings(pluginData.featured, locale),
+      collections: transformCollectionsSettings(pluginData.collections, locale),
+      banners: transformBannersSettings(pluginData.banners, locale),
+    };
+  }
+
+  // Fallback: Try ACF endpoint (for backwards compatibility)
+  const acfData = await fetchWPAPI<{ acf: Partial<HomePageACF> }>(
     "/acf/v3/options/home-page",
     {
       tags: ["home-page-settings"],
@@ -206,23 +432,23 @@ export async function getHomePageSettings(locale?: Locale): Promise<HomePageACF>
 
   // Merge with defaults to ensure all fields exist
   return {
-    hero_slider: data?.acf?.hero_slider || defaultHeroSlider,
+    hero_slider: acfData?.acf?.hero_slider || defaultHeroSlider,
     new_products: {
       ...defaultProductSection,
       section_title: "New Products",
       section_subtitle: "Discover our latest arrivals",
-      ...data?.acf?.new_products,
+      ...acfData?.acf?.new_products,
     },
     bestseller_products: {
       ...defaultProductSection,
       section_title: "Bestsellers",
       section_subtitle: "Our most popular products",
-      ...data?.acf?.bestseller_products,
+      ...acfData?.acf?.bestseller_products,
     },
-    shop_by_category: data?.acf?.shop_by_category || defaultCategorySection,
-    featured_products: data?.acf?.featured_products || defaultFeaturedProducts,
-    collections: data?.acf?.collections || defaultCollections,
-    banners: data?.acf?.banners || defaultBanners,
+    shop_by_category: acfData?.acf?.shop_by_category || defaultCategorySection,
+    featured_products: acfData?.acf?.featured_products || defaultFeaturedProducts,
+    collections: acfData?.acf?.collections || defaultCollections,
+    banners: acfData?.acf?.banners || defaultBanners,
   };
 }
 
