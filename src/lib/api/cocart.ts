@@ -33,6 +33,7 @@ export interface CoCartItem {
   backorders: string;
   cart_item_data: Record<string, unknown>;
   featured_image: string;
+  variation_id?: number;
 }
 
 export interface CoCartTotals {
