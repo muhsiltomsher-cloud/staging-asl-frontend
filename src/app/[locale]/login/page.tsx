@@ -134,6 +134,7 @@ export default function LoginPage({ params }: LoginPageProps) {
               error={errors.username}
               autoComplete="username"
               dir={isRTL ? "rtl" : "ltr"}
+              required
             />
 
             <Input
@@ -146,6 +147,7 @@ export default function LoginPage({ params }: LoginPageProps) {
               error={errors.password}
               autoComplete="current-password"
               dir={isRTL ? "rtl" : "ltr"}
+              required
             />
 
             <Button

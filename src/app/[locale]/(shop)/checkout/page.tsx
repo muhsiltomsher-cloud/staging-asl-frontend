@@ -12,7 +12,7 @@ import type { Locale } from "@/config/site";
 
 export default function CheckoutPage() {
   const { locale } = useParams<{ locale: string }>();
-  const { formatPrice } = useCurrency();
+  const { formatCartPrice } = useCurrency();
   const { cart, cartItems, cartSubtotal, cartTotal } = useCart();
   const isRTL = locale === "ar";
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -166,7 +166,7 @@ export default function CheckoutPage() {
                     <span className="text-gray-600">
                       {item.name} x {item.quantity.value}
                     </span>
-                    <span className="font-medium">{formatPrice(item.totals.total)}</span>
+                    <span className="font-medium">{formatCartPrice(item.totals.total)}</span>
                   </div>
                 ))}
               </div>
@@ -175,17 +175,17 @@ export default function CheckoutPage() {
               <div className="space-y-3 border-b py-4">
                 <div className="flex justify-between text-gray-600">
                   <span>{isRTL ? "المجموع الفرعي" : "Subtotal"}</span>
-                  <span>{formatPrice(cartSubtotal)}</span>
+                  <span>{formatCartPrice(cartSubtotal)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>{isRTL ? "الشحن" : "Shipping"}</span>
-                  <span>{formatPrice(cart?.totals?.shipping_total || "0")}</span>
+                  <span>{formatCartPrice(cart?.totals?.shipping_total || "0")}</span>
                 </div>
               </div>
 
               <div className="flex justify-between py-4 text-lg font-semibold text-gray-900">
                 <span>{isRTL ? "الإجمالي" : "Total"}</span>
-                <span>{formatPrice(cartTotal)}</span>
+                <span>{formatCartPrice(cartTotal)}</span>
               </div>
 
               <Button
