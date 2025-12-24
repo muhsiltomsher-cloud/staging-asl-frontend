@@ -5,3 +5,5 @@ export * from "./Input";
 export * from "./Select";
 export * from "./Badge";
 export * from "./Skeleton";
+export * from "./AEDIcon";
+export * from "./FormattedPrice";

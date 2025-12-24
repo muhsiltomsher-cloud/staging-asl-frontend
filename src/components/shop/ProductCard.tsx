@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ShoppingBag, Heart } from "lucide-react";
 import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,6 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, locale, className }: ProductCardProps) {
-  const { formatPrice } = useCurrency();
   const { addToCart, isLoading } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist, isLoading: isWishlistLoading } = useWishlist();
 
@@ -120,17 +119,24 @@ export function ProductCard({ product, locale, className }: ProductCardProps) {
           <div className="flex items-center gap-2">
             {product.onSale && product.salePrice ? (
               <>
-                <span className="text-sm font-semibold text-gray-900">
-                  {formatPrice(product.salePrice)}
-                </span>
-                <span className="text-sm text-gray-500 line-through">
-                  {formatPrice(product.regularPrice)}
-                </span>
+                <FormattedPrice
+                  price={product.salePrice}
+                  className="text-sm font-semibold text-gray-900"
+                  iconSize="xs"
+                />
+                <FormattedPrice
+                  price={product.regularPrice}
+                  className="text-sm text-gray-500"
+                  iconSize="xs"
+                  strikethrough
+                />
               </>
             ) : (
-              <span className="text-sm font-semibold text-gray-900">
-                {formatPrice(product.price)}
-              </span>
+              <FormattedPrice
+                price={product.price}
+                className="text-sm font-semibold text-gray-900"
+                iconSize="xs"
+              />
             )}
           </div>
         </div>
