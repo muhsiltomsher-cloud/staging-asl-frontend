@@ -2,11 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
 
 const API_BASE = `${siteConfig.apiUrl}/wp-json/wc/v3`;
-const CONSUMER_KEY = process.env.WC_CONSUMER_KEY || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "";
-const CONSUMER_SECRET = process.env.WC_CONSUMER_SECRET || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "";
+
+function getWooCommerceCredentials() {
+  const consumerKey = process.env.WC_CONSUMER_KEY || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "";
+  const consumerSecret = process.env.WC_CONSUMER_SECRET || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "";
+  return { consumerKey, consumerSecret };
+}
 
 function getBasicAuthParams(): string {
-  return `consumer_key=${CONSUMER_KEY}&consumer_secret=${CONSUMER_SECRET}`;
+  const { consumerKey, consumerSecret } = getWooCommerceCredentials();
+  return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
 }
 
 export async function GET(request: NextRequest) {
