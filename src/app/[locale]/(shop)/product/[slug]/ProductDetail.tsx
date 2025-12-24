@@ -8,6 +8,8 @@ import { Badge } from "@/components/common/Badge";
 import { QuantitySelector } from "@/components/shop/QuantitySelector";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { formatWCPrice } from "@/lib/api/woocommerce";
+import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 
@@ -20,6 +22,9 @@ export function ProductDetail({ product, locale }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
+  const { addToCart } = useCart();
+  const { addToWishlist, isInWishlist } = useWishlist();
   const isRTL = locale === "ar";
 
   const breadcrumbItems = [
@@ -29,9 +34,24 @@ export function ProductDetail({ product, locale }: ProductDetailProps) {
 
   const handleAddToCart = async () => {
     setIsAddingToCart(true);
-    // TODO: Implement add to cart with WooCommerce Store API
-    console.log("Add to cart:", product.id, "quantity:", quantity);
-    setTimeout(() => setIsAddingToCart(false), 1000);
+    try {
+      await addToCart(product.id, quantity);
+    } catch (error) {
+      console.error("Failed to add to cart:", error);
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleAddToWishlist = async () => {
+    setIsAddingToWishlist(true);
+    try {
+      await addToWishlist(product.id);
+    } catch (error) {
+      console.error("Failed to add to wishlist:", error);
+    } finally {
+      setIsAddingToWishlist(false);
+    }
   };
 
   const isOutOfStock = !product.is_in_stock;
@@ -166,10 +186,16 @@ export function ProductDetail({ product, locale }: ProductDetailProps) {
             </Button>
             <button
               type="button"
-              className="rounded-md border border-gray-300 p-3 text-gray-600 hover:bg-gray-50"
+              onClick={handleAddToWishlist}
+              disabled={isAddingToWishlist}
+              className={`rounded-md border p-3 transition-colors ${
+                isInWishlist(product.id)
+                  ? "border-red-500 bg-red-50 text-red-500"
+                  : "border-gray-300 text-gray-600 hover:bg-gray-50"
+              } ${isAddingToWishlist ? "opacity-50 cursor-not-allowed" : ""}`}
               aria-label={isRTL ? "أضف إلى المفضلة" : "Add to wishlist"}
             >
-              <Heart className="h-5 w-5" />
+              <Heart className={`h-5 w-5 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
             </button>
           </div>
 
