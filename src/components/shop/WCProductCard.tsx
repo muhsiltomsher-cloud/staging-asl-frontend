@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag, Heart } from "lucide-react";
@@ -7,6 +8,8 @@ import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
 import { cn } from "@/lib/utils";
 import { formatWCPrice } from "@/lib/api/woocommerce";
+import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 
@@ -21,11 +24,35 @@ export function WCProductCard({
   locale,
   className,
 }: WCProductCardProps) {
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
+  const { addToCart } = useCart();
+  const { addToWishlist, isInWishlist } = useWishlist();
+
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // TODO: Implement add to cart with WooCommerce Store API
-    console.log("Add to cart:", product.id);
+    setIsAddingToCart(true);
+    try {
+      await addToCart(product.id, 1);
+    } catch (error) {
+      console.error("Failed to add to cart:", error);
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleAddToWishlist = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsAddingToWishlist(true);
+    try {
+      await addToWishlist(product.id);
+    } catch (error) {
+      console.error("Failed to add to wishlist:", error);
+    } finally {
+      setIsAddingToWishlist(false);
+    }
   };
 
   const isOutOfStock = !product.is_in_stock;
@@ -60,17 +87,23 @@ export function WCProductCard({
           <div className="absolute right-2 top-2 flex flex-col gap-2 opacity-0 transition-opacity group-hover:opacity-100">
             <button
               type="button"
-              className="rounded-full bg-white p-2 shadow-md transition-colors hover:bg-gray-100"
+              onClick={handleAddToWishlist}
+              disabled={isAddingToWishlist}
+              className={`rounded-full p-2 shadow-md transition-colors ${
+                isInWishlist(product.id)
+                  ? "bg-red-50 text-red-500"
+                  : "bg-white hover:bg-gray-100"
+              } ${isAddingToWishlist ? "opacity-50 cursor-not-allowed" : ""}`}
               aria-label="Add to wishlist"
             >
-              <Heart className="h-4 w-4" />
+              <Heart className={`h-4 w-4 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
             </button>
           </div>
 
           {/* Add to cart button */}
           {!isOutOfStock && product.is_purchasable && (
             <div className="absolute bottom-2 left-2 right-2 opacity-0 transition-opacity group-hover:opacity-100">
-              <Button onClick={handleAddToCart} className="w-full" size="sm">
+              <Button onClick={handleAddToCart} className="w-full" size="sm" isLoading={isAddingToCart}>
                 <ShoppingBag className="mr-2 h-4 w-4" />
                 Add to Cart
               </Button>
