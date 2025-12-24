@@ -16,7 +16,10 @@
       "readMore": "اقرأ المزيد",
       "learnMore": "اعرف المزيد",
       "more": "المزيد",
-      "remove": "إزالة"
+      "remove": "إزالة",
+      "categories": "الفئات",
+      "noResults": "لم يتم العثور على منتجات",
+      "viewAllResults": "عرض جميع النتائج"
     },
   "navigation": {
     "menu": "القائمة",

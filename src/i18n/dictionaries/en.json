@@ -16,7 +16,10 @@
       "readMore": "Read More",
       "learnMore": "Learn More",
       "more": "More",
-      "remove": "Remove"
+      "remove": "Remove",
+      "categories": "Categories",
+      "noResults": "No products found",
+      "viewAllResults": "View all results"
     },
   "navigation": {
     "menu": "Menu",

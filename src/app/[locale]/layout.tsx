@@ -84,6 +84,7 @@ export default async function LocaleLayout({
                 <MobileBottomBar
                   locale={validLocale}
                   settings={mobileBarSettings}
+                  dictionary={dictionary}
                 />
               </div>
               <MiniCartDrawer

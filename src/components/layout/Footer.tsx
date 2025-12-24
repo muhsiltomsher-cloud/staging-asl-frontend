@@ -31,19 +31,19 @@ export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
   };
 
   return (
-    <footer className="border-t bg-gray-50">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-          {/* Brand section */}
-          <div className="space-y-4">
+    <footer className="border-t bg-gray-50 pb-20 md:pb-0">
+      <div className="container mx-auto px-4 py-8 md:py-12">
+        <div className="grid grid-cols-2 gap-6 md:grid-cols-2 lg:grid-cols-4 md:gap-8">
+          {/* Brand section - Full width on mobile */}
+          <div className="col-span-2 space-y-4 text-center md:col-span-1 md:text-left">
             <Link href={`/${locale}`} className="inline-block">
               {siteSettings?.logo?.url ? (
                 <Image
                   src={siteSettings.logo.url}
                   alt={siteSettings.logo.alt || siteSettings.site_name || "Logo"}
                   width={150}
-                  height={40}
-                  className="h-10 w-auto"
+                  height={110}
+                  className="mx-auto h-[70px] w-auto md:mx-0 md:h-[110px]"
                 />
               ) : (
                 <span className="text-xl font-bold tracking-tight text-gray-900">
@@ -54,12 +54,12 @@ export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
             <p className="text-sm text-gray-600">
               {siteSettings?.tagline || "Premium fragrances and aromatic products crafted with care."}
             </p>
-            <div className="flex gap-4">
+            <div className="flex justify-center gap-4 md:justify-start">
               <a
                 href={siteConfig.links.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-600 hover:text-gray-900"
+                className="rounded-full bg-gray-200 p-2 text-gray-600 transition-colors hover:bg-gray-300 hover:text-gray-900"
                 aria-label="Facebook"
               >
                 <Facebook className="h-5 w-5" />
@@ -68,14 +68,14 @@ export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
                 href={siteConfig.links.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-600 hover:text-gray-900"
+                className="rounded-full bg-gray-200 p-2 text-gray-600 transition-colors hover:bg-gray-300 hover:text-gray-900"
                 aria-label="Instagram"
               >
                 <Instagram className="h-5 w-5" />
               </a>
               <a
                 href="#"
-                className="text-gray-600 hover:text-gray-900"
+                className="rounded-full bg-gray-200 p-2 text-gray-600 transition-colors hover:bg-gray-300 hover:text-gray-900"
                 aria-label="Twitter"
               >
                 <Twitter className="h-5 w-5" />
@@ -85,10 +85,10 @@ export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
 
           {/* Quick Links */}
           <div>
-            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-900">
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-900 md:mb-4">
               {dictionary.footer.quickLinks}
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-2 md:space-y-3">
               {footerLinks.quickLinks.map((link) => (
                 <li key={link.name}>
                   <Link
@@ -104,10 +104,10 @@ export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
 
           {/* Customer Service */}
           <div>
-            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-900">
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-900 md:mb-4">
               {dictionary.footer.customerService}
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-2 md:space-y-3">
               {footerLinks.customerService.map((link) => (
                 <li key={link.name}>
                   <Link
@@ -121,23 +121,23 @@ export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
             </ul>
           </div>
 
-          {/* Newsletter */}
-          <div>
-            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-900">
+          {/* Newsletter - Full width on mobile */}
+          <div className="col-span-2 md:col-span-1">
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-900 md:mb-4">
               {dictionary.footer.newsletter}
             </h3>
-            <p className="mb-4 text-sm text-gray-600">
+            <p className="mb-3 text-sm text-gray-600 md:mb-4">
               {dictionary.footer.subscribeText}
             </p>
-            <form className="flex gap-2">
+            <form className="flex flex-col gap-2 sm:flex-row">
               <input
                 type="email"
                 placeholder={dictionary.footer.emailPlaceholder}
-                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                className="flex-1 rounded-md border border-gray-300 px-3 py-2.5 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
               />
               <button
                 type="submit"
-                className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+                className="rounded-md bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800"
               >
                 {dictionary.footer.subscribe}
               </button>
@@ -146,8 +146,8 @@ export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 border-t pt-8">
-          <p className="text-center text-sm text-gray-600">
+        <div className="mt-8 border-t pt-6 md:mt-12 md:pt-8">
+          <p className="text-center text-xs text-gray-600 md:text-sm">
             &copy; {currentYear} {siteConfig.name}. {dictionary.footer.copyright}
           </p>
         </div>
