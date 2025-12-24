@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/common/Input";
 import { Button } from "@/components/common/Button";
 import { register } from "@/lib/api/auth";
+import { useNotification } from "@/contexts/NotificationContext";
 
 interface RegisterPageProps {
   params: Promise<{ locale: string }>;
@@ -13,6 +14,7 @@ interface RegisterPageProps {
 
 export default function RegisterPage({ params }: RegisterPageProps) {
   const router = useRouter();
+  const { notify } = useNotification();
   const [locale, setLocale] = useState<string>("en");
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -30,9 +32,9 @@ export default function RegisterPage({ params }: RegisterPageProps) {
   }>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  useState(() => {
+  useEffect(() => {
     params.then((p) => setLocale(p.locale));
-  });
+  }, [params]);
 
   const isRTL = locale === "ar";
 
@@ -138,6 +140,7 @@ export default function RegisterPage({ params }: RegisterPageProps) {
 
       if (response.success) {
         setSuccessMessage(texts.registerSuccess);
+        notify("success", texts.registerSuccess);
         setTimeout(() => {
           router.push(`/${locale}/login`);
         }, 2000);
