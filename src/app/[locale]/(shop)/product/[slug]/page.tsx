@@ -5,6 +5,8 @@ import { ProductDetail } from "./ProductDetail";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 
+export const revalidate = 60;
+
 interface ProductPageProps {
   params: Promise<{ locale: string; slug: string }>;
 }

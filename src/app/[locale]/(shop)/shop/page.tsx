@@ -8,6 +8,8 @@ import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { ShopClient } from "./ShopClient";
 
+export const revalidate = 60;
+
 interface ShopPageProps {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

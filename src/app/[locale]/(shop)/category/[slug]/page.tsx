@@ -9,6 +9,8 @@ import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { CategoryClient } from "./CategoryClient";
 
+export const revalidate = 60;
+
 interface CategoryPageProps {
   params: Promise<{ locale: string; slug: string }>;
 }
