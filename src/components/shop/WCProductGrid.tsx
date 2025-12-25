@@ -9,7 +9,7 @@ interface WCProductGridProps {
   locale: Locale;
   isLoading?: boolean;
   className?: string;
-  columns?: 2 | 3 | 4;
+  columns?: 2 | 3 | 4 | 5;
 }
 
 export function WCProductGrid({
@@ -17,7 +17,7 @@ export function WCProductGrid({
   locale,
   isLoading = false,
   className,
-  columns = 4,
+  columns = 5,
 }: WCProductGridProps) {
   if (isLoading) {
     return <ProductGridSkeleton count={columns * 2} />;
@@ -35,6 +35,7 @@ export function WCProductGrid({
     2: "grid-cols-2",
     3: "grid-cols-2 md:grid-cols-3",
     4: "grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
+    5: "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5",
   };
 
   return (

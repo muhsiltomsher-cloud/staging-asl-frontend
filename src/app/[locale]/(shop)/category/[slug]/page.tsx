@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { WCProductGrid } from "@/components/shop/WCProductGrid";
 import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
@@ -8,6 +7,7 @@ import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { getCategoryBySlug, getProductsByCategory } from "@/lib/api/woocommerce";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
+import { CategoryClient } from "./CategoryClient";
 
 interface CategoryPageProps {
   params: Promise<{ locale: string; slug: string }>;
@@ -34,7 +34,6 @@ export async function generateMetadata({
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { locale, slug } = await params;
   const dictionary = await getDictionary(locale as Locale);
-  const isRTL = locale === "ar";
 
   // Fetch category and products from WooCommerce API
   const category = await getCategoryBySlug(slug);
@@ -62,18 +61,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       </div>
 
       <Suspense fallback={<ProductGridSkeleton count={12} />}>
-        <WCProductGrid products={products} locale={locale as Locale} />
+        <CategoryClient products={products} locale={locale as Locale} />
       </Suspense>
-
-      {products.length === 0 && (
-        <div className="py-12 text-center">
-          <p className="text-gray-500">
-            {isRTL
-              ? "لا توجد منتجات في هذه الفئة حالياً."
-              : "No products in this category at the moment."}
-          </p>
-        </div>
-      )}
     </div>
   );
 }

@@ -3,11 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Search, X, Grid3X3, LayoutGrid, ArrowLeft, Sparkles } from "lucide-react";
+import { Search, X, ArrowLeft, Sparkles } from "lucide-react";
 import type { Locale } from "@/config/site";
 import type { WCProduct } from "@/types/woocommerce";
 import { getProducts } from "@/lib/api/woocommerce";
-import { WCProductGrid } from "@/components/shop/WCProductGrid";
+import { ProductListing } from "@/components/shop/ProductListing";
 import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { cn } from "@/lib/utils";
 
@@ -22,12 +22,11 @@ export function SearchResultsClient({
 }: SearchResultsClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [query, setQuery] = useState(initialQuery);
-  const [inputValue, setInputValue] = useState(initialQuery);
-  const [products, setProducts] = useState<WCProduct[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [gridColumns, setGridColumns] = useState<2 | 3 | 4>(4);
-  const isRTL = locale === "ar";
+    const [query, setQuery] = useState(initialQuery);
+    const [inputValue, setInputValue] = useState(initialQuery);
+    const [products, setProducts] = useState<WCProduct[]>([]);
+    const [loading, setLoading] = useState(true);
+    const isRTL = locale === "ar";
 
   const fetchProducts = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -170,9 +169,9 @@ export function SearchResultsClient({
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        {/* Toolbar */}
+        {/* Back to Shop Link */}
         {query && products.length > 0 && (
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="mb-6">
             <Link
               href={`/${locale}/shop`}
               className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition-colors hover:text-amber-800"
@@ -180,30 +179,6 @@ export function SearchResultsClient({
               <ArrowLeft className={cn("h-4 w-4", isRTL && "rotate-180")} />
               {t.backToShop}
             </Link>
-            
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">{t.gridView}:</span>
-              <div className="flex rounded-lg border border-gray-200 bg-white p-1">
-                <button
-                  onClick={() => setGridColumns(2)}
-                  className={cn(
-                    "rounded-md p-2 transition-colors",
-                    gridColumns === 2 ? "bg-amber-100 text-amber-800" : "text-gray-400 hover:text-gray-600"
-                  )}
-                >
-                  <Grid3X3 className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => setGridColumns(4)}
-                  className={cn(
-                    "rounded-md p-2 transition-colors",
-                    gridColumns === 4 ? "bg-amber-100 text-amber-800" : "text-gray-400 hover:text-gray-600"
-                  )}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
           </div>
         )}
 
@@ -251,12 +226,12 @@ export function SearchResultsClient({
           </div>
         )}
 
-        {/* Results Grid */}
+        {/* Results with View Toggle */}
         {!loading && query && products.length > 0 && (
-          <WCProductGrid 
+          <ProductListing 
             products={products} 
-            locale={locale} 
-            columns={gridColumns}
+            locale={locale}
+            showToolbar={true}
           />
         )}
       </div>

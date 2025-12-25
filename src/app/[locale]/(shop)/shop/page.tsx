@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { WCProductGrid } from "@/components/shop/WCProductGrid";
 import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
@@ -7,6 +6,7 @@ import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { getProducts } from "@/lib/api/woocommerce";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
+import { ShopClient } from "./ShopClient";
 
 interface ShopPageProps {
   params: Promise<{ locale: string }>;
@@ -55,24 +55,9 @@ export default async function ShopPage({ params }: ShopPageProps) {
         </p>
       </div>
 
-      {/* Filters will be added here */}
-      <div className="mb-8">
-        {/* ProductFilters component */}
-      </div>
-
       <Suspense fallback={<ProductGridSkeleton count={12} />}>
-        <WCProductGrid products={products} locale={locale as Locale} />
+        <ShopClient products={products} locale={locale as Locale} />
       </Suspense>
-
-      {products.length === 0 && (
-        <div className="py-12 text-center">
-          <p className="text-gray-500">
-            {isRTL
-              ? "لا توجد منتجات متاحة حالياً. يرجى التحقق لاحقاً."
-              : "No products available at the moment. Please check back later."}
-          </p>
-        </div>
-      )}
     </div>
   );
 }
