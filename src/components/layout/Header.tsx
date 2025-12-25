@@ -84,7 +84,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
 
         {/* Main header */}
         <div className="container mx-auto px-4">
-          <div className="flex h-14 items-center justify-between">
+          <div className="flex h-16 items-center justify-between md:h-20">
             {/* Mobile: Left side - Menu button only */}
             <button
               type="button"
@@ -99,19 +99,19 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               )}
             </button>
 
-            {/* Logo - Desktop: 48px height, Mobile: 40px height */}
+            {/* Logo - Desktop: 56px height, Mobile: 44px height */}
             <Link href={`/${locale}`} className="flex items-center">
               {headerSettings?.logo || siteSettings?.logo?.url ? (
                 <Image
                   src={headerSettings?.logo || siteSettings?.logo?.url || ""}
                   alt={siteSettings?.logo?.alt || siteSettings?.site_name || "Logo"}
-                  width={65}
-                  height={48}
-                  className="h-10 w-auto md:h-12"
+                  width={80}
+                  height={56}
+                  className="h-11 w-auto md:h-14"
                   priority
                 />
               ) : (
-                <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white md:text-2xl">
                   {siteSettings?.site_name || "Aromatic Scents Lab"}
                 </span>
               )}

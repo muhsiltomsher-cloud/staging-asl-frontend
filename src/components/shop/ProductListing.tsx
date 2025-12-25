@@ -116,6 +116,7 @@ export function ProductListing({
             onViewModeChange={handleViewModeChange}
             onGridColumnsChange={handleGridColumnsChange}
             locale={locale}
+            productCount={products.length}
           />
         </div>
       )}
