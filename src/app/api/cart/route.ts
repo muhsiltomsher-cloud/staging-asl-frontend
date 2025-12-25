@@ -50,6 +50,23 @@ function isAuthError(status: number, data: Record<string, unknown>): boolean {
   );
 }
 
+// Get Store API authentication tokens (cart-token and nonce) for coupon operations
+async function getStoreApiAuth(): Promise<{ cartToken: string | null; nonce: string | null }> {
+  try {
+    const response = await fetch(`${API_BASE}/wp-json/wc/store/v1/cart`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    
+    const cartToken = response.headers.get("cart-token");
+    const nonce = response.headers.get("nonce");
+    
+    return { cartToken, nonce };
+  } catch {
+    return { cartToken: null, nonce: null };
+  }
+}
+
 function createResponseWithCartKey(
   data: Record<string, unknown>,
   cartKey: string | null,
@@ -171,13 +188,71 @@ export async function POST(request: NextRequest) {
         baseUrl = `${API_BASE}/wp-json/cocart/v2/cart/clear`;
         break;
       case "apply-coupon":
+      case "remove-coupon": {
         // Use WooCommerce Store API for coupons (CoCart v2 doesn't have coupon endpoints on this backend)
-        baseUrl = `${API_BASE}/wp-json/wc/store/v1/cart/apply-coupon`;
-        break;
-      case "remove-coupon":
-        // Use WooCommerce Store API for coupons (CoCart v2 doesn't have coupon endpoints on this backend)
-        baseUrl = `${API_BASE}/wp-json/wc/store/v1/cart/remove-coupon`;
-        break;
+        // Store API requires Cart-Token and X-WP-Nonce headers for authentication
+        const { cartToken, nonce } = await getStoreApiAuth();
+        
+        if (!cartToken || !nonce) {
+          return NextResponse.json(
+            { success: false, error: { code: "store_api_auth_error", message: "Failed to get Store API authentication" } },
+            { status: 500 }
+          );
+        }
+        
+        const storeApiUrl = action === "apply-coupon" 
+          ? `${API_BASE}/wp-json/wc/store/v1/cart/apply-coupon`
+          : `${API_BASE}/wp-json/wc/store/v1/cart/remove-coupon`;
+        
+        const storeApiResponse = await fetch(storeApiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Cart-Token": cartToken,
+            "X-WP-Nonce": nonce,
+          },
+          body: JSON.stringify(body),
+        });
+        
+        const storeApiData = await storeApiResponse.json();
+        
+        if (!storeApiResponse.ok) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: {
+                code: storeApiData.code || "coupon_error",
+                message: storeApiData.message || "Coupon operation failed.",
+              },
+            },
+            { status: storeApiResponse.status }
+          );
+        }
+        
+        // After successful coupon operation, fetch the cart via CoCart to return consistent data format
+        const coCartUrl = cartKey
+          ? `${API_BASE}/wp-json/cocart/v2/cart?cart_key=${cartKey}`
+          : `${API_BASE}/wp-json/cocart/v2/cart`;
+        
+        const coCartResponse = await fetch(coCartUrl, {
+          method: "GET",
+          headers: authToken ? getAuthHeaders(request, authToken) : getGuestHeaders(),
+        });
+        
+        const coCartData = await coCartResponse.json();
+        
+        if (!coCartResponse.ok) {
+          // If CoCart fetch fails, return the Store API response with a warning
+          return NextResponse.json({ 
+            success: true, 
+            cart: storeApiData,
+            warning: "Cart data may not be in expected format"
+          });
+        }
+        
+        const newCartKey = coCartData.cart_key ? coCartData.cart_key : null;
+        return createResponseWithCartKey({ success: true, cart: coCartData }, newCartKey);
+      }
       default:
         return NextResponse.json(
           { success: false, error: { code: "invalid_action", message: "Invalid action" } },
