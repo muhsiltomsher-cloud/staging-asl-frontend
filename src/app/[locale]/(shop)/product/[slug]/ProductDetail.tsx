@@ -382,11 +382,11 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
 
     // Slider View
     return (
-      <div>
+      <div className="w-full max-w-full overflow-hidden">
         <ViewToggle />
         <div className="space-y-3">
           {/* Main Slider */}
-          <div className="relative">
+          <div className="relative w-full max-w-full">
             <Swiper
               modules={[Navigation, Thumbs]}
               thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
@@ -395,7 +395,7 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
                 nextEl: ".gallery-next",
               }}
               onSlideChange={(swiper) => setSelectedImage(swiper.activeIndex)}
-              className="aspect-square overflow-hidden rounded-lg bg-gray-100"
+              className="aspect-square w-full max-w-full overflow-hidden rounded-lg bg-gray-100"
             >
               {images.map((image, index) => (
                 <SwiperSlide key={image.id}>
@@ -421,17 +421,17 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
               <>
                 <button
                   type="button"
-                  className="gallery-prev absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md transition-all hover:bg-white hover:shadow-lg disabled:opacity-50"
+                  className="gallery-prev absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1.5 shadow-md transition-all hover:bg-white hover:shadow-lg disabled:opacity-50 sm:left-3 sm:p-2"
                   aria-label={isRTL ? "الصورة السابقة" : "Previous image"}
                 >
-                  <ChevronLeft className="h-5 w-5 text-gray-800" />
+                  <ChevronLeft className="h-4 w-4 text-gray-800 sm:h-5 sm:w-5" />
                 </button>
                 <button
                   type="button"
-                  className="gallery-next absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md transition-all hover:bg-white hover:shadow-lg disabled:opacity-50"
+                  className="gallery-next absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1.5 shadow-md transition-all hover:bg-white hover:shadow-lg disabled:opacity-50 sm:right-3 sm:p-2"
                   aria-label={isRTL ? "الصورة التالية" : "Next image"}
                 >
-                  <ChevronRight className="h-5 w-5 text-gray-800" />
+                  <ChevronRight className="h-4 w-4 text-gray-800 sm:h-5 sm:w-5" />
                 </button>
               </>
             )}
@@ -449,15 +449,16 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
             <Swiper
               modules={[FreeMode, Thumbs]}
               onSwiper={setThumbsSwiper}
-              spaceBetween={8}
-              slidesPerView={4}
+              spaceBetween={6}
+              slidesPerView={3}
               freeMode={true}
               watchSlidesProgress={true}
               breakpoints={{
-                480: { slidesPerView: 5 },
-                640: { slidesPerView: 6 },
+                360: { slidesPerView: 4, spaceBetween: 8 },
+                480: { slidesPerView: 5, spaceBetween: 8 },
+                640: { slidesPerView: 6, spaceBetween: 8 },
               }}
-              className="thumbs-slider"
+              className="thumbs-slider w-full max-w-full"
             >
               {images.map((image, index) => (
                 <SwiperSlide key={image.id}>
