@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, Minus, Plus, ChevronDown, ShoppingBag } from "lucide-react";
+import { Heart, Minus, Plus, ChevronDown, ShoppingBag, X, ZoomIn } from "lucide-react";
 import { Badge } from "@/components/common/Badge";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { RelatedProducts } from "@/components/shop/RelatedProducts";
@@ -50,6 +50,77 @@ function AccordionSection({ title, isOpen, onToggle, children }: AccordionSectio
   );
 }
 
+interface FullscreenGalleryProps {
+  images: { id: number; src: string; alt: string }[];
+  selectedIndex: number;
+  onClose: () => void;
+  onSelectImage: (index: number) => void;
+  productName: string;
+}
+
+function FullscreenGallery({ images, selectedIndex, onClose, onSelectImage, productName }: FullscreenGalleryProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") onSelectImage(selectedIndex > 0 ? selectedIndex - 1 : images.length - 1);
+      if (e.key === "ArrowRight") onSelectImage(selectedIndex < images.length - 1 ? selectedIndex + 1 : 0);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [selectedIndex, images.length, onClose, onSelectImage]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+        aria-label="Close fullscreen"
+      >
+        <X className="h-6 w-6" />
+      </button>
+      
+      <div className="relative h-[80vh] w-[90vw] max-w-5xl">
+        <Image
+          src={images[selectedIndex].src}
+          alt={images[selectedIndex].alt || productName}
+          fill
+          sizes="90vw"
+          className="object-contain"
+          priority
+        />
+      </div>
+
+      {images.length > 1 && (
+        <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+          {images.map((image, index) => (
+            <button
+              key={image.id}
+              type="button"
+              onClick={() => onSelectImage(index)}
+              className={`h-16 w-16 overflow-hidden rounded border-2 transition-all ${
+                selectedIndex === index ? "border-white" : "border-transparent opacity-60 hover:opacity-100"
+              }`}
+            >
+              <Image
+                src={image.src}
+                alt={image.alt || `${productName} ${index + 1}`}
+                width={64}
+                height={64}
+                className="h-full w-full object-cover"
+              />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface ProductDetailProps {
   product: WCProduct;
   locale: Locale;
@@ -62,6 +133,7 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<string | null>("characteristics");
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
   const { isAuthenticated } = useAuth();
@@ -107,58 +179,151 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
   };
 
   const isOutOfStock = !product.is_in_stock;
-  const mainImage = product.images[selectedImage] || product.images[0];
+  const images = product.images;
+  const imageCount = images.length;
+
+  const renderImageGallery = () => {
+    if (imageCount === 0) {
+      return (
+        <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
+          <div className="flex h-full items-center justify-center">
+            <span className="text-gray-400">{isRTL ? "لا توجد صورة" : "No image"}</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (imageCount === 1) {
+      return (
+        <div 
+          className="group relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-gray-100"
+          onClick={() => setIsFullscreen(true)}
+        >
+          <Image
+            src={images[0].src}
+            alt={images[0].alt || product.name}
+            fill
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            priority
+          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/10 group-hover:opacity-100">
+            <ZoomIn className="h-8 w-8 text-white drop-shadow-lg" />
+          </div>
+        </div>
+      );
+    }
+
+    if (imageCount === 2) {
+      return (
+        <div className="space-y-3">
+          {images.map((image, index) => (
+            <div 
+              key={image.id}
+              className="group relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-gray-100"
+              onClick={() => {
+                setSelectedImage(index);
+                setIsFullscreen(true);
+              }}
+            >
+              <Image
+                src={image.src}
+                alt={image.alt || `${product.name} ${index + 1}`}
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                priority={index === 0}
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/10 group-hover:opacity-100">
+                <ZoomIn className="h-8 w-8 text-white drop-shadow-lg" />
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        <div 
+          className="group relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-gray-100"
+          onClick={() => {
+            setSelectedImage(0);
+            setIsFullscreen(true);
+          }}
+        >
+          <Image
+            src={images[0].src}
+            alt={images[0].alt || product.name}
+            fill
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            priority
+          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/10 group-hover:opacity-100">
+            <ZoomIn className="h-8 w-8 text-white drop-shadow-lg" />
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3">
+          {images.slice(1, 3).map((image, index) => (
+            <div 
+              key={image.id}
+              className="group relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-gray-100"
+              onClick={() => {
+                setSelectedImage(index + 1);
+                setIsFullscreen(true);
+              }}
+            >
+              <Image
+                src={image.src}
+                alt={image.alt || `${product.name} ${index + 2}`}
+                fill
+                sizes="(max-width: 1024px) 50vw, 25vw"
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/10 group-hover:opacity-100">
+                <ZoomIn className="h-6 w-6 text-white drop-shadow-lg" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {imageCount > 3 && (
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {images.slice(3).map((image, index) => (
+              <button
+                key={image.id}
+                type="button"
+                onClick={() => {
+                  setSelectedImage(index + 3);
+                  setIsFullscreen(true);
+                }}
+                className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border border-gray-200 transition-all hover:border-gray-400"
+              >
+                <Image
+                  src={image.thumbnail || image.src}
+                  alt={image.alt || `${product.name} ${index + 4}`}
+                  fill
+                  sizes="64px"
+                  className="object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
       <Breadcrumbs items={breadcrumbItems} locale={locale} />
 
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-        {/* Product Gallery */}
-        <div className="space-y-4">
-          {/* Main Image */}
-          <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
-            {mainImage ? (
-              <Image
-                src={mainImage.src}
-                alt={mainImage.alt || product.name}
-                fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover"
-                priority
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center">
-                <span className="text-gray-400">No image</span>
-              </div>
-            )}
-          </div>
-
-          {/* Thumbnail Gallery */}
-          {product.images.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto">
-              {product.images.map((image, index) => (
-                <button
-                  key={image.id}
-                  type="button"
-                  onClick={() => setSelectedImage(index)}
-                  className={`relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border-2 ${
-                    selectedImage === index
-                      ? "border-black"
-                      : "border-transparent"
-                  }`}
-                >
-                  <Image
-                    src={image.thumbnail || image.src}
-                    alt={image.alt || `${product.name} ${index + 1}`}
-                    fill
-                    sizes="80px"
-                    className="object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
+        {/* Product Gallery - Sticky on desktop */}
+        <div className="lg:sticky lg:top-24 lg:self-start">
+          {renderImageGallery()}
         </div>
 
         {/* Product Info */}
@@ -176,13 +341,13 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
           {/* Title */}
           <h1 className="text-2xl font-medium text-gray-900 md:text-3xl">{product.name}</h1>
 
-          {/* Price */}
+          {/* Price - Bold and main color */}
           <div className="flex items-center gap-3">
             {product.on_sale ? (
               <>
                 <FormattedPrice
                   price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
-                  className="text-lg font-medium text-gray-900"
+                  className="text-xl font-bold text-amber-800"
                   iconSize="md"
                 />
                 <FormattedPrice
@@ -196,7 +361,7 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
             ) : (
               <FormattedPrice
                 price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
-                className="text-lg font-medium text-gray-900"
+                className="text-xl font-bold text-amber-800"
                 iconSize="md"
               />
             )}
@@ -400,6 +565,17 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
         currentProductId={product.id}
         locale={locale}
       />
+
+      {/* Fullscreen Gallery Modal */}
+      {isFullscreen && images.length > 0 && (
+        <FullscreenGallery
+          images={images}
+          selectedIndex={selectedImage}
+          onClose={() => setIsFullscreen(false)}
+          onSelectImage={setSelectedImage}
+          productName={product.name}
+        />
+      )}
     </div>
   );
 }

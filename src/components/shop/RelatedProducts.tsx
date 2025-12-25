@@ -59,11 +59,11 @@ export function RelatedProducts({
         </div>
       </div>
 
-      <div className="relative -mx-4 px-4">
+      <div className="relative overflow-hidden">
         <Swiper
           modules={[Navigation, FreeMode]}
-          spaceBetween={24}
-          slidesPerView={2}
+          spaceBetween={16}
+          slidesPerView={1.5}
           freeMode={{
             enabled: true,
             sticky: false,
@@ -75,8 +75,12 @@ export function RelatedProducts({
             nextEl: ".related-slider-next",
           }}
           breakpoints={{
-            640: {
+            480: {
               slidesPerView: 2,
+              spaceBetween: 12,
+            },
+            640: {
+              slidesPerView: 2.5,
               spaceBetween: 16,
             },
             768: {
@@ -88,7 +92,7 @@ export function RelatedProducts({
               spaceBetween: 24,
             },
           }}
-          className="related-products-slider !overflow-visible"
+          className="related-products-slider"
         >
           {filteredProducts.slice(0, 8).map((product) => (
             <SwiperSlide key={product.id}>
