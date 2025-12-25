@@ -1,68 +1,163 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
-import { Select } from "@/components/common/Select";
+import { CountrySelect } from "@/components/common/CountrySelect";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { getCustomer, type Customer } from "@/lib/api/customer";
 import type { Locale } from "@/config/site";
+import { MapPin, Check, ChevronDown, ChevronUp } from "lucide-react";
 
-interface CheckoutFormData {
-  email: string;
-  phone: string;
+interface AddressFormData {
   firstName: string;
   lastName: string;
   address: string;
+  address2: string;
   city: string;
   state: string;
   postalCode: string;
   country: string;
+  phone: string;
+  email: string;
+}
+
+interface CheckoutFormData {
+  shipping: AddressFormData;
+  billing: AddressFormData;
+  sameAsShipping: boolean;
   paymentMethod: string;
   orderNotes: string;
 }
+
+const emptyAddress: AddressFormData = {
+  firstName: "",
+  lastName: "",
+  address: "",
+  address2: "",
+  city: "",
+  state: "",
+  postalCode: "",
+  country: "AE",
+  phone: "",
+  email: "",
+};
 
 export default function CheckoutPage() {
   const { locale } = useParams<{ locale: string }>();
   const router = useRouter();
   const { cart, cartItems, cartSubtotal, cartTotal, clearCart } = useCart();
+  const { isAuthenticated, user } = useAuth();
   const isRTL = locale === "ar";
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [customerData, setCustomerData] = useState<Customer | null>(null);
+  const [isLoadingCustomer, setIsLoadingCustomer] = useState(false);
+  const [showBillingSection, setShowBillingSection] = useState(false);
 
   const [formData, setFormData] = useState<CheckoutFormData>({
-    email: "",
-    phone: "",
-    firstName: "",
-    lastName: "",
-    address: "",
-    city: "",
-    state: "",
-    postalCode: "",
-    country: "AE",
+    shipping: { ...emptyAddress },
+    billing: { ...emptyAddress },
+    sameAsShipping: true,
     paymentMethod: "cod",
     orderNotes: "",
   });
+
+  useEffect(() => {
+    const fetchCustomerData = async () => {
+      if (isAuthenticated && user?.user_id) {
+        setIsLoadingCustomer(true);
+        try {
+          const response = await getCustomer(user.user_id);
+          if (response.success && response.data) {
+            const customer = response.data;
+            setCustomerData(customer);
+            if (customer.shipping) {
+              setFormData(prev => ({
+                ...prev,
+                shipping: {
+                  firstName: customer.shipping.first_name || "",
+                  lastName: customer.shipping.last_name || "",
+                  address: customer.shipping.address_1 || "",
+                  address2: customer.shipping.address_2 || "",
+                  city: customer.shipping.city || "",
+                  state: customer.shipping.state || "",
+                  postalCode: customer.shipping.postcode || "",
+                  country: customer.shipping.country || "AE",
+                  phone: customer.shipping.phone || customer.billing?.phone || "",
+                  email: customer.billing?.email || customer.email || "",
+                },
+              }));
+            }
+            if (customer.billing) {
+              setFormData(prev => ({
+                ...prev,
+                billing: {
+                  firstName: customer.billing.first_name || "",
+                  lastName: customer.billing.last_name || "",
+                  address: customer.billing.address_1 || "",
+                  address2: customer.billing.address_2 || "",
+                  city: customer.billing.city || "",
+                  state: customer.billing.state || "",
+                  postalCode: customer.billing.postcode || "",
+                  country: customer.billing.country || "AE",
+                  phone: customer.billing.phone || "",
+                  email: customer.billing.email || customer.email || "",
+                },
+              }));
+            }
+          }
+        } catch (err) {
+          console.error("Failed to fetch customer data:", err);
+        } finally {
+          setIsLoadingCustomer(false);
+        }
+      }
+    };
+    fetchCustomerData();
+  }, [isAuthenticated, user?.user_id]);
 
   const breadcrumbItems = [
     { name: isRTL ? "السلة" : "Cart", href: `/${locale}/cart` },
     { name: isRTL ? "الدفع" : "Checkout", href: `/${locale}/checkout` },
   ];
 
-  const countryOptions = [
-    { value: "SA", label: isRTL ? "المملكة العربية السعودية" : "Saudi Arabia" },
-    { value: "AE", label: isRTL ? "الإمارات العربية المتحدة" : "United Arab Emirates" },
-    { value: "KW", label: isRTL ? "الكويت" : "Kuwait" },
-    { value: "BH", label: isRTL ? "البحرين" : "Bahrain" },
-    { value: "OM", label: isRTL ? "عمان" : "Oman" },
-    { value: "QA", label: isRTL ? "قطر" : "Qatar" },
-  ];
-
-  const handleInputChange = (field: keyof CheckoutFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const handleShippingChange = (field: keyof AddressFormData, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      shipping: { ...prev.shipping, [field]: value },
+      billing: prev.sameAsShipping ? { ...prev.shipping, [field]: value } : prev.billing,
+    }));
     setError(null);
+  };
+
+  const handleBillingChange = (field: keyof AddressFormData, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      billing: { ...prev.billing, [field]: value },
+    }));
+    setError(null);
+  };
+
+  const handleSameAsShippingChange = (checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      sameAsShipping: checked,
+      billing: checked ? { ...prev.shipping } : prev.billing,
+    }));
+  };
+
+  const handlePaymentChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, paymentMethod: value }));
+  };
+
+  const handleNotesChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, orderNotes: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -77,18 +172,31 @@ export default function CheckoutPage() {
         variation_id: item.variation_id || undefined,
       }));
 
+      const billingData = formData.sameAsShipping ? formData.shipping : formData.billing;
+
       const orderPayload = {
         payment_method: formData.paymentMethod,
         billing: {
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          address_1: formData.address,
-          city: formData.city,
-          state: formData.state,
-          postcode: formData.postalCode,
-          country: formData.country,
-          email: formData.email,
-          phone: formData.phone,
+          first_name: billingData.firstName,
+          last_name: billingData.lastName,
+          address_1: billingData.address,
+          address_2: billingData.address2,
+          city: billingData.city,
+          state: billingData.state,
+          postcode: billingData.postalCode,
+          country: billingData.country,
+          email: billingData.email || formData.shipping.email,
+          phone: billingData.phone || formData.shipping.phone,
+        },
+        shipping: {
+          first_name: formData.shipping.firstName,
+          last_name: formData.shipping.lastName,
+          address_1: formData.shipping.address,
+          address_2: formData.shipping.address2,
+          city: formData.shipping.city,
+          state: formData.shipping.state,
+          postcode: formData.shipping.postalCode,
+          country: formData.shipping.country,
         },
         line_items: lineItems,
         customer_note: formData.orderNotes,
@@ -133,11 +241,20 @@ export default function CheckoutPage() {
         </div>
       )}
 
+      {isLoadingCustomer && (
+        <div className="mb-6 flex items-center justify-center py-4">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900"></div>
+          <span className="ml-2 text-gray-600">{isRTL ? "جاري تحميل بياناتك..." : "Loading your data..."}</span>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit}>
         <div className="grid gap-8 lg:grid-cols-3">
-          <div className="space-y-8 lg:col-span-2">
-            <div className="rounded-lg border p-6">
-              <h2 className="mb-4 text-lg font-semibold text-gray-900">
+          <div className="space-y-6 lg:col-span-2">
+            {/* Contact Information */}
+            <div className="rounded-lg border bg-white p-6 shadow-sm">
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">1</span>
                 {isRTL ? "معلومات الاتصال" : "Contact Information"}
               </h2>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -145,106 +262,247 @@ export default function CheckoutPage() {
                   label={isRTL ? "البريد الإلكتروني" : "Email"}
                   type="email"
                   required
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
+                  value={formData.shipping.email}
+                  onChange={(e) => handleShippingChange("email", e.target.value)}
                 />
                 <Input
                   label={isRTL ? "رقم الهاتف" : "Phone"}
                   type="tel"
                   required
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
+                  value={formData.shipping.phone}
+                  onChange={(e) => handleShippingChange("phone", e.target.value)}
                 />
               </div>
             </div>
 
-            <div className="rounded-lg border p-6">
-              <h2 className="mb-4 text-lg font-semibold text-gray-900">
+            {/* Shipping Address */}
+            <div className="rounded-lg border bg-white p-6 shadow-sm">
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">2</span>
                 {isRTL ? "عنوان الشحن" : "Shipping Address"}
               </h2>
+
+              {/* Show saved address info for authenticated users */}
+              {isAuthenticated && customerData?.shipping && customerData.shipping.address_1 && (
+                <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="mt-0.5 h-5 w-5 text-blue-600" />
+                    <div className="flex-1">
+                      <p className="font-medium text-blue-900">
+                        {isRTL ? "العنوان المحفوظ" : "Saved Address"}
+                      </p>
+                      <p className="mt-1 text-sm text-blue-700">
+                        {customerData.shipping.first_name} {customerData.shipping.last_name}
+                        {customerData.shipping.address_1 && `, ${customerData.shipping.address_1}`}
+                        {customerData.shipping.city && `, ${customerData.shipping.city}`}
+                        {customerData.shipping.country && `, ${customerData.shipping.country}`}
+                      </p>
+                    </div>
+                    <Check className="h-5 w-5 text-blue-600" />
+                  </div>
+                </div>
+              )}
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <Input
                   label={isRTL ? "الاسم الأول" : "First Name"}
                   required
-                  value={formData.firstName}
-                  onChange={(e) => handleInputChange("firstName", e.target.value)}
+                  value={formData.shipping.firstName}
+                  onChange={(e) => handleShippingChange("firstName", e.target.value)}
                 />
                 <Input
                   label={isRTL ? "اسم العائلة" : "Last Name"}
                   required
-                  value={formData.lastName}
-                  onChange={(e) => handleInputChange("lastName", e.target.value)}
+                  value={formData.shipping.lastName}
+                  onChange={(e) => handleShippingChange("lastName", e.target.value)}
                 />
                 <div className="sm:col-span-2">
                   <Input
                     label={isRTL ? "العنوان" : "Address"}
                     required
-                    value={formData.address}
-                    onChange={(e) => handleInputChange("address", e.target.value)}
+                    value={formData.shipping.address}
+                    onChange={(e) => handleShippingChange("address", e.target.value)}
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <Input
+                    label={isRTL ? "العنوان (سطر 2)" : "Address Line 2"}
+                    value={formData.shipping.address2}
+                    onChange={(e) => handleShippingChange("address2", e.target.value)}
+                    placeholder={isRTL ? "شقة، جناح، وحدة، إلخ. (اختياري)" : "Apartment, suite, unit, etc. (optional)"}
                   />
                 </div>
                 <Input
                   label={isRTL ? "المدينة" : "City"}
                   required
-                  value={formData.city}
-                  onChange={(e) => handleInputChange("city", e.target.value)}
+                  value={formData.shipping.city}
+                  onChange={(e) => handleShippingChange("city", e.target.value)}
                 />
                 <Input
                   label={isRTL ? "المنطقة" : "State/Province"}
-                  value={formData.state}
-                  onChange={(e) => handleInputChange("state", e.target.value)}
+                  value={formData.shipping.state}
+                  onChange={(e) => handleShippingChange("state", e.target.value)}
                 />
                 <Input
                   label={isRTL ? "الرمز البريدي" : "Postal Code"}
-                  value={formData.postalCode}
-                  onChange={(e) => handleInputChange("postalCode", e.target.value)}
+                  value={formData.shipping.postalCode}
+                  onChange={(e) => handleShippingChange("postalCode", e.target.value)}
                 />
-                <Select
+                <CountrySelect
                   label={isRTL ? "الدولة" : "Country"}
-                  options={countryOptions}
                   required
-                  value={formData.country}
-                  onChange={(e) => handleInputChange("country", e.target.value)}
+                  value={formData.shipping.country}
+                  onChange={(value) => handleShippingChange("country", value)}
+                  isRTL={isRTL}
                 />
               </div>
             </div>
 
-            <div className="rounded-lg border p-6">
-              <h2 className="mb-4 text-lg font-semibold text-gray-900">
+            {/* Billing Address */}
+            <div className="rounded-lg border bg-white p-6 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">3</span>
+                  {isRTL ? "عنوان الفاتورة" : "Billing Address"}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setShowBillingSection(!showBillingSection)}
+                  className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
+                >
+                  {showBillingSection ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </button>
+              </div>
+
+              {/* Same as shipping checkbox */}
+              <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4 hover:bg-gray-50">
+                <input
+                  type="checkbox"
+                  checked={formData.sameAsShipping}
+                  onChange={(e) => handleSameAsShippingChange(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  {isRTL ? "نفس عنوان الشحن" : "Same as shipping address"}
+                </span>
+              </label>
+
+              {/* Billing address form - only show if not same as shipping */}
+              {(!formData.sameAsShipping || showBillingSection) && !formData.sameAsShipping && (
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <Input
+                    label={isRTL ? "الاسم الأول" : "First Name"}
+                    required
+                    value={formData.billing.firstName}
+                    onChange={(e) => handleBillingChange("firstName", e.target.value)}
+                  />
+                  <Input
+                    label={isRTL ? "اسم العائلة" : "Last Name"}
+                    required
+                    value={formData.billing.lastName}
+                    onChange={(e) => handleBillingChange("lastName", e.target.value)}
+                  />
+                  <div className="sm:col-span-2">
+                    <Input
+                      label={isRTL ? "العنوان" : "Address"}
+                      required
+                      value={formData.billing.address}
+                      onChange={(e) => handleBillingChange("address", e.target.value)}
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Input
+                      label={isRTL ? "العنوان (سطر 2)" : "Address Line 2"}
+                      value={formData.billing.address2}
+                      onChange={(e) => handleBillingChange("address2", e.target.value)}
+                      placeholder={isRTL ? "شقة، جناح، وحدة، إلخ. (اختياري)" : "Apartment, suite, unit, etc. (optional)"}
+                    />
+                  </div>
+                  <Input
+                    label={isRTL ? "المدينة" : "City"}
+                    required
+                    value={formData.billing.city}
+                    onChange={(e) => handleBillingChange("city", e.target.value)}
+                  />
+                  <Input
+                    label={isRTL ? "المنطقة" : "State/Province"}
+                    value={formData.billing.state}
+                    onChange={(e) => handleBillingChange("state", e.target.value)}
+                  />
+                  <Input
+                    label={isRTL ? "الرمز البريدي" : "Postal Code"}
+                    value={formData.billing.postalCode}
+                    onChange={(e) => handleBillingChange("postalCode", e.target.value)}
+                  />
+                  <CountrySelect
+                    label={isRTL ? "الدولة" : "Country"}
+                    required
+                    value={formData.billing.country}
+                    onChange={(value) => handleBillingChange("country", value)}
+                    isRTL={isRTL}
+                  />
+                  <Input
+                    label={isRTL ? "رقم الهاتف" : "Phone"}
+                    type="tel"
+                    value={formData.billing.phone}
+                    onChange={(e) => handleBillingChange("phone", e.target.value)}
+                  />
+                  <Input
+                    label={isRTL ? "البريد الإلكتروني" : "Email"}
+                    type="email"
+                    value={formData.billing.email}
+                    onChange={(e) => handleBillingChange("email", e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Payment Method */}
+            <div className="rounded-lg border bg-white p-6 shadow-sm">
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">4</span>
                 {isRTL ? "طريقة الدفع" : "Payment Method"}
               </h2>
               <div className="space-y-3">
-                <label className="flex cursor-pointer items-center gap-3 rounded-md border p-4 hover:bg-gray-50">
+                <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4 hover:bg-gray-50 transition-colors">
                   <input
                     type="radio"
                     name="payment"
                     value="card"
                     checked={formData.paymentMethod === "card"}
-                    onChange={(e) => handleInputChange("paymentMethod", e.target.value)}
-                    className="h-4 w-4 text-gray-900"
+                    onChange={(e) => handlePaymentChange(e.target.value)}
+                    className="h-4 w-4 text-gray-900 focus:ring-gray-900"
                   />
-                  <span>{isRTL ? "بطاقة ائتمان" : "Credit Card"}</span>
+                  <div className="flex-1">
+                    <span className="font-medium">{isRTL ? "بطاقة ائتمان" : "Credit Card"}</span>
+                    <p className="text-xs text-gray-500">{isRTL ? "ادفع بأمان ببطاقتك" : "Pay securely with your card"}</p>
+                  </div>
                 </label>
-                <label className="flex cursor-pointer items-center gap-3 rounded-md border p-4 hover:bg-gray-50">
+                <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4 hover:bg-gray-50 transition-colors">
                   <input
                     type="radio"
                     name="payment"
                     value="cod"
                     checked={formData.paymentMethod === "cod"}
-                    onChange={(e) => handleInputChange("paymentMethod", e.target.value)}
-                    className="h-4 w-4 text-gray-900"
+                    onChange={(e) => handlePaymentChange(e.target.value)}
+                    className="h-4 w-4 text-gray-900 focus:ring-gray-900"
                   />
-                  <span>{isRTL ? "الدفع عند الاستلام" : "Cash on Delivery"}</span>
+                  <div className="flex-1">
+                    <span className="font-medium">{isRTL ? "الدفع عند الاستلام" : "Cash on Delivery"}</span>
+                    <p className="text-xs text-gray-500">{isRTL ? "ادفع نقداً عند التسليم" : "Pay cash when you receive your order"}</p>
+                  </div>
                 </label>
               </div>
             </div>
 
-            <div className="rounded-lg border p-6">
-              <h2 className="mb-4 text-lg font-semibold text-gray-900">
+            {/* Order Notes */}
+            <div className="rounded-lg border bg-white p-6 shadow-sm">
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">5</span>
                 {isRTL ? "ملاحظات الطلب" : "Order Notes"}
               </h2>
               <textarea
-                className="w-full rounded-md border border-gray-300 p-3 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                className="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 transition-colors"
                 rows={4}
                 placeholder={
                   isRTL
@@ -252,28 +510,55 @@ export default function CheckoutPage() {
                     : "Additional notes about your order (optional)"
                 }
                 value={formData.orderNotes}
-                onChange={(e) => handleInputChange("orderNotes", e.target.value)}
+                onChange={(e) => handleNotesChange(e.target.value)}
               />
             </div>
           </div>
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 rounded-lg border bg-gray-50 p-6">
+            <div className="sticky top-24 rounded-lg border bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-semibold text-gray-900">
                 {isRTL ? "ملخص الطلب" : "Order Summary"}
               </h2>
 
-              {/* Cart Items */}
-              <div className="max-h-64 space-y-3 overflow-y-auto border-b pb-4">
+              {/* Cart Items with Thumbnails */}
+              <div className="max-h-80 space-y-4 overflow-y-auto border-b pb-4">
                 {cartItems.map((item) => (
-                  <div key={item.item_key} className="flex justify-between text-sm">
-                    <span className="text-gray-600">
-                      {item.name} x {item.quantity.value}
-                    </span>
+                  <div key={item.item_key} className="flex items-center gap-3">
+                    {/* Product Thumbnail */}
+                    <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border bg-gray-100">
+                      {item.featured_image ? (
+                        <Image
+                          src={item.featured_image}
+                          alt={item.name}
+                          fill
+                          className="object-cover"
+                          sizes="64px"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-gray-400">
+                          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      )}
+                      {/* Quantity Badge */}
+                      <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900 text-xs font-medium text-white">
+                        {item.quantity.value}
+                      </span>
+                    </div>
+                    {/* Product Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate text-sm font-medium text-gray-900">{item.name}</p>
+                      <p className="text-xs text-gray-500">
+                        {isRTL ? "الكمية:" : "Qty:"} {item.quantity.value}
+                      </p>
+                    </div>
+                    {/* Price */}
                     <FormattedPrice
                       price={parseInt(item.totals.total) / 100}
-                      className="font-medium"
+                      className="text-sm font-medium"
                       iconSize="xs"
                     />
                   </div>
@@ -282,14 +567,14 @@ export default function CheckoutPage() {
 
               {/* Totals */}
               <div className="space-y-3 border-b py-4">
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between text-sm text-gray-600">
                   <span>{isRTL ? "المجموع الفرعي" : "Subtotal"}</span>
                   <FormattedPrice
                     price={parseInt(cartSubtotal) / 100}
                     iconSize="xs"
                   />
                 </div>
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between text-sm text-gray-600">
                   <span>{isRTL ? "الشحن" : "Shipping"}</span>
                   <FormattedPrice
                     price={parseInt(cart?.totals?.shipping_total || "0") / 100}
@@ -298,7 +583,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <div className="flex justify-between py-4 text-lg font-semibold text-gray-900">
+              <div className="flex justify-between py-4 text-lg font-bold text-gray-900">
                 <span>{isRTL ? "الإجمالي" : "Total"}</span>
                 <FormattedPrice
                   price={parseInt(cartTotal) / 100}
