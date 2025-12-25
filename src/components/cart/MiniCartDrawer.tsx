@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Minus, Plus, Trash2, ShoppingBag, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -36,16 +37,24 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
     removeCartItem,
   } = useCart();
 
+  const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
   const isRTL = locale === "ar";
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
 
   const handleQuantityChange = async (itemKey: string, newQuantity: number) => {
     if (newQuantity < 1) return;
+    setUpdatingItems(prev => new Set(prev).add(itemKey));
     try {
       await updateCartItem(itemKey, newQuantity);
     } catch (error) {
       console.error("Failed to update quantity:", error);
+    } finally {
+      setUpdatingItems(prev => {
+        const next = new Set(prev);
+        next.delete(itemKey);
+        return next;
+      });
     }
   };
 
@@ -152,13 +161,17 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
                       item.quantity.value - 1
                     )
                   }
-                  className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-gray-100 disabled:opacity-50 transition-colors"
-                  disabled={isLoading || item.quantity.value <= 1}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-[#633d1f] hover:text-white hover:border-[#633d1f] disabled:opacity-50 transition-colors cursor-pointer"
+                  disabled={isLoading || updatingItems.has(item.item_key) || item.quantity.value <= 1}
                 >
                   <Minus className="h-4 w-4" />
                 </button>
-                <span className="w-8 text-center text-sm font-medium">
-                  {item.quantity.value}
+                <span className="w-8 text-center text-sm font-medium relative">
+                  {updatingItems.has(item.item_key) ? (
+                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#633d1f]"></span>
+                  ) : (
+                    item.quantity.value
+                  )}
                 </span>
                 <button
                   onClick={() =>
@@ -167,8 +180,8 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
                       item.quantity.value + 1
                     )
                   }
-                  className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-gray-100 disabled:opacity-50 transition-colors"
-                  disabled={isLoading}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-[#633d1f] hover:text-white hover:border-[#633d1f] disabled:opacity-50 transition-colors cursor-pointer"
+                  disabled={isLoading || updatingItems.has(item.item_key)}
                 >
                   <Plus className="h-4 w-4" />
                 </button>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { Menu, X, ShoppingBag, Search, User, Heart } from "lucide-react";
+import { Menu, X, ShoppingBag, User, Heart } from "lucide-react";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 import { CurrencySwitcher } from "@/components/common/CurrencySwitcher";
 import { useCart } from "@/contexts/CartContext";
@@ -15,7 +15,6 @@ import type { Locale } from "@/config/site";
 import type { SiteSettings, WPMenuItem } from "@/types/wordpress";
 import type { HeaderSettings, TopbarSettings } from "@/lib/api/wordpress";
 import { CategoriesDrawer } from "@/components/layout/CategoriesDrawer";
-import { SearchDrawer } from "@/components/layout/SearchDrawer";
 import { DesktopSearchDropdown } from "@/components/layout/DesktopSearchDropdown";
 
 interface HeaderProps {
@@ -36,7 +35,6 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
     ? (isRTL && topbarSettings?.textAr ? topbarSettings.textAr : topbarSettings?.text) || ""
     : "";
   const [isCategoriesDrawerOpen, setIsCategoriesDrawerOpen] = useState(false);
-  const [isSearchDrawerOpen, setIsSearchDrawerOpen] = useState(false);
   const { cartItemsCount, setIsCartOpen } = useCart();
   const { setIsAccountDrawerOpen } = useAuth();
   const { wishlistItemsCount } = useWishlist();
@@ -134,15 +132,6 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                         <div className="flex items-center gap-2 md:gap-4">
                           {/* Desktop Search with Dropdown */}
                           <DesktopSearchDropdown locale={locale} dictionary={dictionary} />
-                          {/* Mobile Search Icon - Opens drawer */}
-              <button
-                type="button"
-                className="p-2 text-gray-700 hover:text-gray-900 md:hidden"
-                onClick={() => setIsSearchDrawerOpen(true)}
-                aria-label={dictionary.common.search}
-              >
-                <Search className="h-5 w-5" />
-              </button>
               <button
                 type="button"
                 onClick={() => setIsAccountDrawerOpen(true)}
@@ -207,12 +196,6 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
       <CategoriesDrawer
         isOpen={isCategoriesDrawerOpen}
         onClose={() => setIsCategoriesDrawerOpen(false)}
-        locale={locale}
-        dictionary={dictionary}
-      />
-      <SearchDrawer
-        isOpen={isSearchDrawerOpen}
-        onClose={() => setIsSearchDrawerOpen(false)}
         locale={locale}
         dictionary={dictionary}
       />

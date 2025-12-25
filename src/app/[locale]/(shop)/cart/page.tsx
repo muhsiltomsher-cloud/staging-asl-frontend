@@ -51,6 +51,7 @@ export default function CartPage() {
   const [couponLoading, setCouponLoading] = useState(false);
   const [availableCoupons, setAvailableCoupons] = useState<PublicCoupon[]>([]);
   const [isLoadingCoupons, setIsLoadingCoupons] = useState(false);
+  const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchAvailableCoupons = async () => {
@@ -173,10 +174,17 @@ export default function CartPage() {
 
   const handleQuantityChange = async (itemKey: string, newQuantity: number) => {
     if (newQuantity < 1) return;
+    setUpdatingItems(prev => new Set(prev).add(itemKey));
     try {
       await updateCartItem(itemKey, newQuantity);
     } catch (error) {
       console.error("Failed to update quantity:", error);
+    } finally {
+      setUpdatingItems(prev => {
+        const next = new Set(prev);
+        next.delete(itemKey);
+        return next;
+      });
     }
   };
 
@@ -317,13 +325,17 @@ export default function CartPage() {
                                 item.quantity.value - 1
                               )
                             }
-                            className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-gray-100 disabled:opacity-50"
-                            disabled={isLoading || item.quantity.value <= 1}
+                            className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-[#633d1f] hover:text-white hover:border-[#633d1f] disabled:opacity-50 transition-colors cursor-pointer"
+                            disabled={isLoading || updatingItems.has(item.item_key) || item.quantity.value <= 1}
                           >
                             <Minus className="h-4 w-4" />
                           </button>
-                          <span className="w-8 text-center">
-                            {item.quantity.value}
+                          <span className="w-8 text-center relative">
+                            {updatingItems.has(item.item_key) ? (
+                              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#633d1f]"></span>
+                            ) : (
+                              item.quantity.value
+                            )}
                           </span>
                           <button
                             onClick={() =>
@@ -332,8 +344,8 @@ export default function CartPage() {
                                 item.quantity.value + 1
                               )
                             }
-                            className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-gray-100 disabled:opacity-50"
-                            disabled={isLoading}
+                            className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-[#633d1f] hover:text-white hover:border-[#633d1f] disabled:opacity-50 transition-colors cursor-pointer"
+                            disabled={isLoading || updatingItems.has(item.item_key)}
                           >
                             <Plus className="h-4 w-4" />
                           </button>
@@ -434,7 +446,7 @@ export default function CartPage() {
                 {/* Available Coupons */}
                 {availableCoupons.length > 0 && (
                   <div>
-                    <p className="mb-2 text-xs font-medium text-gray-500">
+                    <p className="mb-2 text-sm font-semibold text-gray-600 uppercase tracking-wide">
                       {texts.availableCoupons}
                     </p>
                     <div className="flex flex-wrap gap-2">

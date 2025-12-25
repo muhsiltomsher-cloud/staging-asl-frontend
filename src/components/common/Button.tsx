@@ -11,20 +11,20 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", isLoading, disabled, children, asChild = false, ...props }, ref) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
+      "inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer";
 
     const variants = {
-      primary: "bg-gray-900 text-white hover:bg-gray-800 focus-visible:ring-gray-900",
-      secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200 focus-visible:ring-gray-500",
-      outline: "border border-gray-300 bg-transparent hover:bg-gray-100 focus-visible:ring-gray-500",
-      ghost: "hover:bg-gray-100 focus-visible:ring-gray-500",
-      link: "text-gray-900 underline-offset-4 hover:underline focus-visible:ring-gray-500",
+      primary: "bg-gray-900 text-white hover:bg-[#633d1f] focus-visible:ring-gray-900",
+      secondary: "bg-gray-100 text-gray-900 hover:bg-[#633d1f] hover:text-white focus-visible:ring-gray-500",
+      outline: "border border-gray-300 bg-transparent hover:bg-[#633d1f] hover:text-white hover:border-[#633d1f] focus-visible:ring-gray-500",
+      ghost: "hover:bg-[#633d1f] hover:text-white focus-visible:ring-gray-500",
+      link: "text-gray-900 underline-offset-4 hover:underline hover:text-[#633d1f] focus-visible:ring-gray-500 cursor-pointer",
     };
 
     const sizes = {
-      sm: "h-9 rounded-md px-3 text-sm",
-      md: "h-10 rounded-md px-4 text-sm",
-      lg: "h-12 rounded-md px-6 text-base",
+      sm: "h-9 px-3 text-sm",
+      md: "h-10 px-4 text-sm",
+      lg: "h-12 px-6 text-base",
     };
 
     const combinedClassName = cn(baseStyles, variants[variant], sizes[size], className);

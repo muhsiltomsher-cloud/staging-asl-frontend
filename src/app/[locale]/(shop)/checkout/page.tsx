@@ -620,7 +620,7 @@ export default function CheckoutPage() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 rounded-lg border border-black/10 bg-white p-6 shadow-sm">
+            <div className="sticky top-32 rounded-lg border border-black/10 bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-semibold text-gray-900">
                 {isRTL ? "ملخص الطلب" : "Order Summary"}
               </h2>
@@ -728,7 +728,7 @@ export default function CheckoutPage() {
                               {/* Available Coupons */}
                               {availableCoupons.length > 0 && (
                                 <div>
-                                  <p className="mb-2 text-xs font-medium text-gray-500">
+                                  <p className="mb-2 text-sm font-semibold text-gray-600 uppercase tracking-wide">
                                     {isRTL ? "أكواد الخصم المتاحة:" : "Available coupons:"}
                                   </p>
                                   <div className="flex flex-wrap gap-2">
