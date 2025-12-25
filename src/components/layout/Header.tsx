@@ -58,9 +58,9 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+      <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         {/* Top bar - Mobile: Arabic left, Currency right | Desktop: both left */}
-        <div className="border-b bg-gray-50">
+        <div className="border-b border-gray-100 bg-gray-50">
           <div className="container mx-auto flex h-8 items-center justify-between px-4">
             {/* Mobile: Arabic on left */}
             <div className="flex items-center gap-4">

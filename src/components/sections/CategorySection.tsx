@@ -54,7 +54,6 @@ export function CategorySection({
   locale,
   isRTL = false,
   viewAllText = "View All",
-  productsText = "products",
   className = "",
   isLoading = false,
 }: CategorySectionProps) {
@@ -106,14 +105,14 @@ export function CategorySection({
               href={`/${locale}/category/${category.slug}`}
               className="group flex flex-col"
             >
-              <div className="relative aspect-square overflow-hidden rounded-xl bg-stone-100">
+              <div className="relative aspect-square overflow-hidden rounded-xl bg-white p-4">
                 {category.image?.src ? (
                   <Image
                     src={category.image.src}
                     alt={category.image.alt || category.name}
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 25vw"
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="object-contain p-2 transition-transform duration-300 group-hover:scale-105"
                     loading="lazy"
                   />
                 ) : (
@@ -126,9 +125,6 @@ export function CategorySection({
                 <h3 className="text-base font-semibold text-amber-900 transition-colors group-hover:text-amber-700 md:text-lg">
                   {category.name}
                 </h3>
-                <p className="mt-1 text-sm text-amber-700/60">
-                  {category.count} {productsText}
-                </p>
               </div>
             </Link>
           ))}

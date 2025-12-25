@@ -177,50 +177,93 @@ export default async function HomePage({ params }: HomePageProps) {
       {/* Our Collections */}
       <CollectionsSection settings={collectionsSettings} />
 
-      {/* About Section */}
-      <section className="bg-white py-12 md:py-16">
-        <div className="container mx-auto px-4">
-          <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
-            <div className="relative aspect-square overflow-hidden rounded-xl bg-stone-200 lg:aspect-[4/3]" />
-            <div>
-              <h2 className="mb-4 text-2xl font-bold text-amber-900 md:text-3xl">
-                {dictionary.sections.ourStory.title}
-              </h2>
-              <p className="mb-4 text-amber-800/70 md:mb-6">
-                {dictionary.sections.ourStory.description1}
-              </p>
-              <p className="mb-6 text-amber-800/70 md:mb-8">
-                {dictionary.sections.ourStory.description2}
-              </p>
-              <Button variant="outline" className="border-amber-900 text-amber-900 hover:bg-amber-900 hover:text-white" asChild>
-                <Link href={`/${locale}/about`}>{dictionary.common.learnMore}</Link>
-              </Button>
+      {/* About Section - Creative Design */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-white to-stone-50 py-16 md:py-24">
+        {/* Decorative background elements */}
+        <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-amber-100/40 blur-3xl" />
+        <div className="absolute -bottom-20 -right-20 h-80 w-80 rounded-full bg-stone-100/60 blur-3xl" />
+        <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-50/30 blur-3xl" />
+        
+        <div className="container relative mx-auto px-4">
+          {/* Section header with decorative line */}
+          <div className="mb-12 text-center md:mb-16">
+            <div className="mb-4 flex items-center justify-center gap-4">
+              <div className="h-px w-12 bg-gradient-to-r from-transparent to-amber-400" />
+              <span className="text-sm font-medium uppercase tracking-widest text-amber-600">
+                {isRTL ? "اكتشف قصتنا" : "Discover Our Journey"}
+              </span>
+              <div className="h-px w-12 bg-gradient-to-l from-transparent to-amber-400" />
+            </div>
+            <h2 className="text-3xl font-bold text-amber-900 md:text-4xl lg:text-5xl">
+              {dictionary.sections.ourStory.title}
+            </h2>
+          </div>
+
+          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+            {/* Image side with decorative frame */}
+            <div className="relative">
+              <div className="absolute -inset-4 rounded-2xl bg-gradient-to-br from-amber-200/20 to-stone-200/20 blur-sm" />
+              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 shadow-xl lg:aspect-square">
+                {/* Decorative pattern overlay */}
+                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
+                {/* Placeholder content */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-amber-200/50">
+                      <svg className="h-10 w-10 text-amber-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-amber-700/60">{isRTL ? "صورة قصتنا" : "Our Story Image"}</p>
+                  </div>
+                </div>
+              </div>
+              {/* Floating accent */}
+              <div className="absolute -bottom-6 -right-6 h-24 w-24 rounded-full border-4 border-amber-200/50 bg-white/80 shadow-lg backdrop-blur-sm" />
+            </div>
+
+            {/* Content side */}
+            <div className="relative">
+              <div className="space-y-6">
+                <p className="text-lg leading-relaxed text-amber-800/80 md:text-xl">
+                  {dictionary.sections.ourStory.description1}
+                </p>
+                <p className="leading-relaxed text-amber-700/70">
+                  {dictionary.sections.ourStory.description2}
+                </p>
+                
+                {/* Feature highlights */}
+                <div className="grid grid-cols-2 gap-4 pt-4">
+                  <div className="rounded-xl bg-white/60 p-4 shadow-sm backdrop-blur-sm">
+                    <div className="mb-2 text-2xl font-bold text-amber-900">100%</div>
+                    <div className="text-sm text-amber-700/70">{isRTL ? "مكونات طبيعية" : "Natural Ingredients"}</div>
+                  </div>
+                  <div className="rounded-xl bg-white/60 p-4 shadow-sm backdrop-blur-sm">
+                    <div className="mb-2 text-2xl font-bold text-amber-900">10+</div>
+                    <div className="text-sm text-amber-700/70">{isRTL ? "سنوات من الخبرة" : "Years of Excellence"}</div>
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  <Button 
+                    variant="outline" 
+                    className="group border-2 border-amber-900 px-8 py-3 text-amber-900 transition-all duration-300 hover:bg-amber-900 hover:text-white hover:shadow-lg" 
+                    asChild
+                  >
+                    <Link href={`/${locale}/about`}>
+                      {dictionary.common.learnMore}
+                      <svg className="ml-2 inline-block h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </Link>
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Newsletter Section */}
-      <section className="bg-amber-900 py-12 text-white md:py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="mb-3 text-2xl font-bold md:text-3xl">
-            {dictionary.sections.newsletter.title}
-          </h2>
-          <p className="mx-auto mb-6 max-w-md text-amber-100/80 md:mb-8">
-            {dictionary.footer.subscribeText}
-          </p>
-          <form className="mx-auto flex max-w-md flex-col gap-2 sm:flex-row">
-            <input
-              type="email"
-              placeholder={dictionary.footer.emailPlaceholder}
-              className="flex-1 rounded-md border-0 bg-white/10 px-4 py-3 text-white placeholder:text-amber-200/60 focus:outline-none focus:ring-2 focus:ring-white/50"
-            />
-            <Button className="bg-white text-amber-900 hover:bg-amber-50">
-              {dictionary.footer.subscribe}
-            </Button>
-          </form>
-        </div>
-      </section>
     </div>
   );
 }

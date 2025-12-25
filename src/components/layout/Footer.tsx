@@ -31,7 +31,7 @@ export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
   };
 
   return (
-    <footer className="border-t bg-gray-50 pb-20 md:pb-0">
+    <footer className="border-t border-gray-100 bg-gray-50 pb-20 md:pb-0">
       <div className="container mx-auto px-4 py-8 md:py-12">
         <div className="grid grid-cols-2 gap-6 md:grid-cols-2 lg:grid-cols-4 md:gap-8">
           {/* Brand section - Full width on mobile */}
