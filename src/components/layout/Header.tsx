@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Menu, X, ShoppingBag, Search, User, Heart } from "lucide-react";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 import { CurrencySwitcher } from "@/components/common/CurrencySwitcher";
@@ -17,6 +16,7 @@ import type { SiteSettings, WPMenuItem } from "@/types/wordpress";
 import type { HeaderSettings, TopbarSettings } from "@/lib/api/wordpress";
 import { CategoriesDrawer } from "@/components/layout/CategoriesDrawer";
 import { SearchDrawer } from "@/components/layout/SearchDrawer";
+import { DesktopSearchDropdown } from "@/components/layout/DesktopSearchDropdown";
 
 interface HeaderProps {
   locale: Locale;
@@ -29,8 +29,6 @@ interface HeaderProps {
 
 export function Header({ locale, dictionary, siteSettings, headerSettings, menuItems, topbarSettings }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const router = useRouter();
   const isRTL = locale === "ar";
 
   // Get topbar text based on locale
@@ -43,15 +41,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
   const { setIsAccountDrawerOpen } = useAuth();
   const { wishlistItemsCount } = useWishlist();
 
-  const handleDesktopSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/${locale}/shop?search=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery("");
-    }
-  };
-
-  const defaultNavigation = [
+    const defaultNavigation = [
     { name: dictionary.common.home, href: `/${locale}` },
     { name: dictionary.common.shop, href: `/${locale}/shop` },
     { name: dictionary.common.about, href: `/${locale}/about` },
@@ -140,22 +130,11 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               ))}
             </nav>
 
-            {/* Right side icons - Desktop: all icons | Mobile: cart only */}
-            <div className="flex items-center gap-2 md:gap-4">
-              {/* Desktop Search Input */}
-              <form onSubmit={handleDesktopSearch} className="hidden md:block">
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={dictionary.common.searchPlaceholder || "Search..."}
-                    className="w-48 rounded-full border border-gray-200 bg-gray-50 py-2 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 transition-all focus:w-64 focus:border-amber-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-amber-800 lg:w-56 lg:focus:w-72"
-                  />
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                </div>
-              </form>
-              {/* Mobile Search Icon - Opens drawer */}
+                        {/* Right side icons - Desktop: all icons | Mobile: cart only */}
+                        <div className="flex items-center gap-2 md:gap-4">
+                          {/* Desktop Search with Dropdown */}
+                          <DesktopSearchDropdown locale={locale} dictionary={dictionary} />
+                          {/* Mobile Search Icon - Opens drawer */}
               <button
                 type="button"
                 className="p-2 text-gray-700 hover:text-gray-900 md:hidden"
