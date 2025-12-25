@@ -44,6 +44,7 @@ export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
                   width={150}
                   height={110}
                   className="mx-auto h-[70px] w-auto md:mx-0 md:h-[110px]"
+                  loading="lazy"
                 />
               ) : (
                 <span className="text-xl font-bold tracking-tight text-gray-900">

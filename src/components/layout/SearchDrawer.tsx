@@ -175,7 +175,9 @@ export function SearchDrawer({
                         src={product.images[0].src}
                         alt={product.name}
                         fill
+                        sizes="64px"
                         className="object-cover"
+                        loading="lazy"
                       />
                     </div>
                   ) : (

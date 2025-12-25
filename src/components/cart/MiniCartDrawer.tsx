@@ -108,7 +108,9 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
                   src={item.featured_image}
                   alt={item.name}
                   fill
+                  sizes="80px"
                   className="object-cover"
+                  loading="lazy"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">

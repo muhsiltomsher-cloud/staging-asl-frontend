@@ -34,6 +34,7 @@ export function CategoryCard({
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
+          loading="lazy"
         />
       ) : (
         <div className="h-full w-full bg-gray-200" />

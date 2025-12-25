@@ -81,6 +81,7 @@ export function CollectionsSection({
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  loading="lazy"
                 />
               ) : (
                 <div className="absolute inset-0 bg-stone-200" />
