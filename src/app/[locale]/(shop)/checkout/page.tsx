@@ -12,7 +12,16 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCustomer, type Customer } from "@/lib/api/customer";
 import type { Locale } from "@/config/site";
-import { MapPin, Check, ChevronDown, ChevronUp, User, UserCheck } from "lucide-react";
+import { MapPin, Check, ChevronDown, ChevronUp, User, UserCheck, Tag, X } from "lucide-react";
+
+interface PublicCoupon {
+  code: string;
+  description: string;
+  discount_type: "percent" | "fixed_cart" | "fixed_product";
+  amount: string;
+  minimum_amount: string;
+  free_shipping: boolean;
+}
 
 interface AddressFormData {
   firstName: string;
@@ -51,14 +60,20 @@ const emptyAddress: AddressFormData = {
 export default function CheckoutPage() {
   const { locale } = useParams<{ locale: string }>();
   const router = useRouter();
-  const { cart, cartItems, cartSubtotal, cartTotal, clearCart } = useCart();
-  const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
-  const isRTL = locale === "ar";
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [customerData, setCustomerData] = useState<Customer | null>(null);
-  const [isLoadingCustomer, setIsLoadingCustomer] = useState(false);
-  const [showBillingSection, setShowBillingSection] = useState(false);
+    const { cart, cartItems, cartSubtotal, cartTotal, clearCart, applyCoupon, removeCoupon } = useCart();
+    const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
+    const isRTL = locale === "ar";
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [customerData, setCustomerData] = useState<Customer | null>(null);
+    const [isLoadingCustomer, setIsLoadingCustomer] = useState(false);
+    const [showBillingSection, setShowBillingSection] = useState(false);
+  
+    const [couponCode, setCouponCode] = useState("");
+    const [couponError, setCouponError] = useState("");
+    const [couponLoading, setCouponLoading] = useState(false);
+    const [availableCoupons, setAvailableCoupons] = useState<PublicCoupon[]>([]);
+    const [isLoadingCoupons, setIsLoadingCoupons] = useState(false);
   
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
@@ -122,10 +137,65 @@ export default function CheckoutPage() {
         }
       }
     };
-    fetchCustomerData();
-  }, [isAuthenticated, user?.user_id]);
+      fetchCustomerData();
+    }, [isAuthenticated, user?.user_id]);
 
-  const breadcrumbItems = [
+    useEffect(() => {
+      const fetchAvailableCoupons = async () => {
+        setIsLoadingCoupons(true);
+        try {
+          const response = await fetch("/api/coupons");
+          const data = await response.json();
+          if (data.success && data.coupons) {
+            setAvailableCoupons(data.coupons);
+          }
+        } catch (err) {
+          console.error("Failed to fetch available coupons:", err);
+        } finally {
+          setIsLoadingCoupons(false);
+        }
+      };
+      fetchAvailableCoupons();
+    }, []);
+
+    const handleApplyCoupon = async () => {
+      if (!couponCode.trim()) return;
+      setCouponLoading(true);
+      setCouponError("");
+      try {
+        const success = await applyCoupon(couponCode);
+        if (!success) {
+          setCouponError(isRTL ? "كود الخصم غير صالح" : "Invalid coupon code");
+        } else {
+          setCouponCode("");
+        }
+      } catch {
+        setCouponError(isRTL ? "كود الخصم غير صالح" : "Invalid coupon code");
+      } finally {
+        setCouponLoading(false);
+      }
+    };
+
+    const handleRemoveCoupon = async (code: string) => {
+      try {
+        await removeCoupon(code);
+      } catch (error) {
+        console.error("Failed to remove coupon:", error);
+      }
+    };
+
+    const handleSelectCoupon = (code: string) => {
+      setCouponCode(code);
+    };
+
+    const formatCouponDiscount = (coupon: PublicCoupon) => {
+      if (coupon.discount_type === "percent") {
+        return `${coupon.amount}%`;
+      }
+      return `${coupon.amount} AED`;
+    };
+
+    const breadcrumbItems = [
     { name: isRTL ? "السلة" : "Cart", href: `/${locale}/cart` },
     { name: isRTL ? "الدفع" : "Checkout", href: `/${locale}/checkout` },
   ];
@@ -550,66 +620,163 @@ export default function CheckoutPage() {
                 {isRTL ? "ملخص الطلب" : "Order Summary"}
               </h2>
 
-              {/* Cart Items with Thumbnails */}
-              <div className="space-y-4 border-b border-black/10 pb-4 md:max-h-80 md:overflow-y-auto">
-                {cartItems.map((item) => (
-                  <div key={item.item_key} className="flex items-center gap-3">
-                    {/* Product Thumbnail */}
-                    <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-black/10 bg-gray-100">
-                      {item.featured_image ? (
-                        <Image
-                          src={item.featured_image}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                          sizes="64px"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-gray-400">
-                          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                        </div>
-                      )}
-                      {/* Quantity Badge */}
-                      <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900 text-xs font-medium text-white">
-                        {item.quantity.value}
-                      </span>
-                    </div>
-                    {/* Product Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="truncate text-sm font-medium text-gray-900">{item.name}</p>
-                      <p className="text-xs text-gray-500">
-                        {isRTL ? "الكمية:" : "Qty:"} {item.quantity.value}
-                      </p>
-                    </div>
-                    {/* Price */}
-                    <FormattedPrice
-                      price={parseFloat(item.totals.total) / divisor}
-                      className="text-sm font-medium"
-                      iconSize="xs"
-                    />
-                  </div>
-                ))}
-              </div>
+                            {/* Cart Items with Thumbnails */}
+                            <div className="space-y-4 border-b border-black/10 pb-4 md:max-h-60 md:overflow-y-auto">
+                              {cartItems.map((item) => (
+                                <div key={item.item_key} className="flex items-center gap-3">
+                                  {/* Product Thumbnail */}
+                                  <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-black/10 bg-gray-100">
+                                    {item.featured_image ? (
+                                      <Image
+                                        src={item.featured_image}
+                                        alt={item.name}
+                                        fill
+                                        className="object-cover"
+                                        sizes="64px"
+                                      />
+                                    ) : (
+                                      <div className="flex h-full w-full items-center justify-center text-gray-400">
+                                        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                      </div>
+                                    )}
+                                    {/* Quantity Badge */}
+                                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900 text-xs font-medium text-white">
+                                      {item.quantity.value}
+                                    </span>
+                                  </div>
+                                  {/* Product Info */}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="truncate text-sm font-medium text-gray-900">{item.name}</p>
+                                    <p className="text-xs text-gray-500">
+                                      {isRTL ? "الكمية:" : "Qty:"} {item.quantity.value}
+                                    </p>
+                                  </div>
+                                  {/* Price */}
+                                  <FormattedPrice
+                                    price={parseFloat(item.totals.total) / divisor}
+                                    className="text-sm font-medium"
+                                    iconSize="xs"
+                                  />
+                                </div>
+                              ))}
+                            </div>
 
-              {/* Totals */}
-              <div className="space-y-3 border-b border-black/10 py-4">
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>{isRTL ? "المجموع الفرعي" : "Subtotal"}</span>
-                  <FormattedPrice
-                    price={parseFloat(cartSubtotal) / divisor}
-                    iconSize="xs"
-                  />
-                </div>
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>{isRTL ? "الشحن" : "Shipping"}</span>
-                  <FormattedPrice
-                    price={parseFloat(cart?.totals?.shipping_total || "0") / divisor}
-                    iconSize="xs"
-                  />
-                </div>
-              </div>
+                            {/* Coupon Code Section */}
+                            <div className="border-b border-black/10 py-4">
+                              <div className="mb-3">
+                                <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                                  <Tag className="h-4 w-4" />
+                                  {isRTL ? "كود الخصم" : "Coupon Code"}
+                                </label>
+                                <div className="flex gap-2">
+                                  <Input
+                                    type="text"
+                                    value={couponCode}
+                                    onChange={(e) => setCouponCode(e.target.value)}
+                                    placeholder={isRTL ? "أدخل كود الخصم" : "Enter coupon code"}
+                                    className="flex-1"
+                                    error={couponError}
+                                  />
+                                  <Button
+                                    type="button"
+                                    onClick={handleApplyCoupon}
+                                    isLoading={couponLoading}
+                                    disabled={couponLoading || !couponCode.trim()}
+                                    size="sm"
+                                  >
+                                    {isRTL ? "تطبيق" : "Apply"}
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {/* Applied Coupons */}
+                              {cart?.coupons && cart.coupons.length > 0 && (
+                                <div className="mb-3 space-y-2">
+                                  {cart.coupons.map((coupon) => (
+                                    <div
+                                      key={coupon.coupon}
+                                      className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-3 py-2"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <Tag className="h-4 w-4 text-green-600" />
+                                        <span className="text-sm font-medium text-green-700">
+                                          {coupon.coupon}
+                                        </span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveCoupon(coupon.coupon)}
+                                        className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Available Coupons */}
+                              {availableCoupons.length > 0 && (
+                                <div>
+                                  <p className="mb-2 text-xs font-medium text-gray-500">
+                                    {isRTL ? "أكواد الخصم المتاحة:" : "Available coupons:"}
+                                  </p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {availableCoupons.slice(0, 3).map((coupon) => (
+                                      <button
+                                        key={coupon.code}
+                                        type="button"
+                                        onClick={() => handleSelectCoupon(coupon.code)}
+                                        className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800 transition-colors hover:bg-amber-100"
+                                        title={coupon.description || `${formatCouponDiscount(coupon)} off`}
+                                      >
+                                        <Tag className="h-3 w-3" />
+                                        {coupon.code}
+                                        <span className="text-amber-600">({formatCouponDiscount(coupon)})</span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {isLoadingCoupons && (
+                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                  <div className="h-3 w-3 animate-spin rounded-full border border-gray-300 border-t-gray-600"></div>
+                                  {isRTL ? "جاري تحميل الأكواد..." : "Loading coupons..."}
+                                </div>
+                              )}
+                            </div>
+
+                                          {/* Totals */}
+                            <div className="space-y-3 border-b border-black/10 py-4">
+                              <div className="flex justify-between text-sm text-gray-600">
+                                <span>{isRTL ? "المجموع الفرعي" : "Subtotal"}</span>
+                                <FormattedPrice
+                                  price={parseFloat(cartSubtotal) / divisor}
+                                  iconSize="xs"
+                                />
+                              </div>
+                              {cart?.totals?.discount_total && parseFloat(cart.totals.discount_total) > 0 && (
+                                <div className="flex justify-between text-sm text-green-600">
+                                  <span>{isRTL ? "الخصم" : "Discount"}</span>
+                                  <span className="inline-flex items-center gap-1">
+                                    -<FormattedPrice
+                                      price={parseFloat(cart.totals.discount_total) / divisor}
+                                      iconSize="xs"
+                                    />
+                                  </span>
+                                </div>
+                              )}
+                              <div className="flex justify-between text-sm text-gray-600">
+                                <span>{isRTL ? "الشحن" : "Shipping"}</span>
+                                <FormattedPrice
+                                  price={parseFloat(cart?.totals?.shipping_total || "0") / divisor}
+                                  iconSize="xs"
+                                />
+                              </div>
+                            </div>
 
               <div className="hidden py-4 text-lg font-bold text-gray-900 md:flex md:justify-between">
                 <span>{isRTL ? "الإجمالي" : "Total"}</span>
