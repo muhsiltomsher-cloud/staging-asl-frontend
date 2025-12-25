@@ -167,9 +167,11 @@ export default function WishlistPage({ params }: WishlistPageProps) {
                         >
                           {item.product_name}
                         </Link>
-                        <p className="mt-1 text-sm text-gray-500">
-                          {isRTL ? "أضيف في" : "Added"}: {item.dateadded_formatted}
-                        </p>
+                        {item.dateadded_formatted && (
+                          <p className="mt-1 text-sm text-gray-500">
+                            {isRTL ? "أضيف في" : "Added"}: {item.dateadded_formatted}
+                          </p>
+                        )}
                         <button
                           onClick={() => handleRemoveItem(item.product_id)}
                           className="mt-2 flex items-center gap-1 text-sm text-red-600 hover:text-red-700 md:hidden"
@@ -195,19 +197,19 @@ export default function WishlistPage({ params }: WishlistPageProps) {
                       </span>
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          item.is_in_stock
+                          item.is_in_stock !== false
                             ? "bg-green-100 text-green-700"
                             : "bg-red-100 text-red-700"
                         }`}
                       >
-                        {item.is_in_stock ? texts.inStock : texts.outOfStock}
+                        {item.is_in_stock !== false ? texts.inStock : texts.outOfStock}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2 md:col-span-3 md:justify-center">
                       <Button
                         onClick={() => handleAddToCart(item.product_id)}
-                        disabled={!item.is_in_stock || isCartLoading || addingToCart === item.product_id}
+                        disabled={item.is_in_stock === false || isCartLoading || addingToCart === item.product_id}
                         isLoading={addingToCart === item.product_id}
                         size="sm"
                         className="flex-1 md:flex-none"

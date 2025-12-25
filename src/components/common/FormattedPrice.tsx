@@ -5,7 +5,7 @@ import { AEDIcon } from "./AEDIcon";
 import { cn } from "@/lib/utils";
 
 interface FormattedPriceProps {
-  price: string | number;
+  price?: string | number | null;
   showCode?: boolean;
   className?: string;
   iconSize?: "xs" | "sm" | "md" | "lg";
@@ -22,12 +22,17 @@ export function FormattedPrice({
   const { currency, getCurrencyInfo } = useCurrency();
   const currencyInfo = getCurrencyInfo();
 
+  // Handle undefined, null, or empty price
+  if (price === undefined || price === null || price === "") {
+    return <span className={className}>—</span>;
+  }
+
   const numericPrice = typeof price === "string" 
     ? parseFloat(price.replace(/[^0-9.-]+/g, "")) 
     : price;
 
   if (isNaN(numericPrice)) {
-    return <span className={className}>{price.toString()}</span>;
+    return <span className={className}>{String(price)}</span>;
   }
 
   const formattedNumber = new Intl.NumberFormat("en-US", {
