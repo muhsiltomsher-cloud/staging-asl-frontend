@@ -35,6 +35,8 @@ export default function CartPage() {
     removeCartItem,
     applyCoupon,
     removeCoupon,
+    selectedCoupons,
+    couponDiscount,
   } = useCart();
   const { isAuthenticated, user } = useAuth();
 
@@ -73,9 +75,10 @@ export default function CartPage() {
     setCouponLoading(true);
     setCouponError("");
     try {
-      const success = await applyCoupon(couponCode);
-      if (!success) {
-        setCouponError(isRTL ? "كود الخصم غير صالح" : "Invalid coupon code");
+      const couponData = availableCoupons.find(c => c.code.toLowerCase() === couponCode.toLowerCase().trim());
+      const result = await applyCoupon(couponCode, couponData);
+      if (!result.success) {
+        setCouponError(result.error || (isRTL ? "كود الخصم غير صالح" : "Invalid coupon code"));
       } else {
         setCouponCode("");
       }
@@ -400,22 +403,25 @@ export default function CartPage() {
                 </div>
 
                 {/* Applied Coupons */}
-                {cart?.coupons && cart.coupons.length > 0 && (
+                {selectedCoupons.length > 0 && (
                   <div className="mb-3 space-y-2">
-                    {cart.coupons.map((coupon) => (
+                    {selectedCoupons.map((coupon) => (
                       <div
-                        key={coupon.coupon}
+                        key={coupon.code}
                         className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-3 py-2"
                       >
                         <div className="flex items-center gap-2">
                           <Tag className="h-4 w-4 text-green-600" />
                           <span className="text-sm font-medium text-green-700">
-                            {coupon.coupon}
+                            {coupon.code}
+                          </span>
+                          <span className="text-xs text-green-600">
+                            ({coupon.discount_type === "percent" ? `${coupon.amount}%` : `${coupon.amount} AED`})
                           </span>
                         </div>
                         <button
                           type="button"
-                          onClick={() => handleRemoveCoupon(coupon.coupon)}
+                          onClick={() => handleRemoveCoupon(coupon.code)}
                           className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700"
                         >
                           <X className="h-4 w-4" />
@@ -465,13 +471,12 @@ export default function CartPage() {
                     iconSize="xs"
                   />
                 </div>
-                {cart?.totals?.discount_total &&
-                  parseFloat(cart.totals.discount_total) > 0 && (
+                {couponDiscount > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>{texts.discount}</span>
                       <span className="inline-flex items-center gap-1">
                         -<FormattedPrice
-                          price={parseFloat(cart.totals.discount_total) / divisor}
+                          price={couponDiscount / divisor}
                           iconSize="xs"
                         />
                       </span>

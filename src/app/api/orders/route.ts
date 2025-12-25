@@ -32,6 +32,10 @@ interface OrderAddress {
   phone?: string;
 }
 
+interface CouponLine {
+  code: string;
+}
+
 interface CreateOrderRequest {
   payment_method: string;
   payment_method_title: string;
@@ -39,6 +43,7 @@ interface CreateOrderRequest {
   billing: OrderAddress;
   shipping: OrderAddress;
   line_items: OrderLineItem[];
+  coupon_lines?: CouponLine[];
   customer_note?: string;
   customer_id?: number;
 }
@@ -138,6 +143,10 @@ export async function POST(request: NextRequest) {
       line_items: body.line_items,
       customer_note: body.customer_note || "",
     };
+
+    if (body.coupon_lines && body.coupon_lines.length > 0) {
+      orderData.coupon_lines = body.coupon_lines;
+    }
 
     if (body.customer_id) {
       orderData.customer_id = body.customer_id;

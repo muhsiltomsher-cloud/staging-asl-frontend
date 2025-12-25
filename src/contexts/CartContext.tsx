@@ -7,12 +7,18 @@ import {
   updateCartItem as apiUpdateCartItem,
   removeCartItem as apiRemoveCartItem,
   clearCart as apiClearCart,
-  applyCoupon as apiApplyCoupon,
-  removeCoupon as apiRemoveCoupon,
   type CoCartResponse,
   type CoCartItem,
 } from "@/lib/api/cocart";
 import { useNotification } from "./NotificationContext";
+
+export interface SelectedCoupon {
+  code: string;
+  discount_type: "percent" | "fixed_cart" | "fixed_product";
+  amount: string;
+  minimum_amount: string;
+  free_shipping: boolean;
+}
 
 interface CartContextType {
   cart: CoCartResponse | null;
@@ -24,12 +30,15 @@ interface CartContextType {
   updateCartItem: (key: string, quantity: number) => Promise<void>;
   removeCartItem: (key: string) => Promise<void>;
   clearCart: () => Promise<void>;
-  applyCoupon: (code: string) => Promise<boolean>;
+  applyCoupon: (code: string, couponData?: SelectedCoupon) => Promise<{ success: boolean; error?: string }>;
   removeCoupon: (code: string) => Promise<boolean>;
   refreshCart: () => Promise<void>;
   cartItemsCount: number;
   cartSubtotal: string;
   cartTotal: string;
+  selectedCoupons: SelectedCoupon[];
+  couponDiscount: number;
+  clearSelectedCoupons: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -38,6 +47,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CoCartResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [selectedCoupons, setSelectedCoupons] = useState<SelectedCoupon[]>([]);
   const { notify } = useNotification();
 
   const refreshCart = useCallback(async () => {
@@ -146,54 +156,90 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-    const applyCoupon = useCallback(async (code: string): Promise<boolean> => {
-      setIsLoading(true);
-      try {
-        const response = await apiApplyCoupon(code);
-        if (response.success && response.cart) {
-          setCart(response.cart);
+  const applyCoupon = useCallback(async (code: string, couponData?: SelectedCoupon): Promise<{ success: boolean; error?: string }> => {
+    const normalizedCode = code.toLowerCase().trim();
+    
+    if (selectedCoupons.some(c => c.code.toLowerCase() === normalizedCode)) {
+      notify("error", "Coupon already applied");
+      return { success: false, error: "Coupon already applied" };
+    }
+    
+    if (couponData) {
+      const subtotal = parseFloat(cart?.totals?.subtotal || "0");
+      const minAmount = parseFloat(couponData.minimum_amount || "0");
+      
+      if (minAmount > 0 && subtotal < minAmount) {
+        const errorMsg = `Minimum spend of ${minAmount.toFixed(2)} required for this coupon`;
+        notify("error", errorMsg);
+        return { success: false, error: errorMsg };
+      }
+      
+      setSelectedCoupons(prev => [...prev, { ...couponData, code: normalizedCode }]);
+      notify("success", "Coupon applied successfully");
+      return { success: true };
+    }
+    
+    try {
+      const response = await fetch("/api/coupons");
+      const data = await response.json();
+      
+      if (data.success && data.coupons) {
+        const foundCoupon = data.coupons.find(
+          (c: SelectedCoupon) => c.code.toLowerCase() === normalizedCode
+        );
+        
+        if (foundCoupon) {
+          const subtotal = parseFloat(cart?.totals?.subtotal || "0");
+          const minAmount = parseFloat(foundCoupon.minimum_amount || "0");
+          
+          if (minAmount > 0 && subtotal < minAmount) {
+            const errorMsg = `Minimum spend of ${minAmount.toFixed(2)} required for this coupon`;
+            notify("error", errorMsg);
+            return { success: false, error: errorMsg };
+          }
+          
+          setSelectedCoupons(prev => [...prev, { ...foundCoupon, code: normalizedCode }]);
           notify("success", "Coupon applied successfully");
-          return true;
-        } else if (response.error) {
-          console.error("Error applying coupon:", response.error.message);
-          notify("error", response.error.message);
-          return false;
+          return { success: true };
         }
-        return false;
-      } catch (error) {
-        console.error("Error applying coupon:", error);
-        return false;
-      } finally {
-        setIsLoading(false);
       }
-    }, [notify]);
+      
+      notify("error", "Invalid coupon code");
+      return { success: false, error: "Invalid coupon code" };
+    } catch (error) {
+      console.error("Error validating coupon:", error);
+      notify("error", "Failed to validate coupon");
+      return { success: false, error: "Failed to validate coupon" };
+    }
+  }, [cart?.totals?.subtotal, selectedCoupons, notify]);
 
-    const removeCoupon = useCallback(async (code: string): Promise<boolean> => {
-      setIsLoading(true);
-      try {
-        const response = await apiRemoveCoupon(code);
-        if (response.success && response.cart) {
-          setCart(response.cart);
-          notify("success", "Coupon removed");
-          return true;
-        } else if (response.error) {
-          console.error("Error removing coupon:", response.error.message);
-          notify("error", response.error.message);
-          return false;
-        }
-        return false;
-      } catch (error) {
-        console.error("Error removing coupon:", error);
-        return false;
-      } finally {
-        setIsLoading(false);
-      }
-    }, [notify]);
+  const removeCoupon = useCallback(async (code: string): Promise<boolean> => {
+    const normalizedCode = code.toLowerCase().trim();
+    setSelectedCoupons(prev => prev.filter(c => c.code.toLowerCase() !== normalizedCode));
+    notify("success", "Coupon removed");
+    return true;
+  }, [notify]);
+
+  const clearSelectedCoupons = useCallback(() => {
+    setSelectedCoupons([]);
+  }, []);
 
   const cartItems = cart?.items || [];
   const cartItemsCount = cart?.item_count || 0;
   const cartSubtotal = cart?.totals?.subtotal || "0";
   const cartTotal = cart?.totals?.total || "0";
+
+  const couponDiscount = selectedCoupons.reduce((total, coupon) => {
+    const subtotal = parseFloat(cartSubtotal);
+    const amount = parseFloat(coupon.amount);
+    
+    if (coupon.discount_type === "percent") {
+      return total + (subtotal * amount / 100);
+    } else if (coupon.discount_type === "fixed_cart") {
+      return total + amount;
+    }
+    return total;
+  }, 0);
 
   return (
     <CartContext.Provider
@@ -213,6 +259,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         cartItemsCount,
         cartSubtotal,
         cartTotal,
+        selectedCoupons,
+        couponDiscount,
+        clearSelectedCoupons,
       }}
     >
       {children}
