@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/common/Button";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
@@ -203,20 +204,14 @@ export default async function HomePage({ params }: HomePageProps) {
             {/* Image side with decorative frame */}
             <div className="relative">
               <div className="absolute -inset-4 rounded-2xl bg-gradient-to-br from-amber-200/20 to-stone-200/20 blur-sm" />
-              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 shadow-xl lg:aspect-square">
-                {/* Decorative pattern overlay */}
-                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
-                {/* Placeholder content */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-amber-200/50">
-                      <svg className="h-10 w-10 text-amber-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
-                    </div>
-                    <p className="text-sm text-amber-700/60">{isRTL ? "صورة قصتنا" : "Our Story Image"}</p>
-                  </div>
-                </div>
+              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl shadow-xl lg:aspect-square">
+                <Image
+                  src="https://adminasl.stagingndemo.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
+                  alt={isRTL ? "قصتنا" : "Our Story"}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                />
               </div>
               {/* Floating accent */}
               <div className="absolute -bottom-6 -right-6 h-24 w-24 rounded-full border-4 border-amber-200/50 bg-white/80 shadow-lg backdrop-blur-sm" />
