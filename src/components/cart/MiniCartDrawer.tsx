@@ -26,6 +26,7 @@ interface MiniCartDrawerProps {
 
 export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
   const {
+    cart,
     cartItems,
     cartSubtotal,
     isCartOpen,
@@ -36,6 +37,8 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
   } = useCart();
 
   const isRTL = locale === "ar";
+  const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
+  const divisor = Math.pow(10, currencyMinorUnit);
 
   const handleQuantityChange = async (itemKey: string, newQuantity: number) => {
     if (newQuantity < 1) return;
@@ -59,7 +62,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
       <div className="flex items-center justify-between">
         <span className="text-gray-600">{dictionary.subtotal}</span>
         <FormattedPrice
-          price={parseInt(cartSubtotal) / 100}
+          price={parseFloat(cartSubtotal) / divisor}
           className="text-lg font-semibold"
           iconSize="sm"
         />
@@ -136,7 +139,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
 
               <p className="mt-1 text-sm font-medium text-gray-900 inline-flex items-center gap-1">
                 <FormattedPrice
-                  price={parseInt(item.price) / 100}
+                  price={parseFloat(item.price) / divisor}
                   iconSize="xs"
                 /> x {item.quantity.value}
               </p>

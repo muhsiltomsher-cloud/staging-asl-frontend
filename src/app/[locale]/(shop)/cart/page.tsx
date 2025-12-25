@@ -258,7 +258,7 @@ export default function CartPage() {
                           {texts.total}:
                         </span>
                         <FormattedPrice
-                          price={parseFloat(item.totals.total) / divisor}
+                          price={parseFloat(item.totals.total)}
                           className="font-semibold"
                           iconSize="xs"
                         />
