@@ -19,10 +19,11 @@ interface WishlistContextType {
   isWishlistOpen: boolean;
   setIsWishlistOpen: (open: boolean) => void;
   addToWishlist: (productId: number, variationId?: number) => Promise<boolean>;
-  removeFromWishlist: (productId: number) => Promise<boolean>;
+  removeFromWishlist: (productId: number, itemId?: number) => Promise<boolean>;
   syncWishlist: (guestItems: Array<{ product_id: number; variation_id?: number }>) => Promise<void>;
   refreshWishlist: () => Promise<void>;
   isInWishlist: (productId: number) => boolean;
+  getWishlistItemId: (productId: number) => number | undefined;
   wishlistItemsCount: number;
 }
 
@@ -82,10 +83,16 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   );
 
   const removeFromWishlist = useCallback(
-    async (productId: number): Promise<boolean> => {
+    async (productId: number, itemId?: number): Promise<boolean> => {
       setIsLoading(true);
       try {
-        const response = await apiRemoveFromWishlist(productId);
+        // If itemId not provided, try to find it from wishlist items
+        let resolvedItemId = itemId;
+        if (!resolvedItemId && wishlist?.items) {
+          const item = wishlist.items.find((i) => i.product_id === productId);
+          resolvedItemId = item?.id;
+        }
+        const response = await apiRemoveFromWishlist(productId, resolvedItemId);
         if (response.success) {
           await refreshWishlist();
           return true;
@@ -101,7 +108,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
       }
     },
-    [refreshWishlist]
+    [refreshWishlist, wishlist]
   );
 
   const syncWishlist = useCallback(
@@ -130,6 +137,14 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     [wishlist]
   );
 
+  const getWishlistItemId = useCallback(
+    (productId: number): number | undefined => {
+      const item = wishlist?.items?.find((i) => i.product_id === productId);
+      return item?.id;
+    },
+    [wishlist]
+  );
+
   const wishlistItems = wishlist?.items || [];
   const wishlistItemsCount = wishlist?.items_count || wishlistItems.length;
 
@@ -146,6 +161,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         syncWishlist,
         refreshWishlist,
         isInWishlist,
+        getWishlistItemId,
         wishlistItemsCount,
       }}
     >

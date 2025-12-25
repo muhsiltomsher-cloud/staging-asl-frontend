@@ -90,11 +90,11 @@ export async function GET() {
     const data = await response.json();
     
     // TI Wishlist returns wishlist data with share_key
-    let wishlist = null;
+    let wishlistMeta = null;
     let items: unknown[] = [];
     
     if (data && data.share_key) {
-      wishlist = data;
+      wishlistMeta = data;
       
       // Fetch products for this wishlist
       const productsResponse = await fetch(`${WISHLIST_BASE}/${data.share_key}/get_products?${getBasicAuthParams()}`, {
@@ -110,9 +110,9 @@ export async function GET() {
       }
     } else if (Array.isArray(data) && data.length > 0) {
       // If array of wishlists, use first one
-      wishlist = data[0];
-      if (wishlist && wishlist.share_key) {
-        const productsResponse = await fetch(`${WISHLIST_BASE}/${wishlist.share_key}/get_products?${getBasicAuthParams()}`, {
+      wishlistMeta = data[0];
+      if (wishlistMeta && wishlistMeta.share_key) {
+        const productsResponse = await fetch(`${WISHLIST_BASE}/${wishlistMeta.share_key}/get_products?${getBasicAuthParams()}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -125,6 +125,13 @@ export async function GET() {
         }
       }
     }
+
+    // Return wishlist object with items included for WishlistContext compatibility
+    const wishlist = wishlistMeta ? {
+      ...wishlistMeta,
+      items,
+      items_count: items.length,
+    } : null;
 
     return NextResponse.json({ success: true, wishlist, items });
   } catch (error) {
@@ -250,9 +257,10 @@ export async function POST(request: NextRequest) {
           items = Array.isArray(productsData) ? productsData : productsData.products || productsData.items || [];
         }
 
+        // Return wishlist object with items included for WishlistContext compatibility
         return NextResponse.json({
           success: true,
-          wishlist: { share_key: shareKey },
+          wishlist: { share_key: shareKey, items, items_count: items.length },
           items,
           added_to: shareKey,
         });
@@ -322,9 +330,10 @@ export async function POST(request: NextRequest) {
           items = Array.isArray(productsData) ? productsData : productsData.products || productsData.items || [];
         }
 
+        // Return wishlist object with items included for WishlistContext compatibility
         return NextResponse.json({
           success: true,
-          wishlist: { share_key: shareKey },
+          wishlist: { share_key: shareKey, items, items_count: items.length },
           items,
         });
       }
@@ -393,9 +402,10 @@ export async function POST(request: NextRequest) {
           items = Array.isArray(productsData) ? productsData : productsData.products || productsData.items || [];
         }
 
+        // Return wishlist object with items included for WishlistContext compatibility
         return NextResponse.json({
           success: true,
-          wishlist: { share_key: shareKey },
+          wishlist: { share_key: shareKey, items, items_count: items.length },
           items,
           syncResults: results,
         });

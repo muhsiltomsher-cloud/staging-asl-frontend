@@ -142,13 +142,18 @@ export async function addToWishlist(
 }
 
 export async function removeFromWishlist(
-  productId: number
+  productId: number,
+  itemId?: number
 ): Promise<WishlistOperationResponse> {
   try {
+    const body: Record<string, unknown> = { product_id: productId };
+    if (itemId) {
+      body.item_id = itemId;
+    }
     const response = await fetch("/api/wishlist?action=remove", {
       method: "POST",
       headers: getHeaders(),
-      body: JSON.stringify({ product_id: productId }),
+      body: JSON.stringify(body),
     });
 
     const data = await response.json();
