@@ -3,6 +3,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --color-primary: #92400e;
+  --color-primary-dark: #78350f;
+  --color-primary-light: #b45309;
+  --color-beige: #F5F0E8;
+  --color-beige-dark: #E8E0D5;
+  --color-brown: #5C4A3D;
+  --color-brown-light: #8B7355;
 }
 
 @theme inline {

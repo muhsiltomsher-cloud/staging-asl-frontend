@@ -1,0 +1,155 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Input } from "@/components/common/Input";
+import { Button } from "@/components/common/Button";
+import { useNotification } from "@/contexts/NotificationContext";
+
+interface ForgotPasswordPageProps {
+  params: Promise<{ locale: string }>;
+}
+
+export default function ForgotPasswordPage({ params }: ForgotPasswordPageProps) {
+  const { notify } = useNotification();
+  const [locale, setLocale] = useState<string>("en");
+  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    params.then((p) => setLocale(p.locale));
+  }, [params]);
+
+  const isRTL = locale === "ar";
+
+  const t = {
+    en: {
+      title: "Forgot Password",
+      subtitle: "Enter your email address and we'll send you a link to reset your password",
+      email: "Email Address",
+      emailPlaceholder: "Enter your email",
+      submitButton: "Send Reset Link",
+      submitting: "Sending...",
+      backToLogin: "Back to Login",
+      emailRequired: "Email is required",
+      emailInvalid: "Please enter a valid email address",
+      successMessage: "If an account exists with this email, you will receive a password reset link shortly.",
+      errorMessage: "Something went wrong. Please try again.",
+    },
+    ar: {
+      title: "نسيت كلمة المرور",
+      subtitle: "أدخل بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة المرور",
+      email: "البريد الإلكتروني",
+      emailPlaceholder: "أدخل بريدك الإلكتروني",
+      submitButton: "إرسال رابط إعادة التعيين",
+      submitting: "جاري الإرسال...",
+      backToLogin: "العودة لتسجيل الدخول",
+      emailRequired: "البريد الإلكتروني مطلوب",
+      emailInvalid: "يرجى إدخال بريد إلكتروني صحيح",
+      successMessage: "إذا كان هناك حساب مرتبط بهذا البريد الإلكتروني، ستتلقى رابط إعادة تعيين كلمة المرور قريبًا.",
+      errorMessage: "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    },
+  };
+
+  const texts = t[locale as keyof typeof t] || t.en;
+
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccessMessage(null);
+
+    if (!email.trim()) {
+      setError(texts.emailRequired);
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setError(texts.emailInvalid);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Simulate API call for password reset
+      // In a real implementation, this would call the backend API
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      
+      setSuccessMessage(texts.successMessage);
+      notify("success", texts.successMessage);
+      setEmail("");
+    } catch {
+      setError(texts.errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12" style={{ backgroundColor: '#F5F0E8' }}>
+      <div className="w-full max-w-md">
+        <div className="rounded-lg border border-[#E8E0D5] bg-white p-8 shadow-sm">
+          <div className={`mb-8 text-center ${isRTL ? "rtl" : ""}`}>
+            <h1 className="text-2xl font-bold text-[#5C4A3D]">{texts.title}</h1>
+            <p className="mt-2 text-[#8B7355]">{texts.subtitle}</p>
+          </div>
+
+          {error && (
+            <div className="mb-6 rounded-md bg-red-50 p-4 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="mb-6 rounded-md bg-green-50 p-4 text-sm text-green-600">
+              {successMessage}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <Input
+              label={texts.email}
+              name="email"
+              type="email"
+              placeholder={texts.emailPlaceholder}
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (error) setError(null);
+              }}
+              error={error || undefined}
+              autoComplete="email"
+              dir={isRTL ? "rtl" : "ltr"}
+              required
+            />
+
+            <Button
+              type="submit"
+              className="w-full bg-[#92400e] hover:bg-[#78350f] focus-visible:ring-[#92400e]"
+              isLoading={isLoading}
+              disabled={isLoading}
+            >
+              {isLoading ? texts.submitting : texts.submitButton}
+            </Button>
+          </form>
+
+          <div className={`mt-6 text-center text-sm ${isRTL ? "rtl" : ""}`}>
+            <Link
+              href={`/${locale}/login`}
+              className="font-medium text-[#92400e] hover:underline"
+            >
+              {texts.backToLogin}
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

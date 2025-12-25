@@ -167,12 +167,12 @@ export default function RegisterPage({ params }: RegisterPageProps) {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12">
+    <div className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12" style={{ backgroundColor: '#F5F0E8' }}>
       <div className="w-full max-w-md">
-        <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
+        <div className="rounded-lg border border-[#E8E0D5] bg-white p-8 shadow-sm">
           <div className={`mb-8 text-center ${isRTL ? "rtl" : ""}`}>
-            <h1 className="text-2xl font-bold text-gray-900">{texts.registerTitle}</h1>
-            <p className="mt-2 text-gray-600">{texts.registerSubtitle}</p>
+            <h1 className="text-2xl font-bold text-[#5C4A3D]">{texts.registerTitle}</h1>
+            <p className="mt-2 text-[#8B7355]">{texts.registerSubtitle}</p>
           </div>
 
           {errors.general && (
@@ -242,7 +242,7 @@ export default function RegisterPage({ params }: RegisterPageProps) {
 
             <Button
               type="submit"
-              className="w-full"
+              className="w-full bg-[#92400e] hover:bg-[#78350f] focus-visible:ring-[#92400e]"
               isLoading={isLoading}
               disabled={isLoading}
             >
@@ -251,10 +251,10 @@ export default function RegisterPage({ params }: RegisterPageProps) {
           </form>
 
           <div className={`mt-6 text-center text-sm ${isRTL ? "rtl" : ""}`}>
-            <span className="text-gray-600">{texts.hasAccount} </span>
+            <span className="text-[#8B7355]">{texts.hasAccount} </span>
             <Link
               href={`/${locale}/login`}
-              className="font-medium text-gray-900 hover:underline"
+              className="font-medium text-[#92400e] hover:underline"
             >
               {texts.signInLink}
             </Link>
