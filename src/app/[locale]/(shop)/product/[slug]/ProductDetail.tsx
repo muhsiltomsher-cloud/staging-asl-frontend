@@ -388,6 +388,7 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
           {/* Main Slider */}
           <div className="relative w-full max-w-full">
             <Swiper
+              key={viewMode}
               modules={[Navigation, Thumbs]}
               thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
               navigation={{
@@ -395,12 +396,13 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
                 nextEl: ".gallery-next",
               }}
               onSlideChange={(swiper) => setSelectedImage(swiper.activeIndex)}
-              className="aspect-square w-full max-w-full overflow-hidden rounded-lg bg-gray-100"
+              className="product-gallery-swiper w-full overflow-hidden rounded-lg bg-gray-100"
             >
               {images.map((image, index) => (
                 <SwiperSlide key={image.id}>
                   <div 
-                    className="relative h-full w-full cursor-pointer"
+                    className="relative w-full cursor-pointer"
+                    style={{ paddingBottom: '100%' }}
                     onClick={() => setIsFullscreen(true)}
                   >
                     <Image
@@ -415,6 +417,12 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
                 </SwiperSlide>
               ))}
             </Swiper>
+            <style jsx global>{`
+              .product-gallery-swiper .swiper-slide {
+                height: auto !important;
+                width: 100% !important;
+              }
+            `}</style>
 
             {/* Navigation Arrows */}
             {imageCount > 1 && (
