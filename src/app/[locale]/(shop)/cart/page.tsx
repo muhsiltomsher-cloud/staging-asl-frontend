@@ -150,16 +150,12 @@ export default function CartPage() {
 
         {/* Login Status Indicator */}
         {!isEmpty && (
-          <div className={`mb-6 flex items-center gap-3 rounded-lg border p-4 ${
-            isAuthenticated 
-              ? 'border-green-200 bg-green-50' 
-              : 'border-amber-200 bg-amber-50'
-          }`}>
+          <div className="mb-6 flex items-center gap-3 rounded-lg border border-black/10 bg-white p-4">
             {isAuthenticated ? (
               <>
                 <UserCheck className="h-5 w-5 text-green-600" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-green-800">
+                  <p className="text-sm font-medium text-gray-800">
                     {texts.loggedInAs} <span className="font-semibold">{user?.user_email}</span>
                   </p>
                 </div>
@@ -168,8 +164,8 @@ export default function CartPage() {
               <>
                 <User className="h-5 w-5 text-amber-600" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-amber-800">{texts.guestCheckout}</p>
-                  <Link href={`/${locale}/login`} className="text-sm text-amber-700 underline hover:text-amber-900">
+                  <p className="text-sm font-medium text-gray-800">{texts.guestCheckout}</p>
+                  <Link href={`/${locale}/login`} className="text-sm text-gray-600 underline hover:text-gray-900">
                     {texts.loginForBenefits}
                   </Link>
                 </div>
@@ -326,7 +322,7 @@ export default function CartPage() {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="rounded-lg border bg-gray-50 p-6">
+            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-semibold text-gray-900">
                 {texts.orderSummary}
               </h2>
@@ -360,9 +356,9 @@ export default function CartPage() {
                   {cart.coupons.map((coupon) => (
                     <div
                       key={coupon.coupon}
-                      className="flex items-center justify-between rounded-lg bg-green-50 px-3 py-2"
+                      className="flex items-center justify-between rounded-lg border border-black/10 bg-gray-50 px-3 py-2"
                     >
-                      <span className="text-sm font-medium text-green-700">
+                      <span className="text-sm font-medium text-gray-700">
                         {coupon.coupon}
                       </span>
                       <button
@@ -376,7 +372,7 @@ export default function CartPage() {
                 </div>
               )}
 
-              <div className="space-y-3 border-b pb-4">
+              <div className="space-y-3 border-b border-black/10 pb-4">
                 <div className="flex justify-between text-gray-600">
                   <span>{texts.subtotal}</span>
                   <FormattedPrice
@@ -418,7 +414,7 @@ export default function CartPage() {
                 />
               </div>
 
-              <Button className="hidden w-full md:block" size="lg" asChild>
+              <Button className="w-full" size="lg" asChild>
                 <Link href={`/${locale}/checkout`}>{texts.checkout}</Link>
               </Button>
 
@@ -437,7 +433,7 @@ export default function CartPage() {
 
       {/* Mobile Sticky Order Summary - positioned above bottom nav bar */}
       {!isEmpty && (
-        <div className="fixed bottom-16 left-0 right-0 z-40 border-t bg-white px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] md:hidden" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-black/10 bg-white px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] md:hidden" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col">
               <span className="text-xs text-gray-500">{texts.orderTotal}</span>

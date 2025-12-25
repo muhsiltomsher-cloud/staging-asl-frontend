@@ -237,16 +237,12 @@ export default function CheckoutPage() {
         <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 
         {/* Login Status Indicator */}
-        <div className={`mb-6 flex items-center gap-3 rounded-lg border p-4 ${
-          isAuthenticated 
-            ? 'border-green-200 bg-green-50' 
-            : 'border-amber-200 bg-amber-50'
-        }`}>
+        <div className="mb-6 flex items-center gap-3 rounded-lg border border-black/10 bg-white p-4">
           {isAuthenticated ? (
             <>
               <UserCheck className="h-5 w-5 text-green-600" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-green-800">
+                <p className="text-sm font-medium text-gray-800">
                   {isRTL ? "تم تسجيل الدخول كـ" : "Logged in as"} <span className="font-semibold">{user?.user_email}</span>
                 </p>
               </div>
@@ -255,7 +251,7 @@ export default function CheckoutPage() {
             <>
               <User className="h-5 w-5 text-amber-600" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-amber-800">
+                <p className="text-sm font-medium text-gray-800">
                   {isRTL ? "أنت تتسوق كضيف" : "You are checking out as a guest"}
                 </p>
               </div>
@@ -268,7 +264,7 @@ export default function CheckoutPage() {
         </h1>
 
         {error && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+          <div className="mb-6 rounded-lg border border-black/10 bg-white p-4 text-red-600">
             {error}
           </div>
         )}
@@ -284,7 +280,7 @@ export default function CheckoutPage() {
         <div className="grid gap-8 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
             {/* Contact Information */}
-            <div className="rounded-lg border bg-white p-6 shadow-sm">
+            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
               <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">1</span>
                 {isRTL ? "معلومات الاتصال" : "Contact Information"}
@@ -308,7 +304,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* Shipping Address */}
-            <div className="rounded-lg border bg-white p-6 shadow-sm">
+            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
               <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">2</span>
                 {isRTL ? "عنوان الشحن" : "Shipping Address"}
@@ -316,21 +312,21 @@ export default function CheckoutPage() {
 
               {/* Show saved address info for authenticated users */}
               {isAuthenticated && customerData?.shipping && customerData.shipping.address_1 && (
-                <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                <div className="mb-4 rounded-lg border border-black/10 bg-gray-50 p-4">
                   <div className="flex items-start gap-3">
-                    <MapPin className="mt-0.5 h-5 w-5 text-blue-600" />
+                    <MapPin className="mt-0.5 h-5 w-5 text-gray-600" />
                     <div className="flex-1">
-                      <p className="font-medium text-blue-900">
+                      <p className="font-medium text-gray-900">
                         {isRTL ? "العنوان المحفوظ" : "Saved Address"}
                       </p>
-                      <p className="mt-1 text-sm text-blue-700">
+                      <p className="mt-1 text-sm text-gray-600">
                         {customerData.shipping.first_name} {customerData.shipping.last_name}
                         {customerData.shipping.address_1 && `, ${customerData.shipping.address_1}`}
                         {customerData.shipping.city && `, ${customerData.shipping.city}`}
                         {customerData.shipping.country && `, ${customerData.shipping.country}`}
                       </p>
                     </div>
-                    <Check className="h-5 w-5 text-blue-600" />
+                    <Check className="h-5 w-5 text-green-600" />
                   </div>
                 </div>
               )}
@@ -391,7 +387,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* Billing Address */}
-            <div className="rounded-lg border bg-white p-6 shadow-sm">
+            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">3</span>
@@ -407,7 +403,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Same as shipping checkbox */}
-              <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4 hover:bg-gray-50">
+              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-black/10 p-4 hover:bg-gray-50">
                 <input
                   type="checkbox"
                   checked={formData.sameAsShipping}
@@ -490,13 +486,13 @@ export default function CheckoutPage() {
             </div>
 
             {/* Payment Method */}
-            <div className="rounded-lg border bg-white p-6 shadow-sm">
+            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
               <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">4</span>
                 {isRTL ? "طريقة الدفع" : "Payment Method"}
               </h2>
               <div className="space-y-3">
-                <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4 hover:bg-gray-50 transition-colors">
+                <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-black/10 p-4 hover:bg-gray-50 transition-colors">
                   <input
                     type="radio"
                     name="payment"
@@ -510,7 +506,7 @@ export default function CheckoutPage() {
                     <p className="text-xs text-gray-500">{isRTL ? "ادفع بأمان ببطاقتك" : "Pay securely with your card"}</p>
                   </div>
                 </label>
-                <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4 hover:bg-gray-50 transition-colors">
+                <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-black/10 p-4 hover:bg-gray-50 transition-colors">
                   <input
                     type="radio"
                     name="payment"
@@ -528,7 +524,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* Order Notes */}
-            <div className="rounded-lg border bg-white p-6 shadow-sm">
+            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
               <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">5</span>
                 {isRTL ? "ملاحظات الطلب" : "Order Notes"}
@@ -549,17 +545,17 @@ export default function CheckoutPage() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 rounded-lg border bg-white p-6 shadow-sm">
+            <div className="sticky top-24 rounded-lg border border-black/10 bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-semibold text-gray-900">
                 {isRTL ? "ملخص الطلب" : "Order Summary"}
               </h2>
 
               {/* Cart Items with Thumbnails */}
-              <div className="max-h-80 space-y-4 overflow-y-auto border-b pb-4">
+              <div className="space-y-4 border-b border-black/10 pb-4 md:max-h-80 md:overflow-y-auto">
                 {cartItems.map((item) => (
                   <div key={item.item_key} className="flex items-center gap-3">
                     {/* Product Thumbnail */}
-                    <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border bg-gray-100">
+                    <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-black/10 bg-gray-100">
                       {item.featured_image ? (
                         <Image
                           src={item.featured_image}
@@ -598,7 +594,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Totals */}
-              <div className="space-y-3 border-b py-4">
+              <div className="space-y-3 border-b border-black/10 py-4">
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>{isRTL ? "المجموع الفرعي" : "Subtotal"}</span>
                   <FormattedPrice
@@ -645,7 +641,7 @@ export default function CheckoutPage() {
       </div>
 
       {/* Mobile Sticky Order Summary - positioned above bottom nav bar */}
-      <div className="fixed bottom-16 left-0 right-0 z-40 border-t bg-white px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] md:hidden" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
+      <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-black/10 bg-white px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] md:hidden" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
         <div className="flex items-center justify-between gap-4">
           <div className="flex flex-col">
             <span className="text-xs text-gray-500">{isRTL ? "الإجمالي" : "Total"}</span>
