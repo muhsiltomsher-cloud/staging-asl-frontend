@@ -3,7 +3,8 @@ import { siteConfig } from "@/config/site";
 import { cookies } from "next/headers";
 
 const API_BASE = siteConfig.apiUrl;
-const WISHLIST_BASE = `${API_BASE}/wp-json/yith/wishlist/v1`;
+// TI WooCommerce Wishlist REST API v3
+const WISHLIST_BASE = `${API_BASE}/wp-json/wishlist/v3`;
 const WP_AUTH_TOKEN_COOKIE = "asl_wp_auth_token";
 const AUTH_TOKEN_COOKIE = "asl_auth_token";
 
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
   try {
     const { wpToken, cocartToken } = await getAuthToken();
     
-    // Prefer WordPress JWT token for YITH endpoints, fall back to CoCart token
+    // Prefer WordPress JWT token for TI Wishlist endpoints, fall back to CoCart token
     const authToken = wpToken || cocartToken;
     
     if (!authToken) {
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Use /wishlists endpoint with WordPress JWT for authenticated users
+    // TI WooCommerce Wishlist: Get user's wishlists
     const response = await fetch(`${WISHLIST_BASE}/wishlists`, {
       method: "GET",
       headers: getAuthHeaders(request, authToken),
@@ -71,28 +72,39 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Find default wishlist or use first one
-    // API can return either an array directly or { lists: [...] }
+    // TI Wishlist returns array of wishlists
     let wishlist = null;
     let items: unknown[] = [];
-    let wishlistsArray: Array<{ is_default?: boolean; items?: unknown[] }> = [];
+    let wishlistsArray: Array<{ share_key?: string; is_default?: boolean; products?: unknown[] }> = [];
     
     if (Array.isArray(data)) {
-      // Direct array response
       wishlistsArray = data;
-    } else if (data.lists && Array.isArray(data.lists)) {
-      // Response wrapped in { lists: [...] }
-      wishlistsArray = data.lists;
-    } else if (data.id) {
+    } else if (data.wishlists && Array.isArray(data.wishlists)) {
+      wishlistsArray = data.wishlists;
+    } else if (data.share_key) {
       // Single wishlist object
       wishlist = data;
-      items = data.items || [];
+      items = data.products || [];
       return NextResponse.json({ success: true, wishlist, items });
     }
     
     if (wishlistsArray.length > 0) {
+      // Find default wishlist or use first one
       wishlist = wishlistsArray.find((w) => w.is_default) || wishlistsArray[0];
-      items = wishlist?.items || [];
+      
+      // If we have a wishlist, fetch its products
+      if (wishlist && wishlist.share_key) {
+        const productsResponse = await fetch(`${WISHLIST_BASE}/wishlists/${wishlist.share_key}/products`, {
+          method: "GET",
+          headers: getAuthHeaders(request, authToken),
+        });
+        if (productsResponse.ok) {
+          const productsData = await productsResponse.json();
+          items = Array.isArray(productsData) ? productsData : productsData.products || [];
+        }
+      } else {
+        items = wishlist?.products || [];
+      }
     }
 
     return NextResponse.json({ success: true, wishlist, items });
@@ -117,7 +129,7 @@ export async function POST(request: NextRequest) {
   try {
     const { wpToken, cocartToken } = await getAuthToken();
     
-    // Prefer WordPress JWT token for YITH endpoints, fall back to CoCart token
+    // Prefer WordPress JWT token for TI Wishlist endpoints, fall back to CoCart token
     const authToken = wpToken || cocartToken;
     
     if (!authToken) {
@@ -135,12 +147,66 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json().catch(() => ({}));
 
+    // Helper function to get or create default wishlist
+    async function getOrCreateDefaultWishlist(): Promise<{ share_key: string } | null> {
+      // First, try to get existing wishlists
+      const listResponse = await fetch(`${WISHLIST_BASE}/wishlists`, {
+        method: "GET",
+        headers: getAuthHeaders(request, authToken),
+      });
+      
+      if (listResponse.ok) {
+        const listData = await listResponse.json();
+        const wishlists = Array.isArray(listData) ? listData : listData.wishlists || [];
+        if (wishlists.length > 0) {
+          return wishlists.find((w: { is_default?: boolean }) => w.is_default) || wishlists[0];
+        }
+      }
+      
+      // No wishlist exists, create one
+      const createResponse = await fetch(`${WISHLIST_BASE}/wishlists`, {
+        method: "POST",
+        headers: getAuthHeaders(request, authToken),
+        body: JSON.stringify({
+          title: "Default wishlist",
+          is_default: true,
+        }),
+      });
+      
+      if (createResponse.ok) {
+        return await createResponse.json();
+      }
+      
+      return null;
+    }
+
     switch (action) {
       case "add": {
-        const response = await fetch(`${WISHLIST_BASE}/items`, {
+        // TI Wishlist: First get or create a wishlist, then add product to it
+        const wishlist = await getOrCreateDefaultWishlist();
+        
+        if (!wishlist || !wishlist.share_key) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: {
+                code: "wishlist_error",
+                message: "Could not get or create wishlist.",
+              },
+            },
+            { status: 500 }
+          );
+        }
+        
+        // Add product to wishlist
+        const response = await fetch(`${WISHLIST_BASE}/wishlists/${wishlist.share_key}/products`, {
           method: "POST",
           headers: getAuthHeaders(request, authToken),
-          body: JSON.stringify(body),
+          body: JSON.stringify({
+            product_id: body.product_id,
+            variation_id: body.variation_id || 0,
+            quantity: body.quantity || 1,
+          }),
         });
         const data = await response.json();
 
@@ -159,23 +225,61 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
           success: true,
-          wishlist: data.wishlist || data,
-          items: data.items || data.wishlist?.items || [],
+          wishlist: wishlist,
+          items: data.products || data.items || [],
+          added_to: wishlist.share_key,
         });
       }
 
       case "remove": {
-        // Use query params for DELETE request as it's more reliable
         const productId = body.product_id;
-        const wishlistId = body.wishlist_id;
+        const shareKey = body.share_key || body.wishlist_id;
         
-        const params = new URLSearchParams();
-        if (productId) params.append("product_id", String(productId));
-        if (wishlistId) params.append("wishlist_id", String(wishlistId));
+        if (!shareKey) {
+          // Try to get the default wishlist's share_key
+          const wishlist = await getOrCreateDefaultWishlist();
+          if (!wishlist || !wishlist.share_key) {
+            return NextResponse.json(
+              {
+                success: false,
+                error: {
+                  code: "wishlist_error",
+                  message: "Could not find wishlist.",
+                },
+              },
+              { status: 404 }
+            );
+          }
+          
+          // TI Wishlist: DELETE /wishlists/{share_key}/products/{product_id}
+          const response = await fetch(`${WISHLIST_BASE}/wishlists/${wishlist.share_key}/products/${productId}`, {
+            method: "DELETE",
+            headers: getAuthHeaders(request, authToken),
+          });
+          const data = await response.json();
+
+          if (!response.ok) {
+            return NextResponse.json(
+              {
+                success: false,
+                error: {
+                  code: data.code || "remove_from_wishlist_error",
+                  message: data.message || "Failed to remove item from wishlist.",
+                },
+              },
+              { status: response.status }
+            );
+          }
+
+          return NextResponse.json({
+            success: true,
+            wishlist: wishlist,
+            items: data.products || data.items || [],
+          });
+        }
         
-        const url = `${WISHLIST_BASE}/items?${params.toString()}`;
-        
-        const response = await fetch(url, {
+        // TI Wishlist: DELETE /wishlists/{share_key}/products/{product_id}
+        const response = await fetch(`${WISHLIST_BASE}/wishlists/${shareKey}/products/${productId}`, {
           method: "DELETE",
           headers: getAuthHeaders(request, authToken),
         });
@@ -197,24 +301,41 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
           success: true,
           wishlist: data.wishlist || data,
-          items: data.items || data.wishlist?.items || [],
+          items: data.products || data.items || [],
         });
       }
 
       case "sync": {
-        // Sync is implemented client-side by adding items one by one
-        // since the backend doesn't have a dedicated sync endpoint
+        // Sync guest items to user's wishlist
         const guestItems = body.items || [];
         const results: Array<{ product_id: number; success: boolean }> = [];
         
+        // Get or create default wishlist
+        const wishlist = await getOrCreateDefaultWishlist();
+        
+        if (!wishlist || !wishlist.share_key) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: {
+                code: "wishlist_error",
+                message: "Could not get or create wishlist for sync.",
+              },
+            },
+            { status: 500 }
+          );
+        }
+        
+        // Add each item to the wishlist
         for (const item of guestItems) {
           try {
-            const response = await fetch(`${WISHLIST_BASE}/items`, {
+            const response = await fetch(`${WISHLIST_BASE}/wishlists/${wishlist.share_key}/products`, {
               method: "POST",
               headers: getAuthHeaders(request, authToken),
               body: JSON.stringify({
                 product_id: item.product_id,
-                variation_id: item.variation_id,
+                variation_id: item.variation_id || 0,
+                quantity: item.quantity || 1,
               }),
             });
             const data = await response.json();
@@ -227,26 +348,15 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // Fetch the updated wishlist after sync using /wishlists endpoint
-        const listResponse = await fetch(`${WISHLIST_BASE}/wishlists`, {
+        // Fetch the updated wishlist products
+        const productsResponse = await fetch(`${WISHLIST_BASE}/wishlists/${wishlist.share_key}/products`, {
           method: "GET",
           headers: getAuthHeaders(request, authToken),
         });
-        const listData = await listResponse.json();
-
-        let wishlist = null;
         let items: unknown[] = [];
-        let wishlistsArray: Array<{ is_default?: boolean; items?: unknown[] }> = [];
-
-        if (Array.isArray(listData)) {
-          wishlistsArray = listData;
-        } else if (listData.lists && Array.isArray(listData.lists)) {
-          wishlistsArray = listData.lists;
-        }
-
-        if (wishlistsArray.length > 0) {
-          wishlist = wishlistsArray.find((w) => w.is_default) || wishlistsArray[0];
-          items = wishlist?.items || [];
+        if (productsResponse.ok) {
+          const productsData = await productsResponse.json();
+          items = Array.isArray(productsData) ? productsData : productsData.products || [];
         }
 
         return NextResponse.json({
