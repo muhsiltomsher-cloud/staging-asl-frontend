@@ -4,17 +4,17 @@ export interface WishlistItem {
   id: number;
   product_id: number;
   variation_id?: number;
-  quantity: number;
-  user_id: number;
-  dateadded: string;
-  dateadded_formatted: string;
+  quantity?: number;
+  user_id?: number;
+  dateadded?: string;
+  dateadded_formatted?: string;
   product_name: string;
-  product_price: string;
-  product_price_html: string;
-  product_image: string;
-  product_url: string;
-  stock_status: string;
-  is_in_stock: boolean;
+  product_price?: string;
+  product_price_html?: string;
+  product_image?: string;
+  product_url?: string;
+  stock_status?: string;
+  is_in_stock?: boolean;
 }
 
 export interface WishlistResponse {

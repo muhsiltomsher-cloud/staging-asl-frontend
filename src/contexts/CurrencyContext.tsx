@@ -7,8 +7,8 @@ import { currencies, siteConfig, type Currency } from "@/config/site";
 interface CurrencyContextType {
   currency: Currency;
   setCurrency: (currency: Currency) => void;
-  formatPrice: (price: string | number, showCode?: boolean) => string;
-  formatCartPrice: (price: string | number, minorUnit?: number, showCode?: boolean) => string;
+  formatPrice: (price: string | number | null | undefined, showCode?: boolean) => string;
+  formatCartPrice: (price: string | number | null | undefined, minorUnit?: number, showCode?: boolean) => string;
   getCurrencySymbol: () => string;
   getCurrencyInfo: () => (typeof currencies)[number];
 }
@@ -49,12 +49,18 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   }, [getCurrencyInfo]);
 
   const formatPrice = useCallback(
-    (price: string | number, showCode = true) => {
+    (price: string | number | null | undefined, showCode = true) => {
       const currencyInfo = getCurrencyInfo();
+      
+      // Handle undefined, null, or empty price
+      if (price === undefined || price === null || price === "") {
+        return "—";
+      }
+      
       const numericPrice = typeof price === "string" ? parseFloat(price.replace(/[^0-9.-]+/g, "")) : price;
 
       if (isNaN(numericPrice)) {
-        return price.toString();
+        return String(price);
       }
 
       const formattedNumber = new Intl.NumberFormat("en-US", {
@@ -68,12 +74,18 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   );
 
   const formatCartPrice = useCallback(
-    (price: string | number, minorUnit = 2, showCode = true) => {
+    (price: string | number | null | undefined, minorUnit = 2, showCode = true) => {
       const currencyInfo = getCurrencyInfo();
+      
+      // Handle undefined, null, or empty price
+      if (price === undefined || price === null || price === "") {
+        return "—";
+      }
+      
       const numericPrice = typeof price === "string" ? parseFloat(price.replace(/[^0-9.-]+/g, "")) : price;
 
       if (isNaN(numericPrice)) {
-        return price.toString();
+        return String(price);
       }
 
       const divisor = Math.pow(10, minorUnit);
