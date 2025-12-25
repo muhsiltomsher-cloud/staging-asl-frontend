@@ -4,12 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, User, UserCheck } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Locale } from "@/config/site";
 
 export default function CartPage() {
@@ -26,6 +27,7 @@ export default function CartPage() {
     applyCoupon,
     removeCoupon,
   } = useCart();
+  const { isAuthenticated, user } = useAuth();
 
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
@@ -33,6 +35,9 @@ export default function CartPage() {
 
   const isRTL = locale === "ar";
   const isEmpty = cartItems.length === 0;
+  
+  const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
+  const divisor = Math.pow(10, currencyMinorUnit);
 
   const breadcrumbItems = [
     { name: isRTL ? "السلة" : "Cart", href: `/${locale}/cart` },
@@ -61,6 +66,9 @@ export default function CartPage() {
       removeCoupon: "Remove",
       calculatedAtCheckout: "Calculated at checkout",
       backToShop: "Continue Shopping",
+      loggedInAs: "Logged in as",
+      guestCheckout: "You are checking out as a guest",
+      loginForBenefits: "Login for faster checkout",
     },
     ar: {
       cart: "سلة التسوق",
@@ -84,6 +92,9 @@ export default function CartPage() {
       removeCoupon: "إزالة",
       calculatedAtCheckout: "يحسب عند الدفع",
       backToShop: "متابعة التسوق",
+      loggedInAs: "تم تسجيل الدخول كـ",
+      guestCheckout: "أنت تتسوق كضيف",
+      loginForBenefits: "سجل دخولك لتجربة أسرع",
     },
   };
 
@@ -133,12 +144,43 @@ export default function CartPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
+    <div className="min-h-screen pb-32 md:pb-8" style={{ backgroundColor: '#F5F0E8' }}>
+      <div className="container mx-auto px-4 py-8">
+        <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 
-      <h1 className="mb-8 text-3xl font-bold text-gray-900">
-        {texts.cart} {cartItemsCount > 0 && `(${cartItemsCount})`}
-      </h1>
+        {/* Login Status Indicator */}
+        {!isEmpty && (
+          <div className={`mb-6 flex items-center gap-3 rounded-lg border p-4 ${
+            isAuthenticated 
+              ? 'border-green-200 bg-green-50' 
+              : 'border-amber-200 bg-amber-50'
+          }`}>
+            {isAuthenticated ? (
+              <>
+                <UserCheck className="h-5 w-5 text-green-600" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-green-800">
+                    {texts.loggedInAs} <span className="font-semibold">{user?.user_email}</span>
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <User className="h-5 w-5 text-amber-600" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-amber-800">{texts.guestCheckout}</p>
+                  <Link href={`/${locale}/login`} className="text-sm text-amber-700 underline hover:text-amber-900">
+                    {texts.loginForBenefits}
+                  </Link>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        <h1 className="mb-8 text-3xl font-bold text-gray-900">
+          {texts.cart} {cartItemsCount > 0 && `(${cartItemsCount})`}
+        </h1>
 
       {isEmpty ? (
         <div className="py-16 text-center">
@@ -214,7 +256,7 @@ export default function CartPage() {
 
                       <div className="hidden text-center md:col-span-2 md:block">
                         <FormattedPrice
-                          price={parseInt(item.price) / 100}
+                          price={parseFloat(item.price) / divisor}
                           className="font-medium"
                           iconSize="xs"
                         />
@@ -260,7 +302,7 @@ export default function CartPage() {
                           {texts.total}:
                         </span>
                         <FormattedPrice
-                          price={parseInt(item.totals.total) / 100}
+                          price={parseFloat(item.totals.total) / divisor}
                           className="font-semibold"
                           iconSize="xs"
                         />
@@ -338,7 +380,7 @@ export default function CartPage() {
                 <div className="flex justify-between text-gray-600">
                   <span>{texts.subtotal}</span>
                   <FormattedPrice
-                    price={parseInt(cartSubtotal) / 100}
+                    price={parseFloat(cartSubtotal) / divisor}
                     iconSize="xs"
                   />
                 </div>
@@ -348,7 +390,7 @@ export default function CartPage() {
                       <span>{texts.discount}</span>
                       <span className="inline-flex items-center gap-1">
                         -<FormattedPrice
-                          price={parseInt(cart.totals.discount_total) / 100}
+                          price={parseFloat(cart.totals.discount_total) / divisor}
                           iconSize="xs"
                         />
                       </span>
@@ -360,7 +402,7 @@ export default function CartPage() {
                     {cart?.totals?.shipping_total &&
                     parseFloat(cart.totals.shipping_total) > 0
                       ? <FormattedPrice
-                          price={parseInt(cart.totals.shipping_total) / 100}
+                          price={parseFloat(cart.totals.shipping_total) / divisor}
                           iconSize="xs"
                         />
                       : texts.calculatedAtCheckout}
@@ -371,12 +413,12 @@ export default function CartPage() {
               <div className="flex justify-between py-4 text-lg font-semibold text-gray-900">
                 <span>{texts.orderTotal}</span>
                 <FormattedPrice
-                  price={parseInt(cartTotal) / 100}
+                  price={parseFloat(cartTotal) / divisor}
                   iconSize="sm"
                 />
               </div>
 
-              <Button className="w-full" size="lg" asChild>
+              <Button className="hidden w-full md:block" size="lg" asChild>
                 <Link href={`/${locale}/checkout`}>{texts.checkout}</Link>
               </Button>
 
@@ -388,6 +430,26 @@ export default function CartPage() {
                 {texts.backToShop}
               </Link>
             </div>
+          </div>
+        </div>
+      )}
+      </div>
+
+      {/* Mobile Sticky Order Summary - positioned above bottom nav bar */}
+      {!isEmpty && (
+        <div className="fixed bottom-16 left-0 right-0 z-40 border-t bg-white px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] md:hidden" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col">
+              <span className="text-xs text-gray-500">{texts.orderTotal}</span>
+              <FormattedPrice
+                price={parseFloat(cartTotal) / divisor}
+                className="text-lg font-bold text-gray-900"
+                iconSize="sm"
+              />
+            </div>
+            <Button size="lg" className="flex-1 max-w-[200px]" asChild>
+              <Link href={`/${locale}/checkout`}>{texts.checkout}</Link>
+            </Button>
           </div>
         </div>
       )}
