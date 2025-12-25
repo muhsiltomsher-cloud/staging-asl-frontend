@@ -12,7 +12,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCustomer, type Customer } from "@/lib/api/customer";
 import type { Locale } from "@/config/site";
-import { MapPin, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { MapPin, Check, ChevronDown, ChevronUp, User, UserCheck } from "lucide-react";
 
 interface AddressFormData {
   firstName: string;
@@ -59,6 +59,9 @@ export default function CheckoutPage() {
   const [customerData, setCustomerData] = useState<Customer | null>(null);
   const [isLoadingCustomer, setIsLoadingCustomer] = useState(false);
   const [showBillingSection, setShowBillingSection] = useState(false);
+  
+  const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
+  const divisor = Math.pow(10, currencyMinorUnit);
 
   const [formData, setFormData] = useState<CheckoutFormData>({
     shipping: { ...emptyAddress },
@@ -229,27 +232,55 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
+    <div className="min-h-screen pb-32 md:pb-8" style={{ backgroundColor: '#F5F0E8' }}>
+      <div className="container mx-auto px-4 py-8">
+        <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 
-      <h1 className="mb-8 text-3xl font-bold text-gray-900">
-        {isRTL ? "الدفع" : "Checkout"}
-      </h1>
-
-      {error && (
-        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
-          {error}
+        {/* Login Status Indicator */}
+        <div className={`mb-6 flex items-center gap-3 rounded-lg border p-4 ${
+          isAuthenticated 
+            ? 'border-green-200 bg-green-50' 
+            : 'border-amber-200 bg-amber-50'
+        }`}>
+          {isAuthenticated ? (
+            <>
+              <UserCheck className="h-5 w-5 text-green-600" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-green-800">
+                  {isRTL ? "تم تسجيل الدخول كـ" : "Logged in as"} <span className="font-semibold">{user?.user_email}</span>
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <User className="h-5 w-5 text-amber-600" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-amber-800">
+                  {isRTL ? "أنت تتسوق كضيف" : "You are checking out as a guest"}
+                </p>
+              </div>
+            </>
+          )}
         </div>
-      )}
 
-      {isLoadingCustomer && (
-        <div className="mb-6 flex items-center justify-center py-4">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900"></div>
-          <span className="ml-2 text-gray-600">{isRTL ? "جاري تحميل بياناتك..." : "Loading your data..."}</span>
-        </div>
-      )}
+        <h1 className="mb-8 text-3xl font-bold text-gray-900">
+          {isRTL ? "الدفع" : "Checkout"}
+        </h1>
 
-      <form onSubmit={handleSubmit}>
+        {error && (
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+            {error}
+          </div>
+        )}
+
+        {isLoadingCustomer && (
+          <div className="mb-6 flex items-center justify-center py-4">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900"></div>
+            <span className="ml-2 text-gray-600">{isRTL ? "جاري تحميل بياناتك..." : "Loading your data..."}</span>
+          </div>
+        )}
+
+      <form id="checkout-form" onSubmit={handleSubmit}>
         <div className="grid gap-8 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
             {/* Contact Information */}
@@ -558,7 +589,7 @@ export default function CheckoutPage() {
                     </div>
                     {/* Price */}
                     <FormattedPrice
-                      price={parseInt(item.totals.total) / 100}
+                      price={parseFloat(item.totals.total) / divisor}
                       className="text-sm font-medium"
                       iconSize="xs"
                     />
@@ -571,30 +602,30 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>{isRTL ? "المجموع الفرعي" : "Subtotal"}</span>
                   <FormattedPrice
-                    price={parseInt(cartSubtotal) / 100}
+                    price={parseFloat(cartSubtotal) / divisor}
                     iconSize="xs"
                   />
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>{isRTL ? "الشحن" : "Shipping"}</span>
                   <FormattedPrice
-                    price={parseInt(cart?.totals?.shipping_total || "0") / 100}
+                    price={parseFloat(cart?.totals?.shipping_total || "0") / divisor}
                     iconSize="xs"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-between py-4 text-lg font-bold text-gray-900">
+              <div className="hidden py-4 text-lg font-bold text-gray-900 md:flex md:justify-between">
                 <span>{isRTL ? "الإجمالي" : "Total"}</span>
                 <FormattedPrice
-                  price={parseInt(cartTotal) / 100}
+                  price={parseFloat(cartTotal) / divisor}
                   iconSize="sm"
                 />
               </div>
 
               <Button
                 type="submit"
-                className="w-full"
+                className="hidden w-full md:block"
                 size="lg"
                 isLoading={isSubmitting || isAuthLoading}
                 disabled={isAuthLoading}
@@ -602,7 +633,7 @@ export default function CheckoutPage() {
                 {isRTL ? "تأكيد الطلب" : "Place Order"}
               </Button>
 
-              <p className="mt-4 text-center text-xs text-gray-500">
+              <p className="mt-4 hidden text-center text-xs text-gray-500 md:block">
                 {isRTL
                   ? "بالنقر على تأكيد الطلب، فإنك توافق على شروط الخدمة وسياسة الخصوصية."
                   : "By clicking Place Order, you agree to our Terms of Service and Privacy Policy."}
@@ -611,6 +642,31 @@ export default function CheckoutPage() {
           </div>
         </div>
       </form>
+      </div>
+
+      {/* Mobile Sticky Order Summary - positioned above bottom nav bar */}
+      <div className="fixed bottom-16 left-0 right-0 z-40 border-t bg-white px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] md:hidden" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col">
+            <span className="text-xs text-gray-500">{isRTL ? "الإجمالي" : "Total"}</span>
+            <FormattedPrice
+              price={parseFloat(cartTotal) / divisor}
+              className="text-lg font-bold text-gray-900"
+              iconSize="sm"
+            />
+          </div>
+          <Button 
+            type="submit"
+            form="checkout-form"
+            size="lg" 
+            className="flex-1 max-w-[200px]"
+            isLoading={isSubmitting || isAuthLoading}
+            disabled={isAuthLoading}
+          >
+            {isRTL ? "تأكيد الطلب" : "Place Order"}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
