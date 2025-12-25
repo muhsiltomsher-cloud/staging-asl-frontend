@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, Truck, Shield, RotateCcw } from "lucide-react";
+import { Heart, Truck, Shield, RotateCcw, Minus, Plus, Tag } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { Badge } from "@/components/common/Badge";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
-import { QuantitySelector } from "@/components/shop/QuantitySelector";
 import { ProductTabs } from "@/components/shop/ProductTabs";
 import { RelatedProducts } from "@/components/shop/RelatedProducts";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
@@ -34,8 +34,10 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
   const router = useRouter();
   const isRTL = locale === "ar";
 
+  const primaryCategory = product.categories?.[0];
   const breadcrumbItems = [
     { name: isRTL ? "المتجر" : "Shop", href: `/${locale}/shop` },
+    ...(primaryCategory ? [{ name: primaryCategory.name, href: `/${locale}/category/${primaryCategory.slug}` }] : []),
     { name: product.name, href: `/${locale}/product/${product.slug}` },
   ];
 
@@ -123,9 +125,14 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
 
         {/* Product Info */}
         <div className="space-y-6">
-          {/* Category */}
-          {product.categories?.[0] && (
-            <p className="text-sm text-gray-500">{product.categories[0].name}</p>
+          {/* Category - Clickable for SEO */}
+          {primaryCategory && (
+            <Link 
+              href={`/${locale}/category/${primaryCategory.slug}`}
+              className="inline-block text-sm text-amber-700 hover:text-amber-900 hover:underline transition-colors"
+            >
+              {primaryCategory.name}
+            </Link>
           )}
 
           {/* Title */}
@@ -178,49 +185,101 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
           {/* Short description */}
           {product.short_description && (
             <div
-              className="text-gray-600"
+              className="prose prose-sm prose-amber max-w-none prose-p:text-gray-600 prose-p:leading-relaxed prose-a:text-amber-700 prose-a:no-underline hover:prose-a:underline"
               dangerouslySetInnerHTML={{ __html: product.short_description }}
             />
           )}
 
-          {/* Quantity and Add to Cart */}
-          <div className="flex flex-wrap items-center gap-4">
-            <QuantitySelector
-              quantity={quantity}
-              onChange={setQuantity}
-              max={product.add_to_cart.maximum || 99}
-              disabled={isOutOfStock}
-            />
+          {/* Quantity and Add to Cart - Unified Design */}
+          <div className="flex flex-wrap items-stretch gap-3">
+            {/* Quantity Selector - Custom inline design */}
+            <div className="flex items-center rounded-lg border border-gray-200 bg-white">
+              <button
+                type="button"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                disabled={isOutOfStock || quantity <= 1}
+                className="flex h-12 w-12 items-center justify-center text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label={isRTL ? "تقليل الكمية" : "Decrease quantity"}
+              >
+                <Minus className="h-4 w-4" />
+              </button>
+              <input
+                type="number"
+                value={quantity}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value) || 1;
+                  const max = product.add_to_cart.maximum || 99;
+                  setQuantity(Math.min(Math.max(1, val), max));
+                }}
+                disabled={isOutOfStock}
+                className="h-12 w-14 border-x border-gray-200 bg-transparent text-center text-sm font-medium text-gray-900 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                min={1}
+                max={product.add_to_cart.maximum || 99}
+              />
+              <button
+                type="button"
+                onClick={() => setQuantity(Math.min(quantity + 1, product.add_to_cart.maximum || 99))}
+                disabled={isOutOfStock || quantity >= (product.add_to_cart.maximum || 99)}
+                className="flex h-12 w-12 items-center justify-center text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label={isRTL ? "زيادة الكمية" : "Increase quantity"}
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Add to Cart Button */}
             <Button
               onClick={handleAddToCart}
               isLoading={isAddingToCart}
               disabled={isOutOfStock || !product.is_purchasable}
               size="lg"
-              className="flex-1 md:flex-none"
+              className="h-12 flex-1 px-8 md:flex-none"
             >
               {isRTL ? "أضف إلى السلة" : "Add to Cart"}
             </Button>
+
+            {/* Wishlist Button - Matching height */}
             <button
               type="button"
               onClick={handleAddToWishlist}
               disabled={isAddingToWishlist}
-              className={`rounded-md border p-3 transition-colors ${
+              className={`flex h-12 w-12 items-center justify-center rounded-lg border transition-all ${
                 isInWishlist(product.id)
-                  ? "border-red-500 bg-red-50 text-red-500"
-                  : "border-gray-300 text-gray-600 hover:bg-gray-50"
-              } ${isAddingToWishlist ? "opacity-50 cursor-not-allowed" : ""}`}
+                  ? "border-red-300 bg-red-50 text-red-500 hover:bg-red-100"
+                  : "border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700"
+              } ${isAddingToWishlist ? "cursor-not-allowed opacity-50" : ""}`}
               aria-label={isRTL ? "أضف إلى المفضلة" : "Add to wishlist"}
             >
               <Heart className={`h-5 w-5 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
             </button>
           </div>
 
-          {/* SKU */}
-          {product.sku && (
-            <p className="text-sm text-gray-500">
-              {isRTL ? "رمز المنتج" : "SKU"}: {product.sku}
-            </p>
-          )}
+          {/* SKU & Tags */}
+          <div className="space-y-3">
+            {product.sku && (
+              <p className="text-sm text-gray-500">
+                {isRTL ? "رمز المنتج" : "SKU"}: {product.sku}
+              </p>
+            )}
+            
+            {/* Tags */}
+            {product.tags && product.tags.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="flex items-center gap-1 text-sm text-gray-500">
+                  <Tag className="h-4 w-4" />
+                  {isRTL ? "الوسوم:" : "Tags:"}
+                </span>
+                {product.tags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20 transition-colors hover:bg-amber-100"
+                  >
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Features */}
           <div className="grid gap-4 border-t border-amber-100 pt-6 sm:grid-cols-3">
