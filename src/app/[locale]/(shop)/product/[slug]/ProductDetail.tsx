@@ -4,7 +4,10 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, Minus, Plus, ChevronDown, ShoppingBag, X, ZoomIn } from "lucide-react";
+import { Heart, Minus, Plus, ChevronDown, ShoppingBag, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Thumbs, FreeMode } from "swiper/modules";
+import type { Swiper as SwiperType } from "swiper";
 import { Badge } from "@/components/common/Badge";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { RelatedProducts } from "@/components/shop/RelatedProducts";
@@ -14,6 +17,11 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
+
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/thumbs";
+import "swiper/css/free-mode";
 
 interface AccordionSectionProps {
   title: string;
@@ -134,6 +142,7 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<string | null>("characteristics");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
   const { isAuthenticated } = useAuth();
@@ -193,124 +202,103 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
       );
     }
 
-    if (imageCount === 1) {
-      return (
-        <div 
-          className="group relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-gray-100"
-          onClick={() => setIsFullscreen(true)}
-        >
-          <Image
-            src={images[0].src}
-            alt={images[0].alt || product.name}
-            fill
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            priority
-          />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/10 group-hover:opacity-100">
-            <ZoomIn className="h-8 w-8 text-white drop-shadow-lg" />
-          </div>
-        </div>
-      );
-    }
-
-    if (imageCount === 2) {
-      return (
-        <div className="space-y-3">
-          {images.map((image, index) => (
-            <div 
-              key={image.id}
-              className="group relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-gray-100"
-              onClick={() => {
-                setSelectedImage(index);
-                setIsFullscreen(true);
-              }}
-            >
-              <Image
-                src={image.src}
-                alt={image.alt || `${product.name} ${index + 1}`}
-                fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
-                priority={index === 0}
-              />
-              <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/10 group-hover:opacity-100">
-                <ZoomIn className="h-8 w-8 text-white drop-shadow-lg" />
-              </div>
-            </div>
-          ))}
-        </div>
-      );
-    }
-
     return (
       <div className="space-y-3">
-        <div 
-          className="group relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-gray-100"
-          onClick={() => {
-            setSelectedImage(0);
-            setIsFullscreen(true);
-          }}
-        >
-          <Image
-            src={images[0].src}
-            alt={images[0].alt || product.name}
-            fill
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            priority
-          />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/10 group-hover:opacity-100">
-            <ZoomIn className="h-8 w-8 text-white drop-shadow-lg" />
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-3">
-          {images.slice(1, 3).map((image, index) => (
-            <div 
-              key={image.id}
-              className="group relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-gray-100"
-              onClick={() => {
-                setSelectedImage(index + 1);
-                setIsFullscreen(true);
-              }}
-            >
-              <Image
-                src={image.src}
-                alt={image.alt || `${product.name} ${index + 2}`}
-                fill
-                sizes="(max-width: 1024px) 50vw, 25vw"
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/10 group-hover:opacity-100">
-                <ZoomIn className="h-6 w-6 text-white drop-shadow-lg" />
-              </div>
+        {/* Main Slider */}
+        <div className="relative">
+          <Swiper
+            modules={[Navigation, Thumbs]}
+            thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
+            navigation={{
+              prevEl: ".gallery-prev",
+              nextEl: ".gallery-next",
+            }}
+            onSlideChange={(swiper) => setSelectedImage(swiper.activeIndex)}
+            className="aspect-square overflow-hidden rounded-lg bg-gray-100"
+          >
+            {images.map((image, index) => (
+              <SwiperSlide key={image.id}>
+                <div 
+                  className="relative h-full w-full cursor-pointer"
+                  onClick={() => setIsFullscreen(true)}
+                >
+                  <Image
+                    src={image.src}
+                    alt={image.alt || `${product.name} ${index + 1}`}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    className="object-cover"
+                    priority={index === 0}
+                  />
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+
+          {/* Navigation Arrows */}
+          {imageCount > 1 && (
+            <>
+              <button
+                type="button"
+                className="gallery-prev absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md transition-all hover:bg-white hover:shadow-lg disabled:opacity-50"
+                aria-label={isRTL ? "الصورة السابقة" : "Previous image"}
+              >
+                <ChevronLeft className="h-5 w-5 text-gray-800" />
+              </button>
+              <button
+                type="button"
+                className="gallery-next absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md transition-all hover:bg-white hover:shadow-lg disabled:opacity-50"
+                aria-label={isRTL ? "الصورة التالية" : "Next image"}
+              >
+                <ChevronRight className="h-5 w-5 text-gray-800" />
+              </button>
+            </>
+          )}
+
+          {/* Image Counter */}
+          {imageCount > 1 && (
+            <div className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+              {selectedImage + 1} / {imageCount}
             </div>
-          ))}
+          )}
         </div>
 
-        {imageCount > 3 && (
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {images.slice(3).map((image, index) => (
-              <button
-                key={image.id}
-                type="button"
-                onClick={() => {
-                  setSelectedImage(index + 3);
-                  setIsFullscreen(true);
-                }}
-                className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border border-gray-200 transition-all hover:border-gray-400"
-              >
-                <Image
-                  src={image.thumbnail || image.src}
-                  alt={image.alt || `${product.name} ${index + 4}`}
-                  fill
-                  sizes="64px"
-                  className="object-cover"
-                />
-              </button>
+        {/* Thumbnails Slider */}
+        {imageCount > 1 && (
+          <Swiper
+            modules={[FreeMode, Thumbs]}
+            onSwiper={setThumbsSwiper}
+            spaceBetween={8}
+            slidesPerView={4}
+            freeMode={true}
+            watchSlidesProgress={true}
+            breakpoints={{
+              480: { slidesPerView: 5 },
+              640: { slidesPerView: 6 },
+            }}
+            className="thumbs-slider"
+          >
+            {images.map((image, index) => (
+              <SwiperSlide key={image.id}>
+                <button
+                  type="button"
+                  className={`relative aspect-square w-full overflow-hidden rounded-md border-2 transition-all ${
+                    selectedImage === index 
+                      ? "border-amber-800 ring-1 ring-amber-800" 
+                      : "border-transparent hover:border-gray-300"
+                  }`}
+                >
+                  <Image
+                    src={image.thumbnail || image.src}
+                    alt={image.alt || `${product.name} thumbnail ${index + 1}`}
+                    fill
+                    sizes="80px"
+                    className="object-cover"
+                  />
+                </button>
+              </SwiperSlide>
             ))}
-          </div>
+          </Swiper>
         )}
       </div>
     );
@@ -531,26 +519,6 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
                   {isRTL
                     ? "شحن مجاني للطلبات التي تزيد عن 300 درهم. التوصيل خلال 2-5 أيام عمل."
                     : "Free shipping on orders over 300 AED. Delivery within 2-5 business days."}
-                </p>
-              </div>
-            </AccordionSection>
-
-            {/* Returns */}
-            <AccordionSection
-              title={isRTL ? "الإرجاع" : "Returns"}
-              isOpen={openAccordion === "returns"}
-              onToggle={() => toggleAccordion("returns")}
-            >
-              <div className="space-y-3 text-sm text-gray-600">
-                <p>
-                  {isRTL
-                    ? "نقبل الإرجاع خلال 14 يومًا من تاريخ الشراء. يجب أن تكون المنتجات غير مستخدمة وفي عبوتها الأصلية."
-                    : "We accept returns within 14 days of purchase. Products must be unused and in original packaging."}
-                </p>
-                <p>
-                  {isRTL
-                    ? "للمزيد من المعلومات، يرجى الاطلاع على سياسة الإرجاع الخاصة بنا."
-                    : "For more information, please see our return policy."}
                 </p>
               </div>
             </AccordionSection>
