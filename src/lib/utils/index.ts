@@ -47,3 +47,17 @@ export function getLocalizedPath(pathname: string, locale: string): string {
   const pathWithoutLocale = getPathWithoutLocale(pathname);
   return `/${locale}${pathWithoutLocale}`;
 }
+
+export function decodeHtmlEntities(text: string): string {
+  const entities: Record<string, string> = {
+    "&amp;": "&",
+    "&lt;": "<",
+    "&gt;": ">",
+    "&quot;": '"',
+    "&#39;": "'",
+    "&apos;": "'",
+    "&nbsp;": " ",
+  };
+  
+  return text.replace(/&(?:amp|lt|gt|quot|#39|apos|nbsp);/g, (match) => entities[match] || match);
+}

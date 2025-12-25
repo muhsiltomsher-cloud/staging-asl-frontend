@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/common/Skeleton";
 import type { WCCategory } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 import type { CategorySectionSettings } from "@/types/wordpress";
+import { decodeHtmlEntities } from "@/lib/utils";
 
 interface CategorySectionProps {
   settings: CategorySectionSettings;
@@ -107,14 +108,14 @@ export function CategorySection({
             >
               <div className="relative aspect-[3/2] overflow-hidden rounded-xl bg-white transition-shadow duration-300 hover:shadow-lg">
                 {category.image?.src ? (
-                  <Image
-                    src={category.image.src}
-                    alt={category.image.alt || category.name}
-                    fill
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 25vw"
-                    className="object-contain transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
-                  />
+                                    <Image
+                                      src={category.image.src}
+                                      alt={category.image.alt || decodeHtmlEntities(category.name)}
+                                      fill
+                                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 25vw"
+                                      className="object-contain transition-transform duration-300 group-hover:scale-105"
+                                      loading="lazy"
+                                    />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center bg-stone-200">
                     <span className="text-stone-400">No image</span>
@@ -122,9 +123,9 @@ export function CategorySection({
                 )}
               </div>
               <div className="mt-3 text-center">
-                <h3 className="text-base font-semibold text-amber-900 transition-colors group-hover:text-amber-700 md:text-lg">
-                  {category.name}
-                </h3>
+                                <h3 className="text-base font-semibold text-amber-900 transition-colors group-hover:text-amber-700 md:text-lg">
+                                  {decodeHtmlEntities(category.name)}
+                                </h3>
               </div>
             </Link>
           ))}
