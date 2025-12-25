@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { siteConfig, type Locale } from "@/config/site";
 import type {
   WCProduct,
@@ -74,7 +75,8 @@ export async function getProducts(params?: {
   };
 }
 
-export async function getProductBySlug(
+// Memoized version for request deduplication (used when same product is fetched multiple times in one request)
+export const getProductBySlug = cache(async function getProductBySlug(
   slug: string,
   locale?: Locale
 ): Promise<WCProduct | null> {
@@ -88,7 +90,7 @@ export async function getProductBySlug(
   } catch {
     return null;
   }
-}
+});
 
 export async function getProductById(
   id: number,
@@ -116,7 +118,8 @@ export async function getCategories(locale?: Locale): Promise<WCCategory[]> {
   return categories;
 }
 
-export async function getCategoryBySlug(
+// Memoized version for request deduplication
+export const getCategoryBySlug = cache(async function getCategoryBySlug(
   slug: string,
   locale?: Locale
 ): Promise<WCCategory | null> {
@@ -126,7 +129,7 @@ export async function getCategoryBySlug(
   } catch {
     return null;
   }
-}
+});
 
 export async function getProductsByCategory(
   categorySlug: string,

@@ -4,12 +4,31 @@ import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
-import { getCategoryBySlug, getProductsByCategory } from "@/lib/api/woocommerce";
-import type { Locale } from "@/config/site";
+import { getCategoryBySlug, getProductsByCategory, getCategories } from "@/lib/api/woocommerce";
+import { siteConfig, type Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { CategoryClient } from "./CategoryClient";
 
-export const revalidate = 60;
+// Increased revalidate time for better cache hit rates (5 minutes instead of 60 seconds)
+export const revalidate = 300;
+
+// Pre-render all categories at build time for better performance
+export async function generateStaticParams() {
+  try {
+    const categories = await getCategories();
+    
+    // Generate params for each locale and category combination
+    return categories.flatMap((category) =>
+      siteConfig.locales.map((locale) => ({
+        locale,
+        slug: category.slug,
+      }))
+    );
+  } catch {
+    // Return empty array if fetch fails - pages will be generated on-demand
+    return [];
+  }
+}
 
 interface CategoryPageProps {
   params: Promise<{ locale: string; slug: string }>;

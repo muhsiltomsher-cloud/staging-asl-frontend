@@ -8,7 +8,8 @@ import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { ShopClient } from "./ShopClient";
 
-export const revalidate = 60;
+// Increased revalidate time for better cache hit rates (5 minutes instead of 60 seconds)
+export const revalidate = 300;
 
 interface ShopPageProps {
   params: Promise<{ locale: string }>;
