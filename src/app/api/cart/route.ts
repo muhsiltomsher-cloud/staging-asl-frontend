@@ -171,20 +171,13 @@ export async function POST(request: NextRequest) {
         baseUrl = `${API_BASE}/wp-json/cocart/v2/cart/clear`;
         break;
       case "apply-coupon":
-        baseUrl = `${API_BASE}/wp-json/cocart/v2/cart/coupon`;
+        // Use WooCommerce Store API for coupons (CoCart v2 doesn't have coupon endpoints on this backend)
+        baseUrl = `${API_BASE}/wp-json/wc/store/v1/cart/apply-coupon`;
         break;
-      case "remove-coupon": {
-        const couponCode = searchParams.get("coupon");
-        if (!couponCode) {
-          return NextResponse.json(
-            { success: false, error: { code: "missing_coupon", message: "Coupon code is required" } },
-            { status: 400 }
-          );
-        }
-        baseUrl = `${API_BASE}/wp-json/cocart/v2/cart/coupon/${couponCode}`;
-        method = "DELETE";
+      case "remove-coupon":
+        // Use WooCommerce Store API for coupons (CoCart v2 doesn't have coupon endpoints on this backend)
+        baseUrl = `${API_BASE}/wp-json/wc/store/v1/cart/remove-coupon`;
         break;
-      }
       default:
         return NextResponse.json(
           { success: false, error: { code: "invalid_action", message: "Invalid action" } },

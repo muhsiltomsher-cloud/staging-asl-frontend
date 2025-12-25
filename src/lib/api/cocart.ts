@@ -329,7 +329,7 @@ export async function applyCoupon(couponCode: string): Promise<CartOperationResp
     const response = await fetch("/api/cart?action=apply-coupon", {
       method: "POST",
       headers: getHeaders(),
-      body: JSON.stringify({ coupon: couponCode }),
+      body: JSON.stringify({ code: couponCode }),
     });
 
     const data = await response.json();
@@ -362,9 +362,10 @@ export async function applyCoupon(couponCode: string): Promise<CartOperationResp
 
 export async function removeCoupon(couponCode: string): Promise<CartOperationResponse> {
   try {
-    const response = await fetch(`/api/cart?action=remove-coupon&coupon=${encodeURIComponent(couponCode)}`, {
+    const response = await fetch("/api/cart?action=remove-coupon", {
       method: "POST",
       headers: getHeaders(),
+      body: JSON.stringify({ code: couponCode }),
     });
 
     const data = await response.json();
