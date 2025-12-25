@@ -300,7 +300,40 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
         );
       }
 
-      // 3+ images: main full width, 2nd/3rd in grid, rest as thumbnails
+      // 3 images: show all in single column (same as 2 images layout)
+      if (imageCount === 3) {
+        return (
+          <div>
+            <ViewToggle />
+            <div className="space-y-3">
+              {images.map((image, index) => (
+                <div 
+                  key={image.id}
+                  className="group relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-gray-100"
+                  onClick={() => {
+                    setSelectedImage(index);
+                    setIsFullscreen(true);
+                  }}
+                >
+                  <Image
+                    src={image.src}
+                    alt={image.alt || `${product.name} ${index + 1}`}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    priority={index === 0}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/10 group-hover:opacity-100">
+                    <ZoomIn className="h-8 w-8 text-white drop-shadow-lg" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      // 4+ images: main full width, 2nd/3rd in grid, rest as thumbnails
       return (
         <div>
           <ViewToggle />
@@ -362,7 +395,7 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
                       setSelectedImage(index + 3);
                       setIsFullscreen(true);
                     }}
-                    className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border border-gray-200 transition-all hover:border-gray-400"
+                    className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border border-gray-200 transition-all hover:border-gray-400 cursor-pointer"
                   >
                     <Image
                       src={image.thumbnail || image.src}
@@ -506,7 +539,7 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
         </div>
 
         {/* Product Info - Sticky on desktop */}
-        <div className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+        <div className="space-y-6 lg:sticky lg:top-32 lg:self-start">
           {/* Category - Small uppercase label */}
           {primaryCategory && (
             <Link 
@@ -580,7 +613,7 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
                   type="button"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   disabled={isOutOfStock || quantity <= 1}
-                  className="flex h-10 w-10 items-center justify-center text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-10 items-center justify-center text-gray-500 transition-colors hover:bg-[#633d1f] hover:text-white disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                   aria-label={isRTL ? "تقليل الكمية" : "Decrease quantity"}
                 >
                   <Minus className="h-4 w-4" />
@@ -602,7 +635,7 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
                   type="button"
                   onClick={() => setQuantity(Math.min(quantity + 1, product.add_to_cart.maximum || 99))}
                   disabled={isOutOfStock || quantity >= (product.add_to_cart.maximum || 99)}
-                  className="flex h-10 w-10 items-center justify-center text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-10 items-center justify-center text-gray-500 transition-colors hover:bg-[#633d1f] hover:text-white disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                   aria-label={isRTL ? "زيادة الكمية" : "Increase quantity"}
                 >
                   <Plus className="h-4 w-4" />
@@ -629,7 +662,7 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
               type="button"
               onClick={handleAddToCart}
               disabled={isOutOfStock || !product.is_purchasable || isAddingToCart}
-              className="flex w-full items-center justify-center gap-2 bg-gray-900 px-6 py-3 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400"
+              className="flex w-full items-center justify-center gap-2 bg-gray-900 px-6 py-3 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-[#633d1f] disabled:cursor-not-allowed disabled:bg-gray-400 cursor-pointer"
             >
               <ShoppingBag className="h-4 w-4" />
               {isAddingToCart 

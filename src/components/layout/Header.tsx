@@ -97,15 +97,15 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               )}
             </button>
 
-            {/* Logo - Desktop: 56px height, Mobile: 44px height */}
+            {/* Logo - Desktop: 72px height, Mobile: 56px height */}
             <Link href={`/${locale}`} className="flex items-center">
               {headerSettings?.logo || siteSettings?.logo?.url ? (
                 <Image
                   src={headerSettings?.logo || siteSettings?.logo?.url || ""}
                   alt={siteSettings?.logo?.alt || siteSettings?.site_name || "Logo"}
-                  width={80}
-                  height={56}
-                  className="h-11 w-auto md:h-14"
+                  width={100}
+                  height={72}
+                  className="h-14 w-auto md:h-[72px]"
                   priority
                 />
               ) : (

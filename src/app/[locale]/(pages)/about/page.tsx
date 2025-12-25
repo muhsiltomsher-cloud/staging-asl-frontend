@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
@@ -57,7 +58,14 @@ export default async function AboutPage({ params }: AboutPageProps) {
             </p>
           </div>
           <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-200">
-            {/* Placeholder for about image */}
+            <Image
+              src="https://adminasl.stagingndemo.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
+              alt={isRTL ? "قصتنا" : "Our Story"}
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
+              priority
+            />
           </div>
         </div>
       </section>
