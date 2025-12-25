@@ -115,7 +115,14 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       try {
         const response = await apiAddToWishlist(productId, variationId);
         if (response.success) {
-          await refreshWishlist();
+          // Use mutation response directly instead of calling refreshWishlist()
+          // This makes the operation faster by avoiding an extra API call
+          if (response.wishlist) {
+            setWishlist(response.wishlist);
+            const newCount = response.wishlist.items_count || response.wishlist.items?.length || 0;
+            setCachedWishlistCount(newCount);
+            setCachedCount(newCount);
+          }
           notify("success", "Added to wishlist");
           return true;
         } else if (response.error) {
@@ -137,7 +144,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
       }
     },
-    [refreshWishlist, notify]
+    [notify]
   );
 
   const removeFromWishlist = useCallback(
@@ -152,7 +159,14 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         }
         const response = await apiRemoveFromWishlist(productId, resolvedItemId);
         if (response.success) {
-          await refreshWishlist();
+          // Use mutation response directly instead of calling refreshWishlist()
+          // This makes the operation faster by avoiding an extra API call
+          if (response.wishlist) {
+            setWishlist(response.wishlist);
+            const newCount = response.wishlist.items_count || response.wishlist.items?.length || 0;
+            setCachedWishlistCount(newCount);
+            setCachedCount(newCount);
+          }
           notify("success", "Removed from wishlist");
           return true;
         } else if (response.error) {
@@ -169,7 +183,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
       }
     },
-    [refreshWishlist, wishlist, notify]
+    [wishlist, notify]
   );
 
   const syncWishlist = useCallback(
