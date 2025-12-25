@@ -72,8 +72,10 @@ export default function WishlistPage({ params }: WishlistPageProps) {
     }
   };
 
-  const formatPrice = (price: string) => {
+  const formatPrice = (price?: string) => {
+    if (!price) return "—";
     const numPrice = parseFloat(price);
+    if (isNaN(numPrice)) return "—";
     return new Intl.NumberFormat(locale === "ar" ? "ar-SA" : "en-SA", {
       style: "currency",
       currency: "SAR",
