@@ -145,7 +145,7 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "slider">("grid");
   const { addToCart } = useCart();
-  const { addToWishlist, isInWishlist } = useWishlist();
+  const { addToWishlist, removeFromWishlist, isInWishlist, getWishlistItemId } = useWishlist();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const isRTL = locale === "ar";
@@ -172,7 +172,9 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
     }
   };
 
-  const handleAddToWishlist = async () => {
+  const isWishlisted = isInWishlist(product.id);
+
+  const handleWishlistToggle = async () => {
     if (!isAuthenticated) {
       router.push(`/${locale}/login`);
       return;
@@ -180,9 +182,14 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
     
     setIsAddingToWishlist(true);
     try {
-      await addToWishlist(product.id);
+      if (isWishlisted) {
+        const itemId = getWishlistItemId(product.id);
+        await removeFromWishlist(product.id, itemId);
+      } else {
+        await addToWishlist(product.id);
+      }
     } catch (error) {
-      console.error("Failed to add to wishlist:", error);
+      console.error("Failed to update wishlist:", error);
     } finally {
       setIsAddingToWishlist(false);
     }
@@ -595,16 +602,16 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
               {/* Wishlist Button */}
               <button
                 type="button"
-                onClick={handleAddToWishlist}
+                onClick={handleWishlistToggle}
                 disabled={isAddingToWishlist}
                 className={`flex h-10 w-10 items-center justify-center border transition-all ${
-                  isInWishlist(product.id)
+                  isWishlisted
                     ? "border-red-300 bg-red-50 text-red-500 hover:bg-red-100"
                     : "border-gray-300 bg-white text-gray-500 hover:border-gray-400 hover:text-gray-700"
                 } ${isAddingToWishlist ? "cursor-not-allowed opacity-50" : ""}`}
-                aria-label={isRTL ? "أضف إلى المفضلة" : "Add to wishlist"}
+                aria-label={isWishlisted ? (isRTL ? "إزالة من المفضلة" : "Remove from wishlist") : (isRTL ? "أضف إلى المفضلة" : "Add to wishlist")}
               >
-                <Heart className={`h-5 w-5 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
+                <Heart className={`h-5 w-5 ${isWishlisted ? "fill-current" : ""}`} />
               </button>
             </div>
 

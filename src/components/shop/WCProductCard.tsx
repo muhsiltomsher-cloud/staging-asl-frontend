@@ -29,7 +29,7 @@ export function WCProductCard({
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
   const { addToCart } = useCart();
-  const { addToWishlist, isInWishlist } = useWishlist();
+  const { addToWishlist, removeFromWishlist, isInWishlist, getWishlistItemId } = useWishlist();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const isRTL = locale === "ar";
@@ -47,7 +47,9 @@ export function WCProductCard({
     }
   };
 
-  const handleAddToWishlist = async (e: React.MouseEvent) => {
+  const isWishlisted = isInWishlist(product.id);
+
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -58,9 +60,14 @@ export function WCProductCard({
     
     setIsAddingToWishlist(true);
     try {
-      await addToWishlist(product.id);
+      if (isWishlisted) {
+        const itemId = getWishlistItemId(product.id);
+        await removeFromWishlist(product.id, itemId);
+      } else {
+        await addToWishlist(product.id);
+      }
     } catch (error) {
-      console.error("Failed to add to wishlist:", error);
+      console.error("Failed to update wishlist:", error);
     } finally {
       setIsAddingToWishlist(false);
     }
@@ -104,18 +111,18 @@ export function WCProductCard({
           <div className={cn("absolute top-3 flex flex-col gap-2", isRTL ? "left-3" : "right-3")}>
             <button
               type="button"
-              onClick={handleAddToWishlist}
+              onClick={handleWishlistToggle}
               disabled={isAddingToWishlist}
               className={cn(
                 "rounded-full p-2.5 shadow-lg transition-all duration-300",
-                isInWishlist(product.id)
+                isWishlisted
                   ? "bg-red-50 text-red-500 hover:bg-red-100"
                   : "bg-white/90 backdrop-blur-sm text-gray-600 hover:bg-white opacity-0 group-hover:opacity-100",
                 isAddingToWishlist && "opacity-50 cursor-not-allowed"
               )}
-              aria-label={isRTL ? "أضف إلى المفضلة" : "Add to wishlist"}
+              aria-label={isWishlisted ? (isRTL ? "إزالة من المفضلة" : "Remove from wishlist") : (isRTL ? "أضف إلى المفضلة" : "Add to wishlist")}
             >
-              <Heart className={cn("h-4 w-4", isInWishlist(product.id) && "fill-current")} />
+              <Heart className={cn("h-4 w-4", isWishlisted && "fill-current")} />
             </button>
           </div>
 
