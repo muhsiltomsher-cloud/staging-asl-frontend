@@ -1,15 +1,26 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, User, UserCheck } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, User, UserCheck, Tag, X } from "lucide-react";
 import { Button } from "@/components/common/Button";
+import { Input } from "@/components/common/Input";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Locale } from "@/config/site";
+
+interface PublicCoupon {
+  code: string;
+  description: string;
+  discount_type: "percent" | "fixed_cart" | "fixed_product";
+  amount: string;
+  minimum_amount: string;
+  free_shipping: boolean;
+}
 
 export default function CartPage() {
   const { locale } = useParams<{ locale: string }>();
@@ -22,6 +33,8 @@ export default function CartPage() {
     isLoading,
     updateCartItem,
     removeCartItem,
+    applyCoupon,
+    removeCoupon,
   } = useCart();
   const { isAuthenticated, user } = useAuth();
 
@@ -30,6 +43,67 @@ export default function CartPage() {
   
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
+
+  const [couponCode, setCouponCode] = useState("");
+  const [couponError, setCouponError] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [availableCoupons, setAvailableCoupons] = useState<PublicCoupon[]>([]);
+  const [isLoadingCoupons, setIsLoadingCoupons] = useState(false);
+
+  useEffect(() => {
+    const fetchAvailableCoupons = async () => {
+      setIsLoadingCoupons(true);
+      try {
+        const response = await fetch("/api/coupons");
+        const data = await response.json();
+        if (data.success && data.coupons) {
+          setAvailableCoupons(data.coupons);
+        }
+      } catch (err) {
+        console.error("Failed to fetch available coupons:", err);
+      } finally {
+        setIsLoadingCoupons(false);
+      }
+    };
+    fetchAvailableCoupons();
+  }, []);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    setCouponError("");
+    try {
+      const success = await applyCoupon(couponCode);
+      if (!success) {
+        setCouponError(isRTL ? "كود الخصم غير صالح" : "Invalid coupon code");
+      } else {
+        setCouponCode("");
+      }
+    } catch {
+      setCouponError(isRTL ? "كود الخصم غير صالح" : "Invalid coupon code");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = async (code: string) => {
+    try {
+      await removeCoupon(code);
+    } catch (error) {
+      console.error("Failed to remove coupon:", error);
+    }
+  };
+
+  const handleSelectCoupon = (code: string) => {
+    setCouponCode(code);
+  };
+
+  const formatCouponDiscount = (coupon: PublicCoupon) => {
+    if (coupon.discount_type === "percent") {
+      return `${coupon.amount}%`;
+    }
+    return `${coupon.amount} AED`;
+  };
 
   const breadcrumbItems = [
     { name: isRTL ? "السلة" : "Cart", href: `/${locale}/cart` },
@@ -57,6 +131,11 @@ export default function CartPage() {
       loggedInAs: "Logged in as",
       guestCheckout: "You are checking out as a guest",
       loginForBenefits: "Login for faster checkout",
+      couponCode: "Coupon Code",
+      enterCouponCode: "Enter coupon code",
+      apply: "Apply",
+      availableCoupons: "Available coupons:",
+      loadingCoupons: "Loading coupons...",
     },
     ar: {
       cart: "سلة التسوق",
@@ -79,6 +158,11 @@ export default function CartPage() {
       loggedInAs: "تم تسجيل الدخول كـ",
       guestCheckout: "أنت تتسوق كضيف",
       loginForBenefits: "سجل دخولك لتجربة أسرع",
+      couponCode: "كود الخصم",
+      enterCouponCode: "أدخل كود الخصم",
+      apply: "تطبيق",
+      availableCoupons: "أكواد الخصم المتاحة:",
+      loadingCoupons: "جاري تحميل الأكواد...",
     },
   };
 
@@ -286,6 +370,92 @@ export default function CartPage() {
               <h2 className="mb-4 text-lg font-semibold text-gray-900">
                 {texts.orderSummary}
               </h2>
+
+              {/* Coupon Code Section */}
+              <div className="border-b border-black/10 pb-4 mb-4">
+                <div className="mb-3">
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <Tag className="h-4 w-4" />
+                    {texts.couponCode}
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      placeholder={texts.enterCouponCode}
+                      className="flex-1"
+                      error={couponError}
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      isLoading={couponLoading}
+                      disabled={couponLoading || !couponCode.trim()}
+                      size="sm"
+                    >
+                      {texts.apply}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Applied Coupons */}
+                {cart?.coupons && cart.coupons.length > 0 && (
+                  <div className="mb-3 space-y-2">
+                    {cart.coupons.map((coupon) => (
+                      <div
+                        key={coupon.coupon}
+                        className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-3 py-2"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Tag className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium text-green-700">
+                            {coupon.coupon}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCoupon(coupon.coupon)}
+                          className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Available Coupons */}
+                {availableCoupons.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-xs font-medium text-gray-500">
+                      {texts.availableCoupons}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {availableCoupons.slice(0, 3).map((coupon) => (
+                        <button
+                          key={coupon.code}
+                          type="button"
+                          onClick={() => handleSelectCoupon(coupon.code)}
+                          className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800 transition-colors hover:bg-amber-100"
+                          title={coupon.description || `${formatCouponDiscount(coupon)} off`}
+                        >
+                          <Tag className="h-3 w-3" />
+                          {coupon.code}
+                          <span className="text-amber-600">({formatCouponDiscount(coupon)})</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {isLoadingCoupons && (
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <div className="h-3 w-3 animate-spin rounded-full border border-gray-300 border-t-gray-600"></div>
+                    {texts.loadingCoupons}
+                  </div>
+                )}
+              </div>
 
               <div className="space-y-3 border-b border-black/10 pb-4">
                 <div className="flex justify-between text-gray-600">
