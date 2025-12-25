@@ -52,7 +52,7 @@ export default function CheckoutPage() {
   const { locale } = useParams<{ locale: string }>();
   const router = useRouter();
   const { cart, cartItems, cartSubtotal, cartTotal, clearCart } = useCart();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
   const isRTL = locale === "ar";
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -200,6 +200,7 @@ export default function CheckoutPage() {
         },
         line_items: lineItems,
         customer_note: formData.orderNotes,
+        ...(isAuthenticated && user?.user_id ? { customer_id: user.user_id } : {}),
       };
 
       const response = await fetch("/api/orders", {
@@ -595,7 +596,8 @@ export default function CheckoutPage() {
                 type="submit"
                 className="w-full"
                 size="lg"
-                isLoading={isSubmitting}
+                isLoading={isSubmitting || isAuthLoading}
+                disabled={isAuthLoading}
               >
                 {isRTL ? "تأكيد الطلب" : "Place Order"}
               </Button>
