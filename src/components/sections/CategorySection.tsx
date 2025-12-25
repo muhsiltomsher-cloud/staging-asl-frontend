@@ -114,6 +114,7 @@ export function CategorySection({
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 25vw"
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center bg-stone-200">

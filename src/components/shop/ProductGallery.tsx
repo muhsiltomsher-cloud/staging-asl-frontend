@@ -91,6 +91,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                 fill
                 sizes="80px"
                 className="object-cover"
+                loading="lazy"
               />
             </button>
           ))}

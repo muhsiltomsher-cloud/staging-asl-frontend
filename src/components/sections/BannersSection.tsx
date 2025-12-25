@@ -65,20 +65,22 @@ export function BannersSection({
               <div className="group relative aspect-[2/1] overflow-hidden rounded-xl md:aspect-[3/1]">
                 {banner.image?.url ? (
                   <>
-                    <Image
-                      src={banner.image.url}
-                      alt={banner.image.alt || banner.title || `Banner ${index + 1}`}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      className="hidden object-cover transition-transform duration-300 group-hover:scale-105 md:block"
-                    />
-                    <Image
-                      src={banner.mobile_image?.url || banner.image.url}
-                      alt={banner.mobile_image?.alt || banner.image.alt || banner.title || `Banner ${index + 1}`}
-                      fill
-                      sizes="100vw"
-                      className="object-cover transition-transform duration-300 group-hover:scale-105 md:hidden"
-                    />
+                      <Image
+                        src={banner.image.url}
+                        alt={banner.image.alt || banner.title || `Banner ${index + 1}`}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        className="hidden object-cover transition-transform duration-300 group-hover:scale-105 md:block"
+                        loading="lazy"
+                      />
+                      <Image
+                        src={banner.mobile_image?.url || banner.image.url}
+                        alt={banner.mobile_image?.alt || banner.image.alt || banner.title || `Banner ${index + 1}`}
+                        fill
+                        sizes="100vw"
+                        className="object-cover transition-transform duration-300 group-hover:scale-105 md:hidden"
+                        loading="lazy"
+                      />
                   </>
                 ) : (
                   <div className="absolute inset-0 bg-stone-200" />
