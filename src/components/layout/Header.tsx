@@ -60,7 +60,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
       <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         {/* Top bar - Mobile: Arabic left, Currency right | Desktop: both left */}
         <div className="border-b bg-gray-50">
-          <div className="container mx-auto flex h-10 items-center justify-between px-4">
+          <div className="container mx-auto flex h-8 items-center justify-between px-4">
             {/* Mobile: Arabic on left */}
             <div className="flex items-center gap-4">
               <LanguageSwitcher locale={locale} />
@@ -83,7 +83,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
 
         {/* Main header */}
         <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
+          <div className="flex h-14 items-center justify-between">
             {/* Mobile: Left side - Menu button only */}
             <button
               type="button"
@@ -98,15 +98,15 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               )}
             </button>
 
-            {/* Logo - Desktop: 110px height, Mobile: 70px height */}
+            {/* Logo - Desktop: 48px height, Mobile: 40px height */}
             <Link href={`/${locale}`} className="flex items-center">
               {headerSettings?.logo || siteSettings?.logo?.url ? (
                 <Image
                   src={headerSettings?.logo || siteSettings?.logo?.url || ""}
                   alt={siteSettings?.logo?.alt || siteSettings?.site_name || "Logo"}
-                  width={150}
-                  height={110}
-                  className="h-[70px] w-auto md:h-[110px]"
+                  width={65}
+                  height={48}
+                  className="h-10 w-auto md:h-12"
                   priority
                 />
               ) : (
