@@ -8,6 +8,7 @@ import { getCategoryBySlug, getProductsByCategory, getCategories } from "@/lib/a
 import { siteConfig, type Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { CategoryClient } from "./CategoryClient";
+import { decodeHtmlEntities } from "@/lib/utils";
 
 // Increased revalidate time for better cache hit rates (5 minutes instead of 60 seconds)
 export const revalidate = 300;
@@ -65,17 +66,17 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   const { products } = await getProductsByCategory(slug, { per_page: 24 });
 
-  const breadcrumbItems = [
-    { name: dictionary.common.shop, href: `/${locale}/shop` },
-    { name: category.name, href: `/${locale}/category/${slug}` },
-  ];
+    const breadcrumbItems = [
+      { name: dictionary.common.shop, href: `/${locale}/shop` },
+      { name: decodeHtmlEntities(category.name), href: `/${locale}/category/${slug}` },
+    ];
 
   return (
     <div className="container mx-auto px-4 py-8">
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">{category.name}</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{decodeHtmlEntities(category.name)}</h1>
         {category.description && (
           <p className="mt-2 text-gray-600">{category.description}</p>
         )}

@@ -8,7 +8,7 @@ import { ShoppingBag, Heart } from "lucide-react";
 import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
-import { cn } from "@/lib/utils";
+import { cn, decodeHtmlEntities } from "@/lib/utils";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -137,11 +137,11 @@ export function WCProductCard({
         </div>
 
         <div className="mt-4 space-y-2">
-          {product.categories?.[0] && (
-            <p className="text-xs font-medium uppercase tracking-wider text-amber-600">
-              {product.categories[0].name}
-            </p>
-          )}
+                    {product.categories?.[0] && (
+                      <p className="text-xs font-medium uppercase tracking-wider text-amber-600">
+                        {decodeHtmlEntities(product.categories[0].name)}
+                      </p>
+                    )}
 
           <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-amber-800 transition-colors">
             {product.name}

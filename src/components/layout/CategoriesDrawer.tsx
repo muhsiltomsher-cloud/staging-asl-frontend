@@ -12,6 +12,7 @@ import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/config/site";
 import type { WCCategory } from "@/types/woocommerce";
 import { getCategories } from "@/lib/api/woocommerce";
+import { decodeHtmlEntities } from "@/lib/utils";
 
 interface CategoriesDrawerProps {
   isOpen: boolean;
@@ -119,22 +120,22 @@ export function CategoriesDrawer({
                     >
                       {category.image ? (
                         <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                          <Image
-                            src={category.image.src}
-                            alt={category.name}
-                            fill
-                            className="object-cover"
-                          />
+                                                    <Image
+                                                      src={category.image.src}
+                                                      alt={decodeHtmlEntities(category.name)}
+                                                      fill
+                                                      className="object-cover"
+                                                    />
                         </div>
                       ) : (
                         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100">
                           <Grid3X3 className="h-5 w-5 text-gray-400" />
                         </div>
                       )}
-                      <div className="flex-1 min-w-0">
-                        <span className="font-medium block truncate">{category.name}</span>
-                        <span className="text-sm text-gray-500">{category.count} products</span>
-                      </div>
+                                            <div className="flex-1 min-w-0">
+                                              <span className="font-medium block truncate">{decodeHtmlEntities(category.name)}</span>
+                                              <span className="text-sm text-gray-500">{category.count} products</span>
+                                            </div>
                       <ChevronRight className={`h-5 w-5 flex-shrink-0 text-gray-400 ${isRTL ? "rotate-180" : ""}`} />
                     </Link>
                   </li>
