@@ -9,6 +9,8 @@ import { getCategoryBySlug, getProductsByCategory } from "@/lib/api/woocommerce"
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 
+export const revalidate = 60;
+
 interface CategoryPageProps {
   params: Promise<{ locale: string; slug: string }>;
 }

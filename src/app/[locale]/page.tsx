@@ -15,6 +15,8 @@ import {
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 
+export const revalidate = 60;
+
 interface HomePageProps {
   params: Promise<{ locale: string }>;
 }
