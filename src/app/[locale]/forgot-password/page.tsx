@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Input } from "@/components/common/Input";
 import { Button } from "@/components/common/Button";
 import { useNotification } from "@/contexts/NotificationContext";
+import { forgotPassword } from "@/lib/api/auth";
 
 interface ForgotPasswordPageProps {
   params: Promise<{ locale: string }>;
@@ -78,13 +79,15 @@ export default function ForgotPasswordPage({ params }: ForgotPasswordPageProps) 
     setIsLoading(true);
 
     try {
-      // Simulate API call for password reset
-      // In a real implementation, this would call the backend API
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await forgotPassword(email);
       
-      setSuccessMessage(texts.successMessage);
-      notify("success", texts.successMessage);
-      setEmail("");
+      if (response.success) {
+        setSuccessMessage(response.message || texts.successMessage);
+        notify("success", response.message || texts.successMessage);
+        setEmail("");
+      } else {
+        setError(response.error?.message || texts.errorMessage);
+      }
     } catch {
       setError(texts.errorMessage);
     } finally {

@@ -50,6 +50,12 @@ export interface RefreshTokenResponse {
   error?: AuthError;
 }
 
+export interface ForgotPasswordResponse {
+  success: boolean;
+  message?: string;
+  error?: AuthError;
+}
+
 export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
   try {
     // Get CoCart JWT token (for cart operations)
@@ -222,4 +228,41 @@ export function getAuthToken(): string | null {
     }
   }
   return null;
+}
+
+export async function forgotPassword(email: string): Promise<ForgotPasswordResponse> {
+  try {
+    const response = await fetch("/api/auth/forgot-password", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      return {
+        success: false,
+        error: {
+          code: result.error?.code || "forgot_password_failed",
+          message: result.error?.message || "Failed to send password reset email.",
+        },
+      };
+    }
+
+    return {
+      success: true,
+      message: result.message,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: {
+        code: "network_error",
+        message: error instanceof Error ? error.message : "Network error occurred",
+      },
+    };
+  }
 }
