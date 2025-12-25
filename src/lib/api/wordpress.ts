@@ -138,6 +138,28 @@ export interface HeaderSettings {
   logoDark: string | null;
 }
 
+// Type for WordPress Plugin topbar settings from /asl/v1/topbar
+interface WPPluginTopbarSettings {
+  enabled: boolean;
+  text: string;
+  textAr: string;
+  link: string;
+  bgColor: string;
+  textColor: string;
+  dismissible: boolean;
+}
+
+// Frontend types for topbar
+export interface TopbarSettings {
+  enabled: boolean;
+  text: string;
+  textAr: string;
+  link: string | null;
+  bgColor: string;
+  textColor: string;
+  dismissible: boolean;
+}
+
 export interface MobileBarItem {
   icon: string;
   label: string;
@@ -624,5 +646,42 @@ export async function getMobileBarSettings(locale?: Locale): Promise<MobileBarSe
   return {
     enabled: data.enabled,
     items,
+  };
+}
+
+// Default topbar settings
+const defaultTopbarSettings: TopbarSettings = {
+  enabled: true,
+  text: "Free shipping on orders over 200 SAR",
+  textAr: "شحن مجاني للطلبات فوق 200 ريال",
+  link: null,
+  bgColor: "#f3f4f6",
+  textColor: "#4b5563",
+  dismissible: false,
+};
+
+// Fetch topbar settings from WordPress Plugin API
+export async function getTopbarSettings(locale?: Locale): Promise<TopbarSettings> {
+  const data = await fetchWPAPI<WPPluginTopbarSettings>(
+    "/asl/v1/topbar",
+    {
+      tags: ["topbar-settings"],
+      locale,
+      revalidate: 60,
+    }
+  );
+
+  if (!data) {
+    return defaultTopbarSettings;
+  }
+
+  return {
+    enabled: data.enabled,
+    text: data.text || defaultTopbarSettings.text,
+    textAr: data.textAr || defaultTopbarSettings.textAr,
+    link: data.link || null,
+    bgColor: data.bgColor || defaultTopbarSettings.bgColor,
+    textColor: data.textColor || defaultTopbarSettings.textColor,
+    dismissible: data.dismissible,
   };
 }

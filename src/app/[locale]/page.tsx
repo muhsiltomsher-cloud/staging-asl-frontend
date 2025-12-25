@@ -46,29 +46,29 @@ export default async function HomePage({ params }: HomePageProps) {
     getHomePageSettings(locale as Locale),
   ]);
 
-  // Translations for sections
+  // Translations for sections - using dictionary for dynamic content
   const sectionTexts = {
     viewAll: dictionary.common.viewAll,
-    products: isRTL ? "منتج" : "products",
+    products: dictionary.sections.products,
     newProducts: {
-      title: isRTL ? "منتجات جديدة" : "New Products",
-      subtitle: isRTL ? "اكتشف أحدث منتجاتنا" : "Discover our latest arrivals",
+      title: dictionary.sections.newProducts.title,
+      subtitle: dictionary.sections.newProducts.subtitle,
     },
     bestsellers: {
-      title: isRTL ? "الأكثر مبيعاً" : "Bestsellers",
-      subtitle: isRTL ? "منتجاتنا الأكثر شعبية" : "Our most popular products",
+      title: dictionary.sections.bestsellers.title,
+      subtitle: dictionary.sections.bestsellers.subtitle,
     },
     shopByCategory: {
-      title: isRTL ? "تسوق حسب الفئة" : "Shop by Category",
-      subtitle: isRTL ? "استكشف مجموعاتنا المتنوعة" : "Explore our diverse collections",
+      title: dictionary.sections.shopByCategory.title,
+      subtitle: dictionary.sections.shopByCategory.subtitle,
     },
     featuredProducts: {
-      title: isRTL ? "منتجات مميزة" : "Featured Products",
-      subtitle: isRTL ? "اكتشف أفضل منتجاتنا" : "Discover our best sellers",
+      title: dictionary.sections.featuredProducts.title,
+      subtitle: dictionary.sections.featuredProducts.subtitle,
     },
     collections: {
-      title: isRTL ? "مجموعاتنا" : "Our Collections",
-      subtitle: isRTL ? "استكشف مجموعاتنا المنسقة" : "Explore our curated collections",
+      title: dictionary.sections.collections.title,
+      subtitle: dictionary.sections.collections.subtitle,
     },
   };
 
@@ -116,14 +116,10 @@ export default async function HomePage({ params }: HomePageProps) {
           <div className="container relative mx-auto flex h-full items-center px-4">
             <div className="max-w-xl text-white">
               <h1 className="mb-4 text-3xl font-bold leading-tight md:text-4xl lg:text-5xl">
-                {isRTL
-                  ? "اكتشف عالم العطور الفاخرة"
-                  : "Discover the World of Premium Fragrances"}
+                {dictionary.sections.hero.title}
               </h1>
               <p className="mb-6 text-base text-white/90 md:mb-8 md:text-lg">
-                {isRTL
-                  ? "مجموعة حصرية من العطور المصنوعة بعناية فائقة"
-                  : "An exclusive collection of carefully crafted aromatic scents"}
+                {dictionary.sections.hero.subtitle}
               </p>
               <Button size="lg" asChild>
                 <Link href={`/${locale}/shop`}>
@@ -186,17 +182,13 @@ export default async function HomePage({ params }: HomePageProps) {
             <div className="relative aspect-square overflow-hidden rounded-xl bg-stone-200 lg:aspect-[4/3]" />
             <div>
               <h2 className="mb-4 text-2xl font-bold text-amber-900 md:text-3xl">
-                {isRTL ? "قصتنا" : "Our Story"}
+                {dictionary.sections.ourStory.title}
               </h2>
               <p className="mb-4 text-amber-800/70 md:mb-6">
-                {isRTL
-                  ? "في أروماتيك سينتس لاب، نؤمن بأن العطر هو فن. نصنع كل منتج بعناية فائقة باستخدام أجود المكونات من جميع أنحاء العالم."
-                  : "At Aromatic Scents Lab, we believe that fragrance is an art. We craft each product with meticulous care using the finest ingredients from around the world."}
+                {dictionary.sections.ourStory.description1}
               </p>
               <p className="mb-6 text-amber-800/70 md:mb-8">
-                {isRTL
-                  ? "مهمتنا هي تقديم تجربة عطرية فريدة تدوم طويلاً وتترك انطباعاً لا يُنسى."
-                  : "Our mission is to deliver a unique aromatic experience that lasts long and leaves an unforgettable impression."}
+                {dictionary.sections.ourStory.description2}
               </p>
               <Button variant="outline" className="border-amber-900 text-amber-900 hover:bg-amber-900 hover:text-white" asChild>
                 <Link href={`/${locale}/about`}>{dictionary.common.learnMore}</Link>
@@ -210,7 +202,7 @@ export default async function HomePage({ params }: HomePageProps) {
       <section className="bg-amber-900 py-12 text-white md:py-16">
         <div className="container mx-auto px-4 text-center">
           <h2 className="mb-3 text-2xl font-bold md:text-3xl">
-            {isRTL ? "اشترك في نشرتنا الإخبارية" : "Subscribe to Our Newsletter"}
+            {dictionary.sections.newsletter.title}
           </h2>
           <p className="mx-auto mb-6 max-w-md text-amber-100/80 md:mb-8">
             {dictionary.footer.subscribeText}

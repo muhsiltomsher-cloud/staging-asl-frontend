@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/config/site";
 import type { SiteSettings, WPMenuItem } from "@/types/wordpress";
-import type { HeaderSettings } from "@/lib/api/wordpress";
+import type { HeaderSettings, TopbarSettings } from "@/lib/api/wordpress";
 import { CategoriesDrawer } from "@/components/layout/CategoriesDrawer";
 import { SearchDrawer } from "@/components/layout/SearchDrawer";
 
@@ -23,10 +23,17 @@ interface HeaderProps {
   siteSettings?: SiteSettings | null;
   headerSettings?: HeaderSettings | null;
   menuItems?: WPMenuItem[] | null;
+  topbarSettings?: TopbarSettings | null;
 }
 
-export function Header({ locale, dictionary, siteSettings, headerSettings, menuItems }: HeaderProps) {
+export function Header({ locale, dictionary, siteSettings, headerSettings, menuItems, topbarSettings }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const isRTL = locale === "ar";
+
+  // Get topbar text based on locale
+  const topbarText = topbarSettings?.enabled !== false
+    ? (isRTL && topbarSettings?.textAr ? topbarSettings.textAr : topbarSettings?.text) || ""
+    : "";
   const [isCategoriesDrawerOpen, setIsCategoriesDrawerOpen] = useState(false);
   const [isSearchDrawerOpen, setIsSearchDrawerOpen] = useState(false);
   const { cartItemsCount, setIsCartOpen } = useCart();
@@ -62,13 +69,15 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                 <CurrencySwitcher />
               </div>
             </div>
-            {/* Mobile: Currency on right | Desktop: Free shipping text */}
+            {/* Mobile: Currency on right | Desktop: Promotional text */}
             <div className="md:hidden">
               <CurrencySwitcher />
             </div>
-            <div className="hidden text-sm text-gray-600 md:block">
-              Free shipping on orders over 200 SAR
-            </div>
+            {topbarText && (
+              <div className="hidden text-sm text-gray-600 md:block">
+                {topbarText}
+              </div>
+            )}
           </div>
         </div>
 

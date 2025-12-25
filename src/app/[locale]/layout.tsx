@@ -15,7 +15,7 @@ import { getDictionary } from "@/i18n";
 import { siteConfig, localeConfig, type Locale } from "@/config/site";
 import { generateOrganizationJsonLd } from "@/lib/utils/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { getSiteSettings, getHeaderSettings, getMobileBarSettings, getPrimaryMenu } from "@/lib/api/wordpress";
+import { getSiteSettings, getHeaderSettings, getMobileBarSettings, getPrimaryMenu, getTopbarSettings } from "@/lib/api/wordpress";
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
@@ -57,11 +57,12 @@ export default async function LocaleLayout({
   const dictionary = await getDictionary(validLocale);
   const { dir } = localeConfig[validLocale];
 
-  // Fetch site settings, header settings, mobile bar settings, and menu in parallel
-  const [siteSettings, headerSettings, mobileBarSettings, menuItems] = await Promise.all([
+  // Fetch site settings, header settings, mobile bar settings, topbar settings, and menu in parallel
+  const [siteSettings, headerSettings, mobileBarSettings, topbarSettings, menuItems] = await Promise.all([
     getSiteSettings(validLocale),
     getHeaderSettings(),
     getMobileBarSettings(validLocale),
+    getTopbarSettings(validLocale),
     getPrimaryMenu(validLocale),
   ]);
 
@@ -90,6 +91,7 @@ export default async function LocaleLayout({
                   siteSettings={siteSettings}
                   headerSettings={headerSettings}
                   menuItems={menuItems?.items}
+                  topbarSettings={topbarSettings}
                 />
                 <main className="flex-1">{children}</main>
                 <Footer locale={validLocale} dictionary={dictionary} siteSettings={siteSettings} />
