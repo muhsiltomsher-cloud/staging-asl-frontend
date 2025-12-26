@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { X, Grid3X3, ChevronRight } from "lucide-react";
@@ -13,6 +13,11 @@ import type { Locale } from "@/config/site";
 import type { WCCategory } from "@/types/woocommerce";
 import { getCategories } from "@/lib/api/woocommerce";
 import { decodeHtmlEntities } from "@/lib/utils";
+
+// Module-level cache for categories (persists across component remounts and route changes)
+const categoriesCache: Record<string, { data: WCCategory[]; timestamp: number }> = {};
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache TTL
+const fetchPromise: Record<string, Promise<WCCategory[]> | null> = {};
 
 interface CategoriesDrawerProps {
   isOpen: boolean;
@@ -27,36 +32,86 @@ export function CategoriesDrawer({
   locale,
   dictionary,
 }: CategoriesDrawerProps) {
-  const [categories, setCategories] = useState<WCCategory[]>([]);
+  const [categories, setCategories] = useState<WCCategory[]>(() => {
+    // Initialize from cache if available and not stale
+    const cached = categoriesCache[locale];
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.data;
+    }
+    return [];
+  });
   const [loading, setLoading] = useState(false);
-  const [hasFetched, setHasFetched] = useState(false);
+  const hasFetchedRef = useRef(false);
   const isRTL = locale === "ar";
 
-  const fetchCategories = useCallback(async () => {
-    if (hasFetched) return;
+  const fetchCategoriesData = useCallback(async () => {
+    // Check cache first
+    const cached = categoriesCache[locale];
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      setCategories(cached.data);
+      return;
+    }
+
+    // If already fetching, wait for the existing promise
+    if (fetchPromise[locale]) {
+      try {
+        const cats = await fetchPromise[locale];
+        if (cats) {
+          setCategories(cats);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+      return;
+    }
+
     setLoading(true);
     try {
-      const cats = await getCategories(locale);
-      setCategories(cats.filter((cat) => cat.count > 0));
-      setHasFetched(true);
+      // Create a shared promise for concurrent requests
+      fetchPromise[locale] = getCategories(locale).then((cats) => {
+        const filtered = cats.filter((cat) => cat.count > 0);
+        // Store in cache
+        categoriesCache[locale] = { data: filtered, timestamp: Date.now() };
+        return filtered;
+      });
+
+      const cats = await fetchPromise[locale];
+      if (cats) {
+        setCategories(cats);
+      }
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
+      fetchPromise[locale] = null;
     }
-  }, [locale, hasFetched]);
+  }, [locale]);
 
   useEffect(() => {
-    if (isOpen && !hasFetched) {
-      fetchCategories();
+    // Check if we have valid cached data
+    const cached = categoriesCache[locale];
+    const hasCachedData = cached && Date.now() - cached.timestamp < CACHE_TTL;
+    
+    if (isOpen && !hasCachedData && !hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      fetchCategoriesData();
+    } else if (isOpen && hasCachedData && categories.length === 0) {
+      // Restore from cache if component state was reset
+      setCategories(cached.data);
     }
-  }, [isOpen, hasFetched, fetchCategories]);
+  }, [isOpen, locale, fetchCategoriesData, categories.length]);
+
+  // Reset fetch ref when locale changes
+  useEffect(() => {
+    hasFetchedRef.current = false;
+  }, [locale]);
 
   return (
     <MuiDrawer
       anchor={isRTL ? "right" : "left"}
       open={isOpen}
       onClose={onClose}
+      keepMounted
       PaperProps={{
         sx: {
           width: { xs: "100%", sm: 320 },
