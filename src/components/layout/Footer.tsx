@@ -147,22 +147,16 @@ export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-8 border-t pt-6 md:mt-12 md:pt-8">
-          <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between">
-            <div className="order-2 md:order-1">
-              <Image
-                src="https://adminasl.stagingndemo.com/wp-content/uploads/2025/12/Untitled-design-1.png"
-                alt="Footer badge"
-                width={120}
-                height={40}
-                className="h-auto w-[100px] md:w-[120px]"
-                loading="lazy"
-              />
-            </div>
-            <p className="order-1 text-center text-xs text-gray-600 md:order-2 md:text-sm">
-              &copy; {currentYear} {siteConfig.name}. {dictionary.footer.copyright}
-            </p>
-          </div>
+        <div
+          className="mt-8 border-t pt-6 md:mt-12 md:pt-8 bg-no-repeat bg-left bg-contain"
+          style={{
+            backgroundImage: "url('https://adminasl.stagingndemo.com/wp-content/uploads/2025/12/Untitled-design-1.png')",
+            backgroundSize: "auto 100%",
+          }}
+        >
+          <p className="text-center text-xs text-gray-600 md:text-sm">
+            &copy; {currentYear} {siteConfig.name}. {dictionary.footer.copyright}
+          </p>
         </div>
       </div>
     </footer>
