@@ -14,6 +14,12 @@ interface FetchOptions {
   locale?: Locale;
 }
 
+interface FetchAPIResponse<T> {
+  data: T;
+  total: number;
+  totalPages: number;
+}
+
 async function fetchAPI<T>(
   endpoint: string,
   options: FetchOptions = {}
@@ -41,6 +47,37 @@ async function fetchAPI<T>(
   return response.json();
 }
 
+async function fetchAPIWithPagination<T>(
+  endpoint: string,
+  options: FetchOptions = {}
+): Promise<FetchAPIResponse<T>> {
+  const { revalidate = 60, tags, locale } = options;
+
+  let url = `${API_BASE}${endpoint}`;
+  
+  if (locale) {
+    const separator = endpoint.includes("?") ? "&" : "?";
+    url = `${url}${separator}lang=${locale}`;
+  }
+
+  const response = await fetch(url, {
+    next: {
+      revalidate,
+      tags,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const total = parseInt(response.headers.get("X-WP-Total") || "0", 10);
+  const totalPages = parseInt(response.headers.get("X-WP-TotalPages") || "1", 10);
+
+  return { data, total, totalPages };
+}
+
 // Products API
 export async function getProducts(params?: {
   page?: number;
@@ -63,15 +100,16 @@ export async function getProducts(params?: {
   const queryString = searchParams.toString();
   const endpoint = `/products${queryString ? `?${queryString}` : ""}`;
 
-  const products = await fetchAPI<WCProduct[]>(endpoint, {
+  const { data: products, total, totalPages } = await fetchAPIWithPagination<WCProduct[]>(endpoint, {
     tags: ["products"],
     locale: params?.locale,
+    revalidate: 300,
   });
 
   return {
     products,
-    total: products.length,
-    totalPages: 1,
+    total,
+    totalPages,
   };
 }
 

@@ -41,7 +41,7 @@ export default async function ShopPage({ params }: ShopPageProps) {
   ];
 
   // Fetch products from WooCommerce API
-  const { products } = await getProducts({ per_page: 24 });
+  const { products, total, totalPages } = await getProducts({ per_page: 24 });
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -59,7 +59,12 @@ export default async function ShopPage({ params }: ShopPageProps) {
       </div>
 
       <Suspense fallback={<ProductGridSkeleton count={12} />}>
-        <ShopClient products={products} locale={locale as Locale} />
+        <ShopClient 
+          products={products} 
+          locale={locale as Locale}
+          initialTotal={total}
+          initialTotalPages={totalPages}
+        />
       </Suspense>
     </div>
   );
