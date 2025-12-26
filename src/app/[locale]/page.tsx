@@ -137,14 +137,15 @@ export default async function HomePage({ params }: HomePageProps) {
       {/* Banners - Top Position */}
       <BannersSection settings={homeSettings.banners} />
 
-      {/* New Products Section */}
-      <ProductSection
-        settings={newProductsSettings}
-        products={products}
-        locale={locale as Locale}
-        isRTL={isRTL}
-        viewAllText={sectionTexts.viewAll}
-      />
+            {/* New Products Section */}
+            <ProductSection
+              settings={newProductsSettings}
+              products={products}
+              locale={locale as Locale}
+              isRTL={isRTL}
+              viewAllText={sectionTexts.viewAll}
+              className="bg-[#f7f6f2]"
+            />
 
       {/* Shop by Category */}
       <CategorySection
