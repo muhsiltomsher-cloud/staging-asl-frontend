@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import NProgress from "nprogress";
 import {
   getWishlist as apiGetWishlist,
   addToWishlist as apiAddToWishlist,
@@ -112,6 +113,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const addToWishlist = useCallback(
     async (productId: number, variationId?: number): Promise<boolean> => {
       setIsLoading(true);
+      NProgress.start();
       try {
         const response = await apiAddToWishlist(productId, variationId);
         if (response.success) {
@@ -142,6 +144,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         return false;
       } finally {
         setIsLoading(false);
+        NProgress.done();
       }
     },
     [notify]
@@ -150,6 +153,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const removeFromWishlist = useCallback(
     async (productId: number, itemId?: number): Promise<boolean> => {
       setIsLoading(true);
+      NProgress.start();
       try {
         // If itemId not provided, try to find it from wishlist items
         let resolvedItemId = itemId;
@@ -181,6 +185,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         return false;
       } finally {
         setIsLoading(false);
+        NProgress.done();
       }
     },
     [wishlist, notify]

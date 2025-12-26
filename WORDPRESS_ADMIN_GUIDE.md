@@ -289,6 +289,8 @@ Install and activate the **WP REST API Menus** plugin to expose menus via the RE
 
 ## API Endpoints
 
+### ASL Frontend Settings Plugin Endpoints
+
 The ASL Frontend Settings plugin exposes these REST API endpoints:
 
 | Endpoint | Description |
@@ -310,6 +312,562 @@ The ASL Frontend Settings plugin exposes these REST API endpoints:
 | `/wp-json/wp/v2/media/{id}` | Media endpoint - fetches image URLs by ID |
 
 **Note:** The frontend tries multiple endpoints and uses the first available data source. This provides flexibility for different WordPress configurations.
+
+---
+
+## Complete API Reference
+
+This section documents all APIs used by the ASL Frontend application, including WordPress/WooCommerce backend APIs and Next.js API routes.
+
+### Authentication APIs
+
+The authentication system uses CoCart JWT for cart operations and WordPress JWT for wishlist operations.
+
+#### Login
+- **Endpoint:** `POST /wp-json/cocart/v2/login`
+- **Description:** Authenticates user and returns JWT tokens for cart and wishlist operations
+- **Request Body:**
+  ```json
+  {
+    "username": "string",
+    "password": "string"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "jwt_token": "string",
+    "jwt_refresh_token": "string",
+    "user_id": "number",
+    "email": "string",
+    "user_nicename": "string",
+    "display_name": "string"
+  }
+  ```
+- **Additional:** Also fetches WordPress JWT token from `/wp-json/jwt-auth/v1/token` for YITH wishlist operations
+
+#### Register
+- **Endpoint:** `POST /api/customer` (Next.js API route)
+- **Description:** Creates a new customer account
+- **Request Body:**
+  ```json
+  {
+    "username": "string",
+    "email": "string",
+    "password": "string",
+    "first_name": "string"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "number"
+    }
+  }
+  ```
+
+#### Validate Token
+- **Endpoint:** `POST /wp-json/cocart/jwt/validate-token`
+- **Description:** Validates if the current JWT token is still valid
+- **Headers:** `Authorization: Bearer {token}`
+- **Response:** HTTP 200 if valid, error otherwise
+
+#### Refresh Token
+- **Endpoint:** `POST /wp-json/cocart/jwt/refresh-token`
+- **Description:** Refreshes an expired JWT token
+- **Request Body:**
+  ```json
+  {
+    "refresh_token": "string"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "jwt_token": "string"
+  }
+  ```
+
+#### Forgot Password
+- **Endpoint:** `POST /api/auth/forgot-password` (Next.js API route)
+- **Description:** Sends password reset email to user
+- **Request Body:**
+  ```json
+  {
+    "email": "string"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "message": "Password reset email sent"
+  }
+  ```
+
+### Cart APIs (CoCart)
+
+All cart operations use the CoCart plugin API through Next.js API routes for server-side processing.
+
+#### Get Cart
+- **Endpoint:** `GET /api/cart` (Next.js API route)
+- **Description:** Retrieves the current cart contents
+- **Headers:** `Authorization: Bearer {token}` (optional, for authenticated users)
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "cart": {
+      "cart_hash": "string",
+      "cart_key": "string",
+      "items": [
+        {
+          "item_key": "string",
+          "id": "number",
+          "name": "string",
+          "price": "string",
+          "quantity": { "value": "number" },
+          "totals": { "subtotal": "string", "total": "string" },
+          "featured_image": "string"
+        }
+      ],
+      "item_count": "number",
+      "totals": {
+        "subtotal": "string",
+        "total": "string",
+        "discount_total": "string"
+      },
+      "coupons": []
+    }
+  }
+  ```
+
+#### Add to Cart
+- **Endpoint:** `POST /api/cart?action=add` (Next.js API route)
+- **Description:** Adds a product to the cart
+- **Request Body:**
+  ```json
+  {
+    "id": "string",
+    "quantity": "string",
+    "variation_id": "string (optional)",
+    "variation": { "attribute_name": "value" }
+  }
+  ```
+- **Response:** Returns updated cart object
+
+#### Update Cart Item
+- **Endpoint:** `POST /api/cart?action=update&item_key={item_key}` (Next.js API route)
+- **Description:** Updates quantity of a cart item
+- **Request Body:**
+  ```json
+  {
+    "quantity": "string"
+  }
+  ```
+- **Response:** Returns updated cart object
+
+#### Remove Cart Item
+- **Endpoint:** `POST /api/cart?action=remove&item_key={item_key}` (Next.js API route)
+- **Description:** Removes an item from the cart
+- **Response:** Returns updated cart object
+
+#### Clear Cart
+- **Endpoint:** `POST /api/cart?action=clear` (Next.js API route)
+- **Description:** Removes all items from the cart
+- **Response:** Returns empty cart object
+
+#### Apply Coupon
+- **Endpoint:** `POST /api/cart?action=apply-coupon` (Next.js API route)
+- **Description:** Applies a discount coupon to the cart
+- **Request Body:**
+  ```json
+  {
+    "code": "string"
+  }
+  ```
+- **Response:** Returns updated cart object with coupon applied
+
+#### Remove Coupon
+- **Endpoint:** `POST /api/cart?action=remove-coupon` (Next.js API route)
+- **Description:** Removes a coupon from the cart
+- **Request Body:**
+  ```json
+  {
+    "code": "string"
+  }
+  ```
+- **Response:** Returns updated cart object
+
+### Wishlist APIs (YITH Wishlist)
+
+Wishlist operations use the YITH Wishlist plugin through Next.js API routes.
+
+#### Get Wishlist
+- **Endpoint:** `GET /api/wishlist` (Next.js API route)
+- **Description:** Retrieves the user's wishlist
+- **Headers:** `Authorization: Bearer {token}`
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "wishlist": {
+      "id": "number",
+      "user_id": "number",
+      "name": "string",
+      "token": "string",
+      "items": [
+        {
+          "id": "number",
+          "product_id": "number",
+          "product_name": "string",
+          "product_price": "string",
+          "product_image": "string",
+          "product_url": "string",
+          "is_in_stock": "boolean",
+          "dateadded_formatted": "string"
+        }
+      ],
+      "items_count": "number"
+    },
+    "items": []
+  }
+  ```
+
+#### Add to Wishlist
+- **Endpoint:** `POST /api/wishlist?action=add` (Next.js API route)
+- **Description:** Adds a product to the wishlist
+- **Headers:** `Authorization: Bearer {token}`
+- **Request Body:**
+  ```json
+  {
+    "product_id": "number",
+    "variation_id": "number (optional)"
+  }
+  ```
+- **Response:** Returns updated wishlist object
+- **Error Codes:** `product_already_in_wishlist` if item already exists
+
+#### Remove from Wishlist
+- **Endpoint:** `POST /api/wishlist?action=remove` (Next.js API route)
+- **Description:** Removes a product from the wishlist
+- **Headers:** `Authorization: Bearer {token}`
+- **Request Body:**
+  ```json
+  {
+    "product_id": "number",
+    "item_id": "number (optional)"
+  }
+  ```
+- **Response:** Returns updated wishlist object
+
+#### Sync Wishlist
+- **Endpoint:** `POST /api/wishlist?action=sync` (Next.js API route)
+- **Description:** Syncs guest wishlist items to authenticated user's wishlist
+- **Headers:** `Authorization: Bearer {token}`
+- **Request Body:**
+  ```json
+  {
+    "items": [
+      { "product_id": "number", "variation_id": "number (optional)" }
+    ]
+  }
+  ```
+- **Response:** Returns merged wishlist object
+
+### Customer APIs
+
+Customer management uses WooCommerce REST API through Next.js API routes.
+
+#### Get Customer
+- **Endpoint:** `GET /api/customer?customerId={id}` (Next.js API route)
+- **Description:** Retrieves customer profile information
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "number",
+      "email": "string",
+      "first_name": "string",
+      "last_name": "string",
+      "username": "string",
+      "billing": {
+        "first_name": "string",
+        "last_name": "string",
+        "company": "string",
+        "address_1": "string",
+        "address_2": "string",
+        "city": "string",
+        "state": "string",
+        "postcode": "string",
+        "country": "string",
+        "email": "string",
+        "phone": "string"
+      },
+      "shipping": { "...same as billing..." }
+    }
+  }
+  ```
+
+#### Update Customer
+- **Endpoint:** `PUT /api/customer?customerId={id}` (Next.js API route)
+- **Description:** Updates customer profile information
+- **Request Body:** Partial customer object with fields to update
+- **Response:** Returns updated customer object
+
+#### Update Customer Address
+- **Endpoint:** `PUT /api/customer?customerId={id}` (Next.js API route)
+- **Description:** Updates billing or shipping address
+- **Request Body:**
+  ```json
+  {
+    "billing": { "...address fields..." }
+  }
+  ```
+  or
+  ```json
+  {
+    "shipping": { "...address fields..." }
+  }
+  ```
+- **Response:** Returns updated customer object
+
+### Orders APIs
+
+Order management uses WooCommerce REST API through Next.js API routes.
+
+#### Get Customer Orders
+- **Endpoint:** `GET /api/orders?customerId={id}&page={page}&per_page={count}&status={status}` (Next.js API route)
+- **Description:** Retrieves orders for a customer
+- **Query Parameters:**
+  - `customerId` (required): Customer ID
+  - `page` (optional): Page number for pagination
+  - `per_page` (optional): Number of orders per page
+  - `status` (optional): Filter by order status (pending, processing, completed, etc.)
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "id": "number",
+        "status": "string",
+        "total": "string",
+        "currency": "string",
+        "date_created": "string",
+        "line_items": [
+          {
+            "id": "number",
+            "name": "string",
+            "quantity": "number",
+            "total": "string",
+            "image": { "src": "string" }
+          }
+        ],
+        "billing": { "...address..." },
+        "shipping": { "...address..." }
+      }
+    ]
+  }
+  ```
+
+#### Get Single Order
+- **Endpoint:** `GET /api/orders?orderId={id}` (Next.js API route)
+- **Description:** Retrieves details of a specific order
+- **Response:** Returns single order object
+
+### Products APIs (WooCommerce Store API)
+
+Product data is fetched directly from WooCommerce Store API.
+
+#### Get Products
+- **Endpoint:** `GET /wp-json/wc/store/v1/products`
+- **Description:** Retrieves product listings
+- **Query Parameters:**
+  - `page`: Page number
+  - `per_page`: Products per page
+  - `category`: Category ID
+  - `search`: Search term
+  - `orderby`: Sort field (date, price, popularity)
+  - `order`: Sort direction (asc, desc)
+  - `lang`: Locale (en, ar)
+- **Response:** Array of product objects
+
+#### Get Product by Slug
+- **Endpoint:** `GET /wp-json/wc/store/v1/products?slug={slug}`
+- **Description:** Retrieves a single product by its URL slug
+- **Response:** Array with single product object
+
+#### Get Product by ID
+- **Endpoint:** `GET /wp-json/wc/store/v1/products/{id}`
+- **Description:** Retrieves a single product by ID
+- **Response:** Product object
+
+#### Get Categories
+- **Endpoint:** `GET /wp-json/wc/store/v1/products/categories`
+- **Description:** Retrieves all product categories
+- **Response:** Array of category objects
+
+### WordPress Settings APIs
+
+These endpoints provide site configuration and content settings.
+
+#### Get Site Settings
+- **Endpoint:** `GET /wp-json/asl/v1/site-settings`
+- **Description:** Retrieves site identity settings
+- **Response:**
+  ```json
+  {
+    "name": "string",
+    "description": "string",
+    "url": "string",
+    "logo": { "id": "number", "url": "string" },
+    "favicon": { "id": "number", "url": "string" }
+  }
+  ```
+
+#### Get Home Page Settings
+- **Endpoint:** `GET /wp-json/asl/v1/home-settings`
+- **Description:** Retrieves all home page section configurations
+- **Response:**
+  ```json
+  {
+    "hero": {
+      "enabled": "boolean",
+      "autoplay": "boolean",
+      "autoplayDelay": "number",
+      "loop": "boolean",
+      "slides": [
+        { "image": "string", "mobileImage": "string", "link": "string" }
+      ]
+    },
+    "newProducts": {
+      "enabled": "boolean",
+      "title": "string",
+      "titleAr": "string",
+      "subtitle": "string",
+      "subtitleAr": "string",
+      "count": "number"
+    },
+    "bestseller": { "...same as newProducts..." },
+    "categories": { "...same as newProducts..." },
+    "featured": { "...same as newProducts..." },
+    "collections": {
+      "enabled": "boolean",
+      "title": "string",
+      "titleAr": "string",
+      "items": [
+        { "image": "string", "title": "string", "titleAr": "string", "link": "string" }
+      ]
+    },
+    "banners": {
+      "enabled": "boolean",
+      "items": [
+        { "image": "string", "mobileImage": "string", "title": "string", "link": "string" }
+      ]
+    }
+  }
+  ```
+
+#### Get Header Settings
+- **Endpoint:** `GET /wp-json/asl/v1/header-settings`
+- **Description:** Retrieves header configuration
+- **Response:**
+  ```json
+  {
+    "sticky": "boolean",
+    "logo": "string",
+    "stickyLogo": "string",
+    "logoDark": "string"
+  }
+  ```
+
+#### Get Topbar Settings
+- **Endpoint:** `GET /wp-json/asl/v1/topbar`
+- **Description:** Retrieves promotional top bar configuration
+- **Response:**
+  ```json
+  {
+    "enabled": "boolean",
+    "text": "string",
+    "textAr": "string",
+    "link": "string",
+    "bgColor": "string",
+    "textColor": "string",
+    "dismissible": "boolean"
+  }
+  ```
+
+#### Get Mobile Bar Settings
+- **Endpoint:** `GET /wp-json/asl/v1/mobile-bar`
+- **Description:** Retrieves mobile bottom navigation configuration
+- **Response:**
+  ```json
+  {
+    "enabled": "boolean",
+    "items": [
+      {
+        "icon": "string",
+        "label": "string",
+        "labelAr": "string",
+        "url": "string"
+      }
+    ]
+  }
+  ```
+
+#### Get Menu
+- **Endpoint:** `GET /wp-json/menus/v1/locations/{location}`
+- **Description:** Retrieves navigation menu by location
+- **Locations:** `primary`, `footer`
+- **Response:** Menu object with items array
+
+### Coupons API
+
+#### Validate Coupon
+- **Endpoint:** `GET /api/coupons?code={code}` (Next.js API route)
+- **Description:** Validates a coupon code
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "code": "string",
+      "discount_type": "string",
+      "amount": "string"
+    }
+  }
+  ```
+
+### Error Response Format
+
+All API endpoints return errors in a consistent format:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "string",
+    "message": "string",
+    "data": {
+      "status": "number"
+    }
+  }
+}
+```
+
+Common error codes:
+- `network_error`: Network connectivity issue
+- `login_failed`: Invalid credentials
+- `registration_failed`: Registration error
+- `cart_error`: Cart operation failed
+- `wishlist_error`: Wishlist operation failed
+- `product_already_in_wishlist`: Item already in wishlist
+- `customer_error`: Customer operation failed
+- `orders_error`: Orders fetch failed
 
 ## Multilingual Support (WPML/Polylang)
 
