@@ -84,7 +84,7 @@ export default async function LocaleLayout({
                 speed={200}
                 shadow="0 0 10px #92400e,0 0 5px #92400e"
               />
-              <div dir={dir} lang={validLocale} className="flex min-h-screen flex-col bg-white">
+              <div dir={dir} lang={validLocale} className="flex min-h-screen flex-col bg-[#f7f6f2]">
                 <Header
                   locale={validLocale}
                   dictionary={dictionary}
