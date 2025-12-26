@@ -75,7 +75,7 @@ export function CategorySection({
   }
 
   return (
-    <section className={`bg-stone-50 py-12 md:py-16 ${className}`}>
+    <section className={`bg-[#eae5d9] py-12 md:py-16 ${className}`}>
       <div className="container mx-auto px-4">
         <div className="mb-8 flex items-center justify-between md:mb-10">
           <div className="text-center w-full md:text-left md:w-auto">

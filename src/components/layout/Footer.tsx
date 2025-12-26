@@ -147,13 +147,7 @@ export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
         </div>
 
         {/* Bottom bar */}
-        <div
-          className="mt-8 border-t pt-6 md:mt-12 md:pt-8 bg-no-repeat bg-left bg-contain"
-          style={{
-            backgroundImage: "url('https://adminasl.stagingndemo.com/wp-content/uploads/2025/12/Untitled-design-1.png')",
-            backgroundSize: "auto 100%",
-          }}
-        >
+        <div className="mt-8 border-t pt-6 md:mt-12 md:pt-8">
           <p className="text-center text-xs text-gray-600 md:text-sm">
             &copy; {currentYear} {siteConfig.name}. {dictionary.footer.copyright}
           </p>
