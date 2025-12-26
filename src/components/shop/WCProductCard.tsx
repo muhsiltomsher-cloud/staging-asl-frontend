@@ -116,13 +116,13 @@ export function WCProductCard({
               className={cn(
                 "rounded-full p-2.5 shadow-lg transition-all duration-300",
                 isWishlisted
-                  ? "bg-red-50 text-red-500 hover:bg-red-100"
+                  ? "bg-[#c67a46]/10 text-[#c67a46] hover:bg-[#c67a46]/20"
                   : "bg-white/90 backdrop-blur-sm text-gray-600 hover:bg-white opacity-0 group-hover:opacity-100",
                 isAddingToWishlist && "opacity-50 cursor-not-allowed"
               )}
               aria-label={isWishlisted ? (isRTL ? "إزالة من المفضلة" : "Remove from wishlist") : (isRTL ? "أضف إلى المفضلة" : "Add to wishlist")}
             >
-              <Heart className={cn("h-4 w-4", isWishlisted && "fill-current")} />
+              <Heart className={cn("h-4 w-4", isWishlisted && "fill-[#c67a46]")} />
             </button>
           </div>
 

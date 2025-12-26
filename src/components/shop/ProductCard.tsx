@@ -77,12 +77,12 @@ export function ProductCard({ product, locale, className }: ProductCardProps) {
                         className={cn(
                           "rounded-full p-2 shadow-md transition-colors",
                           isWishlisted
-                            ? "bg-red-50 text-red-500 hover:bg-red-100"
+                            ? "bg-[#c67a46]/10 text-[#c67a46] hover:bg-[#c67a46]/20"
                             : "bg-white text-gray-600 hover:bg-gray-100 opacity-0 group-hover:opacity-100"
                         )}
                         aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
                       >
-                        <Heart className={cn("h-4 w-4", isWishlisted && "fill-current")} />
+                        <Heart className={cn("h-4 w-4", isWishlisted && "fill-[#c67a46]")} />
                       </button>
                     </div>
 

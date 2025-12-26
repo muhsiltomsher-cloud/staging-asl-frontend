@@ -141,7 +141,7 @@ export function FeaturedProductsSlider({
             <>
               <button
                 type="button"
-                className="featured-slider-prev absolute -left-4 top-1/2 z-10 hidden -translate-y-1/2 rounded-full bg-white p-3 shadow-lg transition-all hover:bg-stone-100 lg:block"
+                className="featured-slider-prev absolute -left-4 top-[calc(50%-2.5rem)] z-10 hidden -translate-y-1/2 rounded-full bg-white p-3 shadow-lg transition-all hover:bg-stone-100 lg:block"
                 aria-label="Previous products"
               >
                 <svg className="h-5 w-5 text-amber-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -150,7 +150,7 @@ export function FeaturedProductsSlider({
               </button>
               <button
                 type="button"
-                className="featured-slider-next absolute -right-4 top-1/2 z-10 hidden -translate-y-1/2 rounded-full bg-white p-3 shadow-lg transition-all hover:bg-stone-100 lg:block"
+                className="featured-slider-next absolute -right-4 top-[calc(50%-2.5rem)] z-10 hidden -translate-y-1/2 rounded-full bg-white p-3 shadow-lg transition-all hover:bg-stone-100 lg:block"
                 aria-label="Next products"
               >
                 <svg className="h-5 w-5 text-amber-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
