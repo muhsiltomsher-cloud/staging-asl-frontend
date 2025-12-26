@@ -121,7 +121,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-sm font-medium text-gray-700 transition-colors hover:text-gray-900"
+                  className="text-sm font-bold text-[#7a3205] transition-colors hover:text-[#5a2504]"
                 >
                   {item.name}
                 </Link>
@@ -132,20 +132,20 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                         <div className="flex items-center gap-2 md:gap-4">
                           {/* Desktop Search with Dropdown */}
                           <DesktopSearchDropdown locale={locale} dictionary={dictionary} />
-              <button
-                type="button"
-                onClick={() => setIsAccountDrawerOpen(true)}
-                className="hidden p-2 text-gray-700 hover:text-gray-900 md:block"
-                aria-label={dictionary.account.myAccount}
-              >
-                <User className="h-5 w-5" />
-              </button>
-              <Link
-                href={`/${locale}/wishlist`}
-                className="relative hidden p-2 text-gray-700 hover:text-gray-900 md:block"
-                aria-label={dictionary.account.wishlist}
-              >
-                <Heart className="h-5 w-5" />
+                            <button
+                              type="button"
+                              onClick={() => setIsAccountDrawerOpen(true)}
+                              className="hidden p-2 text-[#7a3205] hover:text-[#5a2504] md:block"
+                              aria-label={dictionary.account.myAccount}
+                            >
+                              <User className="h-5 w-5" />
+                            </button>
+                            <Link
+                              href={`/${locale}/wishlist`}
+                              className="relative hidden p-2 text-[#7a3205] hover:text-[#5a2504] md:block"
+                              aria-label={dictionary.account.wishlist}
+                            >
+                              <Heart className="h-5 w-5" />
                 {wishlistItemsCount > 0 && (
                   <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black text-xs font-medium text-white">
                     {wishlistItemsCount}
@@ -153,13 +153,13 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                 )}
               </Link>
               {/* Cart - visible on both mobile and desktop */}
-              <button
-                type="button"
-                className="relative p-2 text-gray-700 hover:text-gray-900"
-                onClick={() => setIsCartOpen(true)}
-                aria-label={dictionary.common.cart}
-              >
-                <ShoppingBag className="h-5 w-5" />
+                            <button
+                              type="button"
+                              className="relative p-2 text-[#7a3205] hover:text-[#5a2504]"
+                              onClick={() => setIsCartOpen(true)}
+                              aria-label={dictionary.common.cart}
+                            >
+                              <ShoppingBag className="h-5 w-5" />
                 {cartItemsCount > 0 && (
                   <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black text-xs font-medium text-white">
                     {cartItemsCount}
@@ -179,14 +179,14 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
         >
           <div className="space-y-1 px-4 pb-3 pt-2">
             {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {item.name}
-              </Link>
+                            <Link
+                              key={item.name}
+                              href={item.href}
+                              className="block rounded-md px-3 py-2 text-base font-bold text-[#7a3205] hover:bg-gray-100 hover:text-[#5a2504]"
+                              onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                              {item.name}
+                            </Link>
             ))}
           </div>
         </div>
