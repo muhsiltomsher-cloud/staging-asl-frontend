@@ -38,7 +38,7 @@ function FeaturedProductCardSkeleton() {
 
 export function FeaturedProductsSliderSkeleton() {
   return (
-    <section className="bg-stone-50 py-12 md:py-16">
+    <section className="bg-[#f7f6f2] py-12 md:py-16">
       <div className="container mx-auto px-4">
         <div className="mb-8 md:mb-10">
           <Skeleton className="h-8 w-48 md:h-9" />

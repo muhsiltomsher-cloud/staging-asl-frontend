@@ -172,14 +172,14 @@ export default async function HomePage({ params }: HomePageProps) {
         locale={locale as Locale}
         isRTL={isRTL}
         viewAllText={sectionTexts.viewAll}
-        className="bg-stone-50"
+        className="bg-[#f7f6f2]"
       />
 
       {/* Our Collections */}
       <CollectionsSection settings={collectionsSettings} />
 
       {/* About Section - Creative Design */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-white to-stone-50 py-16 md:py-24">
+      <section className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-[#f7f6f2] to-stone-50 py-16 md:py-24">
         {/* Decorative background elements */}
         <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-amber-100/40 blur-3xl" />
         <div className="absolute -bottom-20 -right-20 h-80 w-80 rounded-full bg-stone-100/60 blur-3xl" />

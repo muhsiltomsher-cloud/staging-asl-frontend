@@ -22,7 +22,7 @@ export function BannersSectionSkeleton({ count = 2 }: { count?: number }) {
   };
 
   return (
-    <section className="bg-white py-8 md:py-12">
+    <section className="bg-[#f7f6f2] py-8 md:py-12">
       <div className="container mx-auto px-4">
         <div className={`grid gap-4 md:gap-6 ${getGridClass()}`}>
           {Array.from({ length: count }).map((_, i) => (
