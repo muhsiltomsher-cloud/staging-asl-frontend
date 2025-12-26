@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/common/Button";
+import { FormattedPrice } from "@/components/common/FormattedPrice";
 
 interface WishlistPageProps {
   params: Promise<{ locale: string }>;
@@ -72,15 +73,6 @@ export default function WishlistPage({ params }: WishlistPageProps) {
     }
   };
 
-  const formatPrice = (price?: string) => {
-    if (!price) return "—";
-    const numPrice = parseFloat(price);
-    if (isNaN(numPrice)) return "—";
-    return new Intl.NumberFormat(locale === "ar" ? "ar-SA" : "en-SA", {
-      style: "currency",
-      currency: "SAR",
-    }).format(numPrice);
-  };
 
   if (authLoading) {
     return (
@@ -185,9 +177,11 @@ export default function WishlistPage({ params }: WishlistPageProps) {
                 <h3 className="font-medium text-gray-900 line-clamp-2 mb-2">
                   {item.product_name}
                 </h3>
-                <p className="text-lg font-semibold text-gray-900 mb-4">
-                  {formatPrice(item.product_price)}
-                </p>
+                                <FormattedPrice
+                                  price={item.product_price}
+                                  className="text-lg font-semibold text-gray-900 mb-4"
+                                  iconSize="sm"
+                                />
                 <Button
                   variant="primary"
                   size="sm"
