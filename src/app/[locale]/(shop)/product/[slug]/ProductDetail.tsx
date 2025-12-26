@@ -17,6 +17,7 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
+import { decodeHtmlEntities } from "@/lib/utils";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -157,8 +158,8 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
   const primaryCategory = product.categories?.[0];
   const breadcrumbItems = [
     { name: isRTL ? "المتجر" : "Shop", href: `/${locale}/shop` },
-    ...(primaryCategory ? [{ name: primaryCategory.name, href: `/${locale}/category/${primaryCategory.slug}` }] : []),
-    { name: product.name, href: `/${locale}/product/${product.slug}` },
+    ...(primaryCategory ? [{ name: decodeHtmlEntities(primaryCategory.name), href: `/${locale}/category/${primaryCategory.slug}` }] : []),
+    { name: decodeHtmlEntities(product.name), href: `/${locale}/product/${product.slug}` },
   ];
 
   const handleAddToCart = async () => {
@@ -546,7 +547,7 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
               href={`/${locale}/category/${primaryCategory.slug}`}
               className="inline-block text-xs font-medium uppercase tracking-wider text-gray-500 hover:text-gray-700 transition-colors"
             >
-              {primaryCategory.name}
+              {decodeHtmlEntities(primaryCategory.name)}
             </Link>
           )}
 
@@ -683,7 +684,7 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
                 {primaryCategory && (
                   <div className="flex justify-between">
                     <span className="text-gray-500">{isRTL ? "الفئة" : "Category"}</span>
-                    <span className="text-gray-900">{primaryCategory.name}</span>
+                    <span className="text-gray-900">{decodeHtmlEntities(primaryCategory.name)}</span>
                   </div>
                 )}
                 {product.sku && (
