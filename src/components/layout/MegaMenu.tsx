@@ -14,6 +14,39 @@ const categoriesCache: Record<string, { data: WCCategory[]; timestamp: number }>
 const CACHE_TTL = 5 * 60 * 1000;
 const fetchPromise: Record<string, Promise<WCCategory[]> | null> = {};
 
+export async function preloadCategoriesCache(locale: string): Promise<void> {
+  const cached = categoriesCache[locale];
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return;
+  }
+
+  if (fetchPromise[locale]) {
+    await fetchPromise[locale];
+    return;
+  }
+
+  try {
+    fetchPromise[locale] = getCategories(locale).then((cats) => {
+      const filtered = cats.filter((cat) => cat.count > 0);
+      categoriesCache[locale] = { data: filtered, timestamp: Date.now() };
+      return filtered;
+    });
+    await fetchPromise[locale];
+  } catch (error) {
+    console.error("Failed to preload categories cache:", error);
+  } finally {
+    fetchPromise[locale] = null;
+  }
+}
+
+export function getCachedCategories(locale: string): WCCategory[] | null {
+  const cached = categoriesCache[locale];
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+  return null;
+}
+
 interface MegaMenuProps {
   isOpen: boolean;
   onClose: () => void;

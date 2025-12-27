@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Menu, X, ShoppingBag, User, Heart } from "lucide-react";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 import { CurrencySwitcher } from "@/components/common/CurrencySwitcher";
@@ -16,7 +16,7 @@ import type { SiteSettings, WPMenuItem } from "@/types/wordpress";
 import type { HeaderSettings, TopbarSettings } from "@/lib/api/wordpress";
 import { CategoriesDrawer } from "@/components/layout/CategoriesDrawer";
 import { DesktopSearchDropdown } from "@/components/layout/DesktopSearchDropdown";
-import { MegaMenu } from "@/components/layout/MegaMenu";
+import { MegaMenu, preloadCategoriesCache } from "@/components/layout/MegaMenu";
 
 interface HeaderProps {
   locale: Locale;
@@ -42,12 +42,16 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
   const { setIsAccountDrawerOpen } = useAuth();
   const { wishlistItemsCount } = useWishlist();
 
-  const handleShopMouseEnter = useCallback(() => {
-    if (megaMenuTimeoutRef.current) {
-      clearTimeout(megaMenuTimeoutRef.current);
-    }
-    setIsMegaMenuOpen(true);
-  }, []);
+    useEffect(() => {
+      preloadCategoriesCache(locale);
+    }, [locale]);
+
+    const handleShopMouseEnter = useCallback(() => {
+      if (megaMenuTimeoutRef.current) {
+        clearTimeout(megaMenuTimeoutRef.current);
+      }
+      setIsMegaMenuOpen(true);
+    }, []);
 
   const handleShopMouseLeave = useCallback(() => {
     megaMenuTimeoutRef.current = setTimeout(() => {
