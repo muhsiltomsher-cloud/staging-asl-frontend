@@ -31,9 +31,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="overflow-x-hidden">
       <body
-        className={`${inter.variable} ${accentGraphic.variable} antialiased`}
+        className={`${inter.variable} ${accentGraphic.variable} antialiased overflow-x-hidden`}
       >
         {children}
       </body>
