@@ -535,8 +535,8 @@ export function BuildYourOwnSetClient({
                           </div>
                         )}
                       </div>
-                      <div className="p-2 sm:p-3">
-                        <p className="line-clamp-2 text-xs sm:text-sm font-medium text-gray-900 uppercase">
+                      <div className="p-2 sm:p-3 min-w-0">
+                        <p className="line-clamp-2 text-xs sm:text-sm font-medium text-gray-900 uppercase break-words">
                           {product.name}
                         </p>
                         <p className="mt-1 text-xs sm:text-sm font-semibold text-amber-700">
