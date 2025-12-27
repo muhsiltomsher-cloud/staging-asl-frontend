@@ -6,13 +6,16 @@ import Image from "next/image";
 import { Grid3X3 } from "lucide-react";
 import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/config/site";
-import type { WCCategory } from "@/types/woocommerce";
-import { getCategories } from "@/lib/api/woocommerce";
+import type { WCCategory, WCProduct } from "@/types/woocommerce";
+import { getCategories, getProducts } from "@/lib/api/woocommerce";
 import { decodeHtmlEntities, cn } from "@/lib/utils";
+import { FormattedPrice } from "@/components/common/FormattedPrice";
 
 const categoriesCache: Record<string, { data: WCCategory[]; timestamp: number }> = {};
+const productsCache: Record<string, { data: WCProduct[]; timestamp: number }> = {};
 const CACHE_TTL = 5 * 60 * 1000;
 const fetchPromise: Record<string, Promise<WCCategory[]> | null> = {};
+const productsFetchPromise: Record<string, Promise<WCProduct[]> | null> = {};
 
 export interface CategoryWithChildren extends WCCategory {
   children: WCCategory[];
@@ -81,8 +84,17 @@ export function MegaMenu({
     }
     return [];
   });
+  const [featuredProducts, setFeaturedProducts] = useState<WCProduct[]>(() => {
+    const cached = productsCache[locale];
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.data;
+    }
+    return [];
+  });
   const [loading, setLoading] = useState(false);
+  const [productsLoading, setProductsLoading] = useState(false);
   const hasFetchedRef = useRef(false);
+  const hasProductsFetchedRef = useRef(false);
   const isRTL = locale === "ar";
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -125,6 +137,50 @@ export function MegaMenu({
     }
   }, [locale]);
 
+  const fetchFeaturedProducts = useCallback(async () => {
+    const cached = productsCache[locale];
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      setFeaturedProducts(cached.data);
+      return;
+    }
+
+    if (productsFetchPromise[locale]) {
+      try {
+        const prods = await productsFetchPromise[locale];
+        if (prods) {
+          setFeaturedProducts(prods);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+      return;
+    }
+
+    setProductsLoading(true);
+    try {
+      productsFetchPromise[locale] = getProducts({
+        per_page: 4,
+        orderby: "date",
+        order: "desc",
+        locale,
+      }).then((response) => {
+        const products = response.products;
+        productsCache[locale] = { data: products, timestamp: Date.now() };
+        return products;
+      });
+
+      const prods = await productsFetchPromise[locale];
+      if (prods) {
+        setFeaturedProducts(prods);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setProductsLoading(false);
+      productsFetchPromise[locale] = null;
+    }
+  }, [locale]);
+
   useEffect(() => {
     const cached = categoriesCache[locale];
     const hasCachedData = cached && Date.now() - cached.timestamp < CACHE_TTL;
@@ -138,29 +194,25 @@ export function MegaMenu({
   }, [isOpen, locale, fetchCategoriesData, categories.length]);
 
   useEffect(() => {
+    const cached = productsCache[locale];
+    const hasCachedData = cached && Date.now() - cached.timestamp < CACHE_TTL;
+    
+    if (isOpen && !hasCachedData && !hasProductsFetchedRef.current) {
+      hasProductsFetchedRef.current = true;
+      fetchFeaturedProducts();
+    } else if (isOpen && hasCachedData && featuredProducts.length === 0) {
+      setFeaturedProducts(cached.data);
+    }
+  }, [isOpen, locale, fetchFeaturedProducts, featuredProducts.length]);
+
+  useEffect(() => {
     hasFetchedRef.current = false;
+    hasProductsFetchedRef.current = false;
   }, [locale]);
 
   if (!isOpen) return null;
 
   const hierarchicalCategories = organizeCategoriesByHierarchy(categories);
-
-  const featuredProducts = [
-    {
-      id: 1,
-      title: isRTL ? "مجموعة الهدايا" : "Gift Sets",
-      subtitle: isRTL ? "خصم 30%" : "30% off",
-      image: "/images/featured-1.jpg",
-      href: `/${locale}/shop?category=gifts-set`,
-    },
-    {
-      id: 2,
-      title: isRTL ? "العطور الجديدة" : "New Fragrances",
-      subtitle: isRTL ? "وصل حديثاً" : "Just Arrived",
-      image: "/images/featured-2.jpg",
-      href: `/${locale}/shop?orderby=date`,
-    },
-  ];
 
   return (
     <>
@@ -196,18 +248,34 @@ export function MegaMenu({
             </div>
           ) : (
             <div className="flex gap-8">
-              {/* Left Side - Categories */}
+              {/* Left Side - Categories with Images */}
               <div className={cn("flex-1", isRTL ? "order-2" : "order-1")}>
                 <div className="grid grid-cols-4 gap-8">
                   {hierarchicalCategories.slice(0, 4).map((category) => (
                     <div key={category.id} className="flex flex-col">
-                      {/* Category Header */}
+                      {/* Category Header with Image */}
                       <Link
                         href={`/${locale}/shop?category=${category.slug}`}
                         onClick={onClose}
-                        className="text-sm font-bold text-gray-900 uppercase tracking-wide hover:text-[#7a3205] transition-colors mb-3"
+                        className="flex items-center gap-2 mb-3 group"
                       >
-                        {decodeHtmlEntities(category.name)}
+                        {category.image?.src ? (
+                          <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
+                            <Image
+                              src={category.image.src}
+                              alt={decodeHtmlEntities(category.name)}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-amber-50">
+                            <Grid3X3 className="h-4 w-4 text-amber-400" />
+                          </div>
+                        )}
+                        <span className="text-sm font-bold text-gray-900 uppercase tracking-wide group-hover:text-[#7a3205] transition-colors">
+                          {decodeHtmlEntities(category.name)}
+                        </span>
                       </Link>
                       
                       {/* Subcategories */}
@@ -239,40 +307,56 @@ export function MegaMenu({
 
               {/* Right Side - Featured Products */}
               <div className={cn("w-[340px] flex-shrink-0", isRTL ? "order-1" : "order-2")}>
-                <div className="grid grid-cols-2 gap-4">
-                  {featuredProducts.map((product) => (
-                    <Link
-                      key={product.id}
-                      href={product.href}
-                      onClick={onClose}
-                      className="group block"
-                    >
-                      <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-gradient-to-b from-[#e8e4dc] to-[#d4cfc5]">
-                        {hierarchicalCategories[product.id - 1]?.image?.src ? (
-                          <Image
-                            src={hierarchicalCategories[product.id - 1]?.image?.src || ""}
-                            alt={product.title}
-                            fill
-                            className="object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <Grid3X3 className="h-12 w-12 text-[#8b7355]" />
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                      </div>
-                      <div className="mt-2">
-                        <h4 className="text-sm font-semibold text-gray-900 group-hover:text-[#7a3205] transition-colors">
-                          {product.title}
-                        </h4>
-                        <p className="text-xs text-[#7a3205] font-medium">
-                          {product.subtitle}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
+                  {isRTL ? "وصل حديثاً" : "New Arrivals"}
+                </h3>
+                {productsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#7a3205]/20 border-t-[#7a3205]" />
+                  </div>
+                ) : featuredProducts.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    {featuredProducts.slice(0, 4).map((product) => (
+                      <Link
+                        key={product.id}
+                        href={`/${locale}/product/${product.slug}`}
+                        onClick={onClose}
+                        className="group block"
+                      >
+                        <div className="relative aspect-square overflow-hidden rounded-lg bg-gradient-to-b from-[#e8e4dc] to-[#d4cfc5]">
+                          {product.images?.[0]?.src ? (
+                            <Image
+                              src={product.images[0].src}
+                              alt={product.name}
+                              fill
+                              className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Grid3X3 className="h-12 w-12 text-[#8b7355]" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-2">
+                          <h4 className="text-xs font-medium text-gray-900 group-hover:text-[#7a3205] transition-colors line-clamp-2 break-words min-w-0">
+                            {product.name}
+                          </h4>
+                          <p className="text-xs text-[#7a3205] font-medium mt-1">
+                            <FormattedPrice 
+                              price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)} 
+                              iconSize="xs" 
+                            />
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Grid3X3 className="mb-2 h-8 w-8 text-gray-200" />
+                    <p className="text-xs text-gray-400">{isRTL ? "لا توجد منتجات" : "No products"}</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
