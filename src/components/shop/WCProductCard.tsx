@@ -130,7 +130,7 @@ export function WCProductCard({
               <button
                 onClick={handleAddToCart}
                 disabled={isAddingToCart}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium uppercase tracking-wide text-white bg-[#C4885B] rounded-sm shadow-lg transition-all duration-300 hover:text-[#C4885B] hover:bg-white/70 hover:backdrop-blur-md hover:border hover:border-[#C4885B]/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium uppercase tracking-wide text-white bg-[#C4885B] rounded-md shadow-lg transition-all duration-300 hover:text-[#C4885B] hover:bg-white/70 hover:backdrop-blur-md hover:border hover:border-[#C4885B]/30 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ShoppingBag className="h-4 w-4" />
                 {isAddingToCart ? (isRTL ? "جاري الإضافة..." : "Adding...") : (isRTL ? "أضف للسلة" : "Add to Cart")}
