@@ -28,7 +28,7 @@ export function organizeCategoriesByHierarchy(categories: WCCategory[]): Categor
   }));
 }
 
-export async function preloadCategoriesCache(locale: string): Promise<void> {
+export async function preloadCategoriesCache(locale: Locale): Promise<void> {
   const cached = categoriesCache[locale];
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return;
