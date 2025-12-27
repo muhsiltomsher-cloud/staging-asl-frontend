@@ -1,6 +1,7 @@
 "use client";
 
-import { User, Package, MapPin, Heart, Settings, LogOut, X, ChevronRight, Globe } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { User, Package, MapPin, Heart, Settings, LogOut, X, ChevronRight, Globe, ChevronDown, Check, Coins } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,7 +12,7 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { Button } from "@/components/common/Button";
 import { localeConfig, currencies, type Locale, type Currency } from "@/config/site";
-import { getPathWithoutLocale } from "@/lib/utils";
+import { getPathWithoutLocale, cn } from "@/lib/utils";
 
 interface AccountDrawerProps {
   locale: string;
@@ -45,6 +46,21 @@ export function AccountDrawer({
   const { currency, setCurrency } = useCurrency();
   const pathname = usePathname();
   const isRTL = locale === "ar";
+  const [isCurrencyDropdownOpen, setIsCurrencyDropdownOpen] = useState(false);
+  const currencyDropdownRef = useRef<HTMLDivElement>(null);
+
+  const currentCurrency = currencies.find((c) => c.code === currency);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (currencyDropdownRef.current && !currencyDropdownRef.current.contains(event.target as Node)) {
+        setIsCurrencyDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const onClose = () => setIsAccountDrawerOpen(false);
 
@@ -55,6 +71,7 @@ export function AccountDrawer({
 
   const handleCurrencyChange = (code: Currency) => {
     setCurrency(code);
+    setIsCurrencyDropdownOpen(false);
   };
 
   const alternateLocale: Locale = locale === "en" ? "ar" : "en";
@@ -189,24 +206,75 @@ export function AccountDrawer({
         </div>
 
         {/* Currency Switcher */}
-        <div className="flex items-center justify-between rounded-lg bg-white px-4 py-3 shadow-sm">
-          <div className="flex items-center gap-3">
-            <span className="flex h-5 w-5 items-center justify-center text-sm font-bold text-gray-500">$</span>
-            <span className="text-sm font-medium text-gray-700">
-              {locale === "en" ? "Currency" : "العملة"}
-            </span>
-          </div>
-          <select
-            value={currency}
-            onChange={(e) => handleCurrencyChange(e.target.value as Currency)}
-            className="rounded-md border-0 bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
+        <div ref={currencyDropdownRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setIsCurrencyDropdownOpen(!isCurrencyDropdownOpen)}
+            className="flex w-full items-center justify-between rounded-lg bg-white px-4 py-3 shadow-sm"
           >
-            {currencies.map((curr) => (
-              <option key={curr.code} value={curr.code}>
-                {curr.code} - {curr.symbol}
-              </option>
-            ))}
-          </select>
+            <div className="flex items-center gap-3">
+              <Coins className="h-5 w-5 text-gray-500" />
+              <span className="text-sm font-medium text-gray-700">
+                {locale === "en" ? "Currency" : "العملة"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700">
+                {currentCurrency?.symbol} {currentCurrency?.code}
+              </span>
+              <ChevronDown className={cn("h-4 w-4 text-gray-400 transition-transform", isCurrencyDropdownOpen && "rotate-180")} />
+            </div>
+          </button>
+
+          {isCurrencyDropdownOpen && (
+            <div className={cn(
+              "absolute z-50 mt-2 w-full overflow-hidden rounded-xl border border-gray-100 bg-white shadow-xl",
+              isRTL ? "right-0" : "left-0"
+            )}>
+              <div className="border-b border-gray-100 bg-gray-50/50 px-4 py-2.5">
+                <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                  {locale === "en" ? "Select Currency" : "اختر العملة"}
+                </p>
+              </div>
+              <ul role="listbox" className="max-h-[200px] overflow-y-auto py-1">
+                {currencies.map((curr) => (
+                  <li key={curr.code}>
+                    <button
+                      type="button"
+                      onClick={() => handleCurrencyChange(curr.code as Currency)}
+                      className={cn(
+                        "flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-gray-50",
+                        currency === curr.code && "bg-[#7a3205]/5"
+                      )}
+                      role="option"
+                      aria-selected={currency === curr.code}
+                    >
+                      <span className={cn(
+                        "flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold",
+                        currency === curr.code 
+                          ? "bg-[#7a3205] text-white" 
+                          : "bg-gray-100 text-gray-600"
+                      )}>
+                        {curr.symbol}
+                      </span>
+                      <div className="flex flex-1 flex-col items-start">
+                        <span className={cn(
+                          "font-medium",
+                          currency === curr.code ? "text-[#7a3205]" : "text-gray-900"
+                        )}>
+                          {curr.code}
+                        </span>
+                        <span className="text-xs text-gray-500">{curr.label.replace(` (${curr.code})`, "")}</span>
+                      </div>
+                      {currency === curr.code && (
+                        <Check className="h-4 w-4 text-[#7a3205]" />
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>

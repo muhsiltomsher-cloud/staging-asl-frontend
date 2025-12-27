@@ -88,8 +88,8 @@ export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherP
           type="button"
           onClick={handleDesktopClick}
           className={cn(
-            "flex items-center gap-2 rounded-full border border-gray-200 bg-white/80 px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm backdrop-blur-sm transition-all hover:border-gray-300 hover:bg-white hover:shadow-md",
-            isOpen && "border-gray-300 bg-white shadow-md"
+            "flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-100",
+            isOpen && "bg-gray-100"
           )}
           aria-expanded={isOpen}
           aria-haspopup="listbox"
@@ -156,7 +156,7 @@ export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherP
         type="button"
         onClick={handleMobileClick}
         className={cn(
-          "flex items-center gap-1.5 rounded-full border border-gray-200 bg-white/80 px-2.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all hover:border-gray-300 hover:bg-white md:hidden",
+          "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-medium transition-all hover:bg-gray-100 md:hidden",
           className
         )}
         aria-label={t.selectCurrency}
