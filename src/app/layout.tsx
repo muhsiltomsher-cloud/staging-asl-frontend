@@ -11,18 +11,8 @@ const inter = Inter({
 const accentGraphic = localFont({
   src: [
     {
-      path: "../../public/fonts/AccentGraphic-Light.otf",
-      weight: "300",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/AccentGraphic-Medium.otf",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/AccentGraphic-Bold.otf",
-      weight: "700",
+      path: "../../public/fonts/AccentGraphic-Medium.woff2",
+      weight: "400",
       style: "normal",
     },
   ],
