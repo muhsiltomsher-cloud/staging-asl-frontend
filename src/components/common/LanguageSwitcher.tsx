@@ -93,70 +93,59 @@ export function LanguageSwitcher({ locale, className, alternateUrl }: LanguageSw
         <ChevronDown className="h-3 w-3 text-gray-400" />
       </button>
 
-      {/* Unified Popup Modal - Same design for all screens */}
+      {/* Small Centered Popup Modal - Same design for all screens */}
       {isOpen && (
         <>
           {/* Overlay */}
           <div
-            className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm transition-opacity"
             onClick={() => setIsOpen(false)}
             aria-hidden="true"
           />
           
-          {/* Modal - Centered on desktop, bottom sheet on mobile */}
+          {/* Modal - Small centered popup on all screens */}
           <div
-            className={cn(
-              "fixed z-[100] bg-white shadow-2xl transition-all",
-              "inset-x-0 bottom-0 rounded-t-2xl",
-              "md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl md:w-[360px]"
-            )}
+            className="fixed left-1/2 top-1/2 z-[100] w-[280px] max-w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white shadow-2xl transition-all"
             dir={isRTL ? "rtl" : "ltr"}
             role="dialog"
             aria-modal="true"
             aria-labelledby="language-modal-title"
           >
-            {/* Handle bar - Mobile only */}
-            <div className="flex justify-center pt-3 md:hidden">
-              <div className="h-1 w-10 rounded-full bg-gray-300" />
-            </div>
-            
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#7a3205]/10">
-                  <Globe className="h-5 w-5 text-[#7a3205]" />
-                </div>
-                <h2 id="language-modal-title" className="text-lg font-semibold text-gray-900">
+            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4 text-[#7a3205]" />
+                <h2 id="language-modal-title" className="text-sm font-semibold text-gray-900">
                   {t.selectLanguage}
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100"
+                className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
                 aria-label="Close"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
             
             {/* Language Options */}
-            <div className="p-5">
-              <div className="grid grid-cols-2 gap-3">
+            <div className="p-3">
+              <div className="grid grid-cols-2 gap-2">
                 {locales.map((loc) => (
                   <button
                     key={loc.code}
                     type="button"
                     onClick={() => handleSelect(loc.code)}
                     className={cn(
-                      "flex flex-col items-center gap-3 rounded-xl border-2 p-5 transition-all",
+                      "flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-all",
                       locale === loc.code
                         ? "border-[#7a3205] bg-[#7a3205]/5"
                         : "border-gray-100 bg-gray-50 hover:border-gray-200 hover:bg-gray-100"
                     )}
                   >
                     <span className={cn(
-                      "flex h-14 w-14 items-center justify-center rounded-full text-xl font-bold",
+                      "flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold",
                       locale === loc.code
                         ? "bg-[#7a3205] text-white"
                         : "bg-white text-gray-700 shadow-sm"
@@ -165,28 +154,19 @@ export function LanguageSwitcher({ locale, className, alternateUrl }: LanguageSw
                     </span>
                     <div className="text-center">
                       <p className={cn(
-                        "text-base font-semibold",
+                        "text-sm font-semibold",
                         locale === loc.code ? "text-[#7a3205]" : "text-gray-900"
                       )}>
                         {loc.nativeName}
                       </p>
-                      <p className="text-sm text-gray-500">
-                        {loc.name}
-                      </p>
                     </div>
                     {locale === loc.code && (
-                      <div className="flex items-center gap-1 text-xs font-medium text-[#7a3205]">
-                        <Check className="h-3.5 w-3.5" />
-                        <span>{t.currentlySelected}</span>
-                      </div>
+                      <Check className="h-3.5 w-3.5 text-[#7a3205]" />
                     )}
                   </button>
                 ))}
               </div>
             </div>
-            
-            {/* Safe area padding for iOS */}
-            <div className="h-safe-area-inset-bottom bg-white md:hidden" />
           </div>
         </>
       )}
