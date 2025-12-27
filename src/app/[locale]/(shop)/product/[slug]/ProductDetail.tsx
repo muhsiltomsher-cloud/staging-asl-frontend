@@ -568,7 +568,7 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
           )}
 
           {/* Title */}
-          <h1 className="text-2xl font-medium text-gray-900 md:text-3xl">{product.name}</h1>
+          <h1 className="text-2xl font-medium text-gray-900 md:text-3xl uppercase">{product.name}</h1>
 
           {/* Price - Bold and main color */}
           <div className="flex items-center gap-3">

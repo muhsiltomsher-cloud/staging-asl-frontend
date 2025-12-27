@@ -291,7 +291,7 @@ export function BuildYourOwnSetClient({
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="truncate font-medium text-gray-900 text-sm sm:text-base">
+                        <p className="truncate font-medium text-gray-900 text-sm sm:text-base uppercase">
                           {selections[index]!.name}
                         </p>
                         <p className="text-xs sm:text-sm text-amber-700">
@@ -359,7 +359,7 @@ export function BuildYourOwnSetClient({
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="truncate font-medium text-gray-900 text-sm sm:text-base">
+                        <p className="truncate font-medium text-gray-900 text-sm sm:text-base uppercase">
                           {selections[index]!.name}
                         </p>
                         <p className="text-xs sm:text-sm text-amber-700">
@@ -536,7 +536,7 @@ export function BuildYourOwnSetClient({
                         )}
                       </div>
                       <div className="p-2 sm:p-3">
-                        <p className="line-clamp-2 text-xs sm:text-sm font-medium text-gray-900">
+                        <p className="line-clamp-2 text-xs sm:text-sm font-medium text-gray-900 uppercase">
                           {product.name}
                         </p>
                         <p className="mt-1 text-xs sm:text-sm font-semibold text-amber-700">

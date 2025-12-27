@@ -257,7 +257,7 @@ export function DesktopSearchDropdown({
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 truncate text-sm">
+                      <h3 className="font-medium text-gray-900 truncate text-sm uppercase">
                         {product.name}
                       </h3>
                       <FormattedPrice

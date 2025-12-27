@@ -163,7 +163,7 @@ export default function WishlistPage({ params }: WishlistPageProps) {
                       <div className="flex flex-col justify-center">
                         <Link
                           href={item.product_url || `/${locale}/product/${item.product_id}`}
-                          className="font-medium text-gray-900 hover:text-gray-700 line-clamp-2"
+                          className="font-medium text-gray-900 hover:text-gray-700 line-clamp-2 uppercase"
                         >
                           {item.product_name}
                         </Link>

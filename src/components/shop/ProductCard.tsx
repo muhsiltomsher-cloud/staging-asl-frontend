@@ -112,7 +112,7 @@ export function ProductCard({ product, locale, className }: ProductCardProps) {
           )}
 
           {/* Name */}
-          <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
+          <h3 className="text-sm font-medium text-gray-900 line-clamp-2 uppercase">
             {product.name}
           </h3>
 

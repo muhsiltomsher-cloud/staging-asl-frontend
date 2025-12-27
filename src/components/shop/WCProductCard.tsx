@@ -146,7 +146,7 @@ export function WCProductCard({
                       </p>
                     )}
 
-          <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-amber-800 transition-colors">
+          <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-amber-800 transition-colors uppercase">
             {product.name}
           </h3>
 
