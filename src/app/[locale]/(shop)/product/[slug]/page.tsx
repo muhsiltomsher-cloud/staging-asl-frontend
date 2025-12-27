@@ -3,6 +3,7 @@ import { getProductBySlug, getRelatedProducts, getProducts } from "@/lib/api/woo
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { ProductDetail } from "./ProductDetail";
 import { siteConfig, type Locale } from "@/config/site";
+import { decodeHtmlEntities } from "@/lib/utils";
 import type { Metadata } from "next";
 
 // Increased revalidate time for better cache hit rates (5 minutes instead of 60 seconds)
@@ -47,8 +48,8 @@ export async function generateMetadata({
   }
 
   return generateSeoMetadata({
-    title: product.name,
-    description: product.short_description.replace(/<[^>]*>/g, "").slice(0, 160),
+    title: decodeHtmlEntities(product.name),
+    description: decodeHtmlEntities(product.short_description.replace(/<[^>]*>/g, "")).slice(0, 160),
     locale: locale as Locale,
     pathname: `/product/${slug}`,
     image: product.images[0]?.src,

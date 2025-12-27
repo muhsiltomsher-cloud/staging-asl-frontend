@@ -40,7 +40,7 @@ export async function generateMetadata({
 }: CategoryPageProps): Promise<Metadata> {
   const { locale, slug } = await params;
   const category = await getCategoryBySlug(slug);
-  const categoryName = category?.name || slug.charAt(0).toUpperCase() + slug.slice(1);
+  const categoryName = decodeHtmlEntities(category?.name || slug.charAt(0).toUpperCase() + slug.slice(1));
   
   return generateSeoMetadata({
     title: categoryName,
