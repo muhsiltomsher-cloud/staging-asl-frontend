@@ -205,40 +205,29 @@ export function MegaMenu({
               <p className="text-gray-400">No categories found</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 lg:gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-5">
               {hierarchicalCategories.map((category) => (
-                <div key={category.id} className="group">
+                <div key={category.id} className="flex flex-col">
                   <Link
                     href={`/${locale}/shop?category=${category.slug}`}
                     onClick={onClose}
-                    className={cn(
-                      "relative overflow-hidden rounded-lg",
-                      "transition-all duration-300 hover:shadow-md",
-                      "block"
-                    )}
+                    className="group block"
                   >
-                    <div className="aspect-square relative overflow-hidden rounded-lg">
-                      {category.image ? (
-                        <>
+                    <div className="relative overflow-hidden rounded-xl bg-gradient-to-b from-[#e8e4dc] to-[#d4cfc5]">
+                      <div className="aspect-[4/3] relative flex items-center justify-center p-4">
+                        {category.image ? (
                           <Image
                             src={category.image.src}
                             alt={decodeHtmlEntities(category.name)}
                             fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-110"
+                            className="object-contain p-4 transition-transform duration-300 group-hover:scale-105"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                        </>
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-100 to-amber-200">
-                          <Grid3X3 className="h-8 w-8 text-amber-500" />
-                        </div>
-                      )}
-                      
-                      <div className="absolute inset-x-0 bottom-0 p-3">
-                        <h4 className={cn(
-                          "font-semibold text-sm sm:text-base leading-tight",
-                          category.image ? "text-white drop-shadow-md" : "text-amber-800"
-                        )}>
+                        ) : (
+                          <Grid3X3 className="h-16 w-16 text-[#8b7355]" />
+                        )}
+                      </div>
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#6b5b4a]/90 to-[#6b5b4a]/70 px-3 py-2.5">
+                        <h4 className="font-semibold text-sm text-white">
                           {decodeHtmlEntities(category.name)}
                         </h4>
                       </div>
@@ -246,26 +235,31 @@ export function MegaMenu({
                   </Link>
 
                   {category.children.length > 0 && (
-                    <div className="mt-2 space-y-0.5">
-                      {category.children.map((child) => (
+                    <div className="mt-2 space-y-1">
+                      {category.children.slice(0, 4).map((child) => (
                         <Link
                           key={child.id}
                           href={`/${locale}/shop?category=${child.slug}`}
                           onClick={onClose}
                           className={cn(
-                            "flex items-center gap-2 px-2 py-1.5 rounded-md",
-                            "text-xs sm:text-sm text-gray-600 hover:text-amber-700",
-                            "hover:bg-amber-50/80 transition-colors",
-                            "group/child"
+                            "flex items-center gap-2 py-1 group/child",
+                            "text-sm text-gray-600 hover:text-amber-700 transition-colors"
                           )}
                         >
-                          <span className={cn(
-                            "w-1 h-1 rounded-full bg-amber-300",
-                            "group-hover/child:bg-amber-500 transition-colors"
-                          )} />
-                          <span className="flex-1 truncate">{decodeHtmlEntities(child.name)}</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                          <span className="truncate">{decodeHtmlEntities(child.name)}</span>
                         </Link>
                       ))}
+                      {category.children.length > 4 && (
+                        <Link
+                          href={`/${locale}/shop?category=${category.slug}`}
+                          onClick={onClose}
+                          className="flex items-center gap-2 py-1 text-sm text-amber-600 hover:text-amber-700 font-medium transition-colors"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                          <span>{isRTL ? "عرض الكل" : "View all"}</span>
+                        </Link>
+                      )}
                     </div>
                   )}
                 </div>
