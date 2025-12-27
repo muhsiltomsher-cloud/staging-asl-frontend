@@ -98,8 +98,9 @@
     "termsConditions": "Terms & Conditions",
     "returnPolicy": "Return Policy",
     "shippingInfo": "Shipping Information",
-    "storeLocator": "Store Locator"
-  },
+      "storeLocator": "Store Locator",
+      "buildYourOwnSet": "Build Your Own Set"
+    },
   "filters": {
     "filters": "Filters",
     "sortBy": "Sort By",

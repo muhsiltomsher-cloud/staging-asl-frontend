@@ -98,8 +98,9 @@
     "termsConditions": "الشروط والأحكام",
     "returnPolicy": "سياسة الإرجاع",
     "shippingInfo": "معلومات الشحن",
-    "storeLocator": "مواقع المتاجر"
-  },
+      "storeLocator": "مواقع المتاجر",
+      "buildYourOwnSet": "أنشئ مجموعتك"
+    },
   "filters": {
     "filters": "التصفية",
     "sortBy": "ترتيب حسب",
