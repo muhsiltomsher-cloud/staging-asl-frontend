@@ -648,7 +648,7 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
                 type="button"
                 onClick={handleAddToCart}
                 disabled={isOutOfStock || !product.is_purchasable || isAddingToCart}
-                className="flex items-center justify-center gap-2 bg-[#C4885B] px-8 py-3 text-sm font-medium uppercase tracking-wide text-white transition-all duration-300 border-2 border-[#C4885B] hover:bg-transparent hover:text-[#C4885B] disabled:cursor-not-allowed disabled:bg-gray-400 disabled:border-gray-400 cursor-pointer"
+                className="flex items-center justify-center gap-2 bg-[#C4885B] px-8 py-3 text-sm font-medium uppercase tracking-wide text-white transition-all duration-300 border-2 border-[#C4885B] rounded-full hover:bg-transparent hover:text-[#C4885B] disabled:cursor-not-allowed disabled:bg-gray-400 disabled:border-gray-400 cursor-pointer"
               >
                 {isAddingToCart 
                   ? (isRTL ? "جاري الإضافة..." : "Adding...") 

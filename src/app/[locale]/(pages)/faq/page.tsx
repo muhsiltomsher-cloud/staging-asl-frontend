@@ -164,7 +164,7 @@ export default function FAQPage() {
           </p>
           <a
             href={`/${locale}/contact`}
-            className="inline-flex items-center justify-center rounded-md bg-gray-900 px-6 py-2 text-sm font-medium text-white hover:bg-gray-800"
+            className="inline-flex items-center justify-center rounded-full bg-gray-900 px-6 py-2 text-sm font-medium text-white hover:bg-gray-800"
           >
             {isRTL ? "اتصل بنا" : "Contact Us"}
           </a>
