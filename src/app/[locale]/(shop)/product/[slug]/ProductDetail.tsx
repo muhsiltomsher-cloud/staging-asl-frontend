@@ -606,20 +606,8 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
 
           {/* Add to Cart Section */}
           <div className="space-y-4">
-            {/* Add to Cart Button and Quantity Selector Row */}
+            {/* Quantity Selector and Add to Cart Button Row */}
             <div className="flex items-center gap-4 flex-wrap">
-              {/* Add to Cart Button */}
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={isOutOfStock || !product.is_purchasable || isAddingToCart}
-                className="flex items-center justify-center gap-2 bg-[#C4885B] px-8 py-3 text-sm font-medium uppercase tracking-wide text-white transition-all duration-300 border-2 border-[#C4885B] hover:bg-transparent hover:text-[#C4885B] disabled:cursor-not-allowed disabled:bg-gray-400 disabled:border-gray-400 cursor-pointer"
-              >
-                {isAddingToCart 
-                  ? (isRTL ? "جاري الإضافة..." : "Adding...") 
-                  : (isRTL ? "أضف إلى السلة" : "Add to Cart")}
-              </button>
-
               {/* Pill-shaped Quantity Selector */}
               <div className="flex items-center rounded-full bg-[#E8E0D5] overflow-hidden">
                 <button
@@ -654,6 +642,18 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
+
+              {/* Add to Cart Button */}
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={isOutOfStock || !product.is_purchasable || isAddingToCart}
+                className="flex items-center justify-center gap-2 bg-[#C4885B] px-8 py-3 text-sm font-medium uppercase tracking-wide text-white transition-all duration-300 border-2 border-[#C4885B] hover:bg-transparent hover:text-[#C4885B] disabled:cursor-not-allowed disabled:bg-gray-400 disabled:border-gray-400 cursor-pointer"
+              >
+                {isAddingToCart 
+                  ? (isRTL ? "جاري الإضافة..." : "Adding...") 
+                  : (isRTL ? "أضف إلى السلة" : "Add to Cart")}
+              </button>
 
               {/* Wishlist Button */}
               <button
