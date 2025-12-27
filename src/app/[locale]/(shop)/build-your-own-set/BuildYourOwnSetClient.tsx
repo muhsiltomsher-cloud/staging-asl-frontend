@@ -174,9 +174,6 @@ export function BuildYourOwnSetClient({
       total: "Total",
       addToCart: "Add to cart",
       adding: "Adding...",
-      tamaraText: "Or split in 4 payments of",
-      tamaraNote: "- No late fees, Sharia compliant!",
-      moreOptions: "More options",
       selectProduct: "Select a Product",
       searchProducts: "Search products...",
       all: "All",
@@ -205,9 +202,6 @@ export function BuildYourOwnSetClient({
       total: "المجموع",
       addToCart: "أضف إلى السلة",
       adding: "جاري الإضافة...",
-      tamaraText: "أو قسّم على 4 دفعات بقيمة",
-      tamaraNote: "- بدون رسوم تأخير، متوافق مع الشريعة!",
-      moreOptions: "المزيد من الخيارات",
       selectProduct: "اختر منتج",
       searchProducts: "ابحث عن المنتجات...",
       all: "الكل",
@@ -224,9 +218,8 @@ export function BuildYourOwnSetClient({
   };
 
   const t = translations[isRTL ? "ar" : "en"];
-  const tamaraPayment = (total / 4).toFixed(2);
 
-  const categories: { key: CategoryFilter; label: string }[] = [
+  const categories:{ key: CategoryFilter; label: string }[] = [
     { key: "all", label: t.all },
     { key: "perfumes", label: t.perfumes },
     { key: "oils", label: t.oils },
@@ -266,31 +259,6 @@ export function BuildYourOwnSetClient({
             <p>{t.description}</p>
             <p>{t.instructions}</p>
           </div>
-
-          {/* Tamara Widget */}
-          {total > 0 && (
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
-              <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
-                <span>{t.tamaraText}</span>
-                <span className="font-semibold text-gray-900">
-                  <FormattedPrice price={parseFloat(tamaraPayment)} iconSize="sm" />
-                </span>
-                <span>{t.tamaraNote}</span>
-              </div>
-              <div className="mt-1 flex items-center gap-2">
-                <a href="#" className="text-sm text-blue-600 hover:underline">
-                  {t.moreOptions}
-                </a>
-                <Image
-                  src="https://cdn.tamara.co/widget-v2/assets/lavendar-badge-en.svg"
-                  alt="Tamara"
-                  width={60}
-                  height={20}
-                  className="h-5 w-auto"
-                />
-              </div>
-            </div>
-          )}
 
           {/* Your Box Section */}
           <div className="space-y-4">
