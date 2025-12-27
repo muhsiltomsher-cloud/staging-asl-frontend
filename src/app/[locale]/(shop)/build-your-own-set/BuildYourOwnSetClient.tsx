@@ -290,14 +290,14 @@ export function BuildYourOwnSetClient({
                           className="object-cover"
                         />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="truncate font-medium text-gray-900 text-sm sm:text-base uppercase">
-                          {selections[index]!.name}
-                        </p>
-                        <p className="text-xs sm:text-sm text-amber-700">
-                          <FormattedPrice price={selections[index]!.price} iconSize="sm" />
-                        </p>
-                      </div>
+                                            <div className="flex-1 min-w-0 overflow-hidden">
+                                              <p className="line-clamp-2 break-words font-medium text-gray-900 text-xs sm:text-sm uppercase">
+                                                {selections[index]!.name}
+                                              </p>
+                                              <p className="text-xs sm:text-sm text-amber-700">
+                                                <FormattedPrice price={selections[index]!.price} iconSize="sm" />
+                                              </p>
+                                            </div>
                       <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                         <button
                           onClick={() => handleSlotClick(index)}
@@ -358,14 +358,14 @@ export function BuildYourOwnSetClient({
                           className="object-cover"
                         />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="truncate font-medium text-gray-900 text-sm sm:text-base uppercase">
-                          {selections[index]!.name}
-                        </p>
-                        <p className="text-xs sm:text-sm text-amber-700">
-                          <FormattedPrice price={selections[index]!.price} iconSize="sm" />
-                        </p>
-                      </div>
+                                            <div className="flex-1 min-w-0 overflow-hidden">
+                                              <p className="line-clamp-2 break-words font-medium text-gray-900 text-xs sm:text-sm uppercase">
+                                                {selections[index]!.name}
+                                              </p>
+                                              <p className="text-xs sm:text-sm text-amber-700">
+                                                <FormattedPrice price={selections[index]!.price} iconSize="sm" />
+                                              </p>
+                                            </div>
                       <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                         <button
                           onClick={() => handleSlotClick(index)}
