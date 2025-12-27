@@ -31,7 +31,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
-  const { locale } = await params;
+  await params;
   return {
     title: {
       default: siteConfig.name,

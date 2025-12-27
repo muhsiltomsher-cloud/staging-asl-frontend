@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Custom server file uses CommonJS
+    "server.js",
   ]),
 ]);
 

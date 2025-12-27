@@ -82,7 +82,7 @@ function getStatusStep(status: string): number {
   return statusMap[status] ?? 0;
 }
 
-function OrderTimeline({ status, t, isRTL }: { status: string; t: typeof translations.en; isRTL: boolean }) {
+function OrderTimeline({ status, t }: { status: string; t: typeof translations.en }) {
   const currentStep = getStatusStep(status);
   const steps = [
     { label: t.orderPlaced, icon: Package },
@@ -289,7 +289,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
       </div>
 
       <div className="space-y-6">
-        <OrderTimeline status={order.status} t={t} isRTL={isRTL} />
+        <OrderTimeline status={order.status} t={t} />
 
         <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
           <div className="border-b p-4">
