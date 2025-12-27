@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Menu, X, ShoppingBag, User, Heart } from "lucide-react";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 import { CurrencySwitcher } from "@/components/common/CurrencySwitcher";
@@ -28,17 +28,7 @@ interface HeaderProps {
 
 export function Header({ locale, dictionary, siteSettings, headerSettings, menuItems, topbarSettings }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   const isRTL = locale === "ar";
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   // Get topbar text based on locale
   const topbarText = topbarSettings?.enabled !== false
@@ -66,15 +56,9 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
 
   return (
     <>
-            <header className={cn(
-              "sticky top-0 z-50 w-full border-b border-gray-100 bg-[#dad6cd] backdrop-blur supports-[backdrop-filter]:bg-[#dad6cd]/95 transition-all duration-300 ease-in-out",
-              isScrolled && "shadow-md"
-            )}>
+            <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-[#dad6cd] backdrop-blur supports-[backdrop-filter]:bg-[#dad6cd]/95">
               {/* Top bar - Mobile: Arabic left, Currency right | Desktop: both left */}
-              <div className={cn(
-                "border-b border-gray-100 bg-[#f7f6f2] transition-all duration-300 ease-in-out overflow-hidden",
-                isScrolled ? "h-0 opacity-0" : "h-8 opacity-100"
-              )}>
+              <div className="border-b border-gray-100 bg-[#f7f6f2] h-8">
           <div className="container mx-auto flex h-8 items-center justify-between px-4">
             {/* Mobile: Arabic on left */}
             <div className="flex items-center gap-4">
@@ -98,10 +82,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
 
         {/* Main header */}
         <div className="container mx-auto px-4">
-          <div className={cn(
-            "flex items-center justify-between transition-all duration-300 ease-in-out",
-            isScrolled ? "h-14 md:h-16" : "h-20 md:h-24"
-          )}>
+          <div className="flex items-center justify-between h-20 md:h-24">
             {/* Mobile: Left side - Menu button only */}
             <button
               type="button"
@@ -116,7 +97,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               )}
             </button>
 
-            {/* Logo - Larger size matching header, reduces on scroll */}
+            {/* Logo */}
             <Link href={`/${locale}`} className="flex items-center">
               {headerSettings?.logo || siteSettings?.logo?.url ? (
                 <Image
@@ -124,17 +105,11 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                   alt={siteSettings?.logo?.alt || siteSettings?.site_name || "Logo"}
                   width={140}
                   height={90}
-                  className={cn(
-                    "w-auto transition-all duration-300 ease-in-out",
-                    isScrolled ? "h-10 md:h-12" : "h-16 md:h-20"
-                  )}
+                  className="w-auto h-16 md:h-20"
                   priority
                 />
               ) : (
-                <span className={cn(
-                  "font-bold tracking-tight text-gray-900 dark:text-white transition-all duration-300 ease-in-out",
-                  isScrolled ? "text-lg md:text-xl" : "text-xl md:text-2xl"
-                )}>
+                <span className="font-bold tracking-tight text-gray-900 dark:text-white text-xl md:text-2xl">
                   {siteSettings?.site_name || "Aromatic Scents Lab"}
                 </span>
               )}
