@@ -14,6 +14,20 @@ const categoriesCache: Record<string, { data: WCCategory[]; timestamp: number }>
 const CACHE_TTL = 5 * 60 * 1000;
 const fetchPromise: Record<string, Promise<WCCategory[]> | null> = {};
 
+export interface CategoryWithChildren extends WCCategory {
+  children: WCCategory[];
+}
+
+export function organizeCategoriesByHierarchy(categories: WCCategory[]): CategoryWithChildren[] {
+  const parentCategories = categories.filter(cat => cat.parent === 0);
+  const childCategories = categories.filter(cat => cat.parent !== 0);
+  
+  return parentCategories.map(parent => ({
+    ...parent,
+    children: childCategories.filter(child => child.parent === parent.id)
+  }));
+}
+
 interface MegaMenuProps {
   isOpen: boolean;
   onClose: () => void;
@@ -96,6 +110,8 @@ export function MegaMenu({
 
   if (!isOpen) return null;
 
+  const hierarchicalCategories = organizeCategoriesByHierarchy(categories);
+
   return (
     <>
       <div 
@@ -150,74 +166,86 @@ export function MegaMenu({
                 <span className="text-sm text-gray-500">{dictionary.common.loading || "Loading..."}</span>
               </div>
             </div>
-          ) : categories.length === 0 ? (
+          ) : hierarchicalCategories.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Grid3X3 className="mb-4 h-16 w-16 text-gray-200" />
               <p className="text-gray-400">No categories found</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {categories.map((category, index) => (
-                <Link
-                  key={category.id}
-                  href={`/${locale}/shop?category=${category.slug}`}
-                  onClick={onClose}
-                  className={cn(
-                    "group relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100",
-                    "transition-all duration-300 hover:shadow-xl hover:-translate-y-1",
-                    "border border-gray-100 hover:border-amber-200"
-                  )}
-                  style={{
-                    animationDelay: `${index * 50}ms`,
-                  }}
-                >
-                  <div className="aspect-square relative overflow-hidden">
-                    {category.image ? (
-                      <>
-                        <Image
-                          src={category.image.src}
-                          alt={decodeHtmlEntities(category.name)}
-                          fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                      </>
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100">
-                        <Grid3X3 className="h-12 w-12 text-amber-300" />
-                      </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {hierarchicalCategories.map((category) => (
+                <div key={category.id} className="group">
+                  <Link
+                    href={`/${locale}/shop?category=${category.slug}`}
+                    onClick={onClose}
+                    className={cn(
+                      "relative overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100",
+                      "transition-all duration-300 hover:shadow-lg",
+                      "border border-gray-100 hover:border-amber-200",
+                      "block"
                     )}
-                    
-                    <div className="absolute inset-x-0 bottom-0 p-4">
-                      <h4 className={cn(
-                        "font-bold text-white text-sm leading-tight mb-1",
-                        "drop-shadow-lg",
-                        !category.image && "text-amber-800"
-                      )}>
-                        {decodeHtmlEntities(category.name)}
-                      </h4>
-                      <span className={cn(
-                        "text-xs font-medium",
-                        category.image ? "text-white/80" : "text-amber-600"
-                      )}>
-                        {category.count} {dictionary.sections?.products || "products"}
-                      </span>
+                  >
+                    <div className="aspect-[4/3] relative overflow-hidden">
+                      {category.image ? (
+                        <>
+                          <Image
+                            src={category.image.src}
+                            alt={decodeHtmlEntities(category.name)}
+                            fill
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                        </>
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100">
+                          <Grid3X3 className="h-12 w-12 text-amber-300" />
+                        </div>
+                      )}
+                      
+                      <div className="absolute inset-x-0 bottom-0 p-4">
+                        <h4 className={cn(
+                          "font-bold text-lg leading-tight mb-1",
+                          category.image ? "text-white drop-shadow-lg" : "text-amber-800"
+                        )}>
+                          {decodeHtmlEntities(category.name)}
+                        </h4>
+                        <span className={cn(
+                          "text-sm font-medium",
+                          category.image ? "text-white/80" : "text-amber-600"
+                        )}>
+                          {category.count} {dictionary.sections?.products || "products"}
+                        </span>
+                      </div>
                     </div>
+                  </Link>
 
-                    <div className={cn(
-                      "absolute top-3 flex items-center justify-center",
-                      "w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm",
-                      "opacity-0 group-hover:opacity-100 transition-all duration-300",
-                      "transform translate-y-2 group-hover:translate-y-0",
-                      isRTL ? "left-3" : "right-3"
-                    )}>
-                      <ArrowRight className={cn(
-                        "h-4 w-4 text-amber-700",
-                        isRTL && "rotate-180"
-                      )} />
+                  {category.children.length > 0 && (
+                    <div className="mt-3 space-y-1">
+                      {category.children.map((child) => (
+                        <Link
+                          key={child.id}
+                          href={`/${locale}/shop?category=${child.slug}`}
+                          onClick={onClose}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-2 rounded-lg",
+                            "text-sm text-gray-600 hover:text-amber-700",
+                            "hover:bg-amber-50 transition-colors",
+                            "group/child"
+                          )}
+                        >
+                          <span className={cn(
+                            "w-1.5 h-1.5 rounded-full bg-amber-300",
+                            "group-hover/child:bg-amber-500 transition-colors"
+                          )} />
+                          <span className="flex-1">{decodeHtmlEntities(child.name)}</span>
+                          <span className="text-xs text-gray-400">
+                            {child.count}
+                          </span>
+                        </Link>
+                      ))}
                     </div>
-                  </div>
-                </Link>
+                  )}
+                </div>
               ))}
             </div>
           )}

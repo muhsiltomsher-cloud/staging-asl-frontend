@@ -17,6 +17,7 @@ import type { HeaderSettings, TopbarSettings } from "@/lib/api/wordpress";
 import { CategoriesDrawer } from "@/components/layout/CategoriesDrawer";
 import { DesktopSearchDropdown } from "@/components/layout/DesktopSearchDropdown";
 import { MegaMenu } from "@/components/layout/MegaMenu";
+import { MobileCategoryMenu } from "@/components/layout/MobileCategoryMenu";
 
 interface HeaderProps {
   locale: Locale;
@@ -254,16 +255,29 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
           )}
         >
           <div className="space-y-1 px-4 pb-3 pt-2">
-            {navigation.map((item) => (
-                            <Link
-                              key={item.name}
-                              href={item.href}
-                              className="block rounded-md px-3 py-2 text-base font-bold text-[#7a3205] hover:bg-gray-100 hover:text-[#5a2504]"
-                              onClick={() => setIsMobileMenuOpen(false)}
-                            >
-                              {item.name}
-                            </Link>
-            ))}
+            {navigation.map((item) => {
+              const isShopItem = item.href === `/${locale}/shop`;
+              if (isShopItem) {
+                return null;
+              }
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="block rounded-md px-3 py-2 text-base font-bold text-[#7a3205] hover:bg-gray-100 hover:text-[#5a2504]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              );
+            })}
+            
+            {/* Mobile Category Menu with hierarchy */}
+            <MobileCategoryMenu
+              locale={locale}
+              dictionary={dictionary}
+              onNavigate={() => setIsMobileMenuOpen(false)}
+            />
           </div>
         </div>
       </header>
