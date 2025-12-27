@@ -11,20 +11,20 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", isLoading, disabled, children, asChild = false, ...props }, ref) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer";
+      "inline-flex items-center justify-center font-medium transition-all duration-300 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer uppercase tracking-wide";
 
     const variants = {
-      primary: "bg-gray-900 text-white hover:bg-[#633d1f] focus-visible:ring-gray-900",
-      secondary: "bg-gray-100 text-gray-900 hover:bg-[#633d1f] hover:text-white focus-visible:ring-gray-500",
-      outline: "border border-gray-300 bg-transparent hover:bg-[#633d1f] hover:text-white hover:border-[#633d1f] focus-visible:ring-gray-500",
-      ghost: "hover:bg-[#633d1f] hover:text-white focus-visible:ring-gray-500",
-      link: "text-gray-900 underline-offset-4 hover:underline hover:text-[#633d1f] focus-visible:ring-gray-500 cursor-pointer",
+      primary: "bg-[#C4885B] text-white border-2 border-[#C4885B] hover:bg-transparent hover:text-[#C4885B] focus-visible:ring-[#C4885B]",
+      secondary: "bg-gray-100 text-gray-900 border-2 border-gray-100 hover:bg-[#C4885B] hover:text-white hover:border-[#C4885B] focus-visible:ring-gray-500",
+      outline: "border-2 border-[#C4885B] bg-transparent text-[#C4885B] hover:bg-[#C4885B] hover:text-white focus-visible:ring-[#C4885B]",
+      ghost: "hover:bg-[#C4885B] hover:text-white focus-visible:ring-gray-500",
+      link: "text-gray-900 underline-offset-4 hover:underline hover:text-[#C4885B] focus-visible:ring-gray-500 cursor-pointer",
     };
 
     const sizes = {
-      sm: "h-9 px-3 text-sm",
-      md: "h-10 px-4 text-sm",
-      lg: "h-12 px-6 text-base",
+      sm: "h-9 px-4 text-xs",
+      md: "h-11 px-6 text-sm",
+      lg: "h-12 px-8 text-base",
     };
 
     const combinedClassName = cn(baseStyles, variants[variant], sizes[size], className);

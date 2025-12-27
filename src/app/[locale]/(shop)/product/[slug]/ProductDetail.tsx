@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, Minus, Plus, ChevronDown, ShoppingBag, X, ChevronLeft, ChevronRight, ZoomIn, Grid, Layers } from "lucide-react";
+import { Heart, Minus, Plus, ChevronDown, X, ChevronLeft, ChevronRight, ZoomIn, Grid, Layers } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Thumbs, FreeMode } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
@@ -604,17 +604,29 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
             </span>
           )}
 
-          {/* Add to Cart Button - Full width, black style */}
-          <div className="space-y-3">
-            {/* Quantity Selector */}
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-500">{isRTL ? "الكمية" : "Quantity"}</span>
-              <div className="flex items-center border border-gray-300">
+          {/* Add to Cart Section */}
+          <div className="space-y-4">
+            {/* Add to Cart Button and Quantity Selector Row */}
+            <div className="flex items-center gap-4 flex-wrap">
+              {/* Add to Cart Button */}
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={isOutOfStock || !product.is_purchasable || isAddingToCart}
+                className="flex items-center justify-center gap-2 bg-[#C4885B] px-8 py-3 text-sm font-medium uppercase tracking-wide text-white transition-all duration-300 border-2 border-[#C4885B] hover:bg-transparent hover:text-[#C4885B] disabled:cursor-not-allowed disabled:bg-gray-400 disabled:border-gray-400 cursor-pointer"
+              >
+                {isAddingToCart 
+                  ? (isRTL ? "جاري الإضافة..." : "Adding...") 
+                  : (isRTL ? "أضف إلى السلة" : "Add to Cart")}
+              </button>
+
+              {/* Pill-shaped Quantity Selector */}
+              <div className="flex items-center rounded-full bg-[#E8E0D5] overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   disabled={isOutOfStock || quantity <= 1}
-                  className="flex h-10 w-10 items-center justify-center text-gray-500 transition-colors hover:bg-[#633d1f] hover:text-white disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                  className="flex h-10 w-10 items-center justify-center text-[#5C4A3D] transition-all duration-300 hover:bg-[#d9d0c3] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                   aria-label={isRTL ? "تقليل الكمية" : "Decrease quantity"}
                 >
                   <Minus className="h-4 w-4" />
@@ -628,7 +640,7 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
                     setQuantity(Math.min(Math.max(1, val), max));
                   }}
                   disabled={isOutOfStock}
-                  className="h-10 w-12 border-x border-gray-300 bg-transparent text-center text-sm font-medium text-gray-900 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                  className="h-10 w-10 bg-transparent text-center text-sm font-bold text-[#5C4A3D] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   min={1}
                   max={product.add_to_cart.maximum || 99}
                 />
@@ -636,40 +648,28 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
                   type="button"
                   onClick={() => setQuantity(Math.min(quantity + 1, product.add_to_cart.maximum || 99))}
                   disabled={isOutOfStock || quantity >= (product.add_to_cart.maximum || 99)}
-                  className="flex h-10 w-10 items-center justify-center text-gray-500 transition-colors hover:bg-[#633d1f] hover:text-white disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                  className="flex h-10 w-10 items-center justify-center bg-[#C4885B] text-white rounded-full transition-all duration-300 hover:bg-[#b07a4f] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                   aria-label={isRTL ? "زيادة الكمية" : "Increase quantity"}
                 >
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
+
               {/* Wishlist Button */}
               <button
                 type="button"
                 onClick={handleWishlistToggle}
                 disabled={isAddingToWishlist}
-                className={`flex h-10 w-10 items-center justify-center border transition-all ${
+                className={`flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 ${
                   isWishlisted
-                    ? "border-red-300 bg-red-50 text-red-500 hover:bg-red-100"
-                    : "border-gray-300 bg-white text-gray-500 hover:border-gray-400 hover:text-gray-700"
+                    ? "bg-red-50 text-red-500 hover:bg-red-100"
+                    : "bg-[#E8E0D5] text-[#5C4A3D] hover:bg-[#d9d0c3]"
                 } ${isAddingToWishlist ? "cursor-not-allowed opacity-50" : ""}`}
                 aria-label={isWishlisted ? (isRTL ? "إزالة من المفضلة" : "Remove from wishlist") : (isRTL ? "أضف إلى المفضلة" : "Add to wishlist")}
               >
                 <Heart className={`h-5 w-5 ${isWishlisted ? "fill-current" : ""}`} />
               </button>
             </div>
-
-            {/* Add to Cart Button - Black, full width */}
-            <button
-              type="button"
-              onClick={handleAddToCart}
-              disabled={isOutOfStock || !product.is_purchasable || isAddingToCart}
-              className="flex w-full items-center justify-center gap-2 bg-gray-900 px-6 py-3 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-[#633d1f] disabled:cursor-not-allowed disabled:bg-gray-400 cursor-pointer"
-            >
-              <ShoppingBag className="h-4 w-4" />
-              {isAddingToCart 
-                ? (isRTL ? "جاري الإضافة..." : "Adding...") 
-                : (isRTL ? "أضف إلى السلة" : "Add to Bag")}
-            </button>
           </div>
 
           {/* Accordion Sections */}

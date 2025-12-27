@@ -110,8 +110,16 @@ export default function LoginPage({ params }: LoginPageProps) {
     }
   };
 
-  return (
-    <div className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12" style={{ backgroundColor: '#F5F0E8' }}>
+    return (
+      <div 
+        className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12"
+        style={{ 
+          backgroundImage: 'url(https://adminasl.stagingndemo.com/wp-content/uploads/2025/12/page-bg.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
       <div className="w-full max-w-md">
         <div className="rounded-lg border border-[#E8E0D5] bg-white p-8 shadow-sm">
           <div className={`mb-8 text-center ${isRTL ? "rtl" : ""}`}>
