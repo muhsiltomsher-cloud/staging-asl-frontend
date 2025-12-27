@@ -336,7 +336,7 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        <h1 className="mb-8 text-3xl font-bold text-gray-900">
+        <h1 className="mb-8 text-3xl font-bold text-gray-900 font-sans">
           {isRTL ? "الدفع" : "Checkout"}
         </h1>
 
@@ -358,10 +358,10 @@ export default function CheckoutPage() {
           <div className="space-y-6 lg:col-span-2">
             {/* Contact Information */}
             <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
-              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">1</span>
-                {isRTL ? "معلومات الاتصال" : "Contact Information"}
-              </h2>
+                            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 font-sans">
+                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">1</span>
+                              {isRTL ? "معلومات الاتصال" : "Contact Information"}
+                            </h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Input
                   label={isRTL ? "البريد الإلكتروني" : "Email"}
@@ -382,10 +382,10 @@ export default function CheckoutPage() {
 
             {/* Shipping Address */}
             <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
-              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">2</span>
-                {isRTL ? "عنوان الشحن" : "Shipping Address"}
-              </h2>
+                            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 font-sans">
+                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">2</span>
+                              {isRTL ? "عنوان الشحن" : "Shipping Address"}
+                            </h2>
 
               {/* Show saved address info for authenticated users */}
               {isAuthenticated && customerData?.shipping && customerData.shipping.address_1 && (
@@ -466,10 +466,10 @@ export default function CheckoutPage() {
             {/* Billing Address */}
             <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">3</span>
-                  {isRTL ? "عنوان الفاتورة" : "Billing Address"}
-                </h2>
+                                <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900 font-sans">
+                                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">3</span>
+                                  {isRTL ? "عنوان الفاتورة" : "Billing Address"}
+                                </h2>
                 <button
                   type="button"
                   onClick={() => setShowBillingSection(!showBillingSection)}
@@ -560,10 +560,10 @@ export default function CheckoutPage() {
 
             {/* Payment Method */}
             <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
-              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">4</span>
-                {isRTL ? "طريقة الدفع" : "Payment Method"}
-              </h2>
+                            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 font-sans">
+                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">4</span>
+                              {isRTL ? "طريقة الدفع" : "Payment Method"}
+                            </h2>
               <div className="space-y-3">
                 <div className="rounded-lg border border-black/10 p-4 hover:bg-gray-50 transition-colors">
                   <Radio
@@ -590,10 +590,10 @@ export default function CheckoutPage() {
 
             {/* Order Notes */}
             <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
-              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">5</span>
-                {isRTL ? "ملاحظات الطلب" : "Order Notes"}
-              </h2>
+                            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 font-sans">
+                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">5</span>
+                              {isRTL ? "ملاحظات الطلب" : "Order Notes"}
+                            </h2>
               <textarea
                 className="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 transition-colors"
                 rows={4}
@@ -611,9 +611,9 @@ export default function CheckoutPage() {
           {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="sticky top-32 rounded-lg border border-black/10 bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-lg font-semibold text-gray-900">
-                {isRTL ? "ملخص الطلب" : "Order Summary"}
-              </h2>
+                            <h2 className="mb-4 text-lg font-semibold text-gray-900 font-sans">
+                              {isRTL ? "ملخص الطلب" : "Order Summary"}
+                            </h2>
 
                             {/* Cart Items with Thumbnails */}
                             <div className="space-y-4 border-b border-black/10 pb-4 md:max-h-60 md:overflow-y-auto">

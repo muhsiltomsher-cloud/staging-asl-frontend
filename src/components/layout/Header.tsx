@@ -31,8 +31,8 @@ interface HeaderProps {
 export function Header({ locale, dictionary, siteSettings, headerSettings, menuItems, topbarSettings }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
-  const megaMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isRTL = locale === "ar";
+        const megaMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+      const isRTL = locale === "ar";
 
   // Get topbar text based on locale
   const topbarText = topbarSettings?.enabled !== false
@@ -151,22 +151,23 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
               {navigation.map((item) => {
                 const isShopItem = item.href === `/${locale}/shop`;
                 
-                if (isShopItem) {
-                  return (
-                    <div
-                      key={item.name}
-                      className="relative"
-                      onMouseEnter={handleShopMouseEnter}
-                      onMouseLeave={handleShopMouseLeave}
-                    >
-                      <Link
-                        href={item.href}
-                        className={cn(
-                          "text-sm font-bold text-[#7a3205] transition-colors hover:text-[#5a2504]",
-                          "flex items-center gap-1",
-                          isMegaMenuOpen && "text-[#5a2504]"
-                        )}
-                      >
+                                if (isShopItem) {
+                                  return (
+                                    <div
+                                      key={item.name}
+                                      className="relative"
+                                      onMouseEnter={handleShopMouseEnter}
+                                      onMouseLeave={handleShopMouseLeave}
+                                    >
+                                      <Link
+                                        href={item.href}
+                                        onClick={handleMegaMenuClose}
+                                        className={cn(
+                                          "text-sm font-bold text-[#7a3205] transition-colors hover:text-[#5a2504]",
+                                          "flex items-center gap-1",
+                                          isMegaMenuOpen && "text-[#5a2504]"
+                                        )}
+                                      >
                         {item.name}
                         <svg
                           className={cn(

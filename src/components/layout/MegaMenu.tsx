@@ -205,75 +205,65 @@ export function MegaMenu({
               <p className="text-gray-400">No categories found</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 lg:gap-6">
               {hierarchicalCategories.map((category) => (
                 <div key={category.id} className="group">
                   <Link
                     href={`/${locale}/shop?category=${category.slug}`}
                     onClick={onClose}
                     className={cn(
-                      "relative overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100",
-                      "transition-all duration-300 hover:shadow-lg",
-                      "border border-gray-100 hover:border-amber-200",
+                      "relative overflow-hidden rounded-lg",
+                      "transition-all duration-300 hover:shadow-md",
                       "block"
                     )}
                   >
-                    <div className="aspect-[4/3] relative overflow-hidden">
+                    <div className="aspect-square relative overflow-hidden rounded-lg">
                       {category.image ? (
                         <>
                           <Image
                             src={category.image.src}
                             alt={decodeHtmlEntities(category.name)}
                             fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            className="object-cover transition-transform duration-500 group-hover:scale-110"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                         </>
                       ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100">
-                          <Grid3X3 className="h-12 w-12 text-amber-300" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-100 to-amber-200">
+                          <Grid3X3 className="h-8 w-8 text-amber-500" />
                         </div>
                       )}
                       
-                      <div className="absolute inset-x-0 bottom-0 p-4">
+                      <div className="absolute inset-x-0 bottom-0 p-3">
                         <h4 className={cn(
-                          "font-bold text-lg leading-tight mb-1",
-                          category.image ? "text-white drop-shadow-lg" : "text-amber-800"
+                          "font-semibold text-sm sm:text-base leading-tight",
+                          category.image ? "text-white drop-shadow-md" : "text-amber-800"
                         )}>
                           {decodeHtmlEntities(category.name)}
                         </h4>
-                        <span className={cn(
-                          "text-sm font-medium",
-                          category.image ? "text-white/80" : "text-amber-600"
-                        )}>
-                          {category.count} {dictionary.sections?.products || "products"}
-                        </span>
                       </div>
                     </div>
                   </Link>
 
                   {category.children.length > 0 && (
-                    <div className="mt-3 space-y-1">
+                    <div className="mt-2 space-y-0.5">
                       {category.children.map((child) => (
                         <Link
                           key={child.id}
                           href={`/${locale}/shop?category=${child.slug}`}
                           onClick={onClose}
                           className={cn(
-                            "flex items-center gap-2 px-3 py-2 rounded-lg",
-                            "text-sm text-gray-600 hover:text-amber-700",
-                            "hover:bg-amber-50 transition-colors",
+                            "flex items-center gap-2 px-2 py-1.5 rounded-md",
+                            "text-xs sm:text-sm text-gray-600 hover:text-amber-700",
+                            "hover:bg-amber-50/80 transition-colors",
                             "group/child"
                           )}
                         >
                           <span className={cn(
-                            "w-1.5 h-1.5 rounded-full bg-amber-300",
+                            "w-1 h-1 rounded-full bg-amber-300",
                             "group-hover/child:bg-amber-500 transition-colors"
                           )} />
-                          <span className="flex-1">{decodeHtmlEntities(child.name)}</span>
-                          <span className="text-xs text-gray-400">
-                            {child.count}
-                          </span>
+                          <span className="flex-1 truncate">{decodeHtmlEntities(child.name)}</span>
                         </Link>
                       ))}
                     </div>

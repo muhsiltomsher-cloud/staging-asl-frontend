@@ -245,7 +245,7 @@ export function BuildYourOwnSetClient({
         {/* Product Info */}
         <div className="space-y-6">
           {/* Title */}
-          <h1 className="font-serif text-3xl font-medium uppercase tracking-wide text-amber-800 md:text-4xl">
+          <h1 className="font-serif text-2xl sm:text-3xl font-medium uppercase tracking-normal sm:tracking-wide text-amber-800 md:text-4xl leading-tight">
             {t.title}
           </h1>
 
