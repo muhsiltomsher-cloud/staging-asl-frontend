@@ -248,9 +248,9 @@ export function MegaMenu({
                       className="group block"
                     >
                       <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-gradient-to-b from-[#e8e4dc] to-[#d4cfc5]">
-                        {hierarchicalCategories[product.id - 1]?.image ? (
+                        {hierarchicalCategories[product.id - 1]?.image?.src ? (
                           <Image
-                            src={hierarchicalCategories[product.id - 1].image.src}
+                            src={hierarchicalCategories[product.id - 1]?.image?.src || ""}
                             alt={product.title}
                             fill
                             className="object-cover transition-transform duration-300 group-hover:scale-105"
