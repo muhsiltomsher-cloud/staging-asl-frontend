@@ -97,7 +97,8 @@
     "privacyPolicy": "Privacy Policy",
     "termsConditions": "Terms & Conditions",
     "returnPolicy": "Return Policy",
-    "shippingInfo": "Shipping Information"
+    "shippingInfo": "Shipping Information",
+    "storeLocator": "Store Locator"
   },
   "filters": {
     "filters": "Filters",

@@ -20,6 +20,7 @@ export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
       { name: dictionary.common.shop, href: `/${locale}/shop` },
       { name: dictionary.common.about, href: `/${locale}/about` },
       { name: dictionary.common.contact, href: `/${locale}/contact` },
+      { name: dictionary.footer.storeLocator, href: `/${locale}/store-locator` },
     ],
     customerService: [
       { name: dictionary.common.faq, href: `/${locale}/faq` },

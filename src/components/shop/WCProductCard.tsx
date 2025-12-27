@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ShoppingBag, Heart } from "lucide-react";
 import { Badge } from "@/components/common/Badge";
-import { Button } from "@/components/common/Button";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { cn, decodeHtmlEntities } from "@/lib/utils";
 import { useCart } from "@/contexts/CartContext";
@@ -128,10 +127,14 @@ export function WCProductCard({
 
           {!isOutOfStock && product.is_purchasable && (
             <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 translate-y-full transition-all duration-500 ease-out group-hover:opacity-100 group-hover:translate-y-0">
-              <Button onClick={handleAddToCart} className="w-full shadow-lg backdrop-blur-sm" size="sm" isLoading={isAddingToCart}>
-                <ShoppingBag className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
-                {isRTL ? "أضف للسلة" : "Add to Cart"}
-              </Button>
+              <button
+                onClick={handleAddToCart}
+                disabled={isAddingToCart}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium uppercase tracking-wide text-[#C4885B] bg-white/70 backdrop-blur-md border border-[#C4885B]/30 rounded-sm shadow-lg transition-all duration-300 hover:bg-white/90 hover:border-[#C4885B] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ShoppingBag className="h-4 w-4" />
+                {isAddingToCart ? (isRTL ? "جاري الإضافة..." : "Adding...") : (isRTL ? "أضف للسلة" : "Add to Cart")}
+              </button>
             </div>
           )}
         </div>

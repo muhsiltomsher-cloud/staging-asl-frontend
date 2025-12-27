@@ -97,7 +97,8 @@
     "privacyPolicy": "سياسة الخصوصية",
     "termsConditions": "الشروط والأحكام",
     "returnPolicy": "سياسة الإرجاع",
-    "shippingInfo": "معلومات الشحن"
+    "shippingInfo": "معلومات الشحن",
+    "storeLocator": "مواقع المتاجر"
   },
   "filters": {
     "filters": "التصفية",

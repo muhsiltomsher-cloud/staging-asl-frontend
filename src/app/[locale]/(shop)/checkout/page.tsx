@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
+import { Checkbox } from "@/components/common/Checkbox";
+import { Radio } from "@/components/common/Radio";
 import { CountrySelect } from "@/components/common/CountrySelect";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
@@ -478,17 +480,13 @@ export default function CheckoutPage() {
               </div>
 
               {/* Same as shipping checkbox */}
-              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-black/10 p-4 hover:bg-gray-50">
-                <input
-                  type="checkbox"
+              <div className="rounded-lg border border-black/10 p-4 hover:bg-gray-50 transition-colors">
+                <Checkbox
                   checked={formData.sameAsShipping}
                   onChange={(e) => handleSameAsShippingChange(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                  label={isRTL ? "نفس عنوان الشحن" : "Same as shipping address"}
                 />
-                <span className="text-sm font-medium text-gray-700">
-                  {isRTL ? "نفس عنوان الشحن" : "Same as shipping address"}
-                </span>
-              </label>
+              </div>
 
               {/* Billing address form - only show if not same as shipping */}
               {(!formData.sameAsShipping || showBillingSection) && !formData.sameAsShipping && (
@@ -567,34 +565,26 @@ export default function CheckoutPage() {
                 {isRTL ? "طريقة الدفع" : "Payment Method"}
               </h2>
               <div className="space-y-3">
-                <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-black/10 p-4 hover:bg-gray-50 transition-colors">
-                  <input
-                    type="radio"
+                <div className="rounded-lg border border-black/10 p-4 hover:bg-gray-50 transition-colors">
+                  <Radio
                     name="payment"
                     value="card"
                     checked={formData.paymentMethod === "card"}
                     onChange={(e) => handlePaymentChange(e.target.value)}
-                    className="h-4 w-4 text-gray-900 focus:ring-gray-900"
+                    label={isRTL ? "بطاقة ائتمان" : "Credit Card"}
+                    description={isRTL ? "ادفع بأمان ببطاقتك" : "Pay securely with your card"}
                   />
-                  <div className="flex-1">
-                    <span className="font-medium">{isRTL ? "بطاقة ائتمان" : "Credit Card"}</span>
-                    <p className="text-xs text-gray-500">{isRTL ? "ادفع بأمان ببطاقتك" : "Pay securely with your card"}</p>
-                  </div>
-                </label>
-                <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-black/10 p-4 hover:bg-gray-50 transition-colors">
-                  <input
-                    type="radio"
+                </div>
+                <div className="rounded-lg border border-black/10 p-4 hover:bg-gray-50 transition-colors">
+                  <Radio
                     name="payment"
                     value="cod"
                     checked={formData.paymentMethod === "cod"}
                     onChange={(e) => handlePaymentChange(e.target.value)}
-                    className="h-4 w-4 text-gray-900 focus:ring-gray-900"
+                    label={isRTL ? "الدفع عند الاستلام" : "Cash on Delivery"}
+                    description={isRTL ? "ادفع نقداً عند التسليم" : "Pay cash when you receive your order"}
                   />
-                  <div className="flex-1">
-                    <span className="font-medium">{isRTL ? "الدفع عند الاستلام" : "Cash on Delivery"}</span>
-                    <p className="text-xs text-gray-500">{isRTL ? "ادفع نقداً عند التسليم" : "Pay cash when you receive your order"}</p>
-                  </div>
-                </label>
+                </div>
               </div>
             </div>
 
