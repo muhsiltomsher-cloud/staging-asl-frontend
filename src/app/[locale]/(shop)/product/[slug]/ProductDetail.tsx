@@ -630,7 +630,7 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
                   type="button"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   disabled={isOutOfStock || quantity <= 1}
-                  className="flex h-10 w-10 items-center justify-center text-[#5C4A3D] transition-all duration-300 hover:bg-[#d9d0c3] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                  className="flex h-10 w-10 items-center justify-center bg-[#C4885B] text-white rounded-full transition-all duration-300 hover:bg-[#b07a4f] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                   aria-label={isRTL ? "تقليل الكمية" : "Decrease quantity"}
                 >
                   <Minus className="h-4 w-4" />
