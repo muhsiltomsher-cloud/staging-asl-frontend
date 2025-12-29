@@ -15,16 +15,16 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-questrial);
-  /* --font-sans: var(--font-inter); */ /* Hidden - can switch back to Inter if needed */
+  --font-sans: var(--font-inter);
+  /* --font-sans: var(--font-questrial); */ /* Hidden - can switch to Questrial if needed */
   --font-title: var(--font-accent-graphic);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-questrial), Arial, Helvetica, sans-serif;
-  /* font-family: var(--font-inter), Arial, Helvetica, sans-serif; */ /* Hidden - can switch back to Inter if needed */
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  /* font-family: var(--font-questrial), Arial, Helvetica, sans-serif; */ /* Hidden - can switch to Questrial if needed */
 }
 
 h1, h2, h3, h4, h5, h6 {

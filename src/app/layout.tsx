@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
-import { Questrial } from "next/font/google";
-// import { Inter } from "next/font/google"; // Hidden - can switch back to Inter if needed
+import { Inter } from "next/font/google";
+// import { Questrial } from "next/font/google"; // Hidden - can switch to Questrial if needed
 import localFont from "next/font/local";
 import "./globals.css";
 
-const questrial = Questrial({
-  variable: "--font-questrial",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: "400",
 });
 
-// Hidden Inter font - uncomment to switch back
-// const inter = Inter({
-//   variable: "--font-inter",
+// Hidden Questrial font - uncomment to switch
+// const questrial = Questrial({
+//   variable: "--font-questrial",
 //   subsets: ["latin"],
+//   weight: "400",
 // });
 
 const accentGraphic = localFont({
@@ -41,7 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="overflow-x-hidden">
       <body
-        className={`${questrial.variable} ${accentGraphic.variable} antialiased overflow-x-hidden`}
+        className={`${inter.variable} ${accentGraphic.variable} antialiased overflow-x-hidden`}
       >
         {children}
       </body>
