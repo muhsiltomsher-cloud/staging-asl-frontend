@@ -309,8 +309,8 @@ export default function CheckoutPage() {
   };
 
   return (
-        <div className="min-h-screen pb-32 md:pb-8 overflow-x-hidden" style={{ backgroundColor: '#F5F0E8' }}>
-          <div className="container mx-auto px-4 py-8">
+                <div className="min-h-screen pb-32 md:pb-8 overflow-x-hidden" style={{ backgroundColor: '#F5F0E8' }}>
+                  <div className="container mx-auto px-2 sm:px-4 py-8">
         <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 
         {/* Login Status Indicator */}
