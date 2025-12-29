@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
+import { getPageBySlug, stripHtmlTags } from "@/lib/api/wordpress";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 
@@ -16,6 +17,28 @@ export async function generateMetadata({
   params,
 }: AboutPageProps): Promise<Metadata> {
   const { locale } = await params;
+  const wpPage = await getPageBySlug("about-asl", locale as Locale);
+
+  if (wpPage) {
+    const seoTitle = wpPage.yoast_head_json?.title
+      ? wpPage.yoast_head_json.title
+      : stripHtmlTags(wpPage.title.rendered);
+    const seoDescription = wpPage.yoast_head_json?.description
+      ? wpPage.yoast_head_json.description
+      : wpPage.excerpt.rendered
+        ? stripHtmlTags(wpPage.excerpt.rendered).slice(0, 160)
+        : locale === "ar"
+          ? "اكتشف رحلتنا في صناعة العطور الفاخرة - نأخذك في رحلة عبر المكونات لتجربة واستكشاف المكون الأساسي للعطر"
+          : "Discover our journey in crafting premium fragrances - we take you on a journey through ingredients to experience and explore the bare essential component of the Scent";
+
+    return generateSeoMetadata({
+      title: seoTitle,
+      description: seoDescription,
+      locale: locale as Locale,
+      pathname: "/about",
+    });
+  }
+
   return generateSeoMetadata({
     title: locale === "ar" ? "أروماتيك سينتس لاب" : "Aromatic Scents Lab",
     description:
