@@ -550,13 +550,13 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
       <Breadcrumbs items={breadcrumbItems} locale={locale} />
 
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-        {/* Product Gallery */}
-        <div>
+        {/* Product Gallery - Sticky on desktop */}
+        <div className="lg:sticky lg:top-32 lg:self-start lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto lg:pr-2">
           {renderImageGallery()}
         </div>
 
-        {/* Product Info - Sticky on desktop */}
-        <div className="space-y-6 lg:sticky lg:top-32 lg:self-start">
+        {/* Product Info */}
+        <div className="space-y-6">
           {/* Category - Small uppercase label */}
           {primaryCategory && (
             <Link 
