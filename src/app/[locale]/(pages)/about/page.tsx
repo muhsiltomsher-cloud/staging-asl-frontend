@@ -193,7 +193,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
       </div>
 
       {/* WordPress Content Sections */}
-      {contentSections.length > 0 && (
+      {contentSections.length > 0 ? (
         <section className="py-16">
           <div className="container mx-auto px-4">
             <div className="space-y-0">
@@ -246,6 +246,16 @@ export default async function AboutPage({ params }: AboutPageProps) {
                 );
               })}
             </div>
+          </div>
+        </section>
+      ) : (
+        /* Fallback: Render raw WordPress content when parsing fails */
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <div
+              className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-amber-700 hover:prose-a:text-amber-600"
+              dangerouslySetInnerHTML={{ __html: wpPage.content.rendered }}
+            />
           </div>
         </section>
       )}

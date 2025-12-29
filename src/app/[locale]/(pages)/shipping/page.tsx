@@ -145,7 +145,7 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
       </div>
 
       {/* WordPress Content Sections - Creative Two-Column Layout */}
-      {contentSections.length > 0 && (
+      {contentSections.length > 0 ? (
         <section className="mb-16">
           <div className="space-y-0">
             {contentSections.map((section, index) => {
@@ -195,6 +195,14 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
               );
             })}
           </div>
+        </section>
+      ) : (
+        /* Fallback: Render raw WordPress content when parsing fails */
+        <section className="mb-16">
+          <div
+            className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-gray-900 hover:prose-a:text-gray-600"
+            dangerouslySetInnerHTML={{ __html: wpPage.content.rendered }}
+          />
         </section>
       )}
 
