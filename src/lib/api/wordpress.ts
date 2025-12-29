@@ -296,13 +296,14 @@ interface FetchOptions {
   revalidate?: number;
   tags?: string[];
   locale?: Locale;
+  noCache?: boolean;
 }
 
 async function fetchWPAPI<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T | null> {
-  const { revalidate = 60, tags, locale } = options;
+  const { revalidate = 60, tags, locale, noCache = false } = options;
 
   let url = `${WP_API_BASE}${endpoint}`;
 
@@ -312,12 +313,16 @@ async function fetchWPAPI<T>(
   }
 
   try {
-    const response = await fetch(url, {
-      next: {
-        revalidate,
-        tags,
-      },
-    });
+    const fetchOptions: RequestInit = noCache
+      ? { cache: "no-store" }
+      : {
+          next: {
+            revalidate,
+            tags,
+          },
+        };
+
+    const response = await fetch(url, fetchOptions);
 
     if (!response.ok) {
       console.error(`WordPress API Error: ${response.status} ${response.statusText}`);
@@ -744,6 +749,7 @@ export function isFunctionalPageSlug(slug: string): boolean {
 }
 
 // Fetch a single WordPress page by slug
+// Uses no-cache to ensure content updates are reflected immediately
 export async function getPageBySlug(slug: string, locale?: Locale): Promise<WPPage | null> {
   // Don't fetch functional pages from WordPress
   if (isFunctionalPageSlug(slug)) {
@@ -755,7 +761,7 @@ export async function getPageBySlug(slug: string, locale?: Locale): Promise<WPPa
     {
       tags: ["pages", `page-${slug}`],
       locale,
-      revalidate: 60,
+      noCache: true,
     }
   );
 
