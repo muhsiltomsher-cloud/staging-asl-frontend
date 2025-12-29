@@ -45,9 +45,62 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
   const dictionary = await getDictionary(locale as Locale);
   const isRTL = locale === "ar";
 
+  const wpPage = await getPageBySlug("shipping-information", locale as Locale);
+
   const breadcrumbItems = [
     { name: dictionary.footer.shippingInfo, href: `/${locale}/shipping` },
   ];
+
+  if (wpPage && wpPage.content.rendered) {
+    const pageTitle = stripHtmlTags(wpPage.title.rendered);
+
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
+
+        <div className="mb-12 text-center">
+          <h1 className="mb-4 text-4xl font-bold text-gray-900">{pageTitle}</h1>
+          {wpPage.excerpt.rendered && (
+            <p className="mx-auto max-w-2xl text-lg text-gray-600">
+              {stripHtmlTags(wpPage.excerpt.rendered)}
+            </p>
+          )}
+          <p className="mt-2 text-sm text-gray-500">
+            {isRTL ? "آخر تحديث: " : "Last Updated: "}
+            {new Date(wpPage.modified).toLocaleDateString(
+              isRTL ? "ar-SA" : "en-US",
+              {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }
+            )}
+          </p>
+        </div>
+
+        <div className="mx-auto max-w-4xl">
+          <div
+            className="prose prose-amber max-w-none prose-headings:text-amber-900 prose-p:text-gray-700 prose-strong:text-amber-800 prose-li:text-gray-700 prose-a:text-amber-700 prose-a:underline hover:prose-a:text-amber-900 prose-table:w-full prose-th:bg-gray-50 prose-th:px-6 prose-th:py-4 prose-th:text-start prose-th:text-sm prose-th:font-semibold prose-th:text-gray-900 prose-td:px-6 prose-td:py-4 prose-td:text-sm prose-td:text-gray-600 prose-img:mx-auto prose-img:rounded-lg"
+            dangerouslySetInnerHTML={{ __html: wpPage.content.rendered }}
+          />
+
+          <div className="mt-12 rounded-lg bg-gray-50 p-6 text-center">
+            <p className="text-gray-600">
+              {isRTL
+                ? "هل لديك أسئلة حول الشحن؟ فريق خدمة العملاء لدينا جاهز لمساعدتك"
+                : "Have questions about shipping? Our customer service team is ready to help"}
+            </p>
+            <a
+              href={`/${locale}/contact`}
+              className="mt-4 inline-flex items-center justify-center rounded-full bg-gray-900 px-6 py-2 text-sm font-medium text-white hover:bg-gray-800"
+            >
+              {isRTL ? "اتصل بنا" : "Contact Us"}
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const shippingFeatures = [
     {
