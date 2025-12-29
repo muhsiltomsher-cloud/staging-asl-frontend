@@ -378,10 +378,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return total;
   }, 0);
 
+  // Normalize cart to null if undefined (SWR returns undefined before first fetch)
+  const normalizedCart = cart ?? null;
+
   return (
     <CartContext.Provider
       value={{
-        cart,
+        cart: normalizedCart,
         cartItems,
         isLoading,
         isCartOpen,

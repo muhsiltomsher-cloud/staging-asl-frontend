@@ -349,14 +349,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
 
     // Helper function to get user's wishlist share_key (with caching)
-    async function getUserWishlistShareKey(): Promise<string | null> {
+    // Takes userId as parameter to ensure proper TypeScript type narrowing
+    async function getUserWishlistShareKey(uid: number): Promise<string | null> {
       // Check cache first
-      const cachedKey = getCachedShareKey(userId);
+      const cachedKey = getCachedShareKey(uid);
       if (cachedKey) {
         return cachedKey;
       }
       
-      const response = await fetch(`${WISHLIST_BASE}/get_by_user/${userId}?${getBasicAuthParams()}`, {
+      const response = await fetch(`${WISHLIST_BASE}/get_by_user/${uid}?${getBasicAuthParams()}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -374,7 +375,7 @@ export async function POST(request: NextRequest) {
         
         // Cache the share_key for future requests
         if (shareKey) {
-          setCachedShareKey(userId, shareKey);
+          setCachedShareKey(uid, shareKey);
         }
         return shareKey;
       }
@@ -385,7 +386,7 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case "add": {
         // Get user's wishlist share_key
-        const shareKey = await getUserWishlistShareKey();
+        const shareKey = await getUserWishlistShareKey(userId);
         
         if (!shareKey) {
           return NextResponse.json(
@@ -470,7 +471,7 @@ export async function POST(request: NextRequest) {
         let shareKey = body.share_key || body.wishlist_id;
         
         if (!shareKey) {
-          shareKey = await getUserWishlistShareKey();
+          shareKey = await getUserWishlistShareKey(userId);
         }
         
         if (!shareKey) {
@@ -550,7 +551,7 @@ export async function POST(request: NextRequest) {
         const results: Array<{ product_id: number; success: boolean }> = [];
         
         // Get user's wishlist share_key
-        const shareKey = await getUserWishlistShareKey();
+        const shareKey = await getUserWishlistShareKey(userId);
         
         if (!shareKey) {
           return NextResponse.json(
