@@ -551,7 +551,7 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
 
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
         {/* Product Gallery - Sticky on desktop */}
-        <div className="lg:sticky lg:top-32 lg:self-start lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto lg:pr-2">
+        <div className="lg:sticky lg:top-32 lg:self-start">
           {renderImageGallery()}
         </div>
 
