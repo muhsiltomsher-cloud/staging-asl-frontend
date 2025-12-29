@@ -146,15 +146,16 @@ export async function getProductById(
   }
 }
 
-// Categories API
-export async function getCategories(locale?: Locale): Promise<WCCategory[]> {
+// Categories API - Memoized for request deduplication
+export const getCategories = cache(async function getCategories(locale?: Locale): Promise<WCCategory[]> {
   const categories = await fetchAPI<WCCategory[]>("/products/categories", {
     tags: ["categories"],
     locale,
+    revalidate: 600, // Cache categories longer as they change less frequently
   });
 
   return categories;
-}
+});
 
 // Memoized version for request deduplication
 export const getCategoryBySlug = cache(async function getCategoryBySlug(
@@ -189,8 +190,8 @@ export async function getProductsByCategory(
   });
 }
 
-// Get related products by category
-export async function getRelatedProducts(
+// Get related products by category - Memoized for request deduplication
+export const getRelatedProducts = cache(async function getRelatedProducts(
   product: WCProduct,
   params?: {
     per_page?: number;
@@ -214,7 +215,29 @@ export async function getRelatedProducts(
   } catch {
     return [];
   }
-}
+});
+
+// Get related products by category ID directly (for parallel fetching when category ID is known)
+export const getRelatedProductsByCategoryId = cache(async function getRelatedProductsByCategoryId(
+  categoryId: number,
+  excludeProductId: number,
+  params?: {
+    per_page?: number;
+    locale?: Locale;
+  }
+): Promise<WCProduct[]> {
+  try {
+    const { products } = await getProducts({
+      category: categoryId.toString(),
+      per_page: params?.per_page || 8,
+      locale: params?.locale,
+    });
+
+    return products.filter((p) => p.id !== excludeProductId);
+  } catch {
+    return [];
+  }
+});
 
 // Helper function to format price from WooCommerce
 export function formatWCPrice(prices: WCProduct["prices"]): string {

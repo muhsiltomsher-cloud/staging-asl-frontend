@@ -8,6 +8,54 @@ const WISHLIST_BASE = `${API_BASE}/wp-json/wc/v3/wishlist`;
 const PRODUCTS_BASE = `${API_BASE}/wp-json/wc/v3/products`;
 const USER_COOKIE = "asl_auth_user";
 
+// In-memory cache for product details with TTL (5 minutes)
+const PRODUCT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+interface CachedProduct {
+  data: WCProduct;
+  timestamp: number;
+}
+const productCache = new Map<number, CachedProduct>();
+
+// In-memory cache for user's wishlist share_key (1 minute TTL)
+const SHARE_KEY_CACHE_TTL = 60 * 1000; // 1 minute
+interface CachedShareKey {
+  shareKey: string;
+  timestamp: number;
+}
+const shareKeyCache = new Map<number, CachedShareKey>();
+
+function getCachedProduct(productId: number): WCProduct | null {
+  const cached = productCache.get(productId);
+  if (cached && Date.now() - cached.timestamp < PRODUCT_CACHE_TTL) {
+    return cached.data;
+  }
+  // Remove expired cache entry
+  if (cached) {
+    productCache.delete(productId);
+  }
+  return null;
+}
+
+function setCachedProduct(productId: number, product: WCProduct): void {
+  productCache.set(productId, { data: product, timestamp: Date.now() });
+}
+
+function getCachedShareKey(userId: number): string | null {
+  const cached = shareKeyCache.get(userId);
+  if (cached && Date.now() - cached.timestamp < SHARE_KEY_CACHE_TTL) {
+    return cached.shareKey;
+  }
+  // Remove expired cache entry
+  if (cached) {
+    shareKeyCache.delete(userId);
+  }
+  return null;
+}
+
+function setCachedShareKey(userId: number, shareKey: string): void {
+  shareKeyCache.set(userId, { shareKey, timestamp: Date.now() });
+}
+
 // WooCommerce REST API authentication (required for /wc/v3/ endpoints)
 function getWooCommerceCredentials() {
   const consumerKey = process.env.WC_CONSUMER_KEY || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "";
@@ -32,17 +80,33 @@ interface WCProduct {
   images: Array<{ src: string; alt: string }>;
 }
 
-// Fetch product details from WooCommerce for multiple product IDs
+// Fetch product details from WooCommerce for multiple product IDs (with caching)
 async function fetchProductDetails(productIds: number[]): Promise<Map<number, WCProduct>> {
   const productMap = new Map<number, WCProduct>();
   
   if (productIds.length === 0) return productMap;
   
+  // Check cache first and collect uncached IDs
+  const uncachedIds: number[] = [];
+  for (const id of productIds) {
+    const cached = getCachedProduct(id);
+    if (cached) {
+      productMap.set(id, cached);
+    } else {
+      uncachedIds.push(id);
+    }
+  }
+  
+  // If all products are cached, return early
+  if (uncachedIds.length === 0) {
+    return productMap;
+  }
+  
   try {
-    // Batch fetch products using include parameter (WooCommerce supports this)
-    const idsParam = productIds.join(",");
+    // Batch fetch only uncached products
+    const idsParam = uncachedIds.join(",");
     const response = await fetch(
-      `${PRODUCTS_BASE}?include=${idsParam}&per_page=${productIds.length}&${getBasicAuthParams()}`,
+      `${PRODUCTS_BASE}?include=${idsParam}&per_page=${uncachedIds.length}&${getBasicAuthParams()}`,
       {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -53,6 +117,8 @@ async function fetchProductDetails(productIds: number[]): Promise<Map<number, WC
       const products: WCProduct[] = await response.json();
       for (const product of products) {
         productMap.set(product.id, product);
+        // Cache the product for future requests
+        setCachedProduct(product.id, product);
       }
     }
   } catch (error) {
@@ -282,8 +348,14 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json().catch(() => ({}));
 
-    // Helper function to get user's wishlist share_key
+    // Helper function to get user's wishlist share_key (with caching)
     async function getUserWishlistShareKey(): Promise<string | null> {
+      // Check cache first
+      const cachedKey = getCachedShareKey(userId);
+      if (cachedKey) {
+        return cachedKey;
+      }
+      
       const response = await fetch(`${WISHLIST_BASE}/get_by_user/${userId}?${getBasicAuthParams()}`, {
         method: "GET",
         headers: {
@@ -293,12 +365,18 @@ export async function POST(request: NextRequest) {
       
       if (response.ok) {
         const data = await response.json();
+        let shareKey: string | null = null;
         if (data && data.share_key) {
-          return data.share_key;
+          shareKey = data.share_key;
+        } else if (Array.isArray(data) && data.length > 0 && data[0].share_key) {
+          shareKey = data[0].share_key;
         }
-        if (Array.isArray(data) && data.length > 0 && data[0].share_key) {
-          return data[0].share_key;
+        
+        // Cache the share_key for future requests
+        if (shareKey) {
+          setCachedShareKey(userId, shareKey);
         }
+        return shareKey;
       }
       
       return null;

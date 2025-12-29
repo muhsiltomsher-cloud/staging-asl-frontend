@@ -1,16 +1,41 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
-import {
-  getCart as apiGetCart,
-  addToCart as apiAddToCart,
-  updateCartItem as apiUpdateCartItem,
-  removeCartItem as apiRemoveCartItem,
-  clearCart as apiClearCart,
-  type CoCartResponse,
-  type CoCartItem,
-} from "@/lib/api/cocart";
+import React, { createContext, useContext, useState, useCallback } from "react";
+import useSWR, { mutate } from "swr";
+import type { CoCartResponse, CoCartItem } from "@/lib/api/cocart";
+import { getAuthToken } from "@/lib/api/auth";
 import { useNotification } from "./NotificationContext";
+
+const CART_CACHE_KEY = "/api/cart";
+
+function getHeaders(): HeadersInit {
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+  
+  const token = getAuthToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  
+  return headers;
+}
+
+async function cartFetcher(): Promise<CoCartResponse | null> {
+  const response = await fetch(CART_CACHE_KEY, {
+    method: "GET",
+    headers: getHeaders(),
+  });
+
+  const data = await response.json();
+  
+  if (!data.success) {
+    console.error("Failed to fetch cart:", data.error?.message);
+    return null;
+  }
+  
+  return data.cart || null;
+}
 
 export interface SelectedCoupon {
   code: string;
@@ -44,115 +69,227 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [cart, setCart] = useState<CoCartResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  // Use SWR for cart data with automatic caching and deduplication
+  const { data: cart, isLoading: swrLoading, isValidating } = useSWR<CoCartResponse | null>(
+    CART_CACHE_KEY,
+    cartFetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      dedupingInterval: 5000, // Dedupe requests within 5 seconds
+      errorRetryCount: 2,
+      keepPreviousData: true, // Keep showing old data while revalidating
+    }
+  );
+
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedCoupons, setSelectedCoupons] = useState<SelectedCoupon[]>([]);
+  const [isOperationLoading, setIsOperationLoading] = useState(false);
   const { notify } = useNotification();
 
+  // Combined loading state
+  const isLoading = swrLoading || isOperationLoading || isValidating;
+
   const refreshCart = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response = await apiGetCart();
-      if (response.success && response.cart) {
-        setCart(response.cart);
-      }
-    } catch (error) {
-      console.error("Error fetching cart:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    await mutate(CART_CACHE_KEY);
   }, []);
 
-  useEffect(() => {
-    refreshCart();
-  }, [refreshCart]);
+  const addToCart = useCallback(
+    async (productId: number, quantity = 1, variationId?: number, variation?: Record<string, string>) => {
+      setIsOperationLoading(true);
+      
+      // Optimistic update - add a placeholder item immediately
+      const optimisticItem: CoCartItem = {
+        item_key: `temp-${productId}-${Date.now()}`,
+        id: productId,
+        name: "Adding...",
+        title: "Adding...",
+        price: "0",
+        quantity: { value: quantity, min_purchase: 1, max_purchase: 99 },
+        totals: { subtotal: "0", subtotal_tax: "0", total: "0", tax: "0" },
+        slug: "",
+        meta: { product_type: "simple", sku: "", dimensions: { length: "", width: "", height: "", unit: "" }, weight: 0, variation: {} },
+        backorders: "no",
+        cart_item_data: {},
+        featured_image: "",
+      };
 
-    const addToCart = useCallback(
-      async (productId: number, quantity = 1, variationId?: number, variation?: Record<string, string>) => {
-        setIsLoading(true);
-        try {
-          const response = await apiAddToCart(productId, quantity, variationId, variation);
-          if (response.success && response.cart) {
-            setCart(response.cart);
-            setIsCartOpen(true);
-            notify("cart", "Item added to cart");
-          } else if (response.error) {
-            console.error("Error adding to cart:", response.error.message);
-            notify("error", response.error.message);
-            throw new Error(response.error.message);
-          }
-        } catch (error) {
-          console.error("Error adding to cart:", error);
-          throw error;
-        } finally {
-          setIsLoading(false);
-        }
-      },
-      [notify]
-    );
+      // Optimistically update the cache
+      await mutate(
+        CART_CACHE_KEY,
+        (currentCart: CoCartResponse | null | undefined) => {
+          if (!currentCart) return currentCart;
+          return {
+            ...currentCart,
+            items: [...currentCart.items, optimisticItem],
+            item_count: currentCart.item_count + quantity,
+          };
+        },
+        false // Don't revalidate yet
+      );
 
-    const updateCartItem = useCallback(
-      async (key: string, quantity: number) => {
-        setIsLoading(true);
-        try {
-          const response = await apiUpdateCartItem(key, quantity);
-          if (response.success && response.cart) {
-            setCart(response.cart);
-            notify("cart", "Cart updated");
-          } else if (response.error) {
-            console.error("Error updating cart:", response.error.message);
-            notify("error", response.error.message);
-            throw new Error(response.error.message);
-          }
-        } catch (error) {
-          console.error("Error updating cart:", error);
-          throw error;
-        } finally {
-          setIsLoading(false);
-        }
-      },
-      [notify]
-    );
+      try {
+        const body: Record<string, unknown> = { id: String(productId), quantity: String(quantity) };
+        if (variationId) body.variation_id = String(variationId);
+        if (variation) body.variation = variation;
 
-    const removeCartItem = useCallback(
-      async (key: string) => {
-        setIsLoading(true);
-        try {
-          const response = await apiRemoveCartItem(key);
-          if (response.success && response.cart) {
-            setCart(response.cart);
-            notify("cart", "Item removed from cart");
-          } else if (response.error) {
-            console.error("Error removing from cart:", response.error.message);
-            notify("error", response.error.message);
-            throw new Error(response.error.message);
-          }
-        } catch (error) {
-          console.error("Error removing from cart:", error);
-          throw error;
-        } finally {
-          setIsLoading(false);
+        const response = await fetch("/api/cart?action=add", {
+          method: "POST",
+          headers: getHeaders(),
+          body: JSON.stringify(body),
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          // Rollback on error
+          await mutate(CART_CACHE_KEY);
+          notify("error", data.error?.message || "Failed to add item to cart");
+          throw new Error(data.error?.message || "Failed to add item to cart");
         }
-      },
-      [notify]
-    );
+
+        // Update cache with actual data
+        await mutate(CART_CACHE_KEY, data.cart, false);
+        setIsCartOpen(true);
+        notify("cart", "Item added to cart");
+      } catch (error) {
+        // Rollback on error
+        await mutate(CART_CACHE_KEY);
+        console.error("Error adding to cart:", error);
+        throw error;
+      } finally {
+        setIsOperationLoading(false);
+      }
+    },
+    [notify]
+  );
+
+  const updateCartItem = useCallback(
+    async (key: string, quantity: number) => {
+      setIsOperationLoading(true);
+
+      // Optimistically update the quantity
+      await mutate(
+        CART_CACHE_KEY,
+        (currentCart: CoCartResponse | null | undefined) => {
+          if (!currentCart) return currentCart;
+          return {
+            ...currentCart,
+            items: currentCart.items.map((item) =>
+              item.item_key === key ? { ...item, quantity: { ...item.quantity, value: quantity } } : item
+            ),
+          };
+        },
+        false
+      );
+
+      try {
+        const response = await fetch(`/api/cart?action=update&item_key=${encodeURIComponent(key)}`, {
+          method: "POST",
+          headers: getHeaders(),
+          body: JSON.stringify({ quantity: String(quantity) }),
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          await mutate(CART_CACHE_KEY);
+          notify("error", data.error?.message || "Failed to update cart");
+          throw new Error(data.error?.message || "Failed to update cart");
+        }
+
+        await mutate(CART_CACHE_KEY, data.cart, false);
+        notify("cart", "Cart updated");
+      } catch (error) {
+        await mutate(CART_CACHE_KEY);
+        console.error("Error updating cart:", error);
+        throw error;
+      } finally {
+        setIsOperationLoading(false);
+      }
+    },
+    [notify]
+  );
+
+  const removeCartItem = useCallback(
+    async (key: string) => {
+      setIsOperationLoading(true);
+
+      // Optimistically remove the item
+      await mutate(
+        CART_CACHE_KEY,
+        (currentCart: CoCartResponse | null | undefined) => {
+          if (!currentCart) return currentCart;
+          const removedItem = currentCart.items.find((item) => item.item_key === key);
+          return {
+            ...currentCart,
+            items: currentCart.items.filter((item) => item.item_key !== key),
+            item_count: currentCart.item_count - (removedItem?.quantity.value || 0),
+          };
+        },
+        false
+      );
+
+      try {
+        const response = await fetch(`/api/cart?action=remove&item_key=${encodeURIComponent(key)}`, {
+          method: "POST",
+          headers: getHeaders(),
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          await mutate(CART_CACHE_KEY);
+          notify("error", data.error?.message || "Failed to remove item");
+          throw new Error(data.error?.message || "Failed to remove item");
+        }
+
+        await mutate(CART_CACHE_KEY, data.cart, false);
+        notify("cart", "Item removed from cart");
+      } catch (error) {
+        await mutate(CART_CACHE_KEY);
+        console.error("Error removing from cart:", error);
+        throw error;
+      } finally {
+        setIsOperationLoading(false);
+      }
+    },
+    [notify]
+  );
 
   const clearCart = useCallback(async () => {
-    setIsLoading(true);
+    setIsOperationLoading(true);
+
+    // Optimistically clear the cart
+    await mutate(
+      CART_CACHE_KEY,
+      (currentCart: CoCartResponse | null | undefined) => {
+        if (!currentCart) return currentCart;
+        return { ...currentCart, items: [], item_count: 0 };
+      },
+      false
+    );
+
     try {
-      const response = await apiClearCart();
-      if (response.success && response.cart) {
-        setCart(response.cart);
-      } else if (response.error) {
-        console.error("Error clearing cart:", response.error.message);
-        throw new Error(response.error.message);
+      const response = await fetch("/api/cart?action=clear", {
+        method: "POST",
+        headers: getHeaders(),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        await mutate(CART_CACHE_KEY);
+        throw new Error(data.error?.message || "Failed to clear cart");
       }
+
+      await mutate(CART_CACHE_KEY, data.cart, false);
     } catch (error) {
+      await mutate(CART_CACHE_KEY);
       console.error("Error clearing cart:", error);
       throw error;
     } finally {
-      setIsLoading(false);
+      setIsOperationLoading(false);
     }
   }, []);
 
