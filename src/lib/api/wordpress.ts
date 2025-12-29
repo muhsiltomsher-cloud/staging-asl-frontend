@@ -685,3 +685,108 @@ export async function getTopbarSettings(locale?: Locale): Promise<TopbarSettings
     dismissible: data.dismissible,
   };
 }
+
+// WordPress Page types from REST API
+export interface WPPage {
+  id: number;
+  date: string;
+  date_gmt: string;
+  modified: string;
+  modified_gmt: string;
+  slug: string;
+  status: string;
+  type: string;
+  link: string;
+  title: {
+    rendered: string;
+  };
+  content: {
+    rendered: string;
+    protected: boolean;
+  };
+  excerpt: {
+    rendered: string;
+    protected: boolean;
+  };
+  featured_media: number;
+  parent: number;
+  menu_order: number;
+  template: string;
+  meta: Record<string, unknown>;
+  yoast_head_json?: {
+    title?: string;
+    description?: string;
+    og_title?: string;
+    og_description?: string;
+    og_image?: Array<{ url: string }>;
+  };
+}
+
+// Functional page slugs that should NOT be rendered from WordPress
+// These have custom Next.js implementations
+const FUNCTIONAL_PAGE_SLUGS = [
+  "cart",
+  "checkout",
+  "shop",
+  "account",
+  "my-account",
+  "wishlist",
+  "login",
+  "register",
+  "forgot-password",
+  "reset-password",
+  "order-confirmation",
+];
+
+// Check if a slug is a functional page that should not be rendered from WordPress
+export function isFunctionalPageSlug(slug: string): boolean {
+  return FUNCTIONAL_PAGE_SLUGS.includes(slug.toLowerCase());
+}
+
+// Fetch a single WordPress page by slug
+export async function getPageBySlug(slug: string, locale?: Locale): Promise<WPPage | null> {
+  // Don't fetch functional pages from WordPress
+  if (isFunctionalPageSlug(slug)) {
+    return null;
+  }
+
+  const data = await fetchWPAPI<WPPage[]>(
+    `/wp/v2/pages?slug=${encodeURIComponent(slug)}&_embed`,
+    {
+      tags: ["pages", `page-${slug}`],
+      locale,
+      revalidate: 60,
+    }
+  );
+
+  // WordPress returns an array, get the first matching page
+  if (data && data.length > 0) {
+    return data[0];
+  }
+
+  return null;
+}
+
+// Fetch all published WordPress pages
+export async function getPages(locale?: Locale): Promise<WPPage[]> {
+  const data = await fetchWPAPI<WPPage[]>(
+    "/wp/v2/pages?per_page=100&status=publish&_embed",
+    {
+      tags: ["pages"],
+      locale,
+      revalidate: 300, // Cache for 5 minutes
+    }
+  );
+
+  if (!data) {
+    return [];
+  }
+
+  // Filter out functional pages
+  return data.filter((page) => !isFunctionalPageSlug(page.slug));
+}
+
+// Helper function to strip HTML tags from a string (for SEO metadata)
+export function stripHtmlTags(html: string): string {
+  return html.replace(/<[^>]*>/g, "").trim();
+}
