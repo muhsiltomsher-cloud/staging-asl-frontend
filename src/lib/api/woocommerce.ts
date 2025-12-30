@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { siteConfig, type Locale } from "@/config/site";
+import { siteConfig, type Locale, type Currency } from "@/config/site";
 import type {
   WCProduct,
   WCCategory,
@@ -12,6 +12,7 @@ interface FetchOptions {
   revalidate?: number;
   tags?: string[];
   locale?: Locale;
+  currency?: Currency;
 }
 
 interface FetchAPIResponse<T> {
@@ -24,13 +25,20 @@ async function fetchAPI<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T> {
-  const { revalidate = 60, tags, locale } = options;
+  const { revalidate = 60, tags, locale, currency } = options;
 
   let url = `${API_BASE}${endpoint}`;
   
+  // Add locale parameter for WPML language support
   if (locale) {
-    const separator = endpoint.includes("?") ? "&" : "?";
+    const separator = url.includes("?") ? "&" : "?";
     url = `${url}${separator}lang=${locale}`;
+  }
+  
+  // Add currency parameter for WPML multicurrency support
+  if (currency) {
+    const separator = url.includes("?") ? "&" : "?";
+    url = `${url}${separator}currency=${currency}`;
   }
 
   const response = await fetch(url, {
@@ -51,13 +59,20 @@ async function fetchAPIWithPagination<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<FetchAPIResponse<T>> {
-  const { revalidate = 60, tags, locale } = options;
+  const { revalidate = 60, tags, locale, currency } = options;
 
   let url = `${API_BASE}${endpoint}`;
   
+  // Add locale parameter for WPML language support
   if (locale) {
-    const separator = endpoint.includes("?") ? "&" : "?";
+    const separator = url.includes("?") ? "&" : "?";
     url = `${url}${separator}lang=${locale}`;
+  }
+  
+  // Add currency parameter for WPML multicurrency support
+  if (currency) {
+    const separator = url.includes("?") ? "&" : "?";
+    url = `${url}${separator}currency=${currency}`;
   }
 
   const response = await fetch(url, {
@@ -87,6 +102,7 @@ export async function getProducts(params?: {
   orderby?: string;
   order?: "asc" | "desc";
   locale?: Locale;
+  currency?: Currency;
 }): Promise<WCProductsResponse> {
   const searchParams = new URLSearchParams();
 
@@ -103,6 +119,7 @@ export async function getProducts(params?: {
   const { data: products, total, totalPages } = await fetchAPIWithPagination<WCProduct[]>(endpoint, {
     tags: ["products"],
     locale: params?.locale,
+    currency: params?.currency,
     revalidate: 300,
   });
 
@@ -116,12 +133,14 @@ export async function getProducts(params?: {
 // Memoized version for request deduplication (used when same product is fetched multiple times in one request)
 export const getProductBySlug = cache(async function getProductBySlug(
   slug: string,
-  locale?: Locale
+  locale?: Locale,
+  currency?: Currency
 ): Promise<WCProduct | null> {
   try {
     const products = await fetchAPI<WCProduct[]>(`/products?slug=${slug}`, {
       tags: ["products", `product-${slug}`],
       locale,
+      currency,
     });
 
     return products.length > 0 ? products[0] : null;
@@ -132,12 +151,14 @@ export const getProductBySlug = cache(async function getProductBySlug(
 
 export async function getProductById(
   id: number,
-  locale?: Locale
+  locale?: Locale,
+  currency?: Currency
 ): Promise<WCProduct | null> {
   try {
     const product = await fetchAPI<WCProduct>(`/products/${id}`, {
       tags: ["products", `product-${id}`],
       locale,
+      currency,
     });
 
     return product;
@@ -147,10 +168,11 @@ export async function getProductById(
 }
 
 // Categories API - Memoized for request deduplication
-export const getCategories = cache(async function getCategories(locale?: Locale): Promise<WCCategory[]> {
+export const getCategories = cache(async function getCategories(locale?: Locale, currency?: Currency): Promise<WCCategory[]> {
   const categories = await fetchAPI<WCCategory[]>("/products/categories", {
     tags: ["categories"],
     locale,
+    currency,
     revalidate: 600, // Cache categories longer as they change less frequently
   });
 
@@ -160,10 +182,11 @@ export const getCategories = cache(async function getCategories(locale?: Locale)
 // Memoized version for request deduplication
 export const getCategoryBySlug = cache(async function getCategoryBySlug(
   slug: string,
-  locale?: Locale
+  locale?: Locale,
+  currency?: Currency
 ): Promise<WCCategory | null> {
   try {
-    const categories = await getCategories(locale);
+    const categories = await getCategories(locale, currency);
     return categories.find((cat) => cat.slug === slug) || null;
   } catch {
     return null;
@@ -176,9 +199,10 @@ export async function getProductsByCategory(
     page?: number;
     per_page?: number;
     locale?: Locale;
+    currency?: Currency;
   }
 ): Promise<WCProductsResponse> {
-  const category = await getCategoryBySlug(categorySlug, params?.locale);
+  const category = await getCategoryBySlug(categorySlug, params?.locale, params?.currency);
 
   if (!category) {
     return { products: [], total: 0, totalPages: 0 };
@@ -196,6 +220,7 @@ export const getRelatedProducts = cache(async function getRelatedProducts(
   params?: {
     per_page?: number;
     locale?: Locale;
+    currency?: Currency;
   }
 ): Promise<WCProduct[]> {
   const categoryId = product.categories?.[0]?.id;
@@ -209,6 +234,7 @@ export const getRelatedProducts = cache(async function getRelatedProducts(
       category: categoryId.toString(),
       per_page: params?.per_page || 8,
       locale: params?.locale,
+      currency: params?.currency,
     });
 
     return products.filter((p) => p.id !== product.id);
@@ -224,6 +250,7 @@ export const getRelatedProductsByCategoryId = cache(async function getRelatedPro
   params?: {
     per_page?: number;
     locale?: Locale;
+    currency?: Currency;
   }
 ): Promise<WCProduct[]> {
   try {
@@ -231,6 +258,7 @@ export const getRelatedProductsByCategoryId = cache(async function getRelatedPro
       category: categoryId.toString(),
       per_page: params?.per_page || 8,
       locale: params?.locale,
+      currency: params?.currency,
     });
 
     return products.filter((p) => p.id !== excludeProductId);

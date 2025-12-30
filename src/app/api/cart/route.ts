@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 const API_BASE = siteConfig.apiUrl;
 const CART_KEY_COOKIE = "cocart_cart_key";
 const AUTH_TOKEN_COOKIE = "asl_auth_token";
+const CURRENCY_COOKIE = "wcml_currency";
 
 async function getCartKey(): Promise<string | null> {
   const cookieStore = await cookies();
@@ -14,6 +15,18 @@ async function getCartKey(): Promise<string | null> {
 async function getAuthToken(): Promise<string | null> {
   const cookieStore = await cookies();
   return cookieStore.get(AUTH_TOKEN_COOKIE)?.value || null;
+}
+
+async function getCurrency(): Promise<string | null> {
+  const cookieStore = await cookies();
+  return cookieStore.get(CURRENCY_COOKIE)?.value || null;
+}
+
+// Helper to append currency parameter to URL
+function appendCurrencyToUrl(url: string, currency: string | null): string {
+  if (!currency) return url;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}currency=${currency}`;
 }
 
 function getAuthHeaders(request: NextRequest, authToken: string | null): HeadersInit {
@@ -91,12 +104,14 @@ export async function GET(request: NextRequest) {
   try {
     const cartKey = await getCartKey();
     const authToken = await getAuthToken();
+    const currency = await getCurrency();
     
     // For authenticated users, don't use cart_key (use JWT identity)
-    const authUrl = `${API_BASE}/wp-json/cocart/v2/cart`;
+    // Append currency parameter for WPML multicurrency support
+    const authUrl = appendCurrencyToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency);
     const guestUrl = cartKey
-      ? `${API_BASE}/wp-json/cocart/v2/cart?cart_key=${cartKey}`
-      : `${API_BASE}/wp-json/cocart/v2/cart`;
+      ? appendCurrencyToUrl(`${API_BASE}/wp-json/cocart/v2/cart?cart_key=${cartKey}`, currency)
+      : appendCurrencyToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency);
 
     // First attempt: try with auth if token exists
     const url = authToken ? authUrl : guestUrl;
@@ -153,13 +168,14 @@ export async function POST(request: NextRequest) {
   try {
     const cartKey = await getCartKey();
     const authToken = await getAuthToken();
+    const currency = await getCurrency();
     const body = await request.json().catch(() => ({}));
     let baseUrl: string;
     let method: string = "POST";
 
     switch (action) {
       case "add":
-        baseUrl = `${API_BASE}/wp-json/cocart/v2/cart/add-item`;
+        baseUrl = appendCurrencyToUrl(`${API_BASE}/wp-json/cocart/v2/cart/add-item`, currency);
         break;
       case "update": {
         const itemKey = searchParams.get("item_key");
@@ -169,7 +185,7 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        baseUrl = `${API_BASE}/wp-json/cocart/v2/cart/item/${itemKey}`;
+        baseUrl = appendCurrencyToUrl(`${API_BASE}/wp-json/cocart/v2/cart/item/${itemKey}`, currency);
         break;
       }
       case "remove": {
@@ -180,12 +196,12 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        baseUrl = `${API_BASE}/wp-json/cocart/v2/cart/item/${removeKey}`;
+        baseUrl = appendCurrencyToUrl(`${API_BASE}/wp-json/cocart/v2/cart/item/${removeKey}`, currency);
         method = "DELETE";
         break;
       }
       case "clear":
-        baseUrl = `${API_BASE}/wp-json/cocart/v2/cart/clear`;
+        baseUrl = appendCurrencyToUrl(`${API_BASE}/wp-json/cocart/v2/cart/clear`, currency);
         break;
       case "apply-coupon":
       case "remove-coupon": {
@@ -231,8 +247,8 @@ export async function POST(request: NextRequest) {
         
         // After successful coupon operation, fetch the cart via CoCart to return consistent data format
         const coCartUrl = cartKey
-          ? `${API_BASE}/wp-json/cocart/v2/cart?cart_key=${cartKey}`
-          : `${API_BASE}/wp-json/cocart/v2/cart`;
+          ? appendCurrencyToUrl(`${API_BASE}/wp-json/cocart/v2/cart?cart_key=${cartKey}`, currency)
+          : appendCurrencyToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency);
         
         const coCartResponse = await fetch(coCartUrl, {
           method: "GET",
