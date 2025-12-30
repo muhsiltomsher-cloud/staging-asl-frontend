@@ -172,3 +172,6 @@ export interface Menu {
     nodes: MenuItem[];
   };
 }
+
+// Re-export WCPA types
+export * from "./wcpa";

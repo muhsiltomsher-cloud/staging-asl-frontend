@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getProductBySlug, getRelatedProducts, getProducts } from "@/lib/api/woocommerce";
+import { getProductAddons } from "@/lib/api/wcpa";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { ProductDetail } from "./ProductDetail";
 import { siteConfig, type Locale } from "@/config/site";
@@ -64,16 +65,21 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  const relatedProducts = await getRelatedProducts(product, {
-    per_page: 8,
-    locale: locale as Locale,
-  });
+  // Fetch related products and addon forms in parallel
+  const [relatedProducts, productAddons] = await Promise.all([
+    getRelatedProducts(product, {
+      per_page: 8,
+      locale: locale as Locale,
+    }),
+    getProductAddons(product.id, { locale: locale as Locale }),
+  ]);
 
   return (
     <ProductDetail
       product={product}
       locale={locale as Locale}
       relatedProducts={relatedProducts}
+      addonForms={productAddons?.forms}
     />
   );
 }

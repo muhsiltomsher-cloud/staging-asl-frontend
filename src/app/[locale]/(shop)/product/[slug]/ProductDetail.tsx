@@ -11,11 +11,13 @@ import type { Swiper as SwiperType } from "swiper";
 import { Badge } from "@/components/common/Badge";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { RelatedProducts } from "@/components/shop/RelatedProducts";
+import { ProductAddons } from "@/components/shop/ProductAddons";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
 import type { WCProduct } from "@/types/woocommerce";
+import type { WCPAForm, WCPAFormValues } from "@/types/wcpa";
 import type { Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 
@@ -150,9 +152,10 @@ interface ProductDetailProps {
   product: WCProduct;
   locale: Locale;
   relatedProducts?: WCProduct[];
+  addonForms?: WCPAForm[];
 }
 
-export function ProductDetail({ product, locale, relatedProducts = [] }: ProductDetailProps) {
+export function ProductDetail({ product, locale, relatedProducts = [], addonForms = [] }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -161,6 +164,9 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "slider">("grid");
+  const [addonValues, setAddonValues] = useState<WCPAFormValues>({});
+  const [addonPrice, setAddonPrice] = useState(0);
+  const [addonErrors, setAddonErrors] = useState<Record<string, string>>({});
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist, getWishlistItemId } = useWishlist();
   const { isAuthenticated } = useAuth();
@@ -618,6 +624,24 @@ export function ProductDetail({ product, locale, relatedProducts = [] }: Product
                 ? `${product.low_stock_remaining} قطع متبقية فقط`
                 : `Only ${product.low_stock_remaining} left`}
             </span>
+          )}
+
+          {/* Product Addons - WCPA Integration */}
+          {addonForms && addonForms.length > 0 && (
+            <div className="border-t border-gray-200 pt-4">
+              <ProductAddons
+                forms={addonForms}
+                locale={locale}
+                basePrice={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
+                onValuesChange={(values, price) => {
+                  setAddonValues(values);
+                  setAddonPrice(price);
+                }}
+                onValidationChange={(isValid, errors) => {
+                  setAddonErrors(errors);
+                }}
+              />
+            </div>
           )}
 
           {/* Add to Cart Section */}
