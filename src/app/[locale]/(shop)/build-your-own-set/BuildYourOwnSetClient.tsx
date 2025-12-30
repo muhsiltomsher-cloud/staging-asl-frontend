@@ -105,11 +105,6 @@ export function BuildYourOwnSetClient({
   const handleProductSelect = (product: ProductOption) => {
     if (activeSlot === null) return;
 
-    if (selectedIds.has(product.id)) {
-      notify("error", isRTL ? "هذا المنتج مختار بالفعل" : "This product is already selected");
-      return;
-    }
-
     const newSelections = [...selections];
     newSelections[activeSlot] = product;
     setSelections(newSelections);
@@ -128,29 +123,29 @@ export function BuildYourOwnSetClient({
       return;
     }
 
-    const uniqueIds = new Set<number>();
-    for (const selection of selections) {
-      if (selection) {
-        if (uniqueIds.has(selection.id)) {
-          notify("error", isRTL ? "لا يمكن اختيار نفس المنتج مرتين" : "Cannot select the same product twice");
-          return;
-        }
-        uniqueIds.add(selection.id);
-      }
+    if (!bundleProduct) {
+      notify("error", isRTL ? "منتج الحزمة غير متوفر" : "Bundle product not available");
+      return;
     }
 
     setIsAddingToCart(true);
     try {
-      const selectedProducts = selections.filter((s) => s !== null);
-      for (const product of selectedProducts) {
-        if (product) {
-          await addToCart(product.id, quantity);
-        }
-      }
-      notify("success", isRTL ? "تمت إضافة المنتجات إلى السلة" : "Products added to cart");
+      const selectedProducts = selections
+        .filter((s): s is ProductOption => s !== null)
+        .map((product) => ({
+          product_id: product.id,
+          name: product.name,
+          price: product.price,
+        }));
+
+      await addToCart(bundleProduct.id, quantity, undefined, undefined, {
+        bundle_items: selectedProducts,
+      });
+      
+      notify("success", isRTL ? "تمت إضافة الحزمة إلى السلة" : "Bundle added to cart");
     } catch (error) {
       console.error("Failed to add to cart:", error);
-      notify("error", isRTL ? "فشل في إضافة المنتجات" : "Failed to add products");
+      notify("error", isRTL ? "فشل في إضافة الحزمة" : "Failed to add bundle");
     } finally {
       setIsAddingToCart(false);
     }
