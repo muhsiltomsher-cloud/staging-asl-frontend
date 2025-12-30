@@ -749,7 +749,8 @@ export function isFunctionalPageSlug(slug: string): boolean {
 }
 
 // Fetch a single WordPress page by slug
-// Uses no-cache to ensure content updates are reflected immediately
+// Uses ISR caching (revalidate every 5 minutes) for optimal SEO and speed
+// Content updates from WordPress will be reflected within 5 minutes
 export async function getPageBySlug(slug: string, locale?: Locale): Promise<WPPage | null> {
   // Don't fetch functional pages from WordPress
   if (isFunctionalPageSlug(slug)) {
@@ -761,7 +762,7 @@ export async function getPageBySlug(slug: string, locale?: Locale): Promise<WPPa
     {
       tags: ["pages", `page-${slug}`],
       locale,
-      noCache: true,
+      revalidate: 300, // Cache for 5 minutes for better performance
     }
   );
 

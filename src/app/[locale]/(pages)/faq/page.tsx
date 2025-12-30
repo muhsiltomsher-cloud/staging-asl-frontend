@@ -1,26 +1,117 @@
-"use client";
-
-import { useState } from "react";
-import { useParams } from "next/navigation";
-import { ChevronDown } from "lucide-react";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
-import { cn } from "@/lib/utils";
+import { FAQAccordion, type FAQItem } from "@/components/common/FAQAccordion";
+import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
+import { getPageBySlug, stripHtmlTags } from "@/lib/api/wordpress";
 import type { Locale } from "@/config/site";
+import type { Metadata } from "next";
 
-interface FAQItem {
-  question: string;
-  answer: string;
+interface FAQPageProps {
+  params: Promise<{ locale: string }>;
 }
 
-export default function FAQPage() {
-  const { locale } = useParams<{ locale: string }>();
+export async function generateMetadata({
+  params,
+}: FAQPageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const wpPage = await getPageBySlug("faq", locale as Locale);
+
+  if (wpPage) {
+    const seoTitle = wpPage.yoast_head_json?.title
+      ? wpPage.yoast_head_json.title
+      : stripHtmlTags(wpPage.title.rendered);
+    const seoDescription = wpPage.yoast_head_json?.description
+      ? wpPage.yoast_head_json.description
+      : wpPage.excerpt.rendered
+        ? stripHtmlTags(wpPage.excerpt.rendered).slice(0, 160)
+        : locale === "ar"
+          ? "إجابات على الأسئلة الأكثر شيوعاً حول منتجاتنا وخدماتنا"
+          : "Answers to the most common questions about our products and services";
+
+    return generateSeoMetadata({
+      title: seoTitle,
+      description: seoDescription,
+      locale: locale as Locale,
+      pathname: "/faq",
+    });
+  }
+
+  return generateSeoMetadata({
+    title: locale === "ar" ? "الأسئلة الشائعة" : "Frequently Asked Questions",
+    description:
+      locale === "ar"
+        ? "إجابات على الأسئلة الأكثر شيوعاً حول منتجاتنا وخدماتنا"
+        : "Answers to the most common questions about our products and services",
+    locale: locale as Locale,
+    pathname: "/faq",
+  });
+}
+
+export default async function FAQPage({ params }: FAQPageProps) {
+  const { locale } = await params;
   const isRTL = locale === "ar";
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+
+  const wpPage = await getPageBySlug("faq", locale as Locale);
 
   const breadcrumbItems = [
     { name: isRTL ? "الأسئلة الشائعة" : "FAQ", href: `/${locale}/faq` },
   ];
 
+  // If WordPress content is available, render it
+  if (wpPage && wpPage.content.rendered) {
+    const pageTitle = stripHtmlTags(wpPage.title.rendered);
+
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
+
+        <div className="mb-12 text-center">
+          <h1 className="mb-4 text-4xl font-bold text-gray-900">{pageTitle}</h1>
+          {wpPage.excerpt.rendered && (
+            <p className="mx-auto max-w-2xl text-lg text-gray-600">
+              {stripHtmlTags(wpPage.excerpt.rendered)}
+            </p>
+          )}
+          <p className="mt-2 text-sm text-gray-500">
+            {isRTL ? "آخر تحديث: " : "Last Updated: "}
+            {new Date(wpPage.modified).toLocaleDateString(
+              isRTL ? "ar-SA" : "en-US",
+              {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }
+            )}
+          </p>
+        </div>
+
+        <div className="mx-auto max-w-4xl">
+          <div
+            className="prose prose-amber max-w-none prose-headings:text-amber-900 prose-p:text-gray-700 prose-strong:text-amber-800 prose-li:text-gray-700 prose-a:text-amber-700 prose-a:underline hover:prose-a:text-amber-900"
+            dangerouslySetInnerHTML={{ __html: wpPage.content.rendered }}
+          />
+
+          <div className="mt-12 rounded-lg bg-gray-50 p-6 text-center">
+            <h2 className="mb-2 text-xl font-semibold text-gray-900">
+              {isRTL ? "لم تجد إجابة لسؤالك؟" : "Didn't find your answer?"}
+            </h2>
+            <p className="mb-4 text-gray-600">
+              {isRTL
+                ? "تواصل معنا وسنكون سعداء بمساعدتك"
+                : "Contact us and we'll be happy to help"}
+            </p>
+            <a
+              href={`/${locale}/contact`}
+              className="inline-flex items-center justify-center rounded-full bg-gray-900 px-6 py-2 text-sm font-medium text-white hover:bg-gray-800"
+            >
+              {isRTL ? "اتصل بنا" : "Contact Us"}
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback: Use default FAQ items with interactive accordion
   const faqItems: FAQItem[] = isRTL
     ? [
         {
@@ -123,36 +214,8 @@ export default function FAQPage() {
       </div>
 
       <div className="mx-auto max-w-3xl">
-        <div className="divide-y rounded-lg border">
-          {faqItems.map((item, index) => (
-            <div key={index} className="bg-white">
-              <button
-                type="button"
-                onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="flex w-full items-center justify-between px-6 py-4 text-left"
-                aria-expanded={openIndex === index}
-              >
-                <span className="font-medium text-gray-900">{item.question}</span>
-                <ChevronDown
-                  className={cn(
-                    "h-5 w-5 flex-shrink-0 text-gray-500 transition-transform",
-                    openIndex === index && "rotate-180"
-                  )}
-                />
-              </button>
-              <div
-                className={cn(
-                  "overflow-hidden transition-all duration-200",
-                  openIndex === index ? "max-h-96" : "max-h-0"
-                )}
-              >
-                <p className="px-6 pb-4 text-gray-600">{item.answer}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        <FAQAccordion items={faqItems} />
 
-        {/* Contact CTA */}
         <div className="mt-12 rounded-lg bg-gray-50 p-6 text-center">
           <h2 className="mb-2 text-xl font-semibold text-gray-900">
             {isRTL ? "لم تجد إجابة لسؤالك؟" : "Didn't find your answer?"}
