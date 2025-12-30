@@ -267,6 +267,39 @@ export const getRelatedProductsByCategoryId = cache(async function getRelatedPro
   }
 });
 
+// Bundle Configuration API (from ASL Bundle Manager plugin)
+export interface BundleConfig {
+  product_id: number;
+  eligible_products: number[];
+  unique_products: number[];
+  total_slots: number;
+  required_slots: number;
+}
+
+export async function getBundleConfig(
+  productSlug: string
+): Promise<BundleConfig | null> {
+  try {
+    const response = await fetch(
+      `${siteConfig.apiUrl}/wp-json/asl-bundles/v1/config?slug=${productSlug}`,
+      {
+        next: {
+          revalidate: 60,
+          tags: ["bundle-config", `bundle-config-${productSlug}`],
+        },
+      }
+    );
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return response.json();
+  } catch {
+    return null;
+  }
+}
+
 // Helper function to format price from WooCommerce
 export function formatWCPrice(prices: WCProduct["prices"]): string {
   const price = parseInt(prices.price) / Math.pow(10, prices.currency_minor_unit);

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
-import { getProducts, getProductBySlug } from "@/lib/api/woocommerce";
+import { getProducts, getProductBySlug, getBundleConfig } from "@/lib/api/woocommerce";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { BuildYourOwnSetClient } from "./BuildYourOwnSetClient";
@@ -46,17 +46,15 @@ export default async function BuildYourOwnSetPage({
     },
   ];
 
-  // Fetch all products for selection
-  const { products } = await getProducts({
-    per_page: 100,
-    locale: locale as Locale,
-  });
-
-  // Fetch the bundle product to get its price
-  const bundleProduct = await getProductBySlug(
-    "build-your-own-set",
-    locale as Locale
-  );
+  // Fetch all products for selection and bundle configuration in parallel
+  const [{ products }, bundleProduct, bundleConfig] = await Promise.all([
+    getProducts({
+      per_page: 100,
+      locale: locale as Locale,
+    }),
+    getProductBySlug("build-your-own-set", locale as Locale),
+    getBundleConfig("build-your-own-set"),
+  ]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -67,6 +65,7 @@ export default async function BuildYourOwnSetPage({
           products={products}
           locale={locale as Locale}
           bundleProduct={bundleProduct}
+          bundleConfig={bundleConfig}
         />
       </Suspense>
     </div>

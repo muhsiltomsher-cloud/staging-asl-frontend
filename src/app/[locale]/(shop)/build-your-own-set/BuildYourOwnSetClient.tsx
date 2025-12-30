@@ -8,6 +8,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useNotification } from "@/contexts/NotificationContext";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
+import type { BundleConfig } from "@/lib/api/woocommerce";
 
 interface ProductOption {
   id: number;
@@ -22,6 +23,7 @@ interface BuildYourOwnSetClientProps {
   products: WCProduct[];
   locale: Locale;
   bundleProduct?: WCProduct | null;
+  bundleConfig?: BundleConfig | null;
 }
 
 type CategoryFilter = "all" | "perfumes" | "oils" | "lotions" | "home";
@@ -30,6 +32,7 @@ export function BuildYourOwnSetClient({
   products,
   locale,
   bundleProduct,
+  bundleConfig,
 }: BuildYourOwnSetClientProps) {
   const isRTL = locale === "ar";
   const { addToCart } = useCart();
@@ -48,8 +51,25 @@ export function BuildYourOwnSetClient({
     null,
   ]);
 
+  // Get eligible product IDs from bundle config (if configured)
+  const eligibleProductIds = useMemo(() => {
+    if (!bundleConfig?.eligible_products?.length) return null;
+    return new Set(bundleConfig.eligible_products);
+  }, [bundleConfig]);
+
+  // Get unique product IDs from bundle config (products that can only be selected once)
+  const uniqueProductIds = useMemo(() => {
+    if (!bundleConfig?.unique_products?.length) return new Set<number>();
+    return new Set(bundleConfig.unique_products);
+  }, [bundleConfig]);
+
   const productOptions: ProductOption[] = useMemo(() => {
-    return products.map((product) => {
+    // Filter products by eligible list if configured
+    const eligibleProducts = eligibleProductIds
+      ? products.filter((p) => eligibleProductIds.has(p.id))
+      : products;
+
+    return eligibleProducts.map((product) => {
       const categoryName = product.categories?.[0]?.name?.toLowerCase() || "";
       let category: CategoryFilter = "all";
       if (categoryName.includes("perfume") || categoryName.includes("عطر")) {
@@ -73,7 +93,7 @@ export function BuildYourOwnSetClient({
         category,
       };
     });
-  }, [products]);
+  }, [products, eligibleProductIds]);
 
   const selectedIds = useMemo(() => {
     return new Set(selections.filter((s) => s !== null).map((s) => s!.id));
@@ -503,14 +523,20 @@ export function BuildYourOwnSetClient({
             <div className="max-h-[60vh] overflow-y-auto p-4">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {filteredProducts.map((product) => {
+                  // Check if product is already selected
                   const isSelected = selectedIds.has(product.id);
+                  // Check if product is unique (can only be selected once) and already selected
+                  const isUniqueAndSelected = uniqueProductIds.has(product.id) && isSelected;
+                  // Product is disabled if it's a unique product that's already selected
+                  // Non-unique products can be selected multiple times
+                  const isDisabled = isUniqueAndSelected;
                   return (
                     <button
                       key={product.id}
                       onClick={() => handleProductSelect(product)}
-                      disabled={isSelected}
+                      disabled={isDisabled}
                       className={`group relative flex flex-col overflow-hidden rounded-xl border-2 bg-white text-left transition-all ${
-                        isSelected
+                        isDisabled
                           ? "cursor-not-allowed border-gray-200 opacity-50"
                           : "border-transparent hover:border-amber-500 hover:shadow-lg"
                       }`}
@@ -522,7 +548,7 @@ export function BuildYourOwnSetClient({
                           fill
                           className="object-cover transition-transform group-hover:scale-105"
                         />
-                        {isSelected && (
+                        {isDisabled && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                             <div className="rounded-full bg-white p-2">
                               <Check className="h-5 w-5 text-amber-600" />
@@ -538,7 +564,7 @@ export function BuildYourOwnSetClient({
                           <FormattedPrice price={product.price} iconSize="sm" />
                         </p>
                       </div>
-                      {!isSelected && (
+                      {!isDisabled && (
                         <div className="absolute bottom-3 right-3 rounded-full bg-amber-600 px-3 py-1 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
                           {t.select}
                         </div>
