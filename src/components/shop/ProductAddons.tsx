@@ -755,12 +755,14 @@ function FieldRenderer({ field, value, error, onChange, locale, t }: FieldRender
 
     case "header":
       const headerField = field as WCPAField & { heading_level?: string };
-      const HeadingTag = (headerField.heading_level || "h3") as keyof JSX.IntrinsicElements;
-      return (
-        <HeadingTag className="text-lg font-semibold text-gray-900">
-          {field.label}
-        </HeadingTag>
-      );
+      const headingLevel = headerField.heading_level || "h3";
+      const headingClassName = "text-lg font-semibold text-gray-900";
+      if (headingLevel === "h1") return <h1 className={headingClassName}>{field.label}</h1>;
+      if (headingLevel === "h2") return <h2 className={headingClassName}>{field.label}</h2>;
+      if (headingLevel === "h4") return <h4 className={headingClassName}>{field.label}</h4>;
+      if (headingLevel === "h5") return <h5 className={headingClassName}>{field.label}</h5>;
+      if (headingLevel === "h6") return <h6 className={headingClassName}>{field.label}</h6>;
+      return <h3 className={headingClassName}>{field.label}</h3>;
 
     case "separator":
       return <hr className="border-gray-200" />;
