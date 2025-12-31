@@ -14,15 +14,14 @@ interface FooterProps {
 export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
   const currentYear = new Date().getFullYear();
 
-  const footerLinks = {
-    quickLinks: [
-      { name: dictionary.common.home, href: `/${locale}` },
-      { name: dictionary.common.shop, href: `/${locale}/shop` },
-      { name: dictionary.common.about, href: `/${locale}/about` },
-      { name: dictionary.common.contact, href: `/${locale}/contact` },
-          { name: dictionary.footer.storeLocator, href: `/${locale}/store-locator` },
-          { name: dictionary.footer.buildYourOwnSet, href: `/${locale}/build-your-own-set` },
-        ],
+    const footerLinks = {
+      quickLinks: [
+        { name: dictionary.common.home, href: `/${locale}` },
+        { name: dictionary.common.shop, href: `/${locale}/shop` },
+        { name: dictionary.common.about, href: `/${locale}/about` },
+        { name: dictionary.common.contact, href: `/${locale}/contact` },
+        { name: dictionary.footer.storeLocator, href: `/${locale}/store-locator` },
+      ],
     customerService: [
       { name: dictionary.common.faq, href: `/${locale}/faq` },
       { name: dictionary.footer.shippingInfo, href: `/${locale}/shipping` },

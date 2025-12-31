@@ -15,6 +15,7 @@ import { getDictionary } from "@/i18n";
 import { siteConfig, localeConfig, type Locale } from "@/config/site";
 import { generateOrganizationJsonLd } from "@/lib/utils/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { LocationCurrencyBanner } from "@/components/common/LocationCurrencyBanner";
 import { getSiteSettings, getHeaderSettings, getMobileBarSettings, getPrimaryMenu, getTopbarSettings } from "@/lib/api/wordpress";
 
 interface LocaleLayoutProps {
@@ -113,24 +114,25 @@ export default async function LocaleLayout({
                   remove: dictionary.common.remove,
                 }}
               />
-              <AccountDrawer
-                locale={validLocale}
-                dictionary={{
-                  myAccount: dictionary.account.myAccount,
-                  orders: dictionary.account.orders,
-                  addresses: dictionary.account.addresses,
-                  wishlist: dictionary.account.wishlist,
-                  settings: dictionary.account.settings,
-                  logout: dictionary.account.logout,
-                  welcome: dictionary.account.welcome,
-                  login: dictionary.account.login,
-                  register: dictionary.account.register,
-                  notLoggedIn: dictionary.account.notLoggedIn,
-                  profile: dictionary.account.profile,
-                  more: dictionary.common.more,
-                }}
-              />
-            </WishlistProvider>
+                          <AccountDrawer
+                            locale={validLocale}
+                            dictionary={{
+                              myAccount: dictionary.account.myAccount,
+                              orders: dictionary.account.orders,
+                              addresses: dictionary.account.addresses,
+                              wishlist: dictionary.account.wishlist,
+                              settings: dictionary.account.settings,
+                              logout: dictionary.account.logout,
+                              welcome: dictionary.account.welcome,
+                              login: dictionary.account.login,
+                              register: dictionary.account.register,
+                              notLoggedIn: dictionary.account.notLoggedIn,
+                              profile: dictionary.account.profile,
+                              more: dictionary.common.more,
+                            }}
+                          />
+                          <LocationCurrencyBanner locale={validLocale} />
+                        </WishlistProvider>
           </CartProvider>
         </NotificationProvider>
       </CurrencyProvider>
