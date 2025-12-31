@@ -9,6 +9,7 @@ import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
+import { BundleItemsList } from "@/components/cart/BundleItemsList";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Locale } from "@/config/site";
@@ -294,6 +295,7 @@ export default function CartPage() {
                               SKU: {item.meta.sku}
                             </p>
                           )}
+                          <BundleItemsList item={item} locale={locale} />
                           <button
                             onClick={() => handleRemoveItem(item.item_key)}
                             className="mt-2 flex items-center gap-1 text-sm text-red-600 hover:text-red-700 md:hidden"
