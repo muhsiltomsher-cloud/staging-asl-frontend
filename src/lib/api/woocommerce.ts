@@ -137,13 +137,31 @@ export const getProductBySlug = cache(async function getProductBySlug(
   currency?: Currency
 ): Promise<WCProduct | null> {
   try {
-    const products = await fetchAPI<WCProduct[]>(`/products?slug=${slug}`, {
+    // URL encode the slug to handle non-ASCII characters (e.g., Arabic slugs)
+    const encodedSlug = encodeURIComponent(slug);
+    const products = await fetchAPI<WCProduct[]>(`/products?slug=${encodedSlug}`, {
       tags: ["products", `product-${slug}`],
       locale,
       currency,
     });
 
     return products.length > 0 ? products[0] : null;
+  } catch {
+    return null;
+  }
+});
+
+// Get the English slug for a product (used for URL generation)
+// This ensures URLs always use English slugs regardless of current locale
+export const getEnglishSlugForProduct = cache(async function getEnglishSlugForProduct(
+  productId: number
+): Promise<string | null> {
+  try {
+    const product = await fetchAPI<WCProduct>(`/products/${productId}`, {
+      tags: ["products", `product-${productId}`],
+      locale: "en", // Always fetch with English locale to get English slug
+    });
+    return product.slug;
   } catch {
     return null;
   }
