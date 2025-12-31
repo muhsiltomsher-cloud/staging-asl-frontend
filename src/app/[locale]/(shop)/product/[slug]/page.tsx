@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct } from "@/lib/api/woocommerce";
+import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct, getBundleConfig } from "@/lib/api/woocommerce";
 import { getProductAddons } from "@/lib/api/wcpa";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { ProductDetail } from "./ProductDetail";
@@ -92,6 +92,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   if (!product) {
     notFound();
+  }
+
+  // Check if this product has a bundle configuration
+  const bundleConfig = await getBundleConfig(slug);
+  
+  // If bundle is enabled for this product, redirect to the bundle builder page
+  if (bundleConfig && bundleConfig.enabled) {
+    redirect(`/${locale}/build-your-own-set`);
   }
 
   // Fetch related products and addon forms in parallel

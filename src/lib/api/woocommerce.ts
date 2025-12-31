@@ -288,10 +288,18 @@ export const getRelatedProductsByCategoryId = cache(async function getRelatedPro
 // Bundle Configuration API (from ASL Bundle Manager plugin)
 export interface BundleConfig {
   product_id: number;
+  bundle_id?: number;
+  bundle_type?: string;
+  eligible_categories?: number[];
+  exclude_categories?: number[];
   eligible_products: number[];
   unique_products: number[];
   total_slots: number;
   required_slots: number;
+  shipping_fee?: string;
+  slot_labels?: Record<string, string>;
+  enabled?: boolean;
+  title?: string;
 }
 
 export async function getBundleConfig(
