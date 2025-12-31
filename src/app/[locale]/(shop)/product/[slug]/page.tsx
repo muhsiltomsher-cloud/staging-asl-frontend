@@ -79,9 +79,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
         // Redirect to the English slug URL
         redirect(`/${locale}/product/${englishSlug}`);
       }
+      // If no English slug available, fall through to render the product with Arabic slug
+      // This handles cases where WPML doesn't have an English translation
+    } else {
+      // Product not found with Arabic slug
+      notFound();
     }
-    // If product not found or no English slug, show 404
-    notFound();
   }
   
   // For English slugs, fetch the product with the current locale for localized content
