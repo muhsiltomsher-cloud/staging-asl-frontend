@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/contexts/CartContext";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
+import { BundleItemsList } from "@/components/cart/BundleItemsList";
 import MuiDrawer from "@mui/material/Drawer";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
@@ -152,6 +153,8 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
                   iconSize="xs"
                 /> x {item.quantity.value}
               </p>
+
+              <BundleItemsList item={item} locale={locale} compact />
 
               <div className="mt-2 flex items-center gap-2">
                 <button
