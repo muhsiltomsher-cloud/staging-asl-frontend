@@ -11,8 +11,9 @@ import { getCategories } from "@/lib/api/woocommerce";
 import { decodeHtmlEntities, cn } from "@/lib/utils";
 import { organizeCategoriesByHierarchy } from "./MegaMenu";
 
-const categoriesCache: Record<string, { data: WCCategory[]; timestamp: number }> = {};
-const CACHE_TTL = 5 * 60 * 1000;
+// DEV MODE: Cache disabled for faster development - uncomment when done
+// const categoriesCache: Record<string, { data: WCCategory[]; timestamp: number }> = {};
+// const CACHE_TTL = 5 * 60 * 1000;
 const fetchPromise: Record<string, Promise<WCCategory[]> | null> = {};
 
 interface MobileCategoryMenuProps {
@@ -26,25 +27,15 @@ export function MobileCategoryMenu({
   dictionary,
   onNavigate,
 }: MobileCategoryMenuProps) {
-  const [categories, setCategories] = useState<WCCategory[]>(() => {
-    const cached = categoriesCache[locale];
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return cached.data;
-    }
-    return [];
-  });
+  // DEV MODE: Cache disabled for faster development
+  const [categories, setCategories] = useState<WCCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
   const hasFetchedRef = useRef(false);
   const isRTL = locale === "ar";
 
   const fetchCategoriesData = useCallback(async () => {
-    const cached = categoriesCache[locale];
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      setCategories(cached.data);
-      return;
-    }
-
+    // DEV MODE: Cache disabled for faster development
     if (fetchPromise[locale]) {
       try {
         const cats = await fetchPromise[locale];
@@ -61,7 +52,6 @@ export function MobileCategoryMenu({
     try {
       fetchPromise[locale] = getCategories(locale).then((cats) => {
         const filtered = cats.filter((cat) => cat.count > 0);
-        categoriesCache[locale] = { data: filtered, timestamp: Date.now() };
         return filtered;
       });
 
@@ -78,16 +68,12 @@ export function MobileCategoryMenu({
   }, [locale]);
 
   useEffect(() => {
-    const cached = categoriesCache[locale];
-    const hasCachedData = cached && Date.now() - cached.timestamp < CACHE_TTL;
-    
-    if (!hasCachedData && !hasFetchedRef.current) {
+    // DEV MODE: Cache disabled for faster development - always fetch fresh data
+    if (!hasFetchedRef.current) {
       hasFetchedRef.current = true;
       fetchCategoriesData();
-    } else if (hasCachedData && categories.length === 0) {
-      setCategories(cached.data);
     }
-  }, [locale, fetchCategoriesData, categories.length]);
+  }, [locale, fetchCategoriesData]);
 
   useEffect(() => {
     hasFetchedRef.current = false;

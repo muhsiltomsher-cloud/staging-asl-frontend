@@ -5,63 +5,32 @@ import { ProductListing } from "@/components/shop/ProductListing";
 import type { WCProduct, WCProductsResponse } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 
-const PRODUCTS_CACHE_KEY = "asl_products_cache";
-const CACHE_TTL_MS = 5 * 60 * 1000;
+// DEV MODE: Cache disabled for faster development - uncomment when done
+// const PRODUCTS_CACHE_KEY = "asl_products_cache";
+// const CACHE_TTL_MS = 5 * 60 * 1000;
 const PER_PAGE = 24;
 
-interface CachedProducts {
-  products: WCProduct[];
-  total: number;
-  totalPages: number;
-  timestamp: number;
-  locale: string;
-}
+// DEV MODE: Cache functions disabled for faster development
+// interface CachedProducts {
+//   products: WCProduct[];
+//   total: number;
+//   totalPages: number;
+//   timestamp: number;
+//   locale: string;
+// }
 
-function getCachedProducts(locale: string): CachedProducts | null {
-  if (typeof window === "undefined") return null;
-  
-  try {
-    const cached = localStorage.getItem(PRODUCTS_CACHE_KEY);
-    if (!cached) return null;
-    
-    const parsed: CachedProducts = JSON.parse(cached);
-    const now = Date.now();
-    
-    if (now - parsed.timestamp > CACHE_TTL_MS) {
-      localStorage.removeItem(PRODUCTS_CACHE_KEY);
-      return null;
-    }
-    
-    if (parsed.locale !== locale) {
-      return null;
-    }
-    
-    return parsed;
-  } catch {
-    return null;
-  }
+function getCachedProducts(_locale: string): null {
+  // DEV MODE: Cache disabled for faster development
+  return null;
 }
 
 function setCachedProducts(
-  products: WCProduct[],
-  total: number,
-  totalPages: number,
-  locale: string
+  _products: WCProduct[],
+  _total: number,
+  _totalPages: number,
+  _locale: string
 ): void {
-  if (typeof window === "undefined") return;
-  
-  try {
-    const cache: CachedProducts = {
-      products,
-      total,
-      totalPages,
-      timestamp: Date.now(),
-      locale,
-    };
-    localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify(cache));
-  } catch {
-    // Ignore localStorage errors (quota exceeded, etc.)
-  }
+  // DEV MODE: Cache disabled for faster development - do nothing
 }
 
 interface ShopClientProps {

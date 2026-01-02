@@ -11,9 +11,10 @@ import { getCategories, getProducts } from "@/lib/api/woocommerce";
 import { decodeHtmlEntities, cn, getProductSlugFromPermalink } from "@/lib/utils";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 
-const categoriesCache: Record<string, { data: WCCategory[]; timestamp: number }> = {};
-const productsCache: Record<string, { data: WCProduct[]; timestamp: number }> = {};
-const CACHE_TTL = 5 * 60 * 1000;
+// DEV MODE: Cache disabled for faster development - uncomment when done
+// const categoriesCache: Record<string, { data: WCCategory[]; timestamp: number }> = {};
+// const productsCache: Record<string, { data: WCProduct[]; timestamp: number }> = {};
+// const CACHE_TTL = 5 * 60 * 1000;
 const fetchPromise: Record<string, Promise<WCCategory[]> | null> = {};
 const productsFetchPromise: Record<string, Promise<WCProduct[]> | null> = {};
 
@@ -32,10 +33,11 @@ export function organizeCategoriesByHierarchy(categories: WCCategory[]): Categor
 }
 
 export async function preloadCategoriesCache(locale: Locale): Promise<void> {
-  const cached = categoriesCache[locale];
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return;
-  }
+  // DEV MODE: Cache disabled for faster development
+  // const cached = categoriesCache[locale];
+  // if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+  //   return;
+  // }
 
   if (fetchPromise[locale]) {
     await fetchPromise[locale];
@@ -45,7 +47,8 @@ export async function preloadCategoriesCache(locale: Locale): Promise<void> {
   try {
     fetchPromise[locale] = getCategories(locale).then((cats) => {
       const filtered = cats.filter((cat) => cat.count > 0);
-      categoriesCache[locale] = { data: filtered, timestamp: Date.now() };
+      // DEV MODE: Cache disabled
+      // categoriesCache[locale] = { data: filtered, timestamp: Date.now() };
       return filtered;
     });
     await fetchPromise[locale];
@@ -57,10 +60,12 @@ export async function preloadCategoriesCache(locale: Locale): Promise<void> {
 }
 
 export function getCachedCategories(locale: string): WCCategory[] | null {
-  const cached = categoriesCache[locale];
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.data;
-  }
+  // DEV MODE: Cache disabled for faster development
+  // const cached = categoriesCache[locale];
+  // if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+  //   return cached.data;
+  // }
+  void locale; // Suppress unused parameter warning
   return null;
 }
 
@@ -77,20 +82,9 @@ export function MegaMenu({
   locale,
   dictionary,
 }: MegaMenuProps) {
-  const [categories, setCategories] = useState<WCCategory[]>(() => {
-    const cached = categoriesCache[locale];
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return cached.data;
-    }
-    return [];
-  });
-  const [featuredProducts, setFeaturedProducts] = useState<WCProduct[]>(() => {
-    const cached = productsCache[locale];
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return cached.data;
-    }
-    return [];
-  });
+  // DEV MODE: Cache disabled for faster development
+  const [categories, setCategories] = useState<WCCategory[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<WCProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [productsLoading, setProductsLoading] = useState(false);
   const hasFetchedRef = useRef(false);
@@ -99,12 +93,7 @@ export function MegaMenu({
   const menuRef = useRef<HTMLDivElement>(null);
 
   const fetchCategoriesData = useCallback(async () => {
-    const cached = categoriesCache[locale];
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      setCategories(cached.data);
-      return;
-    }
-
+    // DEV MODE: Cache disabled for faster development
     if (fetchPromise[locale]) {
       try {
         const cats = await fetchPromise[locale];
@@ -121,7 +110,6 @@ export function MegaMenu({
     try {
       fetchPromise[locale] = getCategories(locale).then((cats) => {
         const filtered = cats.filter((cat) => cat.count > 0);
-        categoriesCache[locale] = { data: filtered, timestamp: Date.now() };
         return filtered;
       });
 
@@ -138,12 +126,7 @@ export function MegaMenu({
   }, [locale]);
 
   const fetchFeaturedProducts = useCallback(async () => {
-    const cached = productsCache[locale];
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      setFeaturedProducts(cached.data);
-      return;
-    }
-
+    // DEV MODE: Cache disabled for faster development
     if (productsFetchPromise[locale]) {
       try {
         const prods = await productsFetchPromise[locale];
@@ -165,7 +148,6 @@ export function MegaMenu({
         locale,
       }).then((response) => {
         const products = response.products;
-        productsCache[locale] = { data: products, timestamp: Date.now() };
         return products;
       });
 
@@ -182,28 +164,20 @@ export function MegaMenu({
   }, [locale]);
 
   useEffect(() => {
-    const cached = categoriesCache[locale];
-    const hasCachedData = cached && Date.now() - cached.timestamp < CACHE_TTL;
-    
-    if (isOpen && !hasCachedData && !hasFetchedRef.current) {
+    // DEV MODE: Cache disabled for faster development - always fetch fresh data
+    if (isOpen && !hasFetchedRef.current) {
       hasFetchedRef.current = true;
       fetchCategoriesData();
-    } else if (isOpen && hasCachedData && categories.length === 0) {
-      setCategories(cached.data);
     }
-  }, [isOpen, locale, fetchCategoriesData, categories.length]);
+  }, [isOpen, locale, fetchCategoriesData]);
 
   useEffect(() => {
-    const cached = productsCache[locale];
-    const hasCachedData = cached && Date.now() - cached.timestamp < CACHE_TTL;
-    
-    if (isOpen && !hasCachedData && !hasProductsFetchedRef.current) {
+    // DEV MODE: Cache disabled for faster development - always fetch fresh data
+    if (isOpen && !hasProductsFetchedRef.current) {
       hasProductsFetchedRef.current = true;
       fetchFeaturedProducts();
-    } else if (isOpen && hasCachedData && featuredProducts.length === 0) {
-      setFeaturedProducts(cached.data);
     }
-  }, [isOpen, locale, fetchFeaturedProducts, featuredProducts.length]);
+  }, [isOpen, locale, fetchFeaturedProducts]);
 
   useEffect(() => {
     hasFetchedRef.current = false;

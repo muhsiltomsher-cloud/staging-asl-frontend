@@ -8,52 +8,37 @@ const WISHLIST_BASE = `${API_BASE}/wp-json/wc/v3/wishlist`;
 const PRODUCTS_BASE = `${API_BASE}/wp-json/wc/v3/products`;
 const USER_COOKIE = "asl_auth_user";
 
-// In-memory cache for product details with TTL (5 minutes)
-const PRODUCT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
-interface CachedProduct {
-  data: WCProduct;
-  timestamp: number;
-}
-const productCache = new Map<number, CachedProduct>();
+// DEV MODE: Cache disabled for faster development - uncomment when done
+// const PRODUCT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+// interface CachedProduct {
+//   data: WCProduct;
+//   timestamp: number;
+// }
+// const productCache = new Map<number, CachedProduct>();
 
-// In-memory cache for user's wishlist share_key (1 minute TTL)
-const SHARE_KEY_CACHE_TTL = 60 * 1000; // 1 minute
-interface CachedShareKey {
-  shareKey: string;
-  timestamp: number;
-}
-const shareKeyCache = new Map<number, CachedShareKey>();
+// const SHARE_KEY_CACHE_TTL = 60 * 1000; // 1 minute
+// interface CachedShareKey {
+//   shareKey: string;
+//   timestamp: number;
+// }
+// const shareKeyCache = new Map<number, CachedShareKey>();
 
-function getCachedProduct(productId: number): WCProduct | null {
-  const cached = productCache.get(productId);
-  if (cached && Date.now() - cached.timestamp < PRODUCT_CACHE_TTL) {
-    return cached.data;
-  }
-  // Remove expired cache entry
-  if (cached) {
-    productCache.delete(productId);
-  }
+function getCachedProduct(_productId: number): WCProduct | null {
+  // DEV MODE: Cache disabled for faster development
   return null;
 }
 
-function setCachedProduct(productId: number, product: WCProduct): void {
-  productCache.set(productId, { data: product, timestamp: Date.now() });
+function setCachedProduct(_productId: number, _product: WCProduct): void {
+  // DEV MODE: Cache disabled for faster development - do nothing
 }
 
-function getCachedShareKey(userId: number): string | null {
-  const cached = shareKeyCache.get(userId);
-  if (cached && Date.now() - cached.timestamp < SHARE_KEY_CACHE_TTL) {
-    return cached.shareKey;
-  }
-  // Remove expired cache entry
-  if (cached) {
-    shareKeyCache.delete(userId);
-  }
+function getCachedShareKey(_userId: number): string | null {
+  // DEV MODE: Cache disabled for faster development
   return null;
 }
 
-function setCachedShareKey(userId: number, shareKey: string): void {
-  shareKeyCache.set(userId, { shareKey, timestamp: Date.now() });
+function setCachedShareKey(_userId: number, _shareKey: string): void {
+  // DEV MODE: Cache disabled for faster development - do nothing
 }
 
 // WooCommerce REST API authentication (required for /wc/v3/ endpoints)
