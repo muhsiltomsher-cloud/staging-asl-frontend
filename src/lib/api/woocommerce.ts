@@ -130,10 +130,15 @@ export async function getProducts(params?: {
   };
 }
 
+// Helper to check if a slug contains non-ASCII characters (e.g., Arabic)
+function isNonAsciiSlug(slug: string): boolean {
+  return /[^\x00-\x7F]/.test(slug);
+}
+
 // Memoized version for request deduplication (used when same product is fetched multiple times in one request)
 // Note: WPML has a known issue where the Store API slug filter doesn't work with lang parameter.
-// We use a fallback strategy: try without locale first (which works), then the product will have
-// the correct localized content based on the slug itself.
+// For English slugs, we fetch without locale (which works reliably).
+// For non-ASCII slugs (e.g., Arabic), we try with locale first since they may only exist in that language.
 export const getProductBySlug = cache(async function getProductBySlug(
   slug: string,
   locale?: Locale,
@@ -143,20 +148,8 @@ export const getProductBySlug = cache(async function getProductBySlug(
     // URL encode the slug to handle non-ASCII characters (e.g., Arabic slugs)
     const encodedSlug = encodeURIComponent(slug);
     
-    // First try without locale - the Store API slug filter doesn't work well with WPML lang parameter
-    // The product returned will have the correct localized content based on the slug itself
-    const products = await fetchAPI<WCProduct[]>(`/products?slug=${encodedSlug}`, {
-      tags: ["products", `product-${slug}`],
-      currency,
-    });
-
-    if (products.length > 0) {
-      return products[0];
-    }
-    
-    // If not found without locale, try with locale as fallback
-    // This handles cases where the product might only exist in a specific language
-    if (locale) {
+    // For non-ASCII slugs (e.g., Arabic), try with locale first since they may only exist in that language
+    if (isNonAsciiSlug(slug) && locale) {
       const localizedProducts = await fetchAPI<WCProduct[]>(`/products?slug=${encodedSlug}`, {
         tags: ["products", `product-${slug}-${locale}`],
         locale,
@@ -166,6 +159,17 @@ export const getProductBySlug = cache(async function getProductBySlug(
       if (localizedProducts.length > 0) {
         return localizedProducts[0];
       }
+    }
+    
+    // For English slugs (or as fallback), fetch without locale
+    // The Store API slug filter works reliably without the lang parameter
+    const products = await fetchAPI<WCProduct[]>(`/products?slug=${encodedSlug}`, {
+      tags: ["products", `product-${slug}`],
+      currency,
+    });
+
+    if (products.length > 0) {
+      return products[0];
     }
     
     return null;

@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Increase static page generation timeout to handle slow API responses during build
+  staticPageGenerationTimeout: 120,
   // Enable experimental features for better caching
   experimental: {
     // Configure stale times for dynamic and static content
