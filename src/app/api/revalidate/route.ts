@@ -66,18 +66,22 @@ export async function POST(request: NextRequest) {
     const revalidatedTags: string[] = [];
     const revalidatedPaths: string[] = [];
 
+    // Use { expire: 0 } for immediate cache expiration (recommended for webhooks)
+    // This ensures data is expired immediately when WordPress triggers revalidation
+    const revalidateOptions = { expire: 0 };
+
     // Revalidate based on type
     switch (type) {
       case "products":
         // Revalidate all products
-        revalidateTag(CACHE_TAGS.products);
+        revalidateTag(CACHE_TAGS.products, revalidateOptions);
         revalidatedTags.push(CACHE_TAGS.products);
 
         // If a specific slug is provided, revalidate that product's tags
         if (slug) {
-          revalidateTag(`product-${slug}`);
-          revalidateTag(`product-${slug}-en`);
-          revalidateTag(`product-${slug}-ar`);
+          revalidateTag(`product-${slug}`, revalidateOptions);
+          revalidateTag(`product-${slug}-en`, revalidateOptions);
+          revalidateTag(`product-${slug}-ar`, revalidateOptions);
           revalidatedTags.push(`product-${slug}`, `product-${slug}-en`, `product-${slug}-ar`);
           
           // Also revalidate the product page paths
@@ -88,7 +92,7 @@ export async function POST(request: NextRequest) {
 
         // If a specific ID is provided, revalidate that product's tags
         if (id) {
-          revalidateTag(`product-${id}`);
+          revalidateTag(`product-${id}`, revalidateOptions);
           revalidatedTags.push(`product-${id}`);
         }
 
@@ -105,7 +109,7 @@ export async function POST(request: NextRequest) {
 
       case "categories":
         // Revalidate all categories
-        revalidateTag(CACHE_TAGS.categories);
+        revalidateTag(CACHE_TAGS.categories, revalidateOptions);
         revalidatedTags.push(CACHE_TAGS.categories);
 
         // If a specific slug is provided, revalidate that category's page
@@ -118,12 +122,12 @@ export async function POST(request: NextRequest) {
 
       case "pages":
         // Revalidate all pages
-        revalidateTag(CACHE_TAGS.pages);
+        revalidateTag(CACHE_TAGS.pages, revalidateOptions);
         revalidatedTags.push(CACHE_TAGS.pages);
 
         // If a specific slug is provided, revalidate that page
         if (slug) {
-          revalidateTag(`page-${slug}`);
+          revalidateTag(`page-${slug}`, revalidateOptions);
           revalidatedTags.push(`page-${slug}`);
           revalidatePath(`/en/${slug}`);
           revalidatePath(`/ar/${slug}`);
@@ -134,7 +138,7 @@ export async function POST(request: NextRequest) {
       case "all":
         // Revalidate everything
         Object.values(CACHE_TAGS).forEach((tag) => {
-          revalidateTag(tag);
+          revalidateTag(tag, revalidateOptions);
           revalidatedTags.push(tag);
         });
 
