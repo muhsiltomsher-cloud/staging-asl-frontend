@@ -136,9 +136,9 @@ function isNonAsciiSlug(slug: string): boolean {
 }
 
 // Memoized version for request deduplication (used when same product is fetched multiple times in one request)
-// Note: WPML has a known issue where the Store API slug filter doesn't work with lang parameter.
-// For English slugs, we fetch without locale (which works reliably).
-// For non-ASCII slugs (e.g., Arabic), we try with locale first since they may only exist in that language.
+// Two-step approach for localized content:
+// 1. First fetch by slug (without locale) to get the product ID reliably
+// 2. Then fetch by ID with locale to get the localized name, description, and categories
 export const getProductBySlug = cache(async function getProductBySlug(
   slug: string,
   locale?: Locale,
@@ -161,18 +161,31 @@ export const getProductBySlug = cache(async function getProductBySlug(
       }
     }
     
-    // For English slugs (or as fallback), fetch without locale
-    // The Store API slug filter works reliably without the lang parameter
+    // For English slugs, use two-step approach:
+    // Step 1: Fetch by slug without locale to get the product ID
     const products = await fetchAPI<WCProduct[]>(`/products?slug=${encodedSlug}`, {
       tags: ["products", `product-${slug}`],
       currency,
     });
 
-    if (products.length > 0) {
-      return products[0];
+    if (products.length === 0) {
+      return null;
     }
     
-    return null;
+    const product = products[0];
+    
+    // Step 2: If locale is specified and different from default, fetch by ID with locale
+    // to get localized name, description, and categories
+    if (locale && locale !== "en") {
+      const localizedProduct = await fetchAPI<WCProduct>(`/products/${product.id}`, {
+        tags: ["products", `product-${product.id}-${locale}`],
+        locale,
+        currency,
+      });
+      return localizedProduct;
+    }
+    
+    return product;
   } catch {
     return null;
   }
