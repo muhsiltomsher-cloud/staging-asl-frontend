@@ -55,23 +55,12 @@ export function ShopClient({
   const isInitialMount = useRef(true);
 
   useEffect(() => {
-    const cached = getCachedProducts(locale);
-    if (cached && cached.products.length > initialProducts.length) {
-      setProducts(cached.products);
-      setTotal(cached.total);
-      setCurrentPage(Math.ceil(cached.products.length / PER_PAGE));
-      setHasMore(cached.products.length < cached.total);
-    } else {
-      setProducts(initialProducts);
-      setTotal(initialTotal);
-      setHasMore(initialProducts.length < initialTotal);
-      
-      if (initialProducts.length > 0) {
-        setCachedProducts(initialProducts, initialTotal, initialTotalPages, locale);
-      }
-    }
+    // DEV MODE: Cache disabled - always use initial products
+    setProducts(initialProducts);
+    setTotal(initialTotal);
+    setHasMore(initialProducts.length < initialTotal);
     isInitialMount.current = false;
-  }, [initialProducts, initialTotal, initialTotalPages, locale]);
+  }, [initialProducts, initialTotal, locale]);
 
   const loadMoreProducts = useCallback(async () => {
     if (isLoading || !hasMore) return;
