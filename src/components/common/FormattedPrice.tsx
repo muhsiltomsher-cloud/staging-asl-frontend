@@ -1,6 +1,7 @@
 "use client";
 
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { API_BASE_CURRENCY, type Currency } from "@/config/site";
 import { AEDIcon } from "./AEDIcon";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +11,7 @@ interface FormattedPriceProps {
   className?: string;
   iconSize?: "xs" | "sm" | "md" | "lg";
   strikethrough?: boolean;
+  sourceCurrency?: Currency;
 }
 
 export function FormattedPrice({
@@ -18,8 +20,9 @@ export function FormattedPrice({
   className,
   iconSize = "sm",
   strikethrough = false,
+  sourceCurrency = API_BASE_CURRENCY,
 }: FormattedPriceProps) {
-  const { currency, getCurrencyInfo } = useCurrency();
+  const { currency, getCurrencyInfo, convertPrice } = useCurrency();
   const currencyInfo = getCurrencyInfo();
 
   // Handle undefined, null, or empty price
@@ -35,10 +38,13 @@ export function FormattedPrice({
     return <span className={className}>{String(price)}</span>;
   }
 
+  // Convert price from source currency to user's selected currency
+  const convertedPrice = convertPrice(numericPrice, sourceCurrency);
+
   const formattedNumber = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: currencyInfo.decimals,
     maximumFractionDigits: currencyInfo.decimals,
-  }).format(numericPrice);
+  }).format(convertedPrice);
 
   const isAED = currency === "AED";
 

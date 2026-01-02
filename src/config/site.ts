@@ -49,17 +49,24 @@ export type Currency = (typeof currencies)[number]["code"];
  * Supported Currencies
  * 
  * List of currencies supported by the store.
- * Each currency has: code, label, symbol, and decimal places.
+ * Each currency has: code, label, symbol, decimal places, and exchange rate from AED.
+ * Exchange rates are based on WCML Multicurrency settings (1 AED = X currency).
  */
 export const currencies = [
-  { code: "AED", label: "UAE (AED)", symbol: "د.إ", decimals: 2 },
-  { code: "BHD", label: "Bahrain (BHD)", symbol: "BD", decimals: 3 },
-  { code: "KWD", label: "Kuwait (KWD)", symbol: "KD", decimals: 3 },
-  { code: "OMR", label: "Oman (OMR)", symbol: "OMR", decimals: 3 },
-  { code: "QAR", label: "Qatar (QAR)", symbol: "QR", decimals: 2 },
-  { code: "SAR", label: "Saudi Arabia (SAR)", symbol: "SAR", decimals: 2 },
-  { code: "USD", label: "United States (USD)", symbol: "$", decimals: 2 },
+  { code: "AED", label: "UAE (AED)", symbol: "د.إ", decimals: 2, rateFromAED: 1 },
+  { code: "BHD", label: "Bahrain (BHD)", symbol: "BD", decimals: 3, rateFromAED: 0.103 },
+  { code: "KWD", label: "Kuwait (KWD)", symbol: "KD", decimals: 3, rateFromAED: 0.083 },
+  { code: "OMR", label: "Oman (OMR)", symbol: "OMR", decimals: 3, rateFromAED: 0.105 },
+  { code: "QAR", label: "Qatar (QAR)", symbol: "QR", decimals: 2, rateFromAED: 0.99 },
+  { code: "SAR", label: "Saudi Arabia (SAR)", symbol: "SAR", decimals: 2, rateFromAED: 1.02 },
+  { code: "USD", label: "United States (USD)", symbol: "$", decimals: 2, rateFromAED: 0.27 },
 ] as const;
+
+/**
+ * Base currency used by the WooCommerce Store API.
+ * The API returns prices in this currency, and we convert to the user's selected currency.
+ */
+export const API_BASE_CURRENCY = "USD" as const;
 
 /**
  * Locale Configuration

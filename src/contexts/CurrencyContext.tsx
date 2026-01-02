@@ -2,13 +2,14 @@
 
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { getCookie, setCookie } from "cookies-next";
-import { currencies, siteConfig, type Currency } from "@/config/site";
+import { currencies, siteConfig, API_BASE_CURRENCY, type Currency } from "@/config/site";
 
 interface CurrencyContextType {
   currency: Currency;
   setCurrency: (currency: Currency) => void;
   formatPrice: (price: string | number | null | undefined, showCode?: boolean) => string;
   formatCartPrice: (price: string | number | null | undefined, minorUnit?: number, showCode?: boolean) => string;
+  convertPrice: (price: number, fromCurrency?: Currency) => number;
   getCurrencySymbol: () => string;
   getCurrencyInfo: () => (typeof currencies)[number];
 }
@@ -44,11 +45,29 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     return currencies.find((c) => c.code === currency) || currencies[4];
   }, [currency]);
 
-  const getCurrencySymbol = useCallback(() => {
-    return getCurrencyInfo().symbol;
-  }, [getCurrencyInfo]);
+    const getCurrencySymbol = useCallback(() => {
+      return getCurrencyInfo().symbol;
+    }, [getCurrencyInfo]);
 
-  const formatPrice = useCallback(
+    const convertPrice = useCallback(
+      (price: number, fromCurrency: Currency = API_BASE_CURRENCY): number => {
+        if (price === 0) return 0;
+      
+        const fromCurrencyInfo = currencies.find((c) => c.code === fromCurrency);
+        const toCurrencyInfo = getCurrencyInfo();
+      
+        if (!fromCurrencyInfo || !toCurrencyInfo) return price;
+        if (fromCurrency === currency) return price;
+      
+        const priceInAED = price / fromCurrencyInfo.rateFromAED;
+        const convertedPrice = priceInAED * toCurrencyInfo.rateFromAED;
+      
+        return convertedPrice;
+      },
+      [currency, getCurrencyInfo]
+    );
+
+    const formatPrice = useCallback(
     (price: string | number | null | undefined, showCode = true) => {
       const currencyInfo = getCurrencyInfo();
       
@@ -103,14 +122,15 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <CurrencyContext.Provider
-      value={{
-        currency,
-        setCurrency,
-        formatPrice,
-        formatCartPrice,
-        getCurrencySymbol,
-        getCurrencyInfo,
-      }}
+            value={{
+              currency,
+              setCurrency,
+              formatPrice,
+              formatCartPrice,
+              convertPrice,
+              getCurrencySymbol,
+              getCurrencyInfo,
+            }}
     >
       {children}
     </CurrencyContext.Provider>
