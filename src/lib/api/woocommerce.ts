@@ -136,9 +136,9 @@ function isNonAsciiSlug(slug: string): boolean {
 }
 
 // Memoized version for request deduplication (used when same product is fetched multiple times in one request)
-// Two-step approach for localized content:
-// 1. First fetch by slug (without locale) to get the product ID reliably
-// 2. Then fetch by ID with locale to get the localized name, description, and categories
+// WPML uses different product IDs for each language translation, so we must fetch by slug WITH locale
+// to get the correct translated product directly. Fetching by ID with lang parameter does NOT work
+// because the ID refers to a specific language version of the product.
 export const getProductBySlug = cache(async function getProductBySlug(
   slug: string,
   locale?: Locale,
@@ -148,8 +148,10 @@ export const getProductBySlug = cache(async function getProductBySlug(
     // URL encode the slug to handle non-ASCII characters (e.g., Arabic slugs)
     const encodedSlug = encodeURIComponent(slug);
     
-    // For non-ASCII slugs (e.g., Arabic), try with locale first since they may only exist in that language
-    if (isNonAsciiSlug(slug) && locale) {
+    // Always fetch by slug with locale to get the correct translated product
+    // WPML keeps the same slug across languages but returns different product IDs
+    // and localized content based on the lang parameter
+    if (locale) {
       const localizedProducts = await fetchAPI<WCProduct[]>(`/products?slug=${encodedSlug}`, {
         tags: ["products", `product-${slug}-${locale}`],
         locale,
@@ -161,8 +163,7 @@ export const getProductBySlug = cache(async function getProductBySlug(
       }
     }
     
-    // For English slugs, use two-step approach:
-    // Step 1: Fetch by slug without locale to get the product ID
+    // Fallback: fetch without locale (for cases where locale is not specified)
     const products = await fetchAPI<WCProduct[]>(`/products?slug=${encodedSlug}`, {
       tags: ["products", `product-${slug}`],
       currency,
@@ -172,20 +173,7 @@ export const getProductBySlug = cache(async function getProductBySlug(
       return null;
     }
     
-    const product = products[0];
-    
-    // Step 2: If locale is specified and different from default, fetch by ID with locale
-    // to get localized name, description, and categories
-    if (locale && locale !== "en") {
-      const localizedProduct = await fetchAPI<WCProduct>(`/products/${product.id}`, {
-        tags: ["products", `product-${product.id}-${locale}`],
-        locale,
-        currency,
-      });
-      return localizedProduct;
-    }
-    
-    return product;
+    return products[0];
   } catch {
     return null;
   }
