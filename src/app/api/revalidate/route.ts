@@ -1,0 +1,205 @@
+import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag, revalidatePath } from "next/cache";
+
+/**
+ * On-demand revalidation API endpoint for WordPress webhooks.
+ * 
+ * This endpoint allows WordPress/WooCommerce to trigger cache invalidation
+ * when products, categories, or other content is updated.
+ * 
+ * Usage:
+ * POST /api/revalidate
+ * Headers:
+ *   x-revalidate-token: <REVALIDATE_SECRET_TOKEN>
+ * Body (JSON):
+ *   {
+ *     "type": "products" | "categories" | "pages" | "all",
+ *     "slug": "optional-product-slug",
+ *     "id": "optional-product-id",
+ *     "path": "optional-path-to-revalidate"
+ *   }
+ * 
+ * Environment variable required:
+ *   REVALIDATE_SECRET_TOKEN - Secret token for authentication
+ */
+
+// Cache tags used in the application
+const CACHE_TAGS = {
+  products: "products",
+  categories: "categories",
+  pages: "pages",
+  bundleConfig: "bundle-config",
+} as const;
+
+export async function POST(request: NextRequest) {
+  try {
+    // Verify the secret token
+    const token = request.headers.get("x-revalidate-token");
+    const secretToken = process.env.REVALIDATE_SECRET_TOKEN;
+
+    // If no secret token is configured, reject all requests
+    if (!secretToken) {
+      console.error("REVALIDATE_SECRET_TOKEN is not configured");
+      return NextResponse.json(
+        { error: "Revalidation is not configured" },
+        { status: 500 }
+      );
+    }
+
+    // Validate the token
+    if (!token || token !== secretToken) {
+      return NextResponse.json(
+        { error: "Invalid or missing revalidation token" },
+        { status: 401 }
+      );
+    }
+
+    // Parse the request body
+    const body = await request.json().catch(() => ({}));
+    const { type, slug, id, path } = body as {
+      type?: "products" | "categories" | "pages" | "all";
+      slug?: string;
+      id?: string | number;
+      path?: string;
+    };
+
+    const revalidatedTags: string[] = [];
+    const revalidatedPaths: string[] = [];
+
+    // Revalidate based on type
+    switch (type) {
+      case "products":
+        // Revalidate all products
+        revalidateTag(CACHE_TAGS.products);
+        revalidatedTags.push(CACHE_TAGS.products);
+
+        // If a specific slug is provided, revalidate that product's tags
+        if (slug) {
+          revalidateTag(`product-${slug}`);
+          revalidateTag(`product-${slug}-en`);
+          revalidateTag(`product-${slug}-ar`);
+          revalidatedTags.push(`product-${slug}`, `product-${slug}-en`, `product-${slug}-ar`);
+          
+          // Also revalidate the product page paths
+          revalidatePath(`/en/product/${slug}`);
+          revalidatePath(`/ar/product/${slug}`);
+          revalidatedPaths.push(`/en/product/${slug}`, `/ar/product/${slug}`);
+        }
+
+        // If a specific ID is provided, revalidate that product's tags
+        if (id) {
+          revalidateTag(`product-${id}`);
+          revalidatedTags.push(`product-${id}`);
+        }
+
+        // Revalidate shop pages
+        revalidatePath("/en/shop");
+        revalidatePath("/ar/shop");
+        revalidatedPaths.push("/en/shop", "/ar/shop");
+
+        // Revalidate home pages (they often show products)
+        revalidatePath("/en");
+        revalidatePath("/ar");
+        revalidatedPaths.push("/en", "/ar");
+        break;
+
+      case "categories":
+        // Revalidate all categories
+        revalidateTag(CACHE_TAGS.categories);
+        revalidatedTags.push(CACHE_TAGS.categories);
+
+        // If a specific slug is provided, revalidate that category's page
+        if (slug) {
+          revalidatePath(`/en/category/${slug}`);
+          revalidatePath(`/ar/category/${slug}`);
+          revalidatedPaths.push(`/en/category/${slug}`, `/ar/category/${slug}`);
+        }
+        break;
+
+      case "pages":
+        // Revalidate all pages
+        revalidateTag(CACHE_TAGS.pages);
+        revalidatedTags.push(CACHE_TAGS.pages);
+
+        // If a specific slug is provided, revalidate that page
+        if (slug) {
+          revalidateTag(`page-${slug}`);
+          revalidatedTags.push(`page-${slug}`);
+          revalidatePath(`/en/${slug}`);
+          revalidatePath(`/ar/${slug}`);
+          revalidatedPaths.push(`/en/${slug}`, `/ar/${slug}`);
+        }
+        break;
+
+      case "all":
+        // Revalidate everything
+        Object.values(CACHE_TAGS).forEach((tag) => {
+          revalidateTag(tag);
+          revalidatedTags.push(tag);
+        });
+
+        // Revalidate main pages
+        revalidatePath("/en");
+        revalidatePath("/ar");
+        revalidatePath("/en/shop");
+        revalidatePath("/ar/shop");
+        revalidatedPaths.push("/en", "/ar", "/en/shop", "/ar/shop");
+        break;
+
+      default:
+        // If a specific path is provided, revalidate it
+        if (path) {
+          revalidatePath(path);
+          revalidatedPaths.push(path);
+        } else {
+          return NextResponse.json(
+            { error: "Invalid revalidation type. Use: products, categories, pages, all, or provide a path" },
+            { status: 400 }
+          );
+        }
+    }
+
+    console.log(`Revalidation triggered: tags=[${revalidatedTags.join(", ")}], paths=[${revalidatedPaths.join(", ")}]`);
+
+    return NextResponse.json({
+      success: true,
+      revalidated: {
+        tags: revalidatedTags,
+        paths: revalidatedPaths,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Revalidation error:", error);
+    return NextResponse.json(
+      { error: "Failed to revalidate", details: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
+  }
+}
+
+// Also support GET for simple revalidation (with token in query string)
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const token = searchParams.get("token");
+  const type = searchParams.get("type") as "products" | "categories" | "pages" | "all" | undefined;
+  const slug = searchParams.get("slug") || undefined;
+  const id = searchParams.get("id") || undefined;
+  const path = searchParams.get("path") || undefined;
+
+  // Create a mock request with the token in headers
+  const headers = new Headers();
+  headers.set("x-revalidate-token", token || "");
+
+  // Create a new request with the body
+  const mockRequest = new NextRequest(request.url, {
+    method: "POST",
+    headers,
+  });
+
+  // Override the json method to return our params
+  const originalJson = mockRequest.json.bind(mockRequest);
+  mockRequest.json = async () => ({ type, slug, id, path });
+
+  return POST(mockRequest);
+}
