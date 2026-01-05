@@ -31,9 +31,9 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-accent-graphic), Arial, Helvetica, sans-serif;
 }
 
-/* Arabic font styles - Cairo is a modern, clean Arabic font */
+/* Arabic font styles - Noto Sans Arabic is a clean, modern Arabic font from Google */
 html[lang="ar"] body {
-  font-family: var(--font-cairo), Arial, Helvetica, sans-serif;
+  font-family: var(--font-noto-sans-arabic), Arial, Helvetica, sans-serif;
 }
 
 html[lang="ar"] h1,
@@ -42,7 +42,7 @@ html[lang="ar"] h3,
 html[lang="ar"] h4,
 html[lang="ar"] h5,
 html[lang="ar"] h6 {
-  font-family: var(--font-cairo), Arial, Helvetica, sans-serif;
+  font-family: var(--font-noto-sans-arabic), Arial, Helvetica, sans-serif;
 }
 
 /* Global cursor pointer for interactive elements */
