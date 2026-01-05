@@ -564,6 +564,49 @@
           "content": "Once your order is shipped, you will receive an email with a tracking number. You can use this number to track your package on our website or the carrier's website."
         }
       ]
+    },
+    "about": {
+      "title": "Aromatic Scents Lab",
+      "heroSubtitle": "Discover Our Story",
+      "contentUnavailable": "Content is not available at the moment",
+      "seo": {
+        "title": "About Us - Aromatic Scents Lab",
+        "description": "Discover our journey in crafting premium fragrances - we take you on a journey through ingredients to experience and explore the bare essential component of the Scent"
+      },
+      "cta": {
+        "title": "Begin Your Fragrance Journey",
+        "subtitle": "Discover our exclusive collection of handcrafted fragrances",
+        "button": "Shop Now"
+      },
+      "sections": [
+        {
+          "key": "our_story",
+          "title": "Our Story",
+          "content": "Aromatic Scents Lab was born from a passion for the art of perfumery. We believe that fragrance is more than just a scent – it's an experience that evokes emotions, memories, and connections. Our journey began with a simple mission: to create exceptional fragrances that tell a story and leave a lasting impression.",
+          "link": null
+        },
+        {
+          "key": "our_journey",
+          "title": "Our Journey",
+          "content": "From our humble beginnings to becoming a recognized name in the fragrance industry, our journey has been one of continuous learning and innovation. We travel the world to source the finest ingredients, from the lavender fields of Provence to the oud forests of Southeast Asia. Each ingredient is carefully selected to ensure the highest quality in every bottle.",
+          "link": null
+        },
+        {
+          "key": "our_collection",
+          "title": "Our Collection",
+          "content": "Our collection features a diverse range of fragrances, from timeless classics to modern interpretations. Whether you prefer the warmth of oriental notes, the freshness of citrus, or the elegance of floral bouquets, we have something for every taste. Each fragrance is crafted with precision and care, using traditional techniques combined with modern innovation.",
+          "link": {
+            "text": "Explore Our Collection",
+            "url": "/shop"
+          }
+        },
+        {
+          "key": "our_promise",
+          "title": "Our Promise",
+          "content": "We are committed to excellence in everything we do. From the quality of our ingredients to the craftsmanship of our bottles, every detail matters. We promise to deliver fragrances that not only smell exceptional but also reflect our dedication to sustainability and ethical sourcing. Your satisfaction is our ultimate goal.",
+          "link": null
+        }
+      ]
     }
   }
 }
