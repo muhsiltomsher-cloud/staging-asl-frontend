@@ -1,11 +1,12 @@
 "use client";
 
 import type { CoCartItem } from "@/lib/api/cocart";
+import { FormattedPrice } from "@/components/common/FormattedPrice";
 
 interface BundleItem {
   product_id: number;
   name?: string;
-  price?: number;
+  price?: number | string;
   quantity?: number;
 }
 
@@ -13,6 +14,7 @@ interface BundleItemsListProps {
   item: CoCartItem;
   locale?: string;
   compact?: boolean;
+  showPrices?: boolean;
 }
 
 /**
@@ -49,7 +51,7 @@ export function getBundleItems(item: CoCartItem): BundleItem[] | null {
       .map((item) => ({
         product_id: item.product_id,
         name: typeof item.name === "string" ? item.name : undefined,
-        price: typeof item.price === "number" ? item.price : undefined,
+        price: typeof item.price === "number" || typeof item.price === "string" ? item.price : undefined,
         quantity: typeof item.quantity === "number" ? item.quantity : undefined,
       }));
   } catch {
@@ -58,9 +60,20 @@ export function getBundleItems(item: CoCartItem): BundleItem[] | null {
 }
 
 /**
+ * Calculates the total price of all bundle items
+ */
+export function getBundleItemsTotal(bundleItems: BundleItem[]): number {
+  return bundleItems.reduce((total, item) => {
+    const price = typeof item.price === "string" ? parseFloat(item.price) : (item.price || 0);
+    const quantity = item.quantity || 1;
+    return total + (price * quantity);
+  }, 0);
+}
+
+/**
  * Displays the list of products included in a bundle cart item
  */
-export function BundleItemsList({ item, locale, compact = false }: BundleItemsListProps) {
+export function BundleItemsList({ item, locale, compact = false, showPrices = true }: BundleItemsListProps) {
   const bundleItems = getBundleItems(item);
   const isRTL = locale === "ar";
 
@@ -69,34 +82,68 @@ export function BundleItemsList({ item, locale, compact = false }: BundleItemsLi
   }
 
   const label = isRTL ? "يشمل:" : "Includes:";
+  const bundleTotal = getBundleItemsTotal(bundleItems);
 
   if (compact) {
-    // Compact view for mini-cart drawer
+    // Compact view for mini-cart drawer - show names with prices
     return (
       <div className="mt-1 text-xs text-gray-500">
-        <span className="font-medium">{label}</span>{" "}
-        {bundleItems.map((bi, idx) => (
-          <span key={bi.product_id}>
-            {bi.name || `Product #${bi.product_id}`}
-            {idx < bundleItems.length - 1 && ", "}
-          </span>
-        ))}
+        <span className="font-medium">{label}</span>
+        <ul className="mt-0.5 space-y-0.5">
+          {bundleItems.map((bi, idx) => {
+            const price = typeof bi.price === "string" ? parseFloat(bi.price) : bi.price;
+            return (
+              <li key={`${bi.product_id}-${idx}`} className="flex items-center justify-between gap-1">
+                <span className="flex items-center gap-1">
+                  <span className="h-1 w-1 rounded-full bg-amber-500 flex-shrink-0"></span>
+                  <span className="truncate">{bi.name || `Product #${bi.product_id}`}</span>
+                </span>
+                {showPrices && price !== undefined && price > 0 && (
+                  <FormattedPrice price={price} className="text-xs text-gray-400 flex-shrink-0" iconSize="xs" />
+                )}
+              </li>
+            );
+          })}
+        </ul>
+        {showPrices && bundleTotal > 0 && (
+          <div className="mt-1 flex items-center justify-between border-t border-gray-200 pt-1">
+            <span className="font-medium">{isRTL ? "المجموع:" : "Bundle Total:"}</span>
+            <FormattedPrice price={bundleTotal} className="text-xs font-medium text-amber-600" iconSize="xs" />
+          </div>
+        )}
       </div>
     );
   }
 
-  // Full view for cart page
+  // Full view for cart page - show detailed breakdown with prices
   return (
-    <div className="mt-2 rounded-md bg-gray-50 p-2">
-      <p className="mb-1 text-xs font-medium text-gray-600">{label}</p>
-      <ul className="space-y-0.5">
-        {bundleItems.map((bi) => (
-          <li key={bi.product_id} className="flex items-center gap-1 text-xs text-gray-500">
-            <span className="h-1 w-1 rounded-full bg-amber-500"></span>
-            <span>{bi.name || `Product #${bi.product_id}`}</span>
-          </li>
-        ))}
+    <div className="mt-2 rounded-md bg-gray-50 p-3">
+      <p className="mb-2 text-xs font-medium text-gray-600">{label}</p>
+      <ul className="space-y-1.5">
+        {bundleItems.map((bi, idx) => {
+          const price = typeof bi.price === "string" ? parseFloat(bi.price) : bi.price;
+          return (
+            <li key={`${bi.product_id}-${idx}`} className="flex items-center justify-between gap-2 text-xs">
+              <span className="flex items-center gap-1.5 text-gray-600">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500 flex-shrink-0"></span>
+                <span>{bi.name || `Product #${bi.product_id}`}</span>
+                {bi.quantity && bi.quantity > 1 && (
+                  <span className="text-gray-400">x{bi.quantity}</span>
+                )}
+              </span>
+              {showPrices && price !== undefined && price > 0 && (
+                <FormattedPrice price={price} className="text-xs text-gray-500 flex-shrink-0" iconSize="xs" />
+              )}
+            </li>
+          );
+        })}
       </ul>
+      {showPrices && bundleTotal > 0 && (
+        <div className="mt-2 flex items-center justify-between border-t border-gray-200 pt-2">
+          <span className="text-xs font-medium text-gray-600">{isRTL ? "مجموع الحزمة:" : "Bundle Total:"}</span>
+          <FormattedPrice price={bundleTotal} className="text-sm font-semibold text-amber-600" iconSize="xs" />
+        </div>
+      )}
     </div>
   );
 }

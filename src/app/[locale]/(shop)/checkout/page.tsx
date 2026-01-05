@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getCustomer, type Customer } from "@/lib/api/customer";
 import { featureFlags, type Locale } from "@/config/site";
 import { MapPin, Check, ChevronDown, ChevronUp, User, UserCheck, Tag, X } from "lucide-react";
+import { BundleItemsList } from "@/components/cart/BundleItemsList";
 
 interface PublicCoupon {
   code: string;
@@ -647,6 +648,7 @@ export default function CheckoutPage() {
                                     <p className="text-xs text-gray-500">
                                       {isRTL ? "الكمية:" : "Qty:"} {item.quantity.value}
                                     </p>
+                                    <BundleItemsList item={item} locale={locale} compact />
                                   </div>
                                   {/* Price */}
                                   <FormattedPrice
