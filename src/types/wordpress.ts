@@ -48,6 +48,7 @@ export interface Banner {
 export interface BannersSettings {
   enabled: boolean;
   banners: Banner[];
+  hide_on_mobile?: boolean;
 }
 
 // Collection Types
@@ -63,6 +64,7 @@ export interface CollectionsSettings {
   section_title: string;
   section_subtitle?: string;
   collections: Collection[];
+  hide_on_mobile?: boolean;
 }
 
 // Product Section Types
@@ -73,6 +75,7 @@ export interface ProductSectionSettings {
   products_count: number;
   show_view_all: boolean;
   view_all_link?: string;
+  hide_on_mobile?: boolean;
 }
 
 // Category Section Types
@@ -82,6 +85,7 @@ export interface CategorySectionSettings {
   section_subtitle?: string;
   categories_count: number;
   show_view_all: boolean;
+  hide_on_mobile?: boolean;
 }
 
 // Featured Products Slider Types
@@ -92,6 +96,7 @@ export interface FeaturedProductsSettings {
   products_count: number;
   autoplay: boolean;
   autoplay_delay: number;
+  hide_on_mobile?: boolean;
 }
 
 // Site Settings Types

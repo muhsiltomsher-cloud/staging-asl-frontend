@@ -48,6 +48,7 @@ export function BannersSection({
   }
 
   const bannerCount = settings.banners.length;
+  const mobileHiddenClass = settings.hide_on_mobile ? "hidden md:block" : "";
 
   const getGridClass = () => {
     if (bannerCount === 1) return "grid-cols-1";
@@ -57,7 +58,7 @@ export function BannersSection({
   };
 
   return (
-    <section className={`bg-white py-8 md:py-12 ${className}`}>
+    <section className={`bg-white py-8 md:py-12 ${className} ${mobileHiddenClass}`}>
       <div className="container mx-auto px-4">
         <div className={`grid gap-4 md:gap-6 ${getGridClass()}`}>
           {settings.banners.map((banner, index) => {

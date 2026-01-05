@@ -88,3 +88,7 @@ export const localeConfig = {
     hrefLang: "ar",
   },
 } as const;
+
+export const featureFlags = {
+  enableCoupons: false,
+} as const;

@@ -72,9 +72,10 @@ export function FeaturedProductsSlider({
   }
 
   const displayProducts = products.slice(0, settings.products_count);
+  const mobileHiddenClass = settings.hide_on_mobile ? "hidden md:block" : "";
 
   return (
-    <section className={`bg-stone-50 py-12 md:py-16 ${className}`}>
+    <section className={`bg-stone-50 py-12 md:py-16 ${className} ${mobileHiddenClass}`}>
       <div className="container mx-auto px-4">
         <div className="mb-8 flex items-center justify-between md:mb-10">
           <div>

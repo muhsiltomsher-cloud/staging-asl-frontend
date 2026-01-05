@@ -52,8 +52,10 @@ export function CollectionsSection({
     return null;
   }
 
+  const mobileHiddenClass = settings.hide_on_mobile ? "hidden md:block" : "";
+
   return (
-    <section className={`bg-white py-12 md:py-16 ${className}`}>
+    <section className={`bg-white py-12 md:py-16 ${className} ${mobileHiddenClass}`}>
       <div className="container mx-auto px-4">
         <div className="mb-8 text-center md:mb-10">
           <h2 className="mb-2 text-2xl font-bold text-amber-900 md:text-3xl">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
 import { getCookie, setCookie } from "cookies-next";
 import { currencies, siteConfig, API_BASE_CURRENCY, type Currency } from "@/config/site";
 
@@ -18,20 +18,25 @@ const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined
 
 const CURRENCY_COOKIE_NAME = "wcml_currency";
 
-// Initialize currency from cookie (runs once on first render)
-function getInitialCurrency(): Currency {
-  if (typeof window === "undefined") {
-    return siteConfig.defaultCurrency;
-  }
-  const savedCurrency = getCookie(CURRENCY_COOKIE_NAME) as Currency | undefined;
-  if (savedCurrency && currencies.some((c) => c.code === savedCurrency)) {
-    return savedCurrency;
-  }
-  return siteConfig.defaultCurrency;
-}
-
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
-  const [currency, setCurrencyState] = useState<Currency>(getInitialCurrency);
+  // Always start with default currency to avoid hydration mismatch
+  // The actual currency from cookie will be loaded in useEffect after hydration
+  const [currency, setCurrencyState] = useState<Currency>(siteConfig.defaultCurrency);
+  const hasHydrated = useRef(false);
+
+  // Load currency from cookie after hydration to avoid SSR/client mismatch
+  useEffect(() => {
+    if (hasHydrated.current) return;
+    hasHydrated.current = true;
+    
+    const savedCurrency = getCookie(CURRENCY_COOKIE_NAME) as Currency | undefined;
+    if (savedCurrency && currencies.some((c) => c.code === savedCurrency)) {
+      // Use requestAnimationFrame to avoid synchronous setState in effect
+      requestAnimationFrame(() => {
+        setCurrencyState(savedCurrency);
+      });
+    }
+  }, []);
 
   const setCurrency = useCallback((newCurrency: Currency) => {
     setCurrencyState(newCurrency);

@@ -47,6 +47,7 @@ interface WPPluginBannerItem {
 interface WPPluginBannersSettings {
   enabled: boolean;
   items: WPPluginBannerItem[];
+  hideOnMobile?: boolean;
 }
 
 interface WPPluginCollectionItem {
@@ -65,6 +66,7 @@ interface WPPluginCollectionsSettings {
   subtitle: string;
   subtitleAr: string;
   items: WPPluginCollectionItem[];
+  hideOnMobile?: boolean;
 }
 
 interface WPPluginProductSectionSettings {
@@ -76,6 +78,7 @@ interface WPPluginProductSectionSettings {
   count: number;
   display?: string;
   autoplay?: boolean;
+  hideOnMobile?: boolean;
   responsive?: {
     desktop: number;
     tablet: number;
@@ -235,6 +238,7 @@ function transformBannersSettings(pluginBanners: WPPluginBannersSettings, locale
   return {
     enabled: pluginBanners.enabled,
     banners,
+    hide_on_mobile: pluginBanners.hideOnMobile,
   };
 }
 
@@ -254,6 +258,7 @@ function transformCollectionsSettings(pluginCollections: WPPluginCollectionsSett
     section_title: locale === "ar" && pluginCollections.titleAr ? pluginCollections.titleAr : pluginCollections.title,
     section_subtitle: locale === "ar" && pluginCollections.subtitleAr ? pluginCollections.subtitleAr : pluginCollections.subtitle,
     collections,
+    hide_on_mobile: pluginCollections.hideOnMobile,
   };
 }
 
@@ -266,6 +271,7 @@ function transformProductSectionSettings(pluginSection: WPPluginProductSectionSe
     products_count: pluginSection.count,
     show_view_all: true,
     view_all_link: "/shop",
+    hide_on_mobile: pluginSection.hideOnMobile,
   };
 }
 
@@ -277,6 +283,7 @@ function transformCategorySectionSettings(pluginSection: WPPluginProductSectionS
     section_subtitle: locale === "ar" && pluginSection.subtitleAr ? pluginSection.subtitleAr : pluginSection.subtitle,
     categories_count: pluginSection.count,
     show_view_all: true,
+    hide_on_mobile: pluginSection.hideOnMobile,
   };
 }
 
@@ -289,6 +296,7 @@ function transformFeaturedProductsSettings(pluginSection: WPPluginProductSection
     products_count: pluginSection.count,
     autoplay: pluginSection.autoplay ?? true,
     autoplay_delay: 4000,
+    hide_on_mobile: pluginSection.hideOnMobile,
   };
 }
 

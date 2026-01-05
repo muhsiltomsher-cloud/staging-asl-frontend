@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_Arabic } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
 const inter = Inter({
@@ -12,6 +13,13 @@ const notoSansArabic = Noto_Sans_Arabic({
   variable: "--font-noto-sans-arabic",
   subsets: ["arabic"],
   weight: ["400", "500", "600", "700"],
+});
+
+// AccentGraphic font for headings and titles
+const accentGraphic = localFont({
+  src: "../../public/fonts/AccentGraphic-Medium.woff2",
+  variable: "--font-accent-graphic",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -27,7 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="overflow-x-clip">
       <body
-        className={`${inter.variable} ${notoSansArabic.variable} antialiased overflow-x-clip`}
+        className={`${inter.variable} ${notoSansArabic.variable} ${accentGraphic.variable} antialiased overflow-x-clip`}
       >
         {children}
       </body>

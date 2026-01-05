@@ -13,7 +13,7 @@ import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCustomer, type Customer } from "@/lib/api/customer";
-import type { Locale } from "@/config/site";
+import { featureFlags, type Locale } from "@/config/site";
 import { MapPin, Check, ChevronDown, ChevronUp, User, UserCheck, Tag, X } from "lucide-react";
 
 interface PublicCoupon {
@@ -659,6 +659,7 @@ export default function CheckoutPage() {
                             </div>
 
                             {/* Coupon Code Section */}
+                            {featureFlags.enableCoupons && (
                             <div className="border-b border-black/10 py-4">
                               <div className="mb-3">
                                 <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -747,6 +748,7 @@ export default function CheckoutPage() {
                                 </div>
                               )}
                             </div>
+                            )}
 
                                           {/* Totals */}
                             <div className="space-y-3 border-b border-black/10 py-4">

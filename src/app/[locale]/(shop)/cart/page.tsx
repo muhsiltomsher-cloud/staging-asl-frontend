@@ -12,7 +12,7 @@ import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { BundleItemsList } from "@/components/cart/BundleItemsList";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
-import type { Locale } from "@/config/site";
+import { featureFlags, type Locale } from "@/config/site";
 
 interface PublicCoupon {
   code: string;
@@ -389,6 +389,7 @@ export default function CartPage() {
               </h2>
 
               {/* Coupon Code Section */}
+              {featureFlags.enableCoupons && (
               <div className="border-b border-black/10 pb-4 mb-4">
                 <div className="mb-3">
                   <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -476,6 +477,7 @@ export default function CartPage() {
                   </div>
                 )}
               </div>
+              )}
 
               <div className="space-y-3 border-b border-black/10 pb-4">
                 <div className="flex justify-between text-gray-600">
