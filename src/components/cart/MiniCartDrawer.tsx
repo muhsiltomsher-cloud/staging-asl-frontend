@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useCart } from "@/contexts/CartContext";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { BundleItemsList } from "@/components/cart/BundleItemsList";
+import { CartItemSkeleton } from "@/components/common/Skeleton";
 import MuiDrawer from "@mui/material/Drawer";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
@@ -110,91 +111,103 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
     </div>
   );
 
-  const renderCartItems = () => (
-    <ul className="divide-y">
-      {cartItems.map((item) => (
-        <li key={item.item_key} className="p-4">
-          <div className="flex gap-4">
-            <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
-              {item.featured_image ? (
-                <Image
-                  src={item.featured_image}
-                  alt={item.name}
-                  fill
-                  sizes="80px"
-                  className="object-cover"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <ShoppingBag className="h-8 w-8 text-gray-400" />
+    const renderCartItems = () => (
+      <ul className="divide-y">
+        {cartItems.map((item) => {
+          const isAddingItem = item.item_key.startsWith("temp-");
+        
+          if (isAddingItem) {
+            return (
+              <li key={item.item_key}>
+                <CartItemSkeleton />
+              </li>
+            );
+          }
+        
+          return (
+          <li key={item.item_key} className="p-4">
+            <div className="flex gap-4">
+              <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                {item.featured_image ? (
+                  <Image
+                    src={item.featured_image}
+                    alt={item.name}
+                    fill
+                    sizes="80px"
+                    className="object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center">
+                    <ShoppingBag className="h-8 w-8 text-gray-400" />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-1 flex-col">
+                <div className="flex justify-between">
+                  <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
+                    {item.name}
+                  </h3>
+                  <button
+                    onClick={() => handleRemoveItem(item.item_key)}
+                    className="text-gray-400 hover:text-red-500 transition-colors"
+                    aria-label={dictionary.remove}
+                    disabled={isLoading}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
-              )}
-            </div>
 
-            <div className="flex flex-1 flex-col">
-              <div className="flex justify-between">
-                <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
-                  {item.name}
-                </h3>
-                <button
-                  onClick={() => handleRemoveItem(item.item_key)}
-                  className="text-gray-400 hover:text-red-500 transition-colors"
-                  aria-label={dictionary.remove}
-                  disabled={isLoading}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
+                <p className="mt-1 text-sm font-medium text-gray-900 inline-flex items-center gap-1">
+                  <FormattedPrice
+                    price={parseFloat(item.price) / divisor}
+                    iconSize="xs"
+                  /> x {item.quantity.value}
+                </p>
 
-              <p className="mt-1 text-sm font-medium text-gray-900 inline-flex items-center gap-1">
-                <FormattedPrice
-                  price={parseFloat(item.price) / divisor}
-                  iconSize="xs"
-                /> x {item.quantity.value}
-              </p>
+                <BundleItemsList item={item} locale={locale} compact />
 
-              <BundleItemsList item={item} locale={locale} compact />
-
-              <div className="mt-2 flex items-center gap-2">
-                <button
-                  onClick={() =>
-                    handleQuantityChange(
-                      item.item_key,
-                      item.quantity.value - 1
-                    )
-                  }
-                  className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-[#633d1f] hover:text-white hover:border-[#633d1f] disabled:opacity-50 transition-colors cursor-pointer"
-                  disabled={isLoading || updatingItems.has(item.item_key) || item.quantity.value <= 1}
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="w-8 text-center text-sm font-medium relative">
-                  {updatingItems.has(item.item_key) ? (
-                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#633d1f]"></span>
-                  ) : (
-                    item.quantity.value
-                  )}
-                </span>
-                <button
-                  onClick={() =>
-                    handleQuantityChange(
-                      item.item_key,
-                      item.quantity.value + 1
-                    )
-                  }
-                  className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-[#633d1f] hover:text-white hover:border-[#633d1f] disabled:opacity-50 transition-colors cursor-pointer"
-                  disabled={isLoading || updatingItems.has(item.item_key)}
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
+                <div className="mt-2 flex items-center gap-2">
+                  <button
+                    onClick={() =>
+                      handleQuantityChange(
+                        item.item_key,
+                        item.quantity.value - 1
+                      )
+                    }
+                    className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-[#633d1f] hover:text-white hover:border-[#633d1f] disabled:opacity-50 transition-colors"
+                    disabled={isLoading || updatingItems.has(item.item_key) || item.quantity.value <= 1}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <span className="w-8 text-center text-sm font-medium relative">
+                    {updatingItems.has(item.item_key) ? (
+                      <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#633d1f]"></span>
+                    ) : (
+                      item.quantity.value
+                    )}
+                  </span>
+                  <button
+                    onClick={() =>
+                      handleQuantityChange(
+                        item.item_key,
+                        item.quantity.value + 1
+                      )
+                    }
+                    className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-[#633d1f] hover:text-white hover:border-[#633d1f] disabled:opacity-50 transition-colors"
+                    disabled={isLoading || updatingItems.has(item.item_key)}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
+          </li>
+        );
+        })}
+      </ul>
+    );
 
   return (
     <MuiDrawer

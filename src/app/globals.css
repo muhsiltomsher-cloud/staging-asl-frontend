@@ -44,3 +44,23 @@ html[lang="ar"] h5,
 html[lang="ar"] h6 {
   font-family: var(--font-cairo), Arial, Helvetica, sans-serif;
 }
+
+/* Global cursor pointer for interactive elements */
+a,
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+select,
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Ensure disabled elements show not-allowed cursor */
+button:disabled,
+input:disabled,
+select:disabled,
+[disabled] {
+  cursor: not-allowed;
+}

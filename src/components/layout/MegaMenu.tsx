@@ -10,6 +10,7 @@ import type { WCCategory, WCProduct } from "@/types/woocommerce";
 import { getCategories, getProducts } from "@/lib/api/woocommerce";
 import { decodeHtmlEntities, cn, getProductSlugFromPermalink } from "@/lib/utils";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
+import { CategoriesGridSkeleton, MiniProductGridSkeleton } from "@/components/common/Skeleton";
 
 // DEV MODE: Cache disabled for faster development - uncomment when done
 // const categoriesCache: Record<string, { data: WCCategory[]; timestamp: number }> = {};
@@ -208,14 +209,17 @@ export function MegaMenu({
         onMouseLeave={onClose}
       >
         <div className="container mx-auto px-6 py-8">
-          {loading ? (
-            <div className="flex items-center justify-center py-16">
-              <div className="flex flex-col items-center gap-3">
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#7a3205]/20 border-t-[#7a3205]" />
-                <span className="text-sm text-gray-500">{dictionary.common.loading || "Loading..."}</span>
-              </div>
-            </div>
-          ) : hierarchicalCategories.length === 0 ? (
+                    {loading ? (
+                      <div className="flex gap-8">
+                        <div className="flex-1">
+                          <CategoriesGridSkeleton count={4} />
+                        </div>
+                        <div className="w-[340px] flex-shrink-0">
+                          <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mb-4" />
+                          <MiniProductGridSkeleton count={4} />
+                        </div>
+                      </div>
+                    ) : hierarchicalCategories.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Grid3X3 className="mb-4 h-16 w-16 text-gray-200" />
               <p className="text-gray-400">No categories found</p>
@@ -284,11 +288,9 @@ export function MegaMenu({
                 <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
                   {isRTL ? "وصل حديثاً" : "New Arrivals"}
                 </h3>
-                {productsLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#7a3205]/20 border-t-[#7a3205]" />
-                  </div>
-                ) : featuredProducts.length > 0 ? (
+                                {productsLoading ? (
+                                  <MiniProductGridSkeleton count={4} />
+                                ) : featuredProducts.length > 0 ? (
                   <div className="grid grid-cols-2 gap-4">
                     {featuredProducts.slice(0, 4).map((product) => {
                       const productSlug = getProductSlugFromPermalink(product.permalink, product.slug);
