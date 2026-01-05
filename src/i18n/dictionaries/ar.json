@@ -199,8 +199,8 @@
     },
     "products": "منتج"
   },
-    "bundleManager": {
-      "title": "مدير الحزم",
+    "bundlesCreator": {
+      "title": "منشئ الحزم",
       "description": "إنشاء وتكوين حزم المنتجات مع ميزات متقدمة مثل BOPO",
       "bundleTitle": "عنوان الحزمة:",
       "bundleType": "نوع الحزمة:",

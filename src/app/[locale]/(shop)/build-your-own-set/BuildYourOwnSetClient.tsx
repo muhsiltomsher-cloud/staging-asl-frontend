@@ -185,6 +185,7 @@ export function BuildYourOwnSetClient({
       optional: "Optional",
       chooseItem: "Choose item",
       addExtra: "Add extra",
+      addExtraWithPrice: "Add extra (with price)",
       change: "Change",
       total: "Total",
       addToCart: "Add to cart",
@@ -213,6 +214,7 @@ export function BuildYourOwnSetClient({
       optional: "اختياري",
       chooseItem: "اختر منتج",
       addExtra: "أضف إضافي",
+      addExtraWithPrice: "أضف إضافي (بسعر)",
       change: "تغيير",
       total: "المجموع",
       addToCart: "أضف إلى السلة",
@@ -405,7 +407,7 @@ export function BuildYourOwnSetClient({
                         <Plus className="h-6 w-6 text-gray-300" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-400">{t.addExtra}</p>
+                        <p className="font-medium text-gray-400">{t.addExtraWithPrice}</p>
                         <p className="text-xs text-gray-400">{t.optional}</p>
                       </div>
                     </button>

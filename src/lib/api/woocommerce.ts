@@ -313,7 +313,7 @@ export const getRelatedProductsByCategoryId = cache(async function getRelatedPro
   }
 });
 
-// Bundle Configuration API (from ASL Bundle Manager plugin)
+// Bundle Configuration API (from ASL Bundles Creator plugin)
 export interface BundleConfig {
   product_id: number;
   bundle_id?: number;

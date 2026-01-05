@@ -199,8 +199,8 @@
     },
     "products": "products"
   },
-    "bundleManager": {
-      "title": "Bundle Manager",
+    "bundlesCreator": {
+      "title": "Bundles Creator",
       "description": "Create and configure product bundles with advanced BOPO-style features",
       "bundleTitle": "Bundle title:",
       "bundleType": "Bundle type:",

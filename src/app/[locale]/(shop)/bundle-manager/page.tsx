@@ -20,7 +20,7 @@ export async function generateMetadata({
   const isRTL = locale === "ar";
 
   return generateSeoMetadata({
-    title: isRTL ? "مدير الحزم" : "Bundle Manager",
+    title: isRTL ? "منشئ الحزم" : "Bundles Creator",
     description: isRTL
       ? "إنشاء وإدارة حزم المنتجات مع خيارات التكوين المتقدمة"
       : "Create and manage product bundles with advanced configuration options",
@@ -43,7 +43,7 @@ export default async function BundleManagerPage({
       href: `/${locale}/shop`,
     },
     {
-      name: isRTL ? "مدير الحزم" : "Bundle Manager",
+      name: isRTL ? "منشئ الحزم" : "Bundles Creator",
       href: `/${locale}/bundle-manager`,
     },
   ];
@@ -67,7 +67,7 @@ export default async function BundleManagerPage({
 
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-          {isRTL ? "مدير الحزم" : "Bundle Manager"}
+          {isRTL ? "منشئ الحزم" : "Bundles Creator"}
         </h1>
         <p className="mt-2 text-gray-600">
           {isRTL
