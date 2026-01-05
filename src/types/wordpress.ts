@@ -34,6 +34,8 @@ export interface HeroSliderSettings {
   autoplay: boolean;
   autoplay_delay: number;
   loop: boolean;
+  hide_on_mobile?: boolean;
+  hide_on_desktop?: boolean;
 }
 
 // Banner Types
@@ -49,6 +51,7 @@ export interface BannersSettings {
   enabled: boolean;
   banners: Banner[];
   hide_on_mobile?: boolean;
+  hide_on_desktop?: boolean;
 }
 
 // Collection Types
@@ -65,6 +68,7 @@ export interface CollectionsSettings {
   section_subtitle?: string;
   collections: Collection[];
   hide_on_mobile?: boolean;
+  hide_on_desktop?: boolean;
 }
 
 // Product Section Types
@@ -76,6 +80,7 @@ export interface ProductSectionSettings {
   show_view_all: boolean;
   view_all_link?: string;
   hide_on_mobile?: boolean;
+  hide_on_desktop?: boolean;
 }
 
 // Category Section Types
@@ -86,6 +91,7 @@ export interface CategorySectionSettings {
   categories_count: number;
   show_view_all: boolean;
   hide_on_mobile?: boolean;
+  hide_on_desktop?: boolean;
 }
 
 // Featured Products Slider Types
@@ -97,6 +103,7 @@ export interface FeaturedProductsSettings {
   autoplay: boolean;
   autoplay_delay: number;
   hide_on_mobile?: boolean;
+  hide_on_desktop?: boolean;
 }
 
 // Site Settings Types

@@ -52,10 +52,22 @@ export function CollectionsSection({
     return null;
   }
 
-  const mobileHiddenClass = settings.hide_on_mobile ? "hidden md:block" : "";
+  // Handle visibility based on hide_on_mobile and hide_on_desktop settings
+  const getVisibilityClass = () => {
+    if (settings.hide_on_mobile && settings.hide_on_desktop) {
+      return "hidden"; // Hide on both
+    }
+    if (settings.hide_on_mobile) {
+      return "hidden md:block"; // Hide on mobile only
+    }
+    if (settings.hide_on_desktop) {
+      return "md:hidden"; // Hide on desktop only
+    }
+    return ""; // Show on both
+  };
 
   return (
-    <section className={`bg-white py-12 md:py-16 ${className} ${mobileHiddenClass}`}>
+    <section className={`bg-white py-12 md:py-16 ${className} ${getVisibilityClass()}`}>
       <div className="container mx-auto px-4">
         <div className="mb-8 text-center md:mb-10">
           <h2 className="mb-2 text-2xl font-bold text-amber-900 md:text-3xl">

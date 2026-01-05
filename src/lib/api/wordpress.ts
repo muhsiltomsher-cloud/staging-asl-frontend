@@ -32,6 +32,8 @@ interface WPPluginHeroSettings {
   autoplayDelay: number;
   loop: boolean;
   slides: WPPluginHeroSlide[];
+  hideOnMobile?: boolean;
+  hideOnDesktop?: boolean;
 }
 
 interface WPPluginBannerItem {
@@ -48,6 +50,7 @@ interface WPPluginBannersSettings {
   enabled: boolean;
   items: WPPluginBannerItem[];
   hideOnMobile?: boolean;
+  hideOnDesktop?: boolean;
 }
 
 interface WPPluginCollectionItem {
@@ -67,6 +70,7 @@ interface WPPluginCollectionsSettings {
   subtitleAr: string;
   items: WPPluginCollectionItem[];
   hideOnMobile?: boolean;
+  hideOnDesktop?: boolean;
 }
 
 interface WPPluginProductSectionSettings {
@@ -79,6 +83,7 @@ interface WPPluginProductSectionSettings {
   display?: string;
   autoplay?: boolean;
   hideOnMobile?: boolean;
+  hideOnDesktop?: boolean;
   responsive?: {
     desktop: number;
     tablet: number;
@@ -220,6 +225,8 @@ function transformHeroSettings(pluginHero: WPPluginHeroSettings): HeroSliderSett
     autoplay: pluginHero.autoplay,
     autoplay_delay: pluginHero.autoplayDelay,
     loop: pluginHero.loop,
+    hide_on_mobile: pluginHero.hideOnMobile,
+    hide_on_desktop: pluginHero.hideOnDesktop,
   };
 }
 
@@ -239,6 +246,7 @@ function transformBannersSettings(pluginBanners: WPPluginBannersSettings, locale
     enabled: pluginBanners.enabled,
     banners,
     hide_on_mobile: pluginBanners.hideOnMobile,
+    hide_on_desktop: pluginBanners.hideOnDesktop,
   };
 }
 
@@ -259,6 +267,7 @@ function transformCollectionsSettings(pluginCollections: WPPluginCollectionsSett
     section_subtitle: locale === "ar" && pluginCollections.subtitleAr ? pluginCollections.subtitleAr : pluginCollections.subtitle,
     collections,
     hide_on_mobile: pluginCollections.hideOnMobile,
+    hide_on_desktop: pluginCollections.hideOnDesktop,
   };
 }
 
@@ -272,6 +281,7 @@ function transformProductSectionSettings(pluginSection: WPPluginProductSectionSe
     show_view_all: true,
     view_all_link: "/shop",
     hide_on_mobile: pluginSection.hideOnMobile,
+    hide_on_desktop: pluginSection.hideOnDesktop,
   };
 }
 
@@ -284,6 +294,7 @@ function transformCategorySectionSettings(pluginSection: WPPluginProductSectionS
     categories_count: pluginSection.count,
     show_view_all: true,
     hide_on_mobile: pluginSection.hideOnMobile,
+    hide_on_desktop: pluginSection.hideOnDesktop,
   };
 }
 
@@ -297,6 +308,7 @@ function transformFeaturedProductsSettings(pluginSection: WPPluginProductSection
     autoplay: pluginSection.autoplay ?? true,
     autoplay_delay: 4000,
     hide_on_mobile: pluginSection.hideOnMobile,
+    hide_on_desktop: pluginSection.hideOnDesktop,
   };
 }
 

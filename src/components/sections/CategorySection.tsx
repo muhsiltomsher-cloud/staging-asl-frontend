@@ -74,10 +74,22 @@ export function CategorySection({
     return null;
   }
 
-  const mobileHiddenClass = settings.hide_on_mobile ? "hidden md:block" : "";
+  // Handle visibility based on hide_on_mobile and hide_on_desktop settings
+  const getVisibilityClass = () => {
+    if (settings.hide_on_mobile && settings.hide_on_desktop) {
+      return "hidden"; // Hide on both
+    }
+    if (settings.hide_on_mobile) {
+      return "hidden md:block"; // Hide on mobile only
+    }
+    if (settings.hide_on_desktop) {
+      return "md:hidden"; // Hide on desktop only
+    }
+    return ""; // Show on both
+  };
 
   return (
-    <section className={`bg-[#eae5d9] py-12 md:py-16 ${className} ${mobileHiddenClass}`}>
+    <section className={`bg-[#eae5d9] py-12 md:py-16 ${className} ${getVisibilityClass()}`}>
       <div className="container mx-auto px-4">
         <div className="mb-8 flex items-center justify-between md:mb-10">
           <div className="text-center w-full md:text-left md:w-auto">

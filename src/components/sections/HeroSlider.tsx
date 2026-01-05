@@ -20,6 +20,20 @@ export function HeroSlider({ settings }: HeroSliderProps) {
     return null;
   }
 
+  // Handle visibility based on hide_on_mobile and hide_on_desktop settings
+  const getVisibilityClass = () => {
+    if (settings.hide_on_mobile && settings.hide_on_desktop) {
+      return "hidden"; // Hide on both
+    }
+    if (settings.hide_on_mobile) {
+      return "hidden md:block"; // Hide on mobile only
+    }
+    if (settings.hide_on_desktop) {
+      return "md:hidden"; // Hide on desktop only
+    }
+    return ""; // Show on both
+  };
+
   const SlideContent = ({ slide, index }: { slide: HeroSliderSettings["slides"][0]; index: number }) => {
     const imageContent = (
       <div className="relative h-[50vh] min-h-[400px] w-full md:h-[70vh] md:min-h-[500px]">
@@ -62,7 +76,7 @@ export function HeroSlider({ settings }: HeroSliderProps) {
   };
 
   return (
-    <section className="relative w-full">
+    <section className={`relative w-full ${getVisibilityClass()}`}>
       <Swiper
         modules={[Autoplay, Pagination, Navigation, EffectFade]}
         effect="fade"

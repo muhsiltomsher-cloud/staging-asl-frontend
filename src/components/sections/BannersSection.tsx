@@ -48,7 +48,20 @@ export function BannersSection({
   }
 
   const bannerCount = settings.banners.length;
-  const mobileHiddenClass = settings.hide_on_mobile ? "hidden md:block" : "";
+
+  // Handle visibility based on hide_on_mobile and hide_on_desktop settings
+  const getVisibilityClass = () => {
+    if (settings.hide_on_mobile && settings.hide_on_desktop) {
+      return "hidden"; // Hide on both
+    }
+    if (settings.hide_on_mobile) {
+      return "hidden md:block"; // Hide on mobile only
+    }
+    if (settings.hide_on_desktop) {
+      return "md:hidden"; // Hide on desktop only
+    }
+    return ""; // Show on both
+  };
 
   const getGridClass = () => {
     if (bannerCount === 1) return "grid-cols-1";
@@ -58,7 +71,7 @@ export function BannersSection({
   };
 
   return (
-    <section className={`bg-white py-8 md:py-12 ${className} ${mobileHiddenClass}`}>
+    <section className={`bg-white py-8 md:py-12 ${className} ${getVisibilityClass()}`}>
       <div className="container mx-auto px-4">
         <div className={`grid gap-4 md:gap-6 ${getGridClass()}`}>
           {settings.banners.map((banner, index) => {
