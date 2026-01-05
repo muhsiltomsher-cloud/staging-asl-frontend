@@ -32,16 +32,22 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Arabic font styles - Noto Sans Arabic is a clean, modern Arabic font from Google */
-html[lang="ar"] body {
+/* Target the [lang="ar"] attribute on the wrapper div, not html element */
+[lang="ar"] {
   font-family: var(--font-noto-sans-arabic), Arial, Helvetica, sans-serif;
+  --font-sans: var(--font-noto-sans-arabic);
 }
 
-html[lang="ar"] h1,
-html[lang="ar"] h2,
-html[lang="ar"] h3,
-html[lang="ar"] h4,
-html[lang="ar"] h5,
-html[lang="ar"] h6 {
+[lang="ar"] * {
+  font-family: inherit;
+}
+
+[lang="ar"] h1,
+[lang="ar"] h2,
+[lang="ar"] h3,
+[lang="ar"] h4,
+[lang="ar"] h5,
+[lang="ar"] h6 {
   font-family: var(--font-noto-sans-arabic), Arial, Helvetica, sans-serif;
 }
 
