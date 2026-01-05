@@ -285,5 +285,285 @@
     "passwordsNotMatch": "Passwords do not match",
     "welcomeBack": "Welcome back",
     "logoutSuccess": "You have been logged out"
+  },
+  "pages": {
+    "terms": {
+      "title": "Terms & Conditions",
+      "subtitle": "Please read these terms and conditions carefully before using our website",
+      "lastUpdated": "Last Updated: December 2024",
+      "agreement": "By using our website, you agree to these terms and conditions",
+      "seo": {
+        "title": "Terms & Conditions",
+        "description": "Read the terms and conditions for using Aromatic Scents Lab website"
+      },
+      "sections": [
+        {
+          "title": "Acceptance of Terms",
+          "content": "By using the Aromatic Scents Lab website, you agree to be bound by these terms and conditions. If you do not agree to any part of these terms, please do not use our website or services."
+        },
+        {
+          "title": "Use of Website",
+          "content": "You are permitted to use this website for personal and non-commercial purposes only. You may not use the website for any unlawful or prohibited purpose under these terms. You may not copy, modify, distribute, or sell any content from this website without prior written permission."
+        },
+        {
+          "title": "User Accounts",
+          "content": "When creating an account, you must provide accurate and complete information. You are responsible for maintaining the confidentiality of your account information and password. You agree to notify us immediately of any unauthorized use of your account."
+        },
+        {
+          "title": "Products and Pricing",
+          "content": "We strive to display accurate information about our products and prices. However, errors may occur. We reserve the right to correct any errors and change prices without prior notice. All prices are displayed in Saudi Riyals unless otherwise stated."
+        },
+        {
+          "title": "Orders and Payment",
+          "content": "By placing an order, you are making an offer to purchase products. We reserve the right to accept or reject any order for any reason. Payment must be made in full before the order is shipped. We accept the payment methods specified on our website."
+        },
+        {
+          "title": "Shipping and Delivery",
+          "content": "Delivery times stated are estimates and are not guaranteed. We are not responsible for delays caused by circumstances beyond our control. Please review our shipping policy for detailed information."
+        },
+        {
+          "title": "Returns and Exchanges",
+          "content": "We accept returns in accordance with our return policy. Products must be in their original condition and unopened to qualify for return. Please review our return policy for full details."
+        },
+        {
+          "title": "Intellectual Property",
+          "content": "All content on this website, including text, images, logos, and trademarks, is the property of Aromatic Scents Lab or its licensors. Use of any content without prior written permission is prohibited."
+        },
+        {
+          "title": "Limitation of Liability",
+          "content": "We shall not be liable for any direct, indirect, incidental, or consequential damages arising from your use of our website or products. Our maximum liability is limited to the amount you paid for the product in question."
+        },
+        {
+          "title": "Governing Law",
+          "content": "These terms and conditions are governed by and construed in accordance with the laws of the Kingdom of Saudi Arabia. Any disputes arising from these terms shall be subject to the exclusive jurisdiction of the courts of Saudi Arabia."
+        },
+        {
+          "title": "Modifications",
+          "content": "We reserve the right to modify these terms and conditions at any time. Changes will become effective immediately upon posting on the website. Your continued use of the website after any changes constitutes acceptance of the modified terms."
+        },
+        {
+          "title": "Contact Us",
+          "content": "If you have any questions about these terms and conditions, please contact us at: legal@aromaticscentslab.com"
+        }
+      ]
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "subtitle": "We are committed to protecting your privacy and personal data",
+      "lastUpdated": "Last Updated: December 2024",
+      "contactCta": "If you have any questions or concerns, don't hesitate to contact us",
+      "seo": {
+        "title": "Privacy Policy",
+        "description": "Learn how Aromatic Scents Lab protects your privacy and personal data"
+      },
+      "sections": [
+        {
+          "title": "Information Collection",
+          "content": "We collect information you provide directly to us when you create an account, make a purchase, subscribe to our newsletter, or contact us. This information includes: name, email address, phone number, shipping and billing address, and payment information."
+        },
+        {
+          "title": "Use of Information",
+          "content": "We use the information we collect to process and manage your orders, communicate with you about your orders and our products and services, improve our website and services, send marketing communications (if you have opted in), and comply with legal obligations."
+        },
+        {
+          "title": "Information Sharing",
+          "content": "We do not sell or rent your personal information to third parties. We may share your information with service providers who help us operate our business (such as shipping companies and payment processors), only to the extent necessary to provide their services."
+        },
+        {
+          "title": "Data Security",
+          "content": "We take reasonable security measures to protect your personal information from unauthorized access, alteration, disclosure, or destruction. We use SSL encryption to protect data transmitted through our website."
+        },
+        {
+          "title": "Cookies",
+          "content": "We use cookies and similar technologies to improve your experience on our website, remember your preferences, and analyze how our website is used. You can control cookies through your browser settings."
+        },
+        {
+          "title": "Your Rights",
+          "content": "You have the right to access, correct, and delete your personal information. You can also unsubscribe from marketing communications at any time. To exercise any of these rights, please contact us."
+        },
+        {
+          "title": "Changes to This Policy",
+          "content": "We may update this privacy policy from time to time. We will notify you of any material changes by posting the new policy on our website and updating the 'Last Updated' date."
+        },
+        {
+          "title": "Contact Us",
+          "content": "If you have any questions about this privacy policy or our privacy practices, please contact us at: privacy@aromaticscentslab.com"
+        }
+      ]
+    },
+    "returns": {
+      "title": "Return & Exchange Policy",
+      "subtitle": "Your satisfaction is our priority. If you're not happy with your purchase, we're here to help",
+      "needHelp": "Need Help?",
+      "needHelpText": "Our customer service team is ready to help you with any return inquiries",
+      "seo": {
+        "title": "Return Policy",
+        "description": "Learn about Aromatic Scents Lab's return and exchange policy"
+      },
+      "features": [
+        {
+          "key": "14_day_returns",
+          "title": "14-Day Returns",
+          "description": "You can return products within 14 days of receipt"
+        },
+        {
+          "key": "easy_exchange",
+          "title": "Easy Exchange",
+          "description": "Exchange your product for another of equal or higher value"
+        },
+        {
+          "key": "full_refund",
+          "title": "Full Refund",
+          "description": "Full refund for unopened products"
+        },
+        {
+          "key": "simple_conditions",
+          "title": "Simple Conditions",
+          "description": "Clear and simple conditions for the return process"
+        }
+      ],
+      "processTitle": "Return Process",
+      "steps": [
+        {
+          "step": 1,
+          "title": "Contact Us",
+          "description": "Contact customer service via email or phone to initiate the return process"
+        },
+        {
+          "step": 2,
+          "title": "Get Return Number",
+          "description": "You will receive a Return Merchandise Authorization (RMA) number and shipping instructions"
+        },
+        {
+          "step": 3,
+          "title": "Ship the Product",
+          "description": "Pack the product securely and ship it to the specified address"
+        },
+        {
+          "step": 4,
+          "title": "Receive Refund",
+          "description": "After receiving and inspecting the product, your refund will be processed within 5-7 business days"
+        }
+      ],
+      "eligibleTitle": "Eligible for Return",
+      "eligibleItems": [
+        "Unopened products in their original packaging",
+        "Damaged or defective products upon receipt",
+        "Wrong products (different from order)",
+        "Returns within 14 days of receipt"
+      ],
+      "notEligibleTitle": "Not Eligible for Return",
+      "notEligibleItems": [
+        "Opened or used products",
+        "Products without original packaging",
+        "Samples and free gifts",
+        "Products purchased during final sales"
+      ]
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Answers to the most common questions about our products and services",
+      "notFound": "Didn't find your answer?",
+      "notFoundText": "Contact us and we'll be happy to help",
+      "seo": {
+        "title": "Frequently Asked Questions",
+        "description": "Answers to the most common questions about our products and services"
+      },
+      "items": [
+        {
+          "question": "What is your shipping policy?",
+          "answer": "We offer free shipping on orders over 200 SAR within Saudi Arabia. Orders are delivered within 2-5 business days. For international shipping, please contact us for pricing details and delivery times."
+        },
+        {
+          "question": "Can I return a product?",
+          "answer": "Yes, we accept returns within 14 days of receipt, provided the product is unopened and in its original condition. Please contact customer service to initiate a return."
+        },
+        {
+          "question": "How can I track my order?",
+          "answer": "After your order is shipped, you will receive an email with a tracking number and a link to track your shipment. You can also track your order through your account on our website."
+        },
+        {
+          "question": "What payment methods do you accept?",
+          "answer": "We accept credit cards (Visa, Mastercard), Mada, Apple Pay, and cash on delivery for orders within Saudi Arabia."
+        },
+        {
+          "question": "Are your products authentic?",
+          "answer": "Yes, all our products are 100% authentic and made from the finest natural ingredients. We guarantee the quality and authenticity of every product we offer."
+        },
+        {
+          "question": "How do I choose the right fragrance for me?",
+          "answer": "We recommend testing the fragrance on your skin before purchasing. You can request samples of our fragrances or visit one of our stores to try them. You can also contact our team for personalized recommendations based on your preferences."
+        },
+        {
+          "question": "Do you offer gift wrapping?",
+          "answer": "Yes, we offer complimentary luxury gift wrapping. You can select this service at checkout and add a personal message if desired."
+        },
+        {
+          "question": "How do I preserve my fragrance longer?",
+          "answer": "To maintain fragrance quality, store it in a cool, dry place away from direct sunlight. Close the cap tightly after each use and avoid exposing the fragrance to high temperatures."
+        }
+      ]
+    },
+    "contact": {
+      "title": "Contact Us",
+      "subtitle": "We're here to help. Reach out to us for any inquiries or feedback.",
+      "sendMessage": "Send us a Message",
+      "contactInfo": "Contact Information",
+      "mapPlaceholder": "Map Location",
+      "seo": {
+        "title": "Contact Us",
+        "description": "We're here to help. Reach out to us for any inquiries or feedback."
+      },
+      "info": {
+        "address": {
+          "title": "Address",
+          "content": "Riyadh, Saudi Arabia"
+        },
+        "phone": {
+          "title": "Phone",
+          "content": "+966 11 XXX XXXX"
+        },
+        "email": {
+          "title": "Email",
+          "content": "info@aromaticscentslab.com"
+        },
+        "hours": {
+          "title": "Working Hours",
+          "content": "Sat - Thu: 9 AM - 9 PM"
+        }
+      }
+    },
+    "shipping": {
+      "title": "Shipping Information",
+      "haveQuestions": "Have Questions?",
+      "haveQuestionsText": "Our customer service team is ready to help you with any shipping and delivery inquiries",
+      "contentUnavailable": "Content is not available at the moment",
+      "seo": {
+        "title": "Shipping Information",
+        "description": "Learn about Aromatic Scents Lab's shipping and delivery policy"
+      },
+      "sections": [
+        {
+          "key": "shipping_locations",
+          "title": "Shipping Locations",
+          "content": "We ship to all major cities within Saudi Arabia and select international destinations. Domestic orders are typically delivered within 2-5 business days, while international shipping times vary by location."
+        },
+        {
+          "key": "order_processing",
+          "title": "Order Processing Time",
+          "content": "Orders are processed within 1-2 business days. You will receive a confirmation email with tracking information once your order has been shipped."
+        },
+        {
+          "key": "shipping_rates",
+          "title": "Shipping Rates",
+          "content": "We offer free shipping on orders over 200 SAR within Saudi Arabia. For orders below this amount, a flat shipping fee applies. International shipping rates are calculated at checkout based on destination and package weight."
+        },
+        {
+          "key": "tracking",
+          "title": "Order Tracking",
+          "content": "Once your order is shipped, you will receive an email with a tracking number. You can use this number to track your package on our website or the carrier's website."
+        }
+      ]
+    }
   }
 }

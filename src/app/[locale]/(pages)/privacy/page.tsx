@@ -1,7 +1,6 @@
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
-import { getPageBySlug, stripHtmlTags } from "@/lib/api/wordpress";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 
@@ -13,27 +12,12 @@ export async function generateMetadata({
   params,
 }: PrivacyPageProps): Promise<Metadata> {
   const { locale } = await params;
-  const wpPage = await getPageBySlug("privacy-policy", locale as Locale);
-
-  if (wpPage) {
-    return generateSeoMetadata({
-      title: stripHtmlTags(wpPage.title.rendered),
-      description: wpPage.excerpt.rendered
-        ? stripHtmlTags(wpPage.excerpt.rendered).slice(0, 160)
-        : locale === "ar"
-          ? "تعرف على كيفية حماية أروماتيك سينتس لاب لخصوصيتك وبياناتك الشخصية"
-          : "Learn how Aromatic Scents Lab protects your privacy and personal data",
-      locale: locale as Locale,
-      pathname: "/privacy",
-    });
-  }
+  const dictionary = await getDictionary(locale as Locale);
+  const pageContent = dictionary.pages.privacy;
 
   return generateSeoMetadata({
-    title: locale === "ar" ? "سياسة الخصوصية" : "Privacy Policy",
-    description:
-      locale === "ar"
-        ? "تعرف على كيفية حماية أروماتيك سينتس لاب لخصوصيتك وبياناتك الشخصية"
-        : "Learn how Aromatic Scents Lab protects your privacy and personal data",
+    title: pageContent.seo.title,
+    description: pageContent.seo.description,
     locale: locale as Locale,
     pathname: "/privacy",
   });
@@ -42,114 +26,10 @@ export async function generateMetadata({
 export default async function PrivacyPage({ params }: PrivacyPageProps) {
   const { locale } = await params;
   const dictionary = await getDictionary(locale as Locale);
-  const isRTL = locale === "ar";
-
-  const wpPage = await getPageBySlug("privacy-policy", locale as Locale);
+  const pageContent = dictionary.pages.privacy;
 
   const breadcrumbItems = [
     { name: dictionary.footer.privacyPolicy, href: `/${locale}/privacy` },
-  ];
-
-  if (wpPage && wpPage.content.rendered) {
-    const pageTitle = stripHtmlTags(wpPage.title.rendered);
-
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
-
-        <div className="mb-12 text-center">
-          <h1 className="mb-4 text-4xl font-bold text-gray-900">{pageTitle}</h1>
-          {wpPage.excerpt.rendered && (
-            <p className="mx-auto max-w-2xl text-lg text-gray-600">
-              {stripHtmlTags(wpPage.excerpt.rendered)}
-            </p>
-          )}
-          <p className="mt-2 text-sm text-gray-500">
-            {isRTL ? "آخر تحديث: " : "Last Updated: "}
-            {new Date(wpPage.modified).toLocaleDateString(
-              isRTL ? "ar-SA" : "en-US",
-              {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              }
-            )}
-          </p>
-        </div>
-
-        <div className="mx-auto max-w-4xl">
-          <div
-            className="prose prose-amber max-w-none prose-headings:text-amber-900 prose-p:text-gray-700 prose-strong:text-amber-800 prose-li:text-gray-700 prose-a:text-amber-700 prose-a:underline hover:prose-a:text-amber-900"
-            dangerouslySetInnerHTML={{ __html: wpPage.content.rendered }}
-          />
-
-          <div className="mt-12 rounded-lg bg-gray-50 p-6 text-center">
-            <p className="text-gray-600">
-              {isRTL
-                ? "إذا كانت لديك أي أسئلة أو استفسارات، لا تتردد في التواصل معنا"
-                : "If you have any questions or concerns, don't hesitate to contact us"}
-            </p>
-            <a
-              href={`/${locale}/contact`}
-              className="mt-4 inline-flex items-center justify-center rounded-full bg-gray-900 px-6 py-2 text-sm font-medium text-white hover:bg-gray-800"
-            >
-              {isRTL ? "اتصل بنا" : "Contact Us"}
-            </a>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const sections = [
-    {
-      title: isRTL ? "جمع المعلومات" : "Information Collection",
-      content: isRTL
-        ? "نقوم بجمع المعلومات التي تقدمها لنا مباشرة عند إنشاء حساب، أو إجراء عملية شراء، أو الاشتراك في نشرتنا الإخبارية، أو التواصل معنا. تشمل هذه المعلومات: الاسم، عنوان البريد الإلكتروني، رقم الهاتف، عنوان الشحن والفوترة، ومعلومات الدفع."
-        : "We collect information you provide directly to us when you create an account, make a purchase, subscribe to our newsletter, or contact us. This information includes: name, email address, phone number, shipping and billing address, and payment information.",
-    },
-    {
-      title: isRTL ? "استخدام المعلومات" : "Use of Information",
-      content: isRTL
-        ? "نستخدم المعلومات التي نجمعها لمعالجة طلباتك وإدارتها، والتواصل معك بشأن طلباتك ومنتجاتنا وخدماتنا، وتحسين موقعنا وخدماتنا، وإرسال رسائل تسويقية (إذا وافقت على ذلك)، والامتثال للالتزامات القانونية."
-        : "We use the information we collect to process and manage your orders, communicate with you about your orders and our products and services, improve our website and services, send marketing communications (if you have opted in), and comply with legal obligations.",
-    },
-    {
-      title: isRTL ? "مشاركة المعلومات" : "Information Sharing",
-      content: isRTL
-        ? "لا نبيع أو نؤجر معلوماتك الشخصية لأطراف ثالثة. قد نشارك معلوماتك مع مزودي الخدمات الذين يساعدوننا في تشغيل أعمالنا (مثل شركات الشحن ومعالجي الدفع)، وذلك فقط بالقدر اللازم لتقديم خدماتهم."
-        : "We do not sell or rent your personal information to third parties. We may share your information with service providers who help us operate our business (such as shipping companies and payment processors), only to the extent necessary to provide their services.",
-    },
-    {
-      title: isRTL ? "أمان البيانات" : "Data Security",
-      content: isRTL
-        ? "نتخذ تدابير أمنية معقولة لحماية معلوماتك الشخصية من الوصول غير المصرح به أو التغيير أو الإفصاح أو التدمير. نستخدم تشفير SSL لحماية البيانات المنقولة عبر موقعنا."
-        : "We take reasonable security measures to protect your personal information from unauthorized access, alteration, disclosure, or destruction. We use SSL encryption to protect data transmitted through our website.",
-    },
-    {
-      title: isRTL ? "ملفات تعريف الارتباط" : "Cookies",
-      content: isRTL
-        ? "نستخدم ملفات تعريف الارتباط والتقنيات المشابهة لتحسين تجربتك على موقعنا، وتذكر تفضيلاتك، وتحليل كيفية استخدام موقعنا. يمكنك التحكم في ملفات تعريف الارتباط من خلال إعدادات متصفحك."
-        : "We use cookies and similar technologies to improve your experience on our website, remember your preferences, and analyze how our website is used. You can control cookies through your browser settings.",
-    },
-    {
-      title: isRTL ? "حقوقك" : "Your Rights",
-      content: isRTL
-        ? "لديك الحق في الوصول إلى معلوماتك الشخصية وتصحيحها وحذفها. يمكنك أيضاً إلغاء الاشتراك في الرسائل التسويقية في أي وقت. للممارسة أي من هذه الحقوق، يرجى التواصل معنا."
-        : "You have the right to access, correct, and delete your personal information. You can also unsubscribe from marketing communications at any time. To exercise any of these rights, please contact us.",
-    },
-    {
-      title: isRTL ? "التغييرات على هذه السياسة" : "Changes to This Policy",
-      content: isRTL
-        ? "قد نقوم بتحديث سياسة الخصوصية هذه من وقت لآخر. سنقوم بإخطارك بأي تغييرات جوهرية عن طريق نشر السياسة الجديدة على موقعنا وتحديث تاريخ 'آخر تحديث'."
-        : "We may update this privacy policy from time to time. We will notify you of any material changes by posting the new policy on our website and updating the 'Last Updated' date.",
-    },
-    {
-      title: isRTL ? "اتصل بنا" : "Contact Us",
-      content: isRTL
-        ? "إذا كانت لديك أي أسئلة حول سياسة الخصوصية هذه أو ممارساتنا المتعلقة بالخصوصية، يرجى التواصل معنا عبر البريد الإلكتروني: privacy@aromaticscentslab.com"
-        : "If you have any questions about this privacy policy or our privacy practices, please contact us at: privacy@aromaticscentslab.com",
-    },
   ];
 
   return (
@@ -158,21 +38,19 @@ export default async function PrivacyPage({ params }: PrivacyPageProps) {
 
       <div className="mb-12 text-center">
         <h1 className="mb-4 text-4xl font-bold text-gray-900">
-          {isRTL ? "سياسة الخصوصية" : "Privacy Policy"}
+          {pageContent.title}
         </h1>
         <p className="mx-auto max-w-2xl text-lg text-gray-600">
-          {isRTL
-            ? "نحن ملتزمون بحماية خصوصيتك وبياناتك الشخصية"
-            : "We are committed to protecting your privacy and personal data"}
+          {pageContent.subtitle}
         </p>
         <p className="mt-2 text-sm text-gray-500">
-          {isRTL ? "آخر تحديث: ديسمبر 2024" : "Last Updated: December 2024"}
+          {pageContent.lastUpdated}
         </p>
       </div>
 
       <div className="mx-auto max-w-4xl">
         <div className="space-y-8">
-          {sections.map((section, index) => (
+          {pageContent.sections.map((section, index) => (
             <section key={index} className="rounded-lg border bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-xl font-semibold text-gray-900">
                 {index + 1}. {section.title}
@@ -184,15 +62,13 @@ export default async function PrivacyPage({ params }: PrivacyPageProps) {
 
         <div className="mt-12 rounded-lg bg-gray-50 p-6 text-center">
           <p className="text-gray-600">
-            {isRTL
-              ? "إذا كانت لديك أي أسئلة أو استفسارات، لا تتردد في التواصل معنا"
-              : "If you have any questions or concerns, don't hesitate to contact us"}
+            {pageContent.contactCta}
           </p>
           <a
             href={`/${locale}/contact`}
             className="mt-4 inline-flex items-center justify-center rounded-full bg-gray-900 px-6 py-2 text-sm font-medium text-white hover:bg-gray-800"
           >
-            {isRTL ? "اتصل بنا" : "Contact Us"}
+            {dictionary.common.contact}
           </a>
         </div>
       </div>
