@@ -17,7 +17,15 @@ if (defined('ASL_FRONTEND_SETTINGS_LOADED')) {
     return;
 }
 define('ASL_FRONTEND_SETTINGS_LOADED', true);
-define('ASL_SETTINGS_VERSION', '5.0.0');
+define('ASL_SETTINGS_VERSION', '5.1.0');
+
+function asl_sanitize_link($url) {
+    if (empty($url)) return '';
+    if (strpos($url, '/') === 0) {
+        return sanitize_text_field($url);
+    }
+    return esc_url_raw($url);
+}
 
 add_action('admin_enqueue_scripts', function($hook) {
     if (strpos($hook, 'asl-settings') === false) return;
@@ -107,7 +115,7 @@ function asl_render_hero_tab() {
             <table class="form-table">
                 <tr><th>Desktop Image</th><td><?php asl_image_field("asl_hero_slides[{$i}][image]",$s['image']??''); ?></td></tr>
                 <tr><th>Mobile Image</th><td><?php asl_image_field("asl_hero_slides[{$i}][mobile]",$s['mobile']??''); ?></td></tr>
-                <tr><th>Link URL</th><td><input type="url" name="asl_hero_slides[<?php echo $i; ?>][link]" value="<?php echo esc_url($s['link']??''); ?>" class="large-text"></td></tr>
+                <tr><th>Link URL</th><td><input type="text" name="asl_hero_slides[<?php echo $i; ?>][link]" value="<?php echo esc_attr($s['link']??''); ?>" class="large-text" placeholder="/shop or https://example.com"></td></tr>
             </table>
         </div>
         <?php endforeach; ?>
@@ -187,7 +195,7 @@ function asl_render_collections_tab() {
                 <tr><th>Title (AR)</th><td><input type="text" name="asl_collections_items[<?php echo $i; ?>][title_ar]" value="<?php echo esc_attr($item['title_ar']??''); ?>" class="regular-text" dir="rtl"></td></tr>
                 <tr><th>Description (EN)</th><td><textarea name="asl_collections_items[<?php echo $i; ?>][description]" class="large-text" rows="2"><?php echo esc_textarea($item['description']??''); ?></textarea></td></tr>
                 <tr><th>Description (AR)</th><td><textarea name="asl_collections_items[<?php echo $i; ?>][description_ar]" class="large-text" rows="2" dir="rtl"><?php echo esc_textarea($item['description_ar']??''); ?></textarea></td></tr>
-                <tr><th>Link</th><td><input type="url" name="asl_collections_items[<?php echo $i; ?>][link]" value="<?php echo esc_url($item['link']??''); ?>" class="large-text"></td></tr>
+                <tr><th>Link</th><td><input type="text" name="asl_collections_items[<?php echo $i; ?>][link]" value="<?php echo esc_attr($item['link']??''); ?>" class="large-text" placeholder="/shop or https://example.com"></td></tr>
             </table>
         </div>
         <?php endforeach; ?>
@@ -227,7 +235,7 @@ function asl_render_banners_tab() {
                 <tr><th>Title (AR)</th><td><input type="text" name="asl_banners_items[<?php echo $i; ?>][title_ar]" value="<?php echo esc_attr($item['title_ar']??''); ?>" class="regular-text" dir="rtl"></td></tr>
                 <tr><th>Subtitle (EN)</th><td><input type="text" name="asl_banners_items[<?php echo $i; ?>][subtitle]" value="<?php echo esc_attr($item['subtitle']??''); ?>" class="regular-text"></td></tr>
                 <tr><th>Subtitle (AR)</th><td><input type="text" name="asl_banners_items[<?php echo $i; ?>][subtitle_ar]" value="<?php echo esc_attr($item['subtitle_ar']??''); ?>" class="regular-text" dir="rtl"></td></tr>
-                <tr><th>Link</th><td><input type="url" name="asl_banners_items[<?php echo $i; ?>][link]" value="<?php echo esc_url($item['link']??''); ?>" class="large-text"></td></tr>
+                <tr><th>Link</th><td><input type="text" name="asl_banners_items[<?php echo $i; ?>][link]" value="<?php echo esc_attr($item['link']??''); ?>" class="large-text" placeholder="/shop or https://example.com"></td></tr>
             </table>
         </div>
         <?php endforeach; ?>
@@ -258,7 +266,7 @@ function asl_render_header_page() {
                     <tr><th>Enable</th><td><label><input type="checkbox" name="asl_topbar_enabled" value="1" <?php checked(get_theme_mod('asl_topbar_enabled',true)); ?>> Show</label></td></tr>
                     <tr><th>Text (EN)</th><td><input type="text" name="asl_topbar_text" value="<?php echo esc_attr(get_theme_mod('asl_topbar_text','Free shipping on orders over 200 SAR')); ?>" class="large-text"></td></tr>
                     <tr><th>Text (AR)</th><td><input type="text" name="asl_topbar_text_ar" value="<?php echo esc_attr(get_theme_mod('asl_topbar_text_ar','')); ?>" class="large-text" dir="rtl"></td></tr>
-                    <tr><th>Link</th><td><input type="url" name="asl_topbar_link" value="<?php echo esc_url(get_theme_mod('asl_topbar_link','')); ?>" class="large-text"></td></tr>
+                    <tr><th>Link</th><td><input type="text" name="asl_topbar_link" value="<?php echo esc_attr(get_theme_mod('asl_topbar_link','')); ?>" class="large-text" placeholder="/shop or https://example.com"></td></tr>
                     <tr><th>BG Color</th><td><input type="text" name="asl_topbar_bg_color" value="<?php echo esc_attr(get_theme_mod('asl_topbar_bg_color','#f3f4f6')); ?>" class="regular-text"></td></tr>
                     <tr><th>Text Color</th><td><input type="text" name="asl_topbar_text_color" value="<?php echo esc_attr(get_theme_mod('asl_topbar_text_color','#4b5563')); ?>" class="regular-text"></td></tr>
                     <tr><th>Dismissible</th><td><label><input type="checkbox" name="asl_topbar_dismissible" value="1" <?php checked(get_theme_mod('asl_topbar_dismissible',false)); ?>> Allow dismiss</label></td></tr>
@@ -344,7 +352,7 @@ function asl_save_home_settings() {
     $slides = array();
     if (isset($_POST['asl_hero_slides']) && is_array($_POST['asl_hero_slides'])) {
         foreach ($_POST['asl_hero_slides'] as $s) {
-            $slides[] = array('image'=>esc_url_raw($s['image']??''),'mobile'=>esc_url_raw($s['mobile']??''),'link'=>esc_url_raw($s['link']??''));
+            $slides[] = array('image'=>esc_url_raw($s['image']??''),'mobile'=>esc_url_raw($s['mobile']??''),'link'=>asl_sanitize_link($s['link']??''));
         }
     }
     set_theme_mod('asl_hero_slides', $slides);
@@ -384,7 +392,7 @@ function asl_save_home_settings() {
     $collections = array();
     if (isset($_POST['asl_collections_items']) && is_array($_POST['asl_collections_items'])) {
         foreach ($_POST['asl_collections_items'] as $item) {
-            $collections[] = array('image'=>esc_url_raw($item['image']??''),'title'=>sanitize_text_field($item['title']??''),'title_ar'=>sanitize_text_field($item['title_ar']??''),'description'=>sanitize_textarea_field($item['description']??''),'description_ar'=>sanitize_textarea_field($item['description_ar']??''),'link'=>esc_url_raw($item['link']??''));
+            $collections[] = array('image'=>esc_url_raw($item['image']??''),'title'=>sanitize_text_field($item['title']??''),'title_ar'=>sanitize_text_field($item['title_ar']??''),'description'=>sanitize_textarea_field($item['description']??''),'description_ar'=>sanitize_textarea_field($item['description_ar']??''),'link'=>asl_sanitize_link($item['link']??''));
         }
     }
     set_theme_mod('asl_collections_items', $collections);
@@ -398,7 +406,7 @@ function asl_save_home_settings() {
     $banners = array();
     if (isset($_POST['asl_banners_items']) && is_array($_POST['asl_banners_items'])) {
         foreach ($_POST['asl_banners_items'] as $item) {
-            $banners[] = array('image'=>esc_url_raw($item['image']??''),'mobile'=>esc_url_raw($item['mobile']??''),'title'=>sanitize_text_field($item['title']??''),'title_ar'=>sanitize_text_field($item['title_ar']??''),'subtitle'=>sanitize_text_field($item['subtitle']??''),'subtitle_ar'=>sanitize_text_field($item['subtitle_ar']??''),'link'=>esc_url_raw($item['link']??''));
+            $banners[] = array('image'=>esc_url_raw($item['image']??''),'mobile'=>esc_url_raw($item['mobile']??''),'title'=>sanitize_text_field($item['title']??''),'title_ar'=>sanitize_text_field($item['title_ar']??''),'subtitle'=>sanitize_text_field($item['subtitle']??''),'subtitle_ar'=>sanitize_text_field($item['subtitle_ar']??''),'link'=>asl_sanitize_link($item['link']??''));
         }
     }
     set_theme_mod('asl_banners_items', $banners);
@@ -411,7 +419,7 @@ function asl_save_header_settings() {
     set_theme_mod('asl_topbar_enabled', isset($_POST['asl_topbar_enabled']));
     set_theme_mod('asl_topbar_text', sanitize_text_field($_POST['asl_topbar_text']??''));
     set_theme_mod('asl_topbar_text_ar', sanitize_text_field($_POST['asl_topbar_text_ar']??''));
-    set_theme_mod('asl_topbar_link', esc_url_raw($_POST['asl_topbar_link']??''));
+    set_theme_mod('asl_topbar_link', asl_sanitize_link($_POST['asl_topbar_link']??''));
     set_theme_mod('asl_topbar_bg_color', sanitize_hex_color($_POST['asl_topbar_bg_color']??'#f3f4f6'));
     set_theme_mod('asl_topbar_text_color', sanitize_hex_color($_POST['asl_topbar_text_color']??'#4b5563'));
     set_theme_mod('asl_topbar_dismissible', isset($_POST['asl_topbar_dismissible']));
