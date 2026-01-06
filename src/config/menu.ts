@@ -129,13 +129,23 @@ export function getDynamicNavigationItems(
   locale: Locale
 ): DynamicNavigationItem[] {
   if (!menuItems || menuItems.length === 0) {
-    return getNavigationItems(locale);
+    return navigationItems.map((item, index) => ({
+      id: index + 1,
+      name: item.name[locale],
+      href: `/${locale}${item.href}`,
+      hasMegaMenu: item.hasMegaMenu ?? false,
+    }));
   }
   
   const topLevelItems = menuItems.filter((item) => item.parent === 0);
   
   if (topLevelItems.length === 0) {
-    return getNavigationItems(locale);
+    return navigationItems.map((item, index) => ({
+      id: index + 1,
+      name: item.name[locale],
+      href: `/${locale}${item.href}`,
+      hasMegaMenu: item.hasMegaMenu ?? false,
+    }));
   }
   
   return topLevelItems.map((item) => ({

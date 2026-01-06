@@ -3,6 +3,7 @@ import type {
   HomePageACF,
   SiteSettings,
   WPMenu,
+  WPMenuItem,
   HeroSliderSettings,
   ProductSectionSettings,
   CategorySectionSettings,
