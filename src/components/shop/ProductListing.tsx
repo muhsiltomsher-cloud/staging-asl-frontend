@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useReducer, useMemo } from "react";
+import { useState, useCallback, useMemo, useSyncExternalStore } from "react";
 import { WCProductGrid } from "./WCProductGrid";
 import { WCProductListCard } from "./WCProductListCard";
 import { ProductViewToggle, type ViewMode, type GridColumns, type SortOption } from "./ProductViewToggle";
@@ -10,6 +10,7 @@ import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 
 const STORAGE_KEY = "asl_product_view_preference";
+const PREFERENCE_CHANGE_EVENT = "asl_preference_change";
 
 function getProductPrice(product: WCProduct): number {
   const priceStr = product.prices?.price || "0";
@@ -66,11 +67,7 @@ const DEFAULT_PREFERENCE: ViewPreference = {
   gridColumns: 5,
 };
 
-function getInitialPreference(): ViewPreference {
-  if (typeof window === "undefined") {
-    return DEFAULT_PREFERENCE;
-  }
-  
+function getPreferenceSnapshot(): ViewPreference {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -85,15 +82,34 @@ function getInitialPreference(): ViewPreference {
   } catch {
     // Ignore localStorage errors
   }
-  
   return DEFAULT_PREFERENCE;
 }
 
-function savePreference(preference: ViewPreference): void {
-  if (typeof window === "undefined") return;
+function getServerSnapshot(): ViewPreference {
+  return DEFAULT_PREFERENCE;
+}
+
+function subscribeToPreference(callback: () => void): () => void {
+  const handleStorageChange = (e: StorageEvent) => {
+    if (e.key === STORAGE_KEY) {
+      callback();
+    }
+  };
+  const handlePreferenceChange = () => callback();
   
+  window.addEventListener("storage", handleStorageChange);
+  window.addEventListener(PREFERENCE_CHANGE_EVENT, handlePreferenceChange);
+  
+  return () => {
+    window.removeEventListener("storage", handleStorageChange);
+    window.removeEventListener(PREFERENCE_CHANGE_EVENT, handlePreferenceChange);
+  };
+}
+
+function savePreference(preference: ViewPreference): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(preference));
+    window.dispatchEvent(new Event(PREFERENCE_CHANGE_EVENT));
   } catch {
     // Ignore localStorage errors
   }
@@ -107,10 +123,12 @@ export function ProductListing({
   showToolbar = true,
   toolbarClassName,
 }: ProductListingProps) {
-  const [preference, setPreference] = useState<ViewPreference>(() => getInitialPreference());
+  const preference = useSyncExternalStore(
+    subscribeToPreference,
+    getPreferenceSnapshot,
+    getServerSnapshot
+  );
   const [sortBy, setSortBy] = useState<SortOption>("default");
-  const [, forceUpdate] = useReducer(x => x + 1, 0);
-  const isHydrated = typeof window !== "undefined";
 
   const viewMode = preference.viewMode;
   const gridColumns = preference.gridColumns;
@@ -119,16 +137,12 @@ export function ProductListing({
 
   const handleViewModeChange = useCallback((mode: ViewMode) => {
     const newPreference = { viewMode: mode, gridColumns };
-    setPreference(newPreference);
     savePreference(newPreference);
-    forceUpdate();
   }, [gridColumns]);
 
   const handleGridColumnsChange = useCallback((columns: GridColumns) => {
     const newPreference = { viewMode, gridColumns: columns };
-    setPreference(newPreference);
     savePreference(newPreference);
-    forceUpdate();
   }, [viewMode]);
 
   const handleSortChange = useCallback((sort: SortOption) => {
@@ -166,9 +180,7 @@ export function ProductListing({
         </div>
       )}
 
-      {!isHydrated ? (
-        <ProductGridSkeleton count={10} />
-      ) : viewMode === "grid" ? (
+      {viewMode === "grid" ? (
         <WCProductGrid
           products={sortedProducts}
           locale={locale}
