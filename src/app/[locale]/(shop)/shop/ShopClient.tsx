@@ -38,6 +38,7 @@ interface ShopClientProps {
   locale: Locale;
   initialTotal?: number;
   initialTotalPages?: number;
+  giftProductIds?: number[];
 }
 
 export function ShopClient({ 
@@ -45,6 +46,7 @@ export function ShopClient({
   locale,
   initialTotal = 0,
   initialTotalPages = 1,
+  giftProductIds = [],
 }: ShopClientProps) {
   const [products, setProducts] = useState<WCProduct[]>(initialProducts);
   const [isLoading, setIsLoading] = useState(false);
@@ -82,7 +84,12 @@ export function ShopClient({
       if (data.products.length === 0) {
         setHasMore(false);
       } else {
-        const newProducts = [...products, ...data.products];
+        // Filter out gift products from the fetched data
+        const filteredNewProducts = data.products.filter(
+          (product: WCProduct) => !giftProductIds.includes(product.id)
+        );
+        
+        const newProducts = [...products, ...filteredNewProducts];
         const uniqueProducts = newProducts.filter(
           (product, index, self) =>
             index === self.findIndex((p) => p.id === product.id)
@@ -90,17 +97,19 @@ export function ShopClient({
         
         setProducts(uniqueProducts);
         setCurrentPage(nextPage);
-        setTotal(data.total);
-        setHasMore(uniqueProducts.length < data.total);
+        // Adjust total to account for filtered gift products
+        const adjustedTotal = data.total - (data.products.length - filteredNewProducts.length);
+        setTotal(adjustedTotal);
+        setHasMore(uniqueProducts.length < adjustedTotal);
         
-        setCachedProducts(uniqueProducts, data.total, data.totalPages, locale);
+        setCachedProducts(uniqueProducts, adjustedTotal, data.totalPages, locale);
       }
     } catch (error) {
       console.error("Error loading more products:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, hasMore, currentPage, products, locale]);
+  }, [isLoading, hasMore, currentPage, products, locale, giftProductIds]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(

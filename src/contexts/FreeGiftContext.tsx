@@ -30,6 +30,7 @@ interface FreeGiftContextType {
   freeGiftItemKey: string | null;
   isFreeGiftItem: (itemKey: string) => boolean;
   isFreeGiftProduct: (productId: number) => boolean;
+  getFreeGiftProductIds: () => number[];
   refreshRules: () => Promise<void>;
 }
 
@@ -38,7 +39,7 @@ const FreeGiftContext = createContext<FreeGiftContextType | undefined>(undefined
 const FREE_GIFT_ITEM_DATA_KEY = "_asl_free_gift";
 
 export function FreeGiftProvider({ children }: { children: React.ReactNode }) {
-  const { cart, cartItems, cartSubtotal, addToCart, removeCartItem } = useCart();
+  const { cart, cartItems, cartSubtotal, addToCart, removeCartItem, updateCartItem } = useCart();
   const { currency } = useCurrency();
   const [rules, setRules] = useState<FreeGiftRule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -73,21 +74,44 @@ export function FreeGiftProvider({ children }: { children: React.ReactNode }) {
   const isFreeGiftItem = useCallback((itemKey: string): boolean => {
     const item = cartItems.find((i) => i.item_key === itemKey);
     if (!item) return false;
-    return item.cart_item_data?.[FREE_GIFT_ITEM_DATA_KEY] === true;
-  }, [cartItems]);
+    
+    // Primary check: cart_item_data flag (if CoCart preserves it)
+    if (item.cart_item_data?.[FREE_GIFT_ITEM_DATA_KEY] === true) {
+      return true;
+    }
+    
+    // Fallback check: product ID is in gift rules AND price is 0 (free)
+    const isGiftProduct = rules.some((rule) => rule.product_id === item.id);
+    const isFreePrice = parseFloat(item.price) === 0;
+    
+    return isGiftProduct && isFreePrice;
+  }, [cartItems, rules]);
 
   const isFreeGiftProduct = useCallback((productId: number): boolean => {
     return rules.some((rule) => rule.product_id === productId);
   }, [rules]);
 
+  const getFreeGiftProductIds = useCallback((): number[] => {
+    return rules.map((rule) => rule.product_id);
+  }, [rules]);
+
   const findExistingFreeGiftItem = useCallback(() => {
     for (const item of cartItems) {
+      // Primary check: cart_item_data flag (if CoCart preserves it)
       if (item.cart_item_data?.[FREE_GIFT_ITEM_DATA_KEY] === true) {
+        return item;
+      }
+      
+      // Fallback check: product ID is in gift rules AND price is 0 (free)
+      const isGiftProduct = rules.some((rule) => rule.product_id === item.id);
+      const isFreePrice = parseFloat(item.price) === 0;
+      
+      if (isGiftProduct && isFreePrice) {
         return item;
       }
     }
     return null;
-  }, [cartItems]);
+  }, [cartItems, rules]);
 
   const findMatchingRule = useCallback((subtotalValue: number): FreeGiftRule | null => {
     const matchingRules = rules.filter(
@@ -202,6 +226,41 @@ export function FreeGiftProvider({ children }: { children: React.ReactNode }) {
     }
   }, [cartItems, rules, findExistingFreeGiftItem]);
 
+  // Enforce quantity = 1 for free gift items
+  // This handles cases where the gift was added multiple times before the fix
+  const lastCorrectedGiftKeyRef = useRef<string | null>(null);
+  
+  useEffect(() => {
+    const enforceGiftQuantity = async () => {
+      if (isProcessingRef.current) return;
+      if (rules.length === 0) return;
+      
+      const existingFreeGift = findExistingFreeGiftItem();
+      
+      // If gift exists with quantity > 1, correct it to 1
+      if (existingFreeGift && existingFreeGift.quantity.value > 1) {
+        // Prevent repeated corrections for the same item
+        if (lastCorrectedGiftKeyRef.current === existingFreeGift.item_key) {
+          return;
+        }
+        
+        isProcessingRef.current = true;
+        lastCorrectedGiftKeyRef.current = existingFreeGift.item_key;
+        
+        try {
+          await updateCartItem(existingFreeGift.item_key, 1);
+        } catch (error) {
+          console.error("Failed to correct gift quantity:", error);
+        } finally {
+          isProcessingRef.current = false;
+        }
+      }
+    };
+    
+    const timeoutId = setTimeout(enforceGiftQuantity, 600);
+    return () => clearTimeout(timeoutId);
+  }, [cartItems, rules, findExistingFreeGiftItem, updateCartItem]);
+
   return (
     <FreeGiftContext.Provider
       value={{
@@ -211,6 +270,7 @@ export function FreeGiftProvider({ children }: { children: React.ReactNode }) {
         freeGiftItemKey,
         isFreeGiftItem,
         isFreeGiftProduct,
+        getFreeGiftProductIds,
         refreshRules: fetchRules,
       }}
     >
