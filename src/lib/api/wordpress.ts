@@ -238,8 +238,8 @@ function transformBannersSettings(pluginBanners: WPPluginBannersSettings, locale
       image: createWPImage(item.image, item.title || `Banner ${index + 1}`) as WPImage,
       mobile_image: createWPImage(item.mobileImage, item.title || `Banner ${index + 1} Mobile`) || undefined,
       link: createWPLink(item.link, item.title),
-      title: locale === "ar" && item.titleAr ? item.titleAr : item.title,
-      subtitle: locale === "ar" && item.subtitleAr ? item.subtitleAr : item.subtitle,
+      title: locale === "ar" ? (item.titleAr || "") : item.title,
+      subtitle: locale === "ar" ? (item.subtitleAr || "") : item.subtitle,
     }));
 
   return {
@@ -255,16 +255,16 @@ function transformCollectionsSettings(pluginCollections: WPPluginCollectionsSett
   const collections: Collection[] = pluginCollections.items
     .filter(item => item.image || item.title)
     .map((item, index) => ({
-      title: locale === "ar" && item.titleAr ? item.titleAr : item.title,
-      description: locale === "ar" && item.descriptionAr ? item.descriptionAr : item.description,
+      title: locale === "ar" ? (item.titleAr || "") : item.title,
+      description: locale === "ar" ? (item.descriptionAr || "") : item.description,
       image: createWPImage(item.image, item.title || `Collection ${index + 1}`) as WPImage,
       link: createWPLink(item.link, item.title) as WPLink,
     }));
 
   return {
     enabled: pluginCollections.enabled,
-    section_title: locale === "ar" && pluginCollections.titleAr ? pluginCollections.titleAr : pluginCollections.title,
-    section_subtitle: locale === "ar" && pluginCollections.subtitleAr ? pluginCollections.subtitleAr : pluginCollections.subtitle,
+    section_title: locale === "ar" ? (pluginCollections.titleAr || "") : pluginCollections.title,
+    section_subtitle: locale === "ar" ? (pluginCollections.subtitleAr || "") : pluginCollections.subtitle,
     collections,
     hide_on_mobile: pluginCollections.hideOnMobile,
     hide_on_desktop: pluginCollections.hideOnDesktop,
@@ -272,11 +272,13 @@ function transformCollectionsSettings(pluginCollections: WPPluginCollectionsSett
 }
 
 // Transform WordPress Plugin product section settings to frontend format
+// When locale is Arabic, use Arabic fields if available, otherwise return empty string
+// to allow the page component to fall back to translation files
 function transformProductSectionSettings(pluginSection: WPPluginProductSectionSettings, locale?: Locale): ProductSectionSettings {
   return {
     enabled: pluginSection.enabled,
-    section_title: locale === "ar" && pluginSection.titleAr ? pluginSection.titleAr : pluginSection.title,
-    section_subtitle: locale === "ar" && pluginSection.subtitleAr ? pluginSection.subtitleAr : pluginSection.subtitle,
+    section_title: locale === "ar" ? (pluginSection.titleAr || "") : pluginSection.title,
+    section_subtitle: locale === "ar" ? (pluginSection.subtitleAr || "") : pluginSection.subtitle,
     products_count: pluginSection.count,
     show_view_all: true,
     view_all_link: "/shop",
@@ -289,8 +291,8 @@ function transformProductSectionSettings(pluginSection: WPPluginProductSectionSe
 function transformCategorySectionSettings(pluginSection: WPPluginProductSectionSettings, locale?: Locale): CategorySectionSettings {
   return {
     enabled: pluginSection.enabled,
-    section_title: locale === "ar" && pluginSection.titleAr ? pluginSection.titleAr : pluginSection.title,
-    section_subtitle: locale === "ar" && pluginSection.subtitleAr ? pluginSection.subtitleAr : pluginSection.subtitle,
+    section_title: locale === "ar" ? (pluginSection.titleAr || "") : pluginSection.title,
+    section_subtitle: locale === "ar" ? (pluginSection.subtitleAr || "") : pluginSection.subtitle,
     categories_count: pluginSection.count,
     show_view_all: true,
     hide_on_mobile: pluginSection.hideOnMobile,
@@ -302,8 +304,8 @@ function transformCategorySectionSettings(pluginSection: WPPluginProductSectionS
 function transformFeaturedProductsSettings(pluginSection: WPPluginProductSectionSettings, locale?: Locale): FeaturedProductsSettings {
   return {
     enabled: pluginSection.enabled,
-    section_title: locale === "ar" && pluginSection.titleAr ? pluginSection.titleAr : pluginSection.title,
-    section_subtitle: locale === "ar" && pluginSection.subtitleAr ? pluginSection.subtitleAr : pluginSection.subtitle,
+    section_title: locale === "ar" ? (pluginSection.titleAr || "") : pluginSection.title,
+    section_subtitle: locale === "ar" ? (pluginSection.subtitleAr || "") : pluginSection.subtitle,
     products_count: pluginSection.count,
     autoplay: pluginSection.autoplay ?? true,
     autoplay_delay: 4000,
