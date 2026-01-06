@@ -148,6 +148,11 @@ export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherP
                       )}>
                         {curr.code}
                       </p>
+                      {curr.rateFromAED !== 1 && (
+                        <p className="text-xs text-gray-500">
+                          1 AED = {curr.rateFromAED} {curr.code}
+                        </p>
+                      )}
                     </div>
                     {currency === curr.code && (
                       <Check className="h-3.5 w-3.5 text-[#7a3205]" />
