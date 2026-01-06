@@ -519,10 +519,10 @@
           "title": "Address",
           "content": "Riyadh, Saudi Arabia"
         },
-        "phone": {
-          "title": "Phone",
-          "content": "+966 11 XXX XXXX"
-        },
+                "phone": {
+                  "title": "Phone",
+                  "content": "+966 11 123 4567"
+                },
         "email": {
           "title": "Email",
           "content": "info@aromaticscentslab.com"

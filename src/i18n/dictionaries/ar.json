@@ -519,10 +519,10 @@
           "title": "العنوان",
           "content": "الرياض، المملكة العربية السعودية"
         },
-        "phone": {
-          "title": "الهاتف",
-          "content": "+966 11 XXX XXXX"
-        },
+                "phone": {
+                  "title": "الهاتف",
+                  "content": "+966 11 123 4567"
+                },
         "email": {
           "title": "البريد الإلكتروني",
           "content": "info@aromaticscentslab.com"
