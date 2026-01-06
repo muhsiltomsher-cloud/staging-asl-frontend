@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Check, X, Coins } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { currencies, type Currency } from "@/config/site";
+import { type Currency } from "@/config/site";
 import { cn } from "@/lib/utils";
 
 interface CurrencySwitcherProps {
@@ -13,7 +13,7 @@ interface CurrencySwitcherProps {
 }
 
 export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherProps) {
-  const { currency, setCurrency } = useCurrency();
+  const { currency, setCurrency, currencies } = useCurrency();
   const [isOpen, setIsOpen] = useState(false);
   const isRTL = locale === "ar";
 

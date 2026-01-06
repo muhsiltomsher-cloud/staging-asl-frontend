@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { X, MapPin } from "lucide-react";
 import { getCookie, setCookie } from "cookies-next";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { currencies, type Currency } from "@/config/site";
+import { type Currency } from "@/config/site";
 import { cn } from "@/lib/utils";
 
 interface LocationCurrencyBannerProps {
@@ -26,7 +26,7 @@ const countryToCurrency: Record<string, Currency> = {
 };
 
 export function LocationCurrencyBanner({ locale = "en" }: LocationCurrencyBannerProps) {
-  const { currency, setCurrency } = useCurrency();
+  const { currency, setCurrency, currencies } = useCurrency();
   const [isVisible, setIsVisible] = useState(false);
   const [suggestedCurrency, setSuggestedCurrency] = useState<Currency | null>(null);
   const [detectedCountry, setDetectedCountry] = useState<string>("");

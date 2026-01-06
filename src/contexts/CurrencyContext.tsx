@@ -2,7 +2,16 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
 import { getCookie, setCookie } from "cookies-next";
-import { currencies, siteConfig, API_BASE_CURRENCY, type Currency } from "@/config/site";
+import { currencies as defaultCurrencies, siteConfig, API_BASE_CURRENCY, type Currency } from "@/config/site";
+
+// Dynamic currency data type (matches API response)
+export interface CurrencyData {
+  code: string;
+  label: string;
+  symbol: string;
+  decimals: number;
+  rateFromAED: number;
+}
 
 interface CurrencyContextType {
   currency: Currency;
@@ -11,7 +20,9 @@ interface CurrencyContextType {
   formatCartPrice: (price: string | number | null | undefined, minorUnit?: number, showCode?: boolean) => string;
   convertPrice: (price: number, fromCurrency?: Currency) => number;
   getCurrencySymbol: () => string;
-  getCurrencyInfo: () => (typeof currencies)[number];
+  getCurrencyInfo: () => CurrencyData;
+  currencies: CurrencyData[];
+  isLoading: boolean;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -22,7 +33,35 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   // Always start with default currency to avoid hydration mismatch
   // The actual currency from cookie will be loaded in useEffect after hydration
   const [currency, setCurrencyState] = useState<Currency>(siteConfig.defaultCurrency);
+  const [currencies, setCurrencies] = useState<CurrencyData[]>([...defaultCurrencies]);
+  const [isLoading, setIsLoading] = useState(true);
   const hasHydrated = useRef(false);
+  const hasFetchedCurrencies = useRef(false);
+
+  // Fetch currencies from API on mount
+  useEffect(() => {
+    if (hasFetchedCurrencies.current) return;
+    hasFetchedCurrencies.current = true;
+
+    const fetchCurrencies = async () => {
+      try {
+        const response = await fetch("/api/currencies");
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setCurrencies(data);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch currencies:", error);
+        // Keep using default currencies on error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCurrencies();
+  }, []);
 
   // Load currency from cookie after hydration to avoid SSR/client mismatch
   useEffect(() => {
@@ -36,7 +75,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
         setCurrencyState(savedCurrency);
       });
     }
-  }, []);
+  }, [currencies]);
 
   const setCurrency = useCallback((newCurrency: Currency) => {
     setCurrencyState(newCurrency);
@@ -47,8 +86,8 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const getCurrencyInfo = useCallback(() => {
-    return currencies.find((c) => c.code === currency) || currencies[4];
-  }, [currency]);
+    return currencies.find((c) => c.code === currency) || currencies.find((c) => c.code === "QAR") || currencies[0];
+  }, [currency, currencies]);
 
     const getCurrencySymbol = useCallback(() => {
       return getCurrencyInfo().symbol;
@@ -69,7 +108,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
       
         return convertedPrice;
       },
-      [currency, getCurrencyInfo]
+      [currency, currencies, getCurrencyInfo]
     );
 
     const formatPrice = useCallback(
@@ -135,6 +174,8 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
               convertPrice,
               getCurrencySymbol,
               getCurrencyInfo,
+              currencies,
+              isLoading,
             }}
     >
       {children}

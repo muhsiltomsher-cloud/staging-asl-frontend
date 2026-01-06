@@ -11,7 +11,7 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { Button } from "@/components/common/Button";
-import { localeConfig, currencies, type Locale, type Currency } from "@/config/site";
+import { localeConfig, type Locale, type Currency } from "@/config/site";
 import { getPathWithoutLocale, cn } from "@/lib/utils";
 
 interface AccountDrawerProps {
@@ -43,7 +43,7 @@ export function AccountDrawer({
   dictionary,
 }: AccountDrawerProps) {
   const { user, isAuthenticated, logout, isAccountDrawerOpen, setIsAccountDrawerOpen } = useAuth();
-  const { currency, setCurrency } = useCurrency();
+  const { currency, setCurrency, currencies } = useCurrency();
   const pathname = usePathname();
   const isRTL = locale === "ar";
   const [isCurrencyDropdownOpen, setIsCurrencyDropdownOpen] = useState(false);
