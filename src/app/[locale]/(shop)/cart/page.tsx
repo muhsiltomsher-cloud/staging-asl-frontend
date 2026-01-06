@@ -4,13 +4,14 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, User, UserCheck, Tag, X } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, User, UserCheck, Tag, X, Gift } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { BundleItemsList } from "@/components/cart/BundleItemsList";
 import { useCart } from "@/contexts/CartContext";
+import { useFreeGift } from "@/contexts/FreeGiftContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { featureFlags, type Locale } from "@/config/site";
 
@@ -39,9 +40,10 @@ export default function CartPage() {
     selectedCoupons,
     couponDiscount,
   } = useCart();
-  const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user } = useAuth();
+    const { isFreeGiftItem } = useFreeGift();
 
-  const isRTL = locale === "ar";
+    const isRTL = locale === "ar";
   const isEmpty = cartItems.length === 0;
   
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
@@ -262,123 +264,154 @@ export default function CartPage() {
                 </div>
               </div>
 
-              <ul className="divide-y">
-                {cartItems.map((item) => (
-                  <li key={item.item_key} className="p-4">
-                    <div className="grid items-center gap-4 md:grid-cols-12">
-                      <div className="flex gap-4 md:col-span-6">
-                        <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                          {item.featured_image ? (
-                            <Image
-                              src={item.featured_image}
-                              alt={item.name}
-                              fill
-                              sizes="96px"
-                              className="object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center">
-                              <ShoppingBag className="h-8 w-8 text-gray-400" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex flex-col justify-center">
-                          <Link
-                            href={`/${locale}/product/${item.slug}`}
-                            className="font-medium text-gray-900 hover:text-gray-700 line-clamp-2"
-                          >
-                            {item.name}
-                          </Link>
-                          {item.meta.sku && (
-                            <p className="mt-1 text-sm text-gray-500">
-                              SKU: {item.meta.sku}
-                            </p>
-                          )}
-                          <BundleItemsList item={item} locale={locale} />
-                          <button
-                            onClick={() => handleRemoveItem(item.item_key)}
-                            className="mt-2 flex items-center gap-1 text-sm text-red-600 hover:text-red-700 md:hidden"
-                            disabled={isLoading}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            {texts.remove}
-                          </button>
-                        </div>
-                      </div>
+                            <ul className="divide-y">
+                              {cartItems.map((item) => {
+                                const isGiftItem = isFreeGiftItem(item.item_key);
+                                return (
+                                <li key={item.item_key} className={`p-4 ${isGiftItem ? "bg-gradient-to-r from-amber-50 to-orange-50" : ""}`}>
+                                  <div className="grid items-center gap-4 md:grid-cols-12">
+                                    <div className="flex gap-4 md:col-span-6">
+                                      <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                                        {item.featured_image ? (
+                                          <Image
+                                            src={item.featured_image}
+                                            alt={item.name}
+                                            fill
+                                            sizes="96px"
+                                            className="object-cover"
+                                            loading="lazy"
+                                          />
+                                        ) : (
+                                          <div className="flex h-full w-full items-center justify-center">
+                                            <ShoppingBag className="h-8 w-8 text-gray-400" />
+                                          </div>
+                                        )}
+                                        {isGiftItem && (
+                                          <div className="absolute top-0 left-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-br-lg flex items-center gap-0.5">
+                                            <Gift className="h-3 w-3" />
+                                            FREE
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div className="flex flex-col justify-center">
+                                        <Link
+                                          href={`/${locale}/product/${item.slug}`}
+                                          className="font-medium text-gray-900 hover:text-gray-700 line-clamp-2"
+                                        >
+                                          {item.name}
+                                        </Link>
+                                        {isGiftItem && (
+                                          <p className="mt-1 text-sm font-medium text-amber-600 inline-flex items-center gap-1">
+                                            <Gift className="h-3 w-3" />
+                                            {isRTL ? "هدية مجانية" : "Free Gift"}
+                                          </p>
+                                        )}
+                                        {!isGiftItem && item.meta.sku && (
+                                          <p className="mt-1 text-sm text-gray-500">
+                                            SKU: {item.meta.sku}
+                                          </p>
+                                        )}
+                                        <BundleItemsList item={item} locale={locale} />
+                                        {!isGiftItem && (
+                                          <button
+                                            onClick={() => handleRemoveItem(item.item_key)}
+                                            className="mt-2 flex items-center gap-1 text-sm text-red-600 hover:text-red-700 md:hidden"
+                                            disabled={isLoading}
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                            {texts.remove}
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
 
-                      <div className="hidden text-center md:col-span-2 md:block">
-                        <FormattedPrice
-                          price={parseFloat(item.price) / divisor}
-                          className="font-medium"
-                          iconSize="xs"
-                        />
-                      </div>
+                                    <div className="hidden text-center md:col-span-2 md:block">
+                                      {isGiftItem ? (
+                                        <span className="text-amber-600 font-medium">{isRTL ? "مجاني" : "FREE"}</span>
+                                      ) : (
+                                        <FormattedPrice
+                                          price={parseFloat(item.price) / divisor}
+                                          className="font-medium"
+                                          iconSize="xs"
+                                        />
+                                      )}
+                                    </div>
 
-                      <div className="flex items-center justify-between md:col-span-2 md:justify-center">
-                        <span className="text-sm text-gray-500 md:hidden">
-                          {texts.quantity}:
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() =>
-                              handleQuantityChange(
-                                item.item_key,
-                                item.quantity.value - 1
-                              )
-                            }
-                            className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-[#633d1f] hover:text-white hover:border-[#633d1f] disabled:opacity-50 transition-colors cursor-pointer"
-                            disabled={isLoading || updatingItems.has(item.item_key) || item.quantity.value <= 1}
-                          >
-                            <Minus className="h-4 w-4" />
-                          </button>
-                          <span className="w-8 text-center relative">
-                            {updatingItems.has(item.item_key) ? (
-                              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#633d1f]"></span>
-                            ) : (
-                              item.quantity.value
-                            )}
-                          </span>
-                          <button
-                            onClick={() =>
-                              handleQuantityChange(
-                                item.item_key,
-                                item.quantity.value + 1
-                              )
-                            }
-                            className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-[#633d1f] hover:text-white hover:border-[#633d1f] disabled:opacity-50 transition-colors cursor-pointer"
-                            disabled={isLoading || updatingItems.has(item.item_key)}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
+                                    <div className="flex items-center justify-between md:col-span-2 md:justify-center">
+                                      <span className="text-sm text-gray-500 md:hidden">
+                                        {texts.quantity}:
+                                      </span>
+                                      {isGiftItem ? (
+                                        <span className="text-center font-medium">1</span>
+                                      ) : (
+                                        <div className="flex items-center gap-2">
+                                          <button
+                                            onClick={() =>
+                                              handleQuantityChange(
+                                                item.item_key,
+                                                item.quantity.value - 1
+                                              )
+                                            }
+                                            className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-[#633d1f] hover:text-white hover:border-[#633d1f] disabled:opacity-50 transition-colors cursor-pointer"
+                                            disabled={isLoading || updatingItems.has(item.item_key) || item.quantity.value <= 1}
+                                          >
+                                            <Minus className="h-4 w-4" />
+                                          </button>
+                                          <span className="w-8 text-center relative">
+                                            {updatingItems.has(item.item_key) ? (
+                                              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#633d1f]"></span>
+                                            ) : (
+                                              item.quantity.value
+                                            )}
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              handleQuantityChange(
+                                                item.item_key,
+                                                item.quantity.value + 1
+                                              )
+                                            }
+                                            className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-[#633d1f] hover:text-white hover:border-[#633d1f] disabled:opacity-50 transition-colors cursor-pointer"
+                                            disabled={isLoading || updatingItems.has(item.item_key)}
+                                          >
+                                            <Plus className="h-4 w-4" />
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
 
-                      <div className="flex items-center justify-between md:col-span-2 md:justify-center">
-                        <span className="text-sm text-gray-500 md:hidden">
-                          {texts.total}:
-                        </span>
-                        <FormattedPrice
-                          price={parseFloat(item.totals.total)}
-                          className="font-semibold"
-                          iconSize="xs"
-                        />
-                      </div>
+                                    <div className="flex items-center justify-between md:col-span-2 md:justify-center">
+                                      <span className="text-sm text-gray-500 md:hidden">
+                                        {texts.total}:
+                                      </span>
+                                      {isGiftItem ? (
+                                        <span className="text-amber-600 font-semibold">{isRTL ? "مجاني" : "FREE"}</span>
+                                      ) : (
+                                        <FormattedPrice
+                                          price={parseFloat(item.totals.total)}
+                                          className="font-semibold"
+                                          iconSize="xs"
+                                        />
+                                      )}
+                                    </div>
 
-                      <div className="hidden md:col-span-12 md:flex md:justify-end">
-                        <button
-                          onClick={() => handleRemoveItem(item.item_key)}
-                          className="text-gray-400 hover:text-red-500"
-                          aria-label={texts.remove}
-                          disabled={isLoading}
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                                    {!isGiftItem && (
+                                      <div className="hidden md:col-span-12 md:flex md:justify-end">
+                                        <button
+                                          onClick={() => handleRemoveItem(item.item_key)}
+                                          className="text-gray-400 hover:text-red-500"
+                                          aria-label={texts.remove}
+                                          disabled={isLoading}
+                                        >
+                                          <Trash2 className="h-5 w-5" />
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </li>
+                                );
+                              })}
+                            </ul>
             </div>
           </div>
 

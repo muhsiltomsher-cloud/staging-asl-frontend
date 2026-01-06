@@ -11,6 +11,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import { FreeGiftProvider } from "@/contexts/FreeGiftContext";
 import { getDictionary } from "@/i18n";
 import { siteConfig, localeConfig, type Locale } from "@/config/site";
 import { generateOrganizationJsonLd } from "@/lib/utils/seo";
@@ -87,8 +88,9 @@ export default async function LocaleLayout({
     <AuthProvider>
       <CurrencyProvider>
         <NotificationProvider>
-          <CartProvider>
-            <WishlistProvider>
+                    <CartProvider>
+                      <FreeGiftProvider>
+                      <WishlistProvider>
               <JsonLd data={generateOrganizationJsonLd()} />
               <NextTopLoader
                 color="#92400e"
@@ -148,8 +150,9 @@ export default async function LocaleLayout({
                             }}
                           />
                           <LocationCurrencyBanner locale={validLocale} />
-                        </WishlistProvider>
-          </CartProvider>
+                                  </WishlistProvider>
+                      </FreeGiftProvider>
+                    </CartProvider>
         </NotificationProvider>
       </CurrencyProvider>
     </AuthProvider>
