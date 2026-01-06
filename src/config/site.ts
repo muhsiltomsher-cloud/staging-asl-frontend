@@ -41,24 +41,12 @@ export const siteConfig = {
 };
 
 export type Locale = (typeof siteConfig.locales)[number];
-export type Currency = (typeof currencies)[number]["code"];
 
 /**
- * Supported Currencies
- * 
- * List of currencies supported by the store.
- * Each currency has: code, label, symbol, decimal places, and exchange rate from AED.
- * Exchange rates are based on WCML Multicurrency settings (1 AED = X currency).
+ * Currency type - now dynamic from WordPress API
+ * Using string type to allow any currency code from the backend
  */
-export const currencies = [
-  { code: "AED", label: "UAE (AED)", symbol: "د.إ", decimals: 2, rateFromAED: 1 },
-  { code: "BHD", label: "Bahrain (BHD)", symbol: "BD", decimals: 3, rateFromAED: 0.103 },
-  { code: "KWD", label: "Kuwait (KWD)", symbol: "KD", decimals: 3, rateFromAED: 0.083 },
-  { code: "OMR", label: "Oman (OMR)", symbol: "OMR", decimals: 3, rateFromAED: 0.105 },
-  { code: "QAR", label: "Qatar (QAR)", symbol: "QR", decimals: 2, rateFromAED: 0.99 },
-  { code: "SAR", label: "Saudi Arabia (SAR)", symbol: "SAR", decimals: 2, rateFromAED: 1.02 },
-  { code: "USD", label: "United States (USD)", symbol: "$", decimals: 2, rateFromAED: 0.27 },
-] as const;
+export type Currency = string;
 
 /**
  * Base currency used by the WooCommerce Store API.

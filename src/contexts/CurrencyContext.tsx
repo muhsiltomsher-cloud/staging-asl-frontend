@@ -2,7 +2,16 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
 import { getCookie, setCookie } from "cookies-next";
-import { currencies as defaultCurrencies, siteConfig, API_BASE_CURRENCY, type Currency } from "@/config/site";
+import { siteConfig, API_BASE_CURRENCY, type Currency } from "@/config/site";
+
+// Minimal default currency (will be replaced by API data)
+const DEFAULT_CURRENCY: CurrencyData = {
+  code: "AED",
+  label: "UAE (AED)",
+  symbol: "د.إ",
+  decimals: 2,
+  rateFromAED: 1,
+};
 
 // Dynamic currency data type (matches API response)
 export interface CurrencyData {
@@ -33,7 +42,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   // Always start with default currency to avoid hydration mismatch
   // The actual currency from cookie will be loaded in useEffect after hydration
   const [currency, setCurrencyState] = useState<Currency>(siteConfig.defaultCurrency);
-  const [currencies, setCurrencies] = useState<CurrencyData[]>([...defaultCurrencies]);
+  const [currencies, setCurrencies] = useState<CurrencyData[]>([DEFAULT_CURRENCY]);
   const [isLoading, setIsLoading] = useState(true);
   const hasHydrated = useRef(false);
   const hasFetchedCurrencies = useRef(false);
