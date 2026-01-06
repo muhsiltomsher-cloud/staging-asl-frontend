@@ -501,33 +501,33 @@ All cart operations use the CoCart plugin API through Next.js API routes for ser
   ```
 - **Response:** Returns updated cart object
 
-### Wishlist APIs (YITH Wishlist)
+### Wishlist APIs (TI WooCommerce Wishlist)
 
-Wishlist operations use the YITH Wishlist plugin through Next.js API routes.
+Wishlist operations use the TI WooCommerce Wishlist plugin through Next.js API routes. Authentication is based on the user cookie (`asl_auth_user`).
 
 #### Get Wishlist
 - **Endpoint:** `GET /api/wishlist` (Next.js API route)
-- **Description:** Retrieves the user's wishlist
-- **Headers:** `Authorization: Bearer {token}`
+- **Description:** Retrieves the user's wishlist with enriched product details
+- **Authentication:** Requires logged-in user (reads from `asl_auth_user` cookie)
 - **Response:**
   ```json
   {
     "success": true,
     "wishlist": {
-      "id": "number",
-      "user_id": "number",
-      "name": "string",
-      "token": "string",
+      "share_key": "string",
       "items": [
         {
           "id": "number",
           "product_id": "number",
+          "variation_id": "number (optional)",
+          "quantity": "number",
+          "dateadded": "string",
           "product_name": "string",
           "product_price": "string",
           "product_image": "string",
           "product_url": "string",
-          "is_in_stock": "boolean",
-          "dateadded_formatted": "string"
+          "stock_status": "string",
+          "is_in_stock": "boolean"
         }
       ],
       "items_count": "number"
@@ -535,47 +535,65 @@ Wishlist operations use the YITH Wishlist plugin through Next.js API routes.
     "items": []
   }
   ```
+- **Error Response (401):** `{ "success": false, "error": { "code": "unauthorized", "message": "You must be logged in to view your wishlist." } }`
 
 #### Add to Wishlist
 - **Endpoint:** `POST /api/wishlist?action=add` (Next.js API route)
 - **Description:** Adds a product to the wishlist
-- **Headers:** `Authorization: Bearer {token}`
+- **Authentication:** Requires logged-in user
 - **Request Body:**
   ```json
   {
     "product_id": "number",
-    "variation_id": "number (optional)"
+    "variation_id": "number (optional, default: 0)",
+    "quantity": "number (optional, default: 1)"
   }
   ```
-- **Response:** Returns updated wishlist object
-- **Error Codes:** `product_already_in_wishlist` if item already exists
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "wishlist": { "share_key": "string", "items": [...], "items_count": "number" },
+    "items": [...],
+    "added_to": "string (share_key)"
+  }
+  ```
 
 #### Remove from Wishlist
 - **Endpoint:** `POST /api/wishlist?action=remove` (Next.js API route)
 - **Description:** Removes a product from the wishlist
-- **Headers:** `Authorization: Bearer {token}`
+- **Authentication:** Requires logged-in user
 - **Request Body:**
   ```json
   {
     "product_id": "number",
-    "item_id": "number (optional)"
+    "item_id": "number (optional, defaults to product_id)",
+    "share_key": "string (optional, auto-fetched if not provided)"
   }
   ```
-- **Response:** Returns updated wishlist object
+- **Response:** Returns updated wishlist object with enriched items
 
 #### Sync Wishlist
 - **Endpoint:** `POST /api/wishlist?action=sync` (Next.js API route)
 - **Description:** Syncs guest wishlist items to authenticated user's wishlist
-- **Headers:** `Authorization: Bearer {token}`
+- **Authentication:** Requires logged-in user
 - **Request Body:**
   ```json
   {
     "items": [
-      { "product_id": "number", "variation_id": "number (optional)" }
+      { "product_id": "number", "variation_id": "number (optional)", "quantity": "number (optional)" }
     ]
   }
   ```
-- **Response:** Returns merged wishlist object
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "wishlist": { "share_key": "string", "items": [...], "items_count": "number" },
+    "items": [...],
+    "sync_results": [{ "product_id": "number", "success": "boolean" }]
+  }
+  ```
 
 ### Customer APIs
 
@@ -678,6 +696,55 @@ Order management uses WooCommerce REST API through Next.js API routes.
 - **Endpoint:** `GET /api/orders?orderId={id}` (Next.js API route)
 - **Description:** Retrieves details of a specific order
 - **Response:** Returns single order object
+
+#### Create Order
+- **Endpoint:** `POST /api/orders` (Next.js API route)
+- **Description:** Creates a new order
+- **Request Body:**
+  ```json
+  {
+    "payment_method": "string (e.g., cod, credit_card)",
+    "billing": {
+      "first_name": "string",
+      "last_name": "string",
+      "address_1": "string",
+      "city": "string",
+      "state": "string (optional)",
+      "postcode": "string (optional)",
+      "country": "string",
+      "email": "string",
+      "phone": "string"
+    },
+    "shipping": {
+      "first_name": "string (optional, defaults to billing)",
+      "last_name": "string (optional, defaults to billing)",
+      "address_1": "string (optional, defaults to billing)",
+      "city": "string (optional, defaults to billing)",
+      "state": "string (optional)",
+      "postcode": "string (optional)",
+      "country": "string (optional, defaults to billing)"
+    },
+    "line_items": [
+      {
+        "product_id": "number",
+        "quantity": "number",
+        "variation_id": "number (optional)"
+      }
+    ],
+    "coupon_lines": [{ "code": "string" }],
+    "customer_note": "string (optional)",
+    "customer_id": "number (optional)"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "order": { "...full order object..." },
+    "order_id": "number",
+    "order_key": "string"
+  }
+  ```
 
 ### Products APIs (WooCommerce Store API)
 
@@ -827,20 +894,231 @@ These endpoints provide site configuration and content settings.
 
 ### Coupons API
 
-#### Validate Coupon
-- **Endpoint:** `GET /api/coupons?code={code}` (Next.js API route)
-- **Description:** Validates a coupon code
+#### Get Available Coupons
+- **Endpoint:** `GET /api/coupons` (Next.js API route)
+- **Description:** Retrieves all valid, non-expired coupons
+- **Caching:** 300 seconds (5 minutes)
 - **Response:**
   ```json
   {
     "success": true,
-    "data": {
-      "code": "string",
-      "discount_type": "string",
-      "amount": "string"
+    "coupons": [
+      {
+        "code": "string",
+        "description": "string",
+        "discount_type": "percent | fixed_cart | fixed_product",
+        "amount": "string",
+        "minimum_amount": "string",
+        "free_shipping": "boolean"
+      }
+    ]
+  }
+  ```
+- **Notes:** Only returns coupons that are not expired and have not exceeded their usage limit
+
+### Products API (Next.js API Route)
+
+Server-side product fetching with caching support.
+
+#### Get Products
+- **Endpoint:** `GET /api/products` (Next.js API route)
+- **Description:** Retrieves paginated product listings with filtering options
+- **Query Parameters:**
+  - `page` (optional, default: 1): Page number
+  - `per_page` (optional, default: 24): Products per page
+  - `category` (optional): Category ID or slug
+  - `search` (optional): Search term
+  - `orderby` (optional): Sort field (date, price, popularity)
+  - `order` (optional): Sort direction (asc, desc)
+  - `locale` (optional): Locale (en, ar)
+- **Response:**
+  ```json
+  {
+    "products": [...],
+    "total": "number",
+    "totalPages": "number"
+  }
+  ```
+- **Caching:** 300 seconds with stale-while-revalidate of 600 seconds
+
+### Bundles API
+
+Bundle configuration management for "Build Your Own Set" functionality.
+
+#### Get Bundle Configuration
+- **Endpoint:** `GET /api/bundles` (Next.js API route)
+- **Description:** Retrieves bundle configurations
+- **Query Parameters:**
+  - `bundleId` (optional): Specific bundle ID
+  - `productId` (optional): Get bundle by product ID
+- **Response:** Returns bundle configuration object or array
+- **Caching:** 60 seconds, tagged with "bundles"
+
+#### Create Bundle Configuration
+- **Endpoint:** `POST /api/bundles` (Next.js API route)
+- **Description:** Creates a new bundle configuration
+- **Request Body:**
+  ```json
+  {
+    "id": "string",
+    "productId": "number | null",
+    "title": "string",
+    "bundleType": "fixed | variable",
+    "shippingFee": "free | flat | calculated",
+    "pricing": {
+      "mode": "fixed | sum | average",
+      "boxPrice": "number",
+      "includedItemsCount": "number",
+      "extraItemChargingMethod": "full_price | discounted",
+      "showProductPrices": "boolean"
+    },
+    "isEnabled": "boolean",
+    "items": [
+      {
+        "id": "string",
+        "title": "string",
+        "isExpanded": "boolean",
+        "rule": {
+          "categories": ["number"],
+          "excludeCategories": ["number"],
+          "tags": ["number"],
+          "excludeTags": ["number"],
+          "products": ["number"],
+          "productVariations": ["number"],
+          "excludeProducts": ["number"],
+          "excludeProductVariations": ["number"]
+        },
+        "display": {
+          "customTitle": "string",
+          "sortBy": "name | price | date",
+          "sortOrder": "asc | desc",
+          "isDefault": "boolean",
+          "defaultProductId": "number | null",
+          "quantity": "number",
+          "quantityMin": "number",
+          "quantityMax": "number",
+          "discountType": "none | percent | fixed",
+          "discountValue": "number",
+          "isOptional": "boolean",
+          "showPrice": "boolean"
+        }
+      }
+    ]
+  }
+  ```
+- **Response:** Returns saved bundle configuration
+
+#### Update Bundle Configuration
+- **Endpoint:** `PUT /api/bundles` (Next.js API route)
+- **Description:** Updates an existing bundle configuration
+- **Request Body:** Same as POST
+- **Response:** Returns updated bundle configuration
+
+#### Delete Bundle Configuration
+- **Endpoint:** `DELETE /api/bundles?bundleId={id}` (Next.js API route)
+- **Description:** Deletes a bundle configuration
+- **Response:** `{ "success": true }`
+
+### Currencies API
+
+Currency configuration for multi-currency support.
+
+#### Get Currencies
+- **Endpoint:** `GET /api/currencies` (Next.js API route)
+- **Description:** Retrieves available currencies with exchange rates
+- **Caching:** 60 seconds
+- **Response:**
+  ```json
+  [
+    {
+      "code": "string (e.g., AED, USD, SAR)",
+      "label": "string (e.g., UAE (AED))",
+      "symbol": "string (e.g., د.إ, $)",
+      "decimals": "number (2 or 3)",
+      "rateFromAED": "number"
+    }
+  ]
+  ```
+- **Notes:** Falls back to default currencies if WordPress API is unavailable
+
+### Revalidation API
+
+On-demand cache invalidation for WordPress webhooks.
+
+#### Revalidate Cache (POST)
+- **Endpoint:** `POST /api/revalidate` (Next.js API route)
+- **Description:** Triggers cache invalidation for specific content types
+- **Headers:**
+  - `x-revalidate-token`: Secret token (must match `REVALIDATE_SECRET_TOKEN` env var)
+- **Request Body:**
+  ```json
+  {
+    "type": "products | categories | pages | all",
+    "slug": "string (optional, specific item slug)",
+    "id": "string | number (optional, specific item ID)",
+    "path": "string (optional, specific path to revalidate)"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "revalidated": {
+      "tags": ["string"],
+      "paths": ["string"]
+    },
+    "timestamp": "string (ISO date)"
+  }
+  ```
+- **Error Responses:**
+  - 401: Invalid or missing revalidation token
+  - 400: Invalid revalidation type
+  - 500: Revalidation not configured
+
+#### Revalidate Cache (GET)
+- **Endpoint:** `GET /api/revalidate` (Next.js API route)
+- **Description:** Alternative GET endpoint for simple revalidation
+- **Query Parameters:**
+  - `token`: Secret token
+  - `type`: Content type (products, categories, pages, all)
+  - `slug` (optional): Specific item slug
+  - `id` (optional): Specific item ID
+  - `path` (optional): Specific path to revalidate
+- **Response:** Same as POST endpoint
+
+### Reset Password API
+
+Password reset functionality using multiple fallback methods.
+
+#### Reset Password
+- **Endpoint:** `POST /api/auth/reset-password` (Next.js API route)
+- **Description:** Resets user password using reset key from email link
+- **Request Body:**
+  ```json
+  {
+    "key": "string (reset key from email)",
+    "login": "string (username)",
+    "password": "string (new password, min 6 characters)"
+  }
+  ```
+- **Response (Success):**
+  ```json
+  {
+    "success": true,
+    "message": "Password has been reset successfully"
+  }
+  ```
+- **Response (Error):**
+  ```json
+  {
+    "success": false,
+    "error": {
+      "code": "reset_failed | missing_key | missing_login | invalid_password | server_error",
+      "message": "string"
     }
   }
   ```
+- **Notes:** Tries WooCommerce reset first, falls back to WordPress reset if needed
 
 ### Error Response Format
 
