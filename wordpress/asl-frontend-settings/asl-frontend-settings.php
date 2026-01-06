@@ -120,15 +120,15 @@ function asl_render_products_tab($key,$label) {
     <h2><?php echo $label; ?> Section</h2>
     <table class="form-table">
         <tr><th>Enable</th><td><label><input type="checkbox" name="asl_<?php echo $key; ?>_enabled" value="1" <?php checked(get_theme_mod("asl_{$key}_enabled",true)); ?>> Show</label></td></tr>
-        <tr><th>Hide on Mobile</th><td><label><input type="checkbox" name="asl_<?php echo $key; ?>_hide_mobile" value="1" <?php checked(get_theme_mod("asl_{$key}_hide_mobile",false)); ?>></label></td></tr>
-        <tr><th>Hide on Desktop</th><td><label><input type="checkbox" name="asl_<?php echo $key; ?>_hide_desktop" value="1" <?php checked(get_theme_mod("asl_{$key}_hide_desktop",false)); ?>></label></td></tr>
+        <tr><th>Hide on Mobile</th><td><label><input type="checkbox" name="asl_<?php echo $key; ?>_hide_mobile" value="1" <?php checked(get_theme_mod("asl_{$key}_hide_mobile",false)); ?>> Hide on mobile</label></td></tr>
+        <tr><th>Hide on Desktop</th><td><label><input type="checkbox" name="asl_<?php echo $key; ?>_hide_desktop" value="1" <?php checked(get_theme_mod("asl_{$key}_hide_desktop",false)); ?>> Hide on desktop</label></td></tr>
         <tr><th>Title (EN)</th><td><input type="text" name="asl_<?php echo $key; ?>_title" value="<?php echo esc_attr(get_theme_mod("asl_{$key}_title",$label)); ?>" class="regular-text"></td></tr>
         <tr><th>Title (AR)</th><td><input type="text" name="asl_<?php echo $key; ?>_title_ar" value="<?php echo esc_attr(get_theme_mod("asl_{$key}_title_ar",'')); ?>" class="regular-text" dir="rtl"></td></tr>
         <tr><th>Subtitle (EN)</th><td><input type="text" name="asl_<?php echo $key; ?>_subtitle" value="<?php echo esc_attr(get_theme_mod("asl_{$key}_subtitle",'')); ?>" class="regular-text"></td></tr>
         <tr><th>Subtitle (AR)</th><td><input type="text" name="asl_<?php echo $key; ?>_subtitle_ar" value="<?php echo esc_attr(get_theme_mod("asl_{$key}_subtitle_ar",'')); ?>" class="regular-text" dir="rtl"></td></tr>
         <tr><th>Count</th><td><input type="number" name="asl_<?php echo $key; ?>_count" value="<?php echo esc_attr(get_theme_mod("asl_{$key}_count",8)); ?>" min="4" max="24" class="small-text"></td></tr>
         <tr><th>Display</th><td><select name="asl_<?php echo $key; ?>_display"><option value="slider" <?php selected(get_theme_mod("asl_{$key}_display",'slider'),'slider'); ?>>Slider</option><option value="grid" <?php selected(get_theme_mod("asl_{$key}_display",'slider'),'grid'); ?>>Grid</option></select></td></tr>
-        <tr><th>Autoplay</th><td><label><input type="checkbox" name="asl_<?php echo $key; ?>_autoplay" value="1" <?php checked(get_theme_mod("asl_{$key}_autoplay",true)); ?>></label></td></tr>
+        <tr><th>Autoplay</th><td><label><input type="checkbox" name="asl_<?php echo $key; ?>_autoplay" value="1" <?php checked(get_theme_mod("asl_{$key}_autoplay",true)); ?>> Enable</label></td></tr>
         <tr><th>Desktop Cols</th><td><input type="number" name="asl_<?php echo $key; ?>_cols_desktop" value="<?php echo esc_attr(get_theme_mod("asl_{$key}_cols_desktop",4)); ?>" min="2" max="6" class="small-text"></td></tr>
         <tr><th>Tablet Cols</th><td><input type="number" name="asl_<?php echo $key; ?>_cols_tablet" value="<?php echo esc_attr(get_theme_mod("asl_{$key}_cols_tablet",3)); ?>" min="2" max="4" class="small-text"></td></tr>
         <tr><th>Mobile Cols</th><td><input type="number" name="asl_<?php echo $key; ?>_cols_mobile" value="<?php echo esc_attr(get_theme_mod("asl_{$key}_cols_mobile",2)); ?>" min="1" max="3" class="small-text"></td></tr>
@@ -141,8 +141,8 @@ function asl_render_categories_tab() {
     <h2>Categories Section</h2>
     <table class="form-table">
         <tr><th>Enable</th><td><label><input type="checkbox" name="asl_categories_enabled" value="1" <?php checked(get_theme_mod('asl_categories_enabled',true)); ?>> Show</label></td></tr>
-        <tr><th>Hide on Mobile</th><td><label><input type="checkbox" name="asl_categories_hide_mobile" value="1" <?php checked(get_theme_mod('asl_categories_hide_mobile',false)); ?>></label></td></tr>
-        <tr><th>Hide on Desktop</th><td><label><input type="checkbox" name="asl_categories_hide_desktop" value="1" <?php checked(get_theme_mod('asl_categories_hide_desktop',false)); ?>></label></td></tr>
+        <tr><th>Hide on Mobile</th><td><label><input type="checkbox" name="asl_categories_hide_mobile" value="1" <?php checked(get_theme_mod('asl_categories_hide_mobile',false)); ?>> Hide on mobile</label></td></tr>
+        <tr><th>Hide on Desktop</th><td><label><input type="checkbox" name="asl_categories_hide_desktop" value="1" <?php checked(get_theme_mod('asl_categories_hide_desktop',false)); ?>> Hide on desktop</label></td></tr>
         <tr><th>Title (EN)</th><td><input type="text" name="asl_categories_title" value="<?php echo esc_attr(get_theme_mod('asl_categories_title','Shop by Category')); ?>" class="regular-text"></td></tr>
         <tr><th>Title (AR)</th><td><input type="text" name="asl_categories_title_ar" value="<?php echo esc_attr(get_theme_mod('asl_categories_title_ar','')); ?>" class="regular-text" dir="rtl"></td></tr>
         <tr><th>Count</th><td><input type="number" name="asl_categories_count" value="<?php echo esc_attr(get_theme_mod('asl_categories_count',6)); ?>" min="3" max="12" class="small-text"></td></tr>
@@ -167,8 +167,8 @@ function asl_render_collections_tab() {
     <h2>Collections Section</h2>
     <table class="form-table">
         <tr><th>Enable</th><td><label><input type="checkbox" name="asl_collections_enabled" value="1" <?php checked(get_theme_mod('asl_collections_enabled',true)); ?>> Show</label></td></tr>
-        <tr><th>Hide on Mobile</th><td><label><input type="checkbox" name="asl_collections_hide_mobile" value="1" <?php checked(get_theme_mod('asl_collections_hide_mobile',false)); ?>></label></td></tr>
-        <tr><th>Hide on Desktop</th><td><label><input type="checkbox" name="asl_collections_hide_desktop" value="1" <?php checked(get_theme_mod('asl_collections_hide_desktop',false)); ?>></label></td></tr>
+        <tr><th>Hide on Mobile</th><td><label><input type="checkbox" name="asl_collections_hide_mobile" value="1" <?php checked(get_theme_mod('asl_collections_hide_mobile',false)); ?>> Hide on mobile</label></td></tr>
+        <tr><th>Hide on Desktop</th><td><label><input type="checkbox" name="asl_collections_hide_desktop" value="1" <?php checked(get_theme_mod('asl_collections_hide_desktop',false)); ?>> Hide on desktop</label></td></tr>
         <tr><th>Title (EN)</th><td><input type="text" name="asl_collections_title" value="<?php echo esc_attr(get_theme_mod('asl_collections_title','Our Collections')); ?>" class="regular-text"></td></tr>
         <tr><th>Title (AR)</th><td><input type="text" name="asl_collections_title_ar" value="<?php echo esc_attr(get_theme_mod('asl_collections_title_ar','')); ?>" class="regular-text" dir="rtl"></td></tr>
         <tr><th>Layout</th><td><select name="asl_collections_layout"><option value="grid" <?php selected(get_theme_mod('asl_collections_layout','grid'),'grid'); ?>>Grid</option><option value="masonry" <?php selected(get_theme_mod('asl_collections_layout','grid'),'masonry'); ?>>Masonry</option><option value="slider" <?php selected(get_theme_mod('asl_collections_layout','grid'),'slider'); ?>>Slider</option></select></td></tr>
@@ -208,8 +208,8 @@ function asl_render_banners_tab() {
     <h2>Banners Section</h2>
     <table class="form-table">
         <tr><th>Enable</th><td><label><input type="checkbox" name="asl_banners_enabled" value="1" <?php checked(get_theme_mod('asl_banners_enabled',true)); ?>> Show</label></td></tr>
-        <tr><th>Hide on Mobile</th><td><label><input type="checkbox" name="asl_banners_hide_mobile" value="1" <?php checked(get_theme_mod('asl_banners_hide_mobile',false)); ?>></label></td></tr>
-        <tr><th>Hide on Desktop</th><td><label><input type="checkbox" name="asl_banners_hide_desktop" value="1" <?php checked(get_theme_mod('asl_banners_hide_desktop',false)); ?>></label></td></tr>
+        <tr><th>Hide on Mobile</th><td><label><input type="checkbox" name="asl_banners_hide_mobile" value="1" <?php checked(get_theme_mod('asl_banners_hide_mobile',false)); ?>> Hide on mobile</label></td></tr>
+        <tr><th>Hide on Desktop</th><td><label><input type="checkbox" name="asl_banners_hide_desktop" value="1" <?php checked(get_theme_mod('asl_banners_hide_desktop',false)); ?>> Hide on desktop</label></td></tr>
         <tr><th>Layout</th><td><select name="asl_banners_layout"><option value="grid" <?php selected(get_theme_mod('asl_banners_layout','grid'),'grid'); ?>>Grid</option><option value="full-width" <?php selected(get_theme_mod('asl_banners_layout','grid'),'full-width'); ?>>Full Width</option><option value="slider" <?php selected(get_theme_mod('asl_banners_layout','grid'),'slider'); ?>>Slider</option></select></td></tr>
         <tr><th>Desktop Cols</th><td><input type="number" name="asl_banners_cols_desktop" value="<?php echo esc_attr(get_theme_mod('asl_banners_cols_desktop',2)); ?>" min="1" max="4" class="small-text"></td></tr>
         <tr><th>Tablet Cols</th><td><input type="number" name="asl_banners_cols_tablet" value="<?php echo esc_attr(get_theme_mod('asl_banners_cols_tablet',2)); ?>" min="1" max="3" class="small-text"></td></tr>
