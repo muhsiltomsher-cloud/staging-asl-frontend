@@ -3,7 +3,7 @@ import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
-import { getProducts } from "@/lib/api/woocommerce";
+import { getProducts, getFreeGiftProductIds } from "@/lib/api/woocommerce";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { ShopClient } from "./ShopClient";
@@ -40,8 +40,19 @@ export default async function ShopPage({ params }: ShopPageProps) {
     { name: dictionary.common.shop, href: `/${locale}/shop` },
   ];
 
-  // Fetch products from WooCommerce API
-  const { products, total, totalPages } = await getProducts({ per_page: 24, locale: locale as Locale });
+  // Fetch products and gift product IDs in parallel
+  const [productsResult, giftProductIds] = await Promise.all([
+    getProducts({ per_page: 24, locale: locale as Locale }),
+    getFreeGiftProductIds(),
+  ]);
+
+  // Filter out gift products from the shop listing
+  const filteredProducts = productsResult.products.filter(
+    (product) => !giftProductIds.includes(product.id)
+  );
+  
+  // Adjust total count to exclude gift products
+  const filteredTotal = productsResult.total - (productsResult.products.length - filteredProducts.length);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -60,10 +71,11 @@ export default async function ShopPage({ params }: ShopPageProps) {
 
       <Suspense fallback={<ProductGridSkeleton count={12} />}>
         <ShopClient 
-          products={products} 
+          products={filteredProducts} 
           locale={locale as Locale}
-          initialTotal={total}
-          initialTotalPages={totalPages}
+          initialTotal={filteredTotal}
+          initialTotalPages={productsResult.totalPages}
+          giftProductIds={giftProductIds}
         />
       </Suspense>
     </div>

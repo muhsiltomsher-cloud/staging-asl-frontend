@@ -354,6 +354,38 @@ export async function getBundleConfig(
   }
 }
 
+// Fetch free gift product IDs from the backend
+// Used to filter out gift products from shop listings
+export async function getFreeGiftProductIds(currency?: string): Promise<number[]> {
+  try {
+    let url = `${siteConfig.apiUrl}/wp-json/asl-free-gifts/v1/rules`;
+    if (currency) {
+      url += `?currency=${encodeURIComponent(currency)}`;
+    }
+
+    const response = await fetch(url, {
+      next: {
+        revalidate: 60,
+        tags: ["free-gifts"],
+      },
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = await response.json();
+    
+    if (data.rules && Array.isArray(data.rules)) {
+      return data.rules.map((rule: { product_id: number }) => rule.product_id);
+    }
+    
+    return [];
+  } catch {
+    return [];
+  }
+}
+
 // Helper function to format price from WooCommerce
 export function formatWCPrice(prices: WCProduct["prices"]): string {
   const price = parseInt(prices.price) / Math.pow(10, prices.currency_minor_unit);
