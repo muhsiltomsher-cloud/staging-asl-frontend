@@ -585,18 +585,64 @@ export async function getBannersSettings(locale?: Locale): Promise<BannersSettin
   return settings.banners;
 }
 
+// Raw WordPress menu item type from API (uses child_items and ID)
+interface RawWPMenuItem {
+  ID: number;
+  title: string;
+  url: string;
+  target: string;
+  menu_item_parent: string;
+  menu_order: number;
+  child_items?: RawWPMenuItem[];
+}
+
+// Raw WordPress menu type from API
+interface RawWPMenu {
+  term_id: number;
+  name: string;
+  slug: string;
+  items: RawWPMenuItem[];
+}
+
+// Transform raw WordPress menu item to normalized format
+function transformMenuItem(rawItem: RawWPMenuItem): WPMenuItem {
+  return {
+    id: rawItem.ID,
+    title: rawItem.title,
+    url: rawItem.url,
+    target: rawItem.target || "",
+    parent: parseInt(rawItem.menu_item_parent, 10) || 0,
+    order: rawItem.menu_order,
+    children: rawItem.child_items?.map(transformMenuItem),
+  };
+}
+
+// Transform raw WordPress menu to normalized format
+function transformMenu(rawMenu: RawWPMenu): WPMenu {
+  return {
+    id: rawMenu.term_id,
+    name: rawMenu.name,
+    slug: rawMenu.slug,
+    items: rawMenu.items?.map(transformMenuItem) || [],
+  };
+}
+
 // Fetch WordPress menu by location
 export async function getMenu(location: string, locale?: Locale): Promise<WPMenu | null> {
-  const data = await fetchWPAPI<WPMenu>(
+  const data = await fetchWPAPI<RawWPMenu>(
     `/menus/v1/locations/${location}`,
     {
       tags: ["menus", `menu-${location}`],
       locale,
-      revalidate: 300,
+      revalidate: 60,
     }
   );
 
-  return data;
+  if (!data) {
+    return null;
+  }
+
+  return transformMenu(data);
 }
 
 // Fetch primary navigation menu
@@ -842,29 +888,38 @@ export interface MegaMenuData {
 
 function extractCategorySlugFromUrl(url: string): string {
   if (!url) return "";
-  const match = url.match(/[?&]category=([^&]+)/);
-  if (match) return match[1];
-  const pathMatch = url.match(/\/shop\/([^/?]+)/);
-  if (pathMatch) return pathMatch[1];
+  const categoryParamMatch = url.match(/[?&]category=([^&]+)/);
+  if (categoryParamMatch) return categoryParamMatch[1];
+  const shopPathMatch = url.match(/\/shop\/([^/?]+)/);
+  if (shopPathMatch) return shopPathMatch[1];
+  const categoryPathMatch = url.match(/\/category\/([^/?]+)/);
+  if (categoryPathMatch) return categoryPathMatch[1];
+  const lastSegmentMatch = url.match(/\/([^/?]+)\/?$/);
+  if (lastSegmentMatch && lastSegmentMatch[1] !== "#") return lastSegmentMatch[1];
   return "";
 }
 
 function parseProductIds(label: string): number[] {
   const ids: number[] = [];
-  const matches = label.match(/\[(\d+)\]/g);
-  if (matches) {
-    matches.forEach((match) => {
-      const id = parseInt(match.replace(/[\[\]]/g, ""), 10);
-      if (!isNaN(id)) {
-        ids.push(id);
-      }
-    });
+  if (label.includes("[") || label.includes("]")) {
+    const matches = label.match(/\d+/g);
+    if (matches) {
+      matches.forEach((match) => {
+        const id = parseInt(match, 10);
+        if (!isNaN(id) && id > 0) {
+          ids.push(id);
+        }
+      });
+    }
   }
   return ids;
 }
 
 function isProductIdsLabel(label: string): boolean {
-  return /^\[[\d,\[\]\s]+\]?$/.test(label.trim()) || /\[\d+\]/.test(label);
+  if (!label.includes("[") && !label.includes("]")) return false;
+  const hasNumbers = /\d+/.test(label);
+  const hasOnlyBracketsNumbersAndPunctuation = /^[\[\]\d,\s]+$/.test(label.trim());
+  return hasNumbers && hasOnlyBracketsNumbersAndPunctuation;
 }
 
 export async function getMegaMenuData(locale?: Locale): Promise<MegaMenuData | null> {
