@@ -2,8 +2,8 @@
 /**
  * Plugin Name: ASL Frontend Settings
  * Plugin URI: https://aromaticscentslab.com
- * Description: Admin dashboard and REST API endpoints for ASL Frontend with Media Library upload, dynamic slides, and layout options.
- * Version: 4.0.0
+ * Description: Admin dashboard and REST API endpoints for ASL Frontend with Media Library upload, dynamic slides, layout options, and ASL Bundles Creator.
+ * Version: 5.0.0
  * Author: Aromatic Scents Lab
  * License: GPL v2 or later
  */
@@ -17,7 +17,7 @@ if (defined('ASL_FRONTEND_SETTINGS_LOADED')) {
     return;
 }
 define('ASL_FRONTEND_SETTINGS_LOADED', true);
-define('ASL_SETTINGS_VERSION', '4.0.0');
+define('ASL_SETTINGS_VERSION', '5.0.0');
 
 add_action('admin_enqueue_scripts', function($hook) {
     if (strpos($hook, 'asl-settings') === false) return;
@@ -574,3 +574,182 @@ add_action('admin_head', function() {
     if (strpos(get_current_screen()->id,'asl-settings')===false) return;
     echo '<style>.nav-tab-wrapper{margin-bottom:0}.tab-content{margin-top:0}.form-table th{width:200px}.asl-image-field{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px}.asl-preview{flex-basis:100%}</style>';
 });
+
+// ============================================================================
+// ASL BUNDLES CREATOR - REST API ENDPOINTS
+// ============================================================================
+
+add_action('rest_api_init', function() {
+    // Get all bundles or filter by product_id
+    register_rest_route('asl-bundles/v1', '/bundles', array(
+        'methods' => 'GET',
+        'callback' => 'asl_bundles_get_all',
+        'permission_callback' => '__return_true',
+    ));
+
+    // Get single bundle by ID
+    register_rest_route('asl-bundles/v1', '/bundles/(?P<id>[a-zA-Z0-9-]+)', array(
+        'methods' => 'GET',
+        'callback' => 'asl_bundles_get_single',
+        'permission_callback' => '__return_true',
+    ));
+
+    // Create new bundle
+    register_rest_route('asl-bundles/v1', '/bundles', array(
+        'methods' => 'POST',
+        'callback' => 'asl_bundles_create',
+        'permission_callback' => 'asl_bundles_check_permission',
+    ));
+
+    // Update bundle
+    register_rest_route('asl-bundles/v1', '/bundles/(?P<id>[a-zA-Z0-9-]+)', array(
+        'methods' => 'PUT',
+        'callback' => 'asl_bundles_update',
+        'permission_callback' => 'asl_bundles_check_permission',
+    ));
+
+    // Delete bundle
+    register_rest_route('asl-bundles/v1', '/bundles/(?P<id>[a-zA-Z0-9-]+)', array(
+        'methods' => 'DELETE',
+        'callback' => 'asl_bundles_delete',
+        'permission_callback' => 'asl_bundles_check_permission',
+    ));
+});
+
+function asl_bundles_check_permission() {
+    return current_user_can('manage_options') || current_user_can('manage_woocommerce');
+}
+
+function asl_bundles_get_all($request) {
+    $bundles = get_option('asl_bundles_data', array());
+    $product_id = $request->get_param('product_id');
+    
+    if ($product_id) {
+        $product_id = intval($product_id);
+        $filtered = array_filter($bundles, function($bundle) use ($product_id) {
+            return isset($bundle['product_id']) && intval($bundle['product_id']) === $product_id;
+        });
+        return array_values($filtered);
+    }
+    
+    return array_values($bundles);
+}
+
+function asl_bundles_get_single($request) {
+    $id = $request->get_param('id');
+    $bundles = get_option('asl_bundles_data', array());
+    
+    if (isset($bundles[$id])) {
+        return $bundles[$id];
+    }
+    
+    return new WP_Error('not_found', 'Bundle not found', array('status' => 404));
+}
+
+function asl_bundles_create($request) {
+    $data = $request->get_json_params();
+    
+    if (empty($data['id'])) {
+        $data['id'] = wp_generate_uuid4();
+    }
+    
+    $bundle = asl_bundles_sanitize_bundle($data);
+    $bundle['created_at'] = $data['created_at'] ?? current_time('c');
+    $bundle['updated_at'] = current_time('c');
+    
+    $bundles = get_option('asl_bundles_data', array());
+    $bundles[$bundle['id']] = $bundle;
+    update_option('asl_bundles_data', $bundles);
+    
+    return $bundle;
+}
+
+function asl_bundles_update($request) {
+    $id = $request->get_param('id');
+    $data = $request->get_json_params();
+    
+    $bundles = get_option('asl_bundles_data', array());
+    
+    if (!isset($bundles[$id])) {
+        return new WP_Error('not_found', 'Bundle not found', array('status' => 404));
+    }
+    
+    $bundle = asl_bundles_sanitize_bundle($data);
+    $bundle['id'] = $id;
+    $bundle['created_at'] = $bundles[$id]['created_at'] ?? current_time('c');
+    $bundle['updated_at'] = current_time('c');
+    
+    $bundles[$id] = $bundle;
+    update_option('asl_bundles_data', $bundles);
+    
+    return $bundle;
+}
+
+function asl_bundles_delete($request) {
+    $id = $request->get_param('id');
+    $bundles = get_option('asl_bundles_data', array());
+    
+    if (!isset($bundles[$id])) {
+        return new WP_Error('not_found', 'Bundle not found', array('status' => 404));
+    }
+    
+    unset($bundles[$id]);
+    update_option('asl_bundles_data', $bundles);
+    
+    return array('success' => true, 'message' => 'Bundle deleted successfully');
+}
+
+function asl_bundles_sanitize_bundle($data) {
+    $bundle = array(
+        'id' => sanitize_text_field($data['id'] ?? ''),
+        'product_id' => isset($data['product_id']) ? intval($data['product_id']) : null,
+        'title' => sanitize_text_field($data['title'] ?? ''),
+        'bundle_type' => sanitize_text_field($data['bundle_type'] ?? 'custom'),
+        'shipping_fee' => sanitize_text_field($data['shipping_fee'] ?? 'apply_to_each_bundled_product'),
+        'is_enabled' => !empty($data['is_enabled']),
+        'pricing' => array(
+            'mode' => sanitize_text_field($data['pricing']['mode'] ?? 'box_fixed_price'),
+            'box_price' => floatval($data['pricing']['box_price'] ?? 0),
+            'included_items_count' => intval($data['pricing']['included_items_count'] ?? 3),
+            'extra_item_charging_method' => sanitize_text_field($data['pricing']['extra_item_charging_method'] ?? 'cheapest_first'),
+            'show_product_prices' => !empty($data['pricing']['show_product_prices']),
+        ),
+        'items' => array(),
+    );
+    
+    if (!empty($data['items']) && is_array($data['items'])) {
+        foreach ($data['items'] as $item) {
+            $bundle['items'][] = array(
+                'id' => sanitize_text_field($item['id'] ?? ''),
+                'title' => sanitize_text_field($item['title'] ?? ''),
+                'is_expanded' => !empty($item['is_expanded']),
+                'rule' => array(
+                    'categories' => array_map('intval', $item['rule']['categories'] ?? array()),
+                    'exclude_categories' => array_map('intval', $item['rule']['exclude_categories'] ?? array()),
+                    'tags' => array_map('intval', $item['rule']['tags'] ?? array()),
+                    'exclude_tags' => array_map('intval', $item['rule']['exclude_tags'] ?? array()),
+                    'products' => array_map('intval', $item['rule']['products'] ?? array()),
+                    'product_variations' => array_map('intval', $item['rule']['product_variations'] ?? array()),
+                    'exclude_products' => array_map('intval', $item['rule']['exclude_products'] ?? array()),
+                    'exclude_product_variations' => array_map('intval', $item['rule']['exclude_product_variations'] ?? array()),
+                ),
+                'display' => array(
+                    'custom_title' => sanitize_text_field($item['display']['custom_title'] ?? ''),
+                    'sort_by' => sanitize_text_field($item['display']['sort_by'] ?? 'price'),
+                    'sort_order' => sanitize_text_field($item['display']['sort_order'] ?? 'asc'),
+                    'is_default' => !empty($item['display']['is_default']),
+                    'default_product_id' => isset($item['display']['default_product_id']) ? intval($item['display']['default_product_id']) : null,
+                    'quantity' => intval($item['display']['quantity'] ?? 1),
+                    'quantity_min' => intval($item['display']['quantity_min'] ?? 1),
+                    'quantity_max' => intval($item['display']['quantity_max'] ?? 10),
+                    'discount_type' => sanitize_text_field($item['display']['discount_type'] ?? 'percent'),
+                    'discount_value' => floatval($item['display']['discount_value'] ?? 0),
+                    'is_optional' => !empty($item['display']['is_optional']),
+                    'show_price' => isset($item['display']['show_price']) ? !empty($item['display']['show_price']) : true,
+                ),
+            );
+        }
+    }
+    
+    return $bundle;
+}
