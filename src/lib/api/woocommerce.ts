@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { siteConfig, type Locale, type Currency } from "@/config/site";
+import { siteConfig, API_BASE_CURRENCY, type Locale, type Currency } from "@/config/site";
 import type {
   WCProduct,
   WCCategory,
@@ -7,6 +7,9 @@ import type {
 } from "@/types/woocommerce";
 
 const API_BASE = `${siteConfig.apiUrl}/wp-json/wc/store/v1`;
+
+// Default currency for Store API requests - ensures prices are returned in the base currency
+const DEFAULT_API_CURRENCY = API_BASE_CURRENCY;
 
 interface FetchOptions {
   revalidate?: number;
@@ -36,10 +39,10 @@ async function fetchAPI<T>(
   }
   
   // Add currency parameter for WPML multicurrency support
-  if (currency) {
-    const separator = url.includes("?") ? "&" : "?";
-    url = `${url}${separator}currency=${currency}`;
-  }
+  // Use default API currency (AED) if not specified to ensure consistent pricing
+  const currencyToUse = currency || DEFAULT_API_CURRENCY;
+  const separator = url.includes("?") ? "&" : "?";
+  url = `${url}${separator}currency=${currencyToUse}`;
 
   const response = await fetch(url, {
     next: {
@@ -70,10 +73,10 @@ async function fetchAPIWithPagination<T>(
   }
   
   // Add currency parameter for WPML multicurrency support
-  if (currency) {
-    const separator = url.includes("?") ? "&" : "?";
-    url = `${url}${separator}currency=${currency}`;
-  }
+  // Use default API currency (AED) if not specified to ensure consistent pricing
+  const currencyToUse = currency || DEFAULT_API_CURRENCY;
+  const separator = url.includes("?") ? "&" : "?";
+  url = `${url}${separator}currency=${currencyToUse}`;
 
   const response = await fetch(url, {
     next: {
