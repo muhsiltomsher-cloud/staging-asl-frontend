@@ -8,7 +8,8 @@ import type { Locale } from "@/config/site";
 // DEV MODE: Cache disabled for faster development - uncomment when done
 // const PRODUCTS_CACHE_KEY = "asl_products_cache";
 // const CACHE_TTL_MS = 5 * 60 * 1000;
-const PER_PAGE = 24;
+// Reduced from 24 to 12 for faster scroll loading and reduced API weight
+const PER_PAGE = 12;
 
 // Interface kept for type safety even when cache is disabled
 interface CachedProducts {
@@ -71,8 +72,9 @@ export function ShopClient({
     const nextPage = currentPage + 1;
     
     try {
+      // Use lightweight=true to reduce API payload size (strips unnecessary fields)
       const response = await fetch(
-        `/api/products?page=${nextPage}&per_page=${PER_PAGE}&locale=${locale}`
+        `/api/products?page=${nextPage}&per_page=${PER_PAGE}&locale=${locale}&lightweight=true`
       );
       
       if (!response.ok) {

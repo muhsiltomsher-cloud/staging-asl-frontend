@@ -41,8 +41,9 @@ export default async function ShopPage({ params }: ShopPageProps) {
   ];
 
   // Fetch products and gift product IDs in parallel
+  // Load 12 products initially for faster page load, more will load on scroll
   const [productsResult, giftProductIds] = await Promise.all([
-    getProducts({ per_page: 24, locale: locale as Locale }),
+    getProducts({ per_page: 12, locale: locale as Locale }),
     getFreeGiftProductIds(),
   ]);
 
