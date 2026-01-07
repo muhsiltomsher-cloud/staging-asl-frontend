@@ -1,5 +1,5 @@
 // WooCommerce Store API Types
-// Based on https://adminasl.stagingndemo.com/wp-json/wc/store/v1/
+// Based on https://staging.aromaticscentslab.com/wp-json/wc/store/v1/
 
 export interface WCProductImage {
   id: number;

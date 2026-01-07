@@ -190,7 +190,7 @@ export default async function HomePage({ params }: HomePageProps) {
               <div className="absolute -inset-4 rounded-2xl bg-gradient-to-br from-amber-200/20 to-stone-200/20 blur-sm" />
               <div className="relative aspect-[4/5] overflow-hidden rounded-2xl shadow-xl lg:aspect-square">
                 <Image
-                  src="https://adminasl.stagingndemo.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
+                  src="https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
                   alt={isRTL ? "قصتنا" : "Our Story"}
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"

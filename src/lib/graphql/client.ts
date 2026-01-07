@@ -3,7 +3,7 @@ import { setContext } from "@apollo/client/link/context";
 
 const WORDPRESS_GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL ||
-  "https://aromaticscentslab.com/graphql";
+  "https://staging.aromaticscentslab.com/graphql";
 
 const httpLink = createHttpLink({
   uri: WORDPRESS_GRAPHQL_ENDPOINT,

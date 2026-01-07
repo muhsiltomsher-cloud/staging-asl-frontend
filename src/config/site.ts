@@ -13,16 +13,16 @@ export const siteConfig = {
   
   // Frontend URL - update this when deploying to production
   // Local: http://localhost:3000
-  // Production: https://asl-frontend-seven.vercel.app
-  url: "https://asl-frontend-seven.vercel.app",
+  // Production: https://app.aromaticscentslab.com
+  url: "https://app.aromaticscentslab.com",
   
   // Open Graph image URL - used for social media sharing
-  ogImage: "https://asl-frontend-seven.vercel.app/og.jpg",
+  ogImage: "https://app.aromaticscentslab.com/og.jpg",
   
   // WordPress/WooCommerce Backend API URL
-  // Staging: https://adminasl.stagingndemo.com
+  // Staging: https://staging.aromaticscentslab.com
   // Production: https://aromaticscentslab.com (or your production backend)
-  apiUrl: "https://adminasl.stagingndemo.com",
+  apiUrl: "https://staging.aromaticscentslab.com",
   
   // Social media links
   links: {
