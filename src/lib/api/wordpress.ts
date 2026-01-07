@@ -895,9 +895,27 @@ function extractCategorySlugFromUrl(url: string): string {
   if (shopPathMatch) return shopPathMatch[1];
   const categoryPathMatch = url.match(/\/category\/([^/?]+)/);
   if (categoryPathMatch) return categoryPathMatch[1];
+  // Match WordPress product-category URLs (e.g., /product-category/perfumes-oils/)
+  const productCategoryPathMatch = url.match(/\/product-category\/([^/?]+)/);
+  if (productCategoryPathMatch) return productCategoryPathMatch[1];
   const lastSegmentMatch = url.match(/\/([^/?]+)\/?$/);
   if (lastSegmentMatch && lastSegmentMatch[1] !== "#") return lastSegmentMatch[1];
   return "";
+}
+
+/**
+ * Transform a WordPress URL to a frontend category URL
+ * WordPress URLs like https://adminasl.stagingndemo.com/product-category/perfumes-oils/
+ * become /{locale}/category/{slug}
+ */
+function transformToFrontendCategoryUrl(url: string, slug: string, locale?: Locale): string {
+  const localePrefix = locale || "en";
+  // If we have a valid slug, construct the frontend URL
+  if (slug) {
+    return `/${localePrefix}/category/${slug}`;
+  }
+  // Fallback to shop page if no slug
+  return `/${localePrefix}/shop`;
 }
 
 function parseProductIds(label: string): number[] {
@@ -952,11 +970,12 @@ export async function getMegaMenuData(locale?: Locale): Promise<MegaMenuData | n
       continue;
     }
 
+    const childSlug = extractCategorySlugFromUrl(child.url);
     const column: MegaMenuColumn = {
       id: child.id,
       name: child.title,
-      slug: extractCategorySlugFromUrl(child.url),
-      url: child.url,
+      slug: childSlug,
+      url: transformToFrontendCategoryUrl(child.url, childSlug, locale),
       image: null,
       children: [],
     };
@@ -969,11 +988,12 @@ export async function getMegaMenuData(locale?: Locale): Promise<MegaMenuData | n
           continue;
         }
 
+        const subChildSlug = extractCategorySlugFromUrl(subChild.url);
         column.children.push({
           id: subChild.id,
           name: subChild.title,
-          slug: extractCategorySlugFromUrl(subChild.url),
-          url: subChild.url,
+          slug: subChildSlug,
+          url: transformToFrontendCategoryUrl(subChild.url, subChildSlug, locale),
         });
       }
     }
