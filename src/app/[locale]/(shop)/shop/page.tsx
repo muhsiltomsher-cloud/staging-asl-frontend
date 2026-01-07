@@ -3,7 +3,7 @@ import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
-import { getProducts, getFreeGiftProductIds } from "@/lib/api/woocommerce";
+import { getProducts, getFreeGiftProductIds, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { ShopClient } from "./ShopClient";
@@ -40,11 +40,12 @@ export default async function ShopPage({ params }: ShopPageProps) {
     { name: dictionary.common.shop, href: `/${locale}/shop` },
   ];
 
-  // Fetch products and gift product IDs in parallel
+  // Fetch products, gift product IDs, and bundle product slugs in parallel
   // Load 12 products initially for faster page load, more will load on scroll
-  const [productsResult, giftProductIds] = await Promise.all([
+  const [productsResult, giftProductIds, bundleProductSlugs] = await Promise.all([
     getProducts({ per_page: 12, locale: locale as Locale }),
     getFreeGiftProductIds(),
+    getBundleEnabledProductSlugs(),
   ]);
 
   // Filter out gift products from the shop listing
@@ -77,6 +78,7 @@ export default async function ShopPage({ params }: ShopPageProps) {
           initialTotal={filteredTotal}
           initialTotalPages={productsResult.totalPages}
           giftProductIds={giftProductIds}
+          bundleProductSlugs={bundleProductSlugs}
         />
       </Suspense>
     </div>

@@ -10,6 +10,7 @@ interface WCProductGridProps {
   isLoading?: boolean;
   className?: string;
   columns?: 2 | 3 | 4 | 5;
+  bundleProductSlugs?: string[];
 }
 
 export function WCProductGrid({
@@ -18,6 +19,7 @@ export function WCProductGrid({
   isLoading = false,
   className,
   columns = 5,
+  bundleProductSlugs = [],
 }: WCProductGridProps) {
   if (isLoading) {
     return <ProductGridSkeleton count={columns * 2} />;
@@ -41,7 +43,7 @@ export function WCProductGrid({
   return (
     <div className={cn("grid gap-4 md:gap-6", gridCols[columns], className)}>
       {products.map((product) => (
-        <WCProductCard key={product.id} product={product} locale={locale} />
+        <WCProductCard key={product.id} product={product} locale={locale} bundleProductSlugs={bundleProductSlugs} />
       ))}
     </div>
   );

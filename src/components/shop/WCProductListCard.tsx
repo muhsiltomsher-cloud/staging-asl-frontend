@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShoppingBag, Heart } from "lucide-react";
+import { ShoppingBag, Heart, Eye } from "lucide-react";
 import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
@@ -19,12 +19,14 @@ interface WCProductListCardProps {
   product: WCProduct;
   locale: Locale;
   className?: string;
+  bundleProductSlugs?: string[];
 }
 
 export function WCProductListCard({
   product,
   locale,
   className,
+  bundleProductSlugs = [],
 }: WCProductListCardProps) {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
@@ -82,6 +84,9 @@ export function WCProductListCard({
 
   // Use English slug from permalink to ensure consistent URLs across locales
   const productSlug = getProductSlugFromPermalink(product.permalink, product.slug);
+
+  // Check if this product is a bundle product
+  const isBundleProduct = bundleProductSlugs.includes(productSlug) || bundleProductSlugs.includes(product.slug);
 
   return (
     <article className={cn("group relative", className)}>
@@ -171,7 +176,18 @@ export function WCProductListCard({
 
           {/* Actions */}
           <div className="mt-4 flex items-center gap-2">
-            {!isOutOfStock && product.is_purchasable && (
+            {isBundleProduct ? (
+              <Button 
+                size="sm" 
+                className="shadow-sm"
+                asChild
+              >
+                <Link href={`/${locale}/product/${productSlug}`}>
+                  <Eye className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                  {isRTL ? "عرض الخيارات" : "View Options"}
+                </Link>
+              </Button>
+            ) : !isOutOfStock && product.is_purchasable && (
               <Button 
                 onClick={handleAddToCart} 
                 size="sm" 

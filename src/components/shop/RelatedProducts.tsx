@@ -15,12 +15,14 @@ interface RelatedProductsProps {
   products: WCProduct[];
   currentProductId: number;
   locale: Locale;
+  bundleProductSlugs?: string[];
 }
 
 export function RelatedProducts({
   products,
   currentProductId,
   locale,
+  bundleProductSlugs = [],
 }: RelatedProductsProps) {
   const isRTL = locale === "ar";
 
@@ -96,7 +98,7 @@ export function RelatedProducts({
         >
           {filteredProducts.slice(0, 8).map((product) => (
             <SwiperSlide key={product.id}>
-              <WCProductCard product={product} locale={locale} />
+              <WCProductCard product={product} locale={locale} bundleProductSlugs={bundleProductSlugs} />
             </SwiperSlide>
           ))}
         </Swiper>

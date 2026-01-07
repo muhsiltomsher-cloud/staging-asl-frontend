@@ -22,6 +22,7 @@ interface FeaturedProductsSliderProps {
   viewAllText?: string;
   className?: string;
   isLoading?: boolean;
+  bundleProductSlugs?: string[];
 }
 
 function FeaturedProductCardSkeleton() {
@@ -62,6 +63,7 @@ export function FeaturedProductsSlider({
   viewAllText = "View All",
   className = "",
   isLoading = false,
+  bundleProductSlugs = [],
 }: FeaturedProductsSliderProps) {
   if (isLoading) {
     return <FeaturedProductsSliderSkeleton />;
@@ -146,7 +148,7 @@ export function FeaturedProductsSlider({
           >
             {displayProducts.map((product) => (
               <SwiperSlide key={product.id}>
-                <WCProductCard product={product} locale={locale} />
+                <WCProductCard product={product} locale={locale} bundleProductSlugs={bundleProductSlugs} />
               </SwiperSlide>
             ))}
           </Swiper>

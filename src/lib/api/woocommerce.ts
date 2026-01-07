@@ -400,6 +400,64 @@ export async function getFreeGiftProductIds(currency?: string): Promise<number[]
   }
 }
 
+// Fetch all bundle-enabled product slugs from the backend
+// Used to identify bundle products in shop listings
+export async function getBundleEnabledProductSlugs(): Promise<string[]> {
+  try {
+    const response = await fetch(
+      `${siteConfig.apiUrl}/wp-json/asl-bundles/v1/enabled-products`,
+      {
+        next: {
+          revalidate: 60,
+          tags: ["bundle-enabled-products"],
+        },
+      }
+    );
+
+    if (!response.ok) {
+      // Fallback: try to get from bundles list
+      const bundlesResponse = await fetch(
+        `${siteConfig.apiUrl}/wp-json/asl-bundles/v1/bundles`,
+        {
+          next: {
+            revalidate: 60,
+            tags: ["bundles"],
+          },
+        }
+      );
+
+      if (!bundlesResponse.ok) {
+        return [];
+      }
+
+      const bundles = await bundlesResponse.json();
+      if (Array.isArray(bundles)) {
+        // Filter enabled bundles and extract product slugs
+        return bundles
+          .filter((bundle: { is_enabled?: boolean; enabled?: boolean }) => 
+            bundle.is_enabled || bundle.enabled
+          )
+          .map((bundle: { product_slug?: string; slug?: string }) => 
+            bundle.product_slug || bundle.slug
+          )
+          .filter((slug: string | undefined): slug is string => !!slug);
+      }
+      return [];
+    }
+
+    const data = await response.json();
+    if (Array.isArray(data)) {
+      return data;
+    }
+    if (data.slugs && Array.isArray(data.slugs)) {
+      return data.slugs;
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
 // Helper function to format price from WooCommerce
 export function formatWCPrice(prices: WCProduct["prices"]): string {
   const price = parseInt(prices.price) / Math.pow(10, prices.currency_minor_unit);

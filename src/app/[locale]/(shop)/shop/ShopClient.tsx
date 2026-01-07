@@ -40,6 +40,7 @@ interface ShopClientProps {
   initialTotal?: number;
   initialTotalPages?: number;
   giftProductIds?: number[];
+  bundleProductSlugs?: string[];
 }
 
 export function ShopClient({ 
@@ -48,6 +49,7 @@ export function ShopClient({
   initialTotal = 0,
   initialTotalPages = 1,
   giftProductIds = [],
+  bundleProductSlugs = [],
 }: ShopClientProps) {
   const [products, setProducts] = useState<WCProduct[]>(initialProducts);
   const [isLoading, setIsLoading] = useState(false);
@@ -146,6 +148,7 @@ export function ShopClient({
         products={products}
         locale={locale}
         showToolbar={true}
+        bundleProductSlugs={bundleProductSlugs}
       />
       
       <div ref={loadMoreRef} className="py-8 flex justify-center">
