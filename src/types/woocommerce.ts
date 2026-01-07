@@ -121,3 +121,38 @@ export interface WCProductsResponse {
 export interface WCCategoriesResponse {
   categories: WCCategory[];
 }
+
+/**
+ * Lightweight product type for product listings
+ * Contains only the fields needed for ProductCard/ProductListCard components
+ * This reduces API payload size significantly for scroll loading
+ */
+export interface WCProductLightweight {
+  id: number;
+  name: string;
+  slug: string;
+  permalink: string;
+  short_description: string;
+  on_sale: boolean;
+  prices: {
+    price: string;
+    regular_price: string;
+    currency_minor_unit: number;
+  };
+  images: {
+    src: string;
+    alt: string;
+  }[];
+  categories: {
+    id: number;
+    name: string;
+  }[];
+  is_in_stock: boolean;
+  is_purchasable: boolean;
+}
+
+export interface WCProductsLightweightResponse {
+  products: WCProductLightweight[];
+  total: number;
+  totalPages: number;
+}
