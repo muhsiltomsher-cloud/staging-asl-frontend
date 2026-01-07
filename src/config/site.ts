@@ -52,7 +52,7 @@ export type Currency = string;
  * Base currency used by the WooCommerce Store API.
  * The API returns prices in this currency, and we convert to the user's selected currency.
  */
-export const API_BASE_CURRENCY = "USD" as const;
+export const API_BASE_CURRENCY = "AED" as const;
 
 /**
  * Locale Configuration
