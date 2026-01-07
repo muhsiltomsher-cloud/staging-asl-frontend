@@ -12,8 +12,9 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { getCustomer, type Customer } from "@/lib/api/customer";
-import { featureFlags, type Locale, type Currency } from "@/config/site";
+import { featureFlags, type Locale } from "@/config/site";
 import { MapPin, Check, ChevronDown, ChevronUp, User, UserCheck, Tag, X } from "lucide-react";
 import { BundleItemsList } from "@/components/cart/BundleItemsList";
 
@@ -65,6 +66,7 @@ export default function CheckoutPage() {
   const router = useRouter();
     const { cart, cartItems, cartSubtotal, cartTotal, clearCart, applyCoupon, removeCoupon, selectedCoupons, couponDiscount, clearSelectedCoupons } = useCart();
     const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
+    const { currency } = useCurrency();
     const isRTL = locale === "ar";
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -80,7 +82,6 @@ export default function CheckoutPage() {
   
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
-  const cartCurrency = (cart?.currency?.currency_code || "AED") as Currency;
 
   const [formData, setFormData] = useState<CheckoutFormData>({
     shipping: { ...emptyAddress },
@@ -656,7 +657,7 @@ export default function CheckoutPage() {
                                     price={parseFloat(item.totals.total) / divisor}
                                     className="text-sm font-medium"
                                     iconSize="xs"
-                                    sourceCurrency={cartCurrency}
+                                    sourceCurrency={currency}
                                   />
                                 </div>
                               ))}
@@ -761,7 +762,7 @@ export default function CheckoutPage() {
                                 <FormattedPrice
                                   price={parseFloat(cartSubtotal) / divisor}
                                   iconSize="xs"
-                                  sourceCurrency={cartCurrency}
+                                  sourceCurrency={currency}
                                 />
                               </div>
                               {couponDiscount > 0 && (
@@ -771,7 +772,7 @@ export default function CheckoutPage() {
                                     -<FormattedPrice
                                       price={couponDiscount / divisor}
                                       iconSize="xs"
-                                      sourceCurrency={cartCurrency}
+                                      sourceCurrency={currency}
                                     />
                                   </span>
                                 </div>
@@ -781,7 +782,7 @@ export default function CheckoutPage() {
                                 <FormattedPrice
                                   price={parseFloat(cart?.totals?.shipping_total || "0") / divisor}
                                   iconSize="xs"
-                                  sourceCurrency={cartCurrency}
+                                  sourceCurrency={currency}
                                 />
                               </div>
                             </div>
@@ -791,7 +792,7 @@ export default function CheckoutPage() {
                 <FormattedPrice
                   price={parseFloat(cartTotal) / divisor}
                   iconSize="sm"
-                  sourceCurrency={cartCurrency}
+                  sourceCurrency={currency}
                 />
               </div>
 
@@ -825,7 +826,7 @@ export default function CheckoutPage() {
               price={parseFloat(cartTotal) / divisor}
               className="text-lg font-bold text-gray-900"
               iconSize="sm"
-              sourceCurrency={cartCurrency}
+              sourceCurrency={currency}
             />
           </div>
           <Button 
