@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct, getBundleConfig } from "@/lib/api/woocommerce";
+import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct, getEnglishSlugForCategory, getBundleConfig } from "@/lib/api/woocommerce";
 import { getProductAddons } from "@/lib/api/wcpa";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { ProductDetail } from "./ProductDetail";
@@ -102,13 +102,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
     redirect(`/${locale}/build-your-own-set`);
   }
 
-  // Fetch related products and addon forms in parallel
-  const [relatedProducts, productAddons] = await Promise.all([
+  // Get the primary category ID for fetching English slug
+  const primaryCategoryId = product.categories?.[0]?.id;
+
+  // Fetch related products, addon forms, and English category slug in parallel
+  const [relatedProducts, productAddons, englishCategorySlug] = await Promise.all([
     getRelatedProducts(product, {
       per_page: 8,
       locale: locale as Locale,
     }),
     getProductAddons(product.id, { locale: locale as Locale }),
+    primaryCategoryId ? getEnglishSlugForCategory(primaryCategoryId) : Promise.resolve(null),
   ]);
 
   return (
@@ -117,6 +121,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       locale={locale as Locale}
       relatedProducts={relatedProducts}
       addonForms={productAddons?.forms}
+      englishCategorySlug={englishCategorySlug}
     />
   );
 }

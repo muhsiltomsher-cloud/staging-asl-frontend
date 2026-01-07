@@ -43,12 +43,20 @@ export default async function HomePage({ params }: HomePageProps) {
   const isRTL = locale === "ar";
 
   // Fetch all data in parallel
-  const [{ products: allProducts }, categories, homeSettings, giftProductIds] = await Promise.all([
+  // Fetch both localized categories (for names) and English categories (for URL slugs)
+  const [{ products: allProducts }, categories, englishCategories, homeSettings, giftProductIds] = await Promise.all([
     getProducts({ per_page: 20, locale: locale as Locale }),
     getCategories(locale as Locale),
+    getCategories("en"), // Always fetch English categories for URL slugs
     getHomePageSettings(locale as Locale),
     getFreeGiftProductIds(),
   ]);
+
+  // Create a mapping of category ID to English slug for URL generation
+  const englishCategorySlugs: Record<number, string> = {};
+  englishCategories.forEach((cat) => {
+    englishCategorySlugs[cat.id] = cat.slug;
+  });
 
   // Filter out gift products from the home page
   const products = allProducts.filter(
@@ -138,6 +146,7 @@ export default async function HomePage({ params }: HomePageProps) {
         isRTL={isRTL}
         viewAllText={sectionTexts.viewAll}
         productsText={sectionTexts.products}
+        englishCategorySlugs={englishCategorySlugs}
       />
 
       {/* Featured Products Slider */}

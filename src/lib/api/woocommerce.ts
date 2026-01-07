@@ -207,6 +207,21 @@ export const getEnglishSlugForProduct = cache(async function getEnglishSlugForPr
   }
 });
 
+// Get the English slug for a category by its ID (used for URL generation)
+// This ensures category URLs always use English slugs regardless of current locale
+export const getEnglishSlugForCategory = cache(async function getEnglishSlugForCategory(
+  categoryId: number
+): Promise<string | null> {
+  try {
+    // Fetch categories with English locale to get English slugs
+    const categories = await getCategories("en");
+    const category = categories.find((cat) => cat.id === categoryId);
+    return category?.slug || null;
+  } catch {
+    return null;
+  }
+});
+
 export async function getProductById(
   id: number,
   locale?: Locale,

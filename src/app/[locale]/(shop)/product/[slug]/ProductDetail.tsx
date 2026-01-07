@@ -153,9 +153,10 @@ interface ProductDetailProps {
   locale: Locale;
   relatedProducts?: WCProduct[];
   addonForms?: WCPAForm[];
+  englishCategorySlug?: string | null;
 }
 
-export function ProductDetail({ product, locale, relatedProducts = [], addonForms = [] }: ProductDetailProps) {
+export function ProductDetail({ product, locale, relatedProducts = [], addonForms = [], englishCategorySlug }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -178,9 +179,11 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
   };
 
   const primaryCategory = product.categories?.[0];
+  // Use English category slug for URLs (falls back to localized slug if English slug not available)
+  const categorySlugForUrl = englishCategorySlug || primaryCategory?.slug;
   const breadcrumbItems = [
     { name: isRTL ? "المتجر" : "Shop", href: `/${locale}/shop` },
-    ...(primaryCategory ? [{ name: decodeHtmlEntities(primaryCategory.name), href: `/${locale}/category/${primaryCategory.slug}` }] : []),
+    ...(primaryCategory && categorySlugForUrl ? [{ name: decodeHtmlEntities(primaryCategory.name), href: `/${locale}/category/${categorySlugForUrl}` }] : []),
     { name: decodeHtmlEntities(product.name), href: `/${locale}/product/${product.slug}` },
   ];
 
@@ -572,9 +575,9 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
         {/* Product Info - Sticky on desktop */}
         <div className="space-y-6 lg:sticky lg:top-32 lg:self-start">
           {/* Category - Small uppercase label */}
-          {primaryCategory && (
+          {primaryCategory && categorySlugForUrl && (
             <Link 
-              href={`/${locale}/category/${primaryCategory.slug}`}
+              href={`/${locale}/category/${categorySlugForUrl}`}
               className="inline-block text-xs font-medium uppercase tracking-wider text-gray-500 hover:text-gray-700 transition-colors"
             >
               {decodeHtmlEntities(primaryCategory.name)}

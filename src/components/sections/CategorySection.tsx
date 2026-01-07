@@ -17,6 +17,7 @@ interface CategorySectionProps {
   productsText?: string;
   className?: string;
   isLoading?: boolean;
+  englishCategorySlugs?: Record<number, string>;
 }
 
 function CategoryCardSkeleton() {
@@ -57,6 +58,7 @@ export function CategorySection({
   viewAllText = "View All",
   className = "",
   isLoading = false,
+  englishCategorySlugs = {},
 }: CategorySectionProps) {
   if (isLoading) {
     return <CategorySectionSkeleton count={settings.categories_count || 4} />;
@@ -114,10 +116,13 @@ export function CategorySection({
         </div>
 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-          {displayCategories.map((category) => (
+          {displayCategories.map((category) => {
+            // Use English slug for URL (falls back to localized slug if not available)
+            const categorySlugForUrl = englishCategorySlugs[category.id] || category.slug;
+            return (
             <Link
               key={category.slug}
-              href={`/${locale}/category/${category.slug}`}
+              href={`/${locale}/category/${categorySlugForUrl}`}
               className="group flex flex-col"
             >
               <div className="relative aspect-[3/2] overflow-hidden rounded-xl bg-white transition-shadow duration-300 hover:shadow-lg">
@@ -142,7 +147,8 @@ export function CategorySection({
                                 </h3>
               </div>
             </Link>
-          ))}
+          );
+          })}
         </div>
 
         {settings.show_view_all && (
