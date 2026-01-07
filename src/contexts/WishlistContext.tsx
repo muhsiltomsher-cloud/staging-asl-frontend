@@ -90,12 +90,19 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const response = await apiGetWishlist();
-      if (response.success && response.wishlist) {
-        setWishlist(response.wishlist);
-        // Update cache with fresh count
-        const newCount = response.wishlist.items_count || response.wishlist.items?.length || 0;
-        setCachedWishlistCount(newCount);
-        setCachedCount(newCount);
+      if (response.success) {
+        if (response.wishlist) {
+          setWishlist(response.wishlist);
+          // Update cache with fresh count
+          const newCount = response.wishlist.items_count || response.wishlist.items?.length || 0;
+          setCachedWishlistCount(newCount);
+          setCachedCount(newCount);
+        } else {
+          // User has no wishlist yet - clear state to avoid stale data
+          setWishlist(null);
+          clearCachedWishlistCount();
+          setCachedCount(0);
+        }
       }
     } catch (error) {
       console.error("Error fetching wishlist:", error);

@@ -43,9 +43,14 @@ function setCachedShareKey(_userId: number, _shareKey: string): void {
 
 // WooCommerce REST API authentication (required for /wc/v3/ endpoints)
 function getWooCommerceCredentials() {
-  const consumerKey = process.env.WC_CONSUMER_KEY || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "";
-  const consumerSecret = process.env.WC_CONSUMER_SECRET || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "";
+  const consumerKey = process.env.WC_CONSUMER_KEY || "";
+  const consumerSecret = process.env.WC_CONSUMER_SECRET || "";
   return { consumerKey, consumerSecret };
+}
+
+function areCredentialsConfigured(): boolean {
+  const { consumerKey, consumerSecret } = getWooCommerceCredentials();
+  return consumerKey.length > 0 && consumerSecret.length > 0;
 }
 
 function getBasicAuthParams(): string {
@@ -204,6 +209,21 @@ async function getUserId(): Promise<number | null> {
 
 export async function GET() {
   try {
+    // Check if WooCommerce credentials are configured
+    if (!areCredentialsConfigured()) {
+      console.error("[Wishlist API] WC_CONSUMER_KEY and WC_CONSUMER_SECRET environment variables are not configured");
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "server_misconfigured",
+            message: "Wishlist service is not configured. Please contact support.",
+          },
+        },
+        { status: 503 }
+      );
+    }
+
     const userId = await getUserId();
     
     if (!userId) {
@@ -237,9 +257,24 @@ export async function GET() {
         errorData = { message: errorText };
       }
       
-      // If no wishlist found, return empty
+      // If no wishlist found, return empty (user hasn't created a wishlist yet)
       if (response.status === 404) {
         return NextResponse.json({ success: true, wishlist: null, items: [] });
+      }
+      
+      // If upstream returns 401/403, it's likely a credentials/permissions issue
+      if (response.status === 401 || response.status === 403) {
+        console.error("[Wishlist API] Upstream auth error:", errorData);
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "wishlist_upstream_unauthorized",
+              message: "Unable to access wishlist service. Please try again later.",
+            },
+          },
+          { status: 503 }
+        );
       }
       
       return NextResponse.json(
@@ -328,6 +363,21 @@ export async function POST(request: NextRequest) {
   const action = searchParams.get("action");
 
   try {
+    // Check if WooCommerce credentials are configured
+    if (!areCredentialsConfigured()) {
+      console.error("[Wishlist API] WC_CONSUMER_KEY and WC_CONSUMER_SECRET environment variables are not configured");
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "server_misconfigured",
+            message: "Wishlist service is not configured. Please contact support.",
+          },
+        },
+        { status: 503 }
+      );
+    }
+
     const userId = await getUserId();
     
     if (!userId) {
@@ -347,11 +397,12 @@ export async function POST(request: NextRequest) {
 
     // Helper function to get user's wishlist share_key (with caching)
     // Takes userId as parameter to ensure proper TypeScript type narrowing
-    async function getUserWishlistShareKey(uid: number): Promise<string | null> {
+    // Returns: { shareKey, error } where error indicates upstream auth failure
+    async function getUserWishlistShareKey(uid: number): Promise<{ shareKey: string | null; error?: string }> {
       // Check cache first
       const cachedKey = getCachedShareKey(uid);
       if (cachedKey) {
-        return cachedKey;
+        return { shareKey: cachedKey };
       }
       
       const response = await fetch(`${WISHLIST_BASE}/get_by_user/${uid}?${getBasicAuthParams()}`, {
@@ -374,16 +425,36 @@ export async function POST(request: NextRequest) {
         if (shareKey) {
           setCachedShareKey(uid, shareKey);
         }
-        return shareKey;
+        return { shareKey };
       }
       
-      return null;
+      // Check for upstream auth errors
+      if (response.status === 401 || response.status === 403) {
+        return { shareKey: null, error: "upstream_unauthorized" };
+      }
+      
+      return { shareKey: null };
     }
 
     switch (action) {
       case "add": {
         // Get user's wishlist share_key
-        const shareKey = await getUserWishlistShareKey(userId);
+        const { shareKey, error } = await getUserWishlistShareKey(userId);
+        
+        // Handle upstream auth errors
+        if (error === "upstream_unauthorized") {
+          console.error("[Wishlist API] Upstream auth error when getting wishlist for add");
+          return NextResponse.json(
+            {
+              success: false,
+              error: {
+                code: "wishlist_upstream_unauthorized",
+                message: "Unable to access wishlist service. Please try again later.",
+              },
+            },
+            { status: 503 }
+          );
+        }
         
         if (!shareKey) {
           return NextResponse.json(
@@ -391,7 +462,7 @@ export async function POST(request: NextRequest) {
               success: false,
               error: {
                 code: "no_wishlist",
-                message: "No wishlist found. Please try again.",
+                message: "No wishlist found. Please create a wishlist first.",
               },
             },
             { status: 404 }
@@ -468,7 +539,24 @@ export async function POST(request: NextRequest) {
         let shareKey = body.share_key || body.wishlist_id;
         
         if (!shareKey) {
-          shareKey = await getUserWishlistShareKey(userId);
+          const result = await getUserWishlistShareKey(userId);
+          
+          // Handle upstream auth errors
+          if (result.error === "upstream_unauthorized") {
+            console.error("[Wishlist API] Upstream auth error when getting wishlist for remove");
+            return NextResponse.json(
+              {
+                success: false,
+                error: {
+                  code: "wishlist_upstream_unauthorized",
+                  message: "Unable to access wishlist service. Please try again later.",
+                },
+              },
+              { status: 503 }
+            );
+          }
+          
+          shareKey = result.shareKey;
         }
         
         if (!shareKey) {
@@ -548,7 +636,22 @@ export async function POST(request: NextRequest) {
         const results: Array<{ product_id: number; success: boolean }> = [];
         
         // Get user's wishlist share_key
-        const shareKey = await getUserWishlistShareKey(userId);
+        const { shareKey, error } = await getUserWishlistShareKey(userId);
+        
+        // Handle upstream auth errors
+        if (error === "upstream_unauthorized") {
+          console.error("[Wishlist API] Upstream auth error when getting wishlist for sync");
+          return NextResponse.json(
+            {
+              success: false,
+              error: {
+                code: "wishlist_upstream_unauthorized",
+                message: "Unable to access wishlist service. Please try again later.",
+              },
+            },
+            { status: 503 }
+          );
+        }
         
         if (!shareKey) {
           return NextResponse.json(
