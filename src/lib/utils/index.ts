@@ -96,3 +96,39 @@ export function getProductSlugFromPermalink(permalink: string, fallbackSlug: str
   
   return fallbackSlug;
 }
+
+/**
+ * Extracts the category slug from a WooCommerce category permalink URL.
+ * The permalink contains the localized slug based on the current language.
+ * Example: "https://example.com/product-category/fragrance-oils/" -> "fragrance-oils"
+ * Example: "https://example.com/ar/product-category/زيوت-عطرية/" -> "زيوت-عطرية"
+ * 
+ * @param link - The full category link URL from WooCommerce
+ * @param fallbackSlug - The slug to return if extraction fails
+ * @returns The extracted slug or the fallback slug
+ */
+export function getCategorySlugFromLink(link: string, fallbackSlug: string): string {
+  if (!link) return fallbackSlug;
+  
+  try {
+    // Remove trailing slash and get the last path segment
+    const url = new URL(link);
+    const pathSegments = url.pathname.split('/').filter(Boolean);
+    
+    // The category slug is typically the last segment after "product-category"
+    // e.g., /product-category/fragrance-oils/ or /ar/product-category/زيوت-عطرية/
+    const categoryIndex = pathSegments.indexOf('product-category');
+    if (categoryIndex !== -1 && categoryIndex < pathSegments.length - 1) {
+      return decodeURIComponent(pathSegments[categoryIndex + 1]);
+    }
+    
+    // Fallback: return the last segment if "product-category" not found
+    if (pathSegments.length > 0) {
+      return decodeURIComponent(pathSegments[pathSegments.length - 1]);
+    }
+  } catch {
+    // If URL parsing fails, return the fallback
+  }
+  
+  return fallbackSlug;
+}
