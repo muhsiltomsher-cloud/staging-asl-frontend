@@ -19,7 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import type { WCProduct } from "@/types/woocommerce";
 import type { WCPAForm, WCPAFormValues } from "@/types/wcpa";
 import type { Locale } from "@/config/site";
-import { decodeHtmlEntities, getCategorySlugFromLink } from "@/lib/utils";
+import { decodeHtmlEntities } from "@/lib/utils";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -178,10 +178,9 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
   };
 
   const primaryCategory = product.categories?.[0];
-  const categorySlug = primaryCategory ? getCategorySlugFromLink(primaryCategory.link, primaryCategory.slug) : null;
   const breadcrumbItems = [
     { name: isRTL ? "المتجر" : "Shop", href: `/${locale}/shop` },
-    ...(primaryCategory && categorySlug ? [{ name: decodeHtmlEntities(primaryCategory.name), href: `/${locale}/category/${categorySlug}` }] : []),
+    ...(primaryCategory ? [{ name: decodeHtmlEntities(primaryCategory.name), href: `/${locale}/category/${primaryCategory.slug}` }] : []),
     { name: decodeHtmlEntities(product.name), href: `/${locale}/product/${product.slug}` },
   ];
 
@@ -573,9 +572,9 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
         {/* Product Info - Sticky on desktop */}
         <div className="space-y-6 lg:sticky lg:top-32 lg:self-start">
           {/* Category - Small uppercase label */}
-          {primaryCategory && categorySlug && (
+          {primaryCategory && (
             <Link 
-              href={`/${locale}/category/${categorySlug}`}
+              href={`/${locale}/category/${primaryCategory.slug}`}
               className="inline-block text-xs font-medium uppercase tracking-wider text-gray-500 hover:text-gray-700 transition-colors"
             >
               {decodeHtmlEntities(primaryCategory.name)}

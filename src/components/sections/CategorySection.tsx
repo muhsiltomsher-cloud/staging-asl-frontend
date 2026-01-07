@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/common/Skeleton";
 import type { WCCategory } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 import type { CategorySectionSettings } from "@/types/wordpress";
-import { decodeHtmlEntities, getCategorySlugFromLink } from "@/lib/utils";
+import { decodeHtmlEntities } from "@/lib/utils";
 
 interface CategorySectionProps {
   settings: CategorySectionSettings;
@@ -114,12 +114,10 @@ export function CategorySection({
         </div>
 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-          {displayCategories.map((category) => {
-            const categorySlug = getCategorySlugFromLink(category.permalink, category.slug);
-            return (
+          {displayCategories.map((category) => (
             <Link
               key={category.slug}
-              href={`/${locale}/category/${categorySlug}`}
+              href={`/${locale}/category/${category.slug}`}
               className="group flex flex-col"
             >
               <div className="relative aspect-[3/2] overflow-hidden rounded-xl bg-white transition-shadow duration-300 hover:shadow-lg">
@@ -144,8 +142,7 @@ export function CategorySection({
                                 </h3>
               </div>
             </Link>
-          );
-          })}
+          ))}
         </div>
 
         {settings.show_view_all && (
