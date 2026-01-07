@@ -567,7 +567,8 @@
     },
     "about": {
       "title": "Aromatic Scents Lab",
-      "heroSubtitle": "Discover Our Story",
+      "heroSubtitle": "Experience the Art of Fragrance",
+      "heroDescription": "Smelling a fragrance is an experience, and here at Aromatic Scents Lab, we take you on a journey through ingredients to experience and explore the bare essential component of the Scent.",
       "contentUnavailable": "Content is not available at the moment",
       "seo": {
         "title": "About Us - Aromatic Scents Lab",
@@ -577,6 +578,55 @@
         "title": "Begin Your Fragrance Journey",
         "subtitle": "Discover our exclusive collection of handcrafted fragrances",
         "button": "Shop Now"
+      },
+      "stats": {
+        "since": "Since 2021",
+        "location": "UAE Based",
+        "handcrafted": "Handcrafted",
+        "sustainable": "Sustainable"
+      },
+      "mainContent": {
+        "title": "Our Story",
+        "paragraph1": "We create truly one-of-a-kind fragrances with the most innovative & sustainable technologies. By offering fragrances to inspire, captivate and beautify, we develop an invisible fragrant bond with you.",
+        "paragraph2": "We began our fragrance journey in 2021, as a UAE-based fragrance boutique, with quite a simple mission – to create statement-making fragrances with the highest quality ingredients. We produced fine fragrances with proficiency to shape that experience into a fragrance line that combines personal care and air care.",
+        "paragraph3": "We curate stories that are radical and addictive, in every creation of our collection, through an endless array of products for self-care and home care with perfumes, hair mist, fragrance oil, candles, diffusers, and air fresheners. All our fragrances are completely handcrafted by a single ingredient, with the luxury of experiencing it in a single whiff."
+      },
+      "uniqueness": {
+        "title": "We are Unique",
+        "subtitle": "In more ways than one",
+        "content": "We are a timeless brand and believe that the real richness lies in simplicity and quality while creating a product that can be appreciated by both domestic and foreign clients. An exclusive and admirable olfactory wardrobe is built by the most talented perfumers with the finest and rare raw materials. We love simplicity, and our vintage-look packaging along with displays convey to you the bare essence of our fragrance."
+      },
+      "journey": {
+        "title": "A Journey Through Essence",
+        "content": "A Journey through the warm and sultry essence of ingredients is created by Aromatic Scents Lab most beautifully..."
+      },
+      "ingredients": {
+        "title": "Know More About Ingredients",
+        "subtitle": "Driven by artistry and perfection, explore the story and craftsmanship of ingredients from our house of perfumery.",
+        "description": "Each perfume in our house reflects the true essence of ingredients like the aromatic garden of precious and powerful fragrances including the warm and sweet vanilla, the savoir-faire of delicate leather, comforting amber, light, and refreshing florals, ethical and unique musk, along with the relaxing and calming sandalwood. Awakening your senses with an expressive journey of fresh, floral, and fruity delight, each fragrance evolves to be the signature of your skin.",
+        "items": [
+          {
+            "key": "vanilla",
+            "title": "Vanilla in Perfumes",
+            "excerpt": "Vanilla is an ever-popular fragrance note, that seduces our noses and soul for almost many centuries and remains widely loved...",
+            "image": "https://aromaticscentslab.com/wp-content/uploads/2022/07/Vanilla-2.jpg",
+            "link": "https://aromaticscentslab.com/vanilla/"
+          },
+          {
+            "key": "musk",
+            "title": "Musk in Perfumes",
+            "excerpt": "Since classical times, people have used scented ingredients derived from nature to make fragrances. And today, some of these natural...",
+            "image": "https://aromaticscentslab.com/wp-content/uploads/2022/07/musk-scaled.jpg",
+            "link": "https://aromaticscentslab.com/musk-in-perfumes/"
+          },
+          {
+            "key": "leather",
+            "title": "Leather in Perfumes",
+            "excerpt": "Perfumes & leather have been inseparable, historically. The link between these dates to about 2000 years before the birth of Christ...",
+            "image": "https://aromaticscentslab.com/wp-content/uploads/2020/02/Leather-2.jpg",
+            "link": "https://aromaticscentslab.com/leather-in-perfumes/"
+          }
+        ]
       },
       "sections": [
         {
