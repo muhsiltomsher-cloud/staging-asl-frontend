@@ -32,6 +32,11 @@ interface GiftProgress {
   currentSubtotal: number;
 }
 
+interface NewGiftCelebration {
+  isVisible: boolean;
+  giftName: string | null;
+}
+
 interface FreeGiftContextType {
   rules: FreeGiftRule[];
   isLoading: boolean;
@@ -43,6 +48,8 @@ interface FreeGiftContextType {
   refreshRules: () => Promise<void>;
   getGiftMessages: (locale: string) => string[];
   getGiftProgress: () => GiftProgress;
+  newGiftCelebration: NewGiftCelebration;
+  dismissGiftCelebration: () => void;
 }
 
 const FreeGiftContext = createContext<FreeGiftContextType | undefined>(undefined);
@@ -73,9 +80,13 @@ export function FreeGiftProvider({ children, locale }: FreeGiftProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [activeGifts, setActiveGifts] = useState<FreeGiftRule[]>([]);
   const [freeGiftItemKeys, setFreeGiftItemKeys] = useState<string[]>([]);
-  const isProcessingRef = useRef(false);
-  const lastProcessedStateRef = useRef<string | null>(null);
-  const correctedGiftKeysRef = useRef<Set<string>>(new Set());
+  const [newGiftCelebration, setNewGiftCelebration] = useState<NewGiftCelebration>({
+    isVisible: false,
+    giftName: null,
+  });
+    const isProcessingRef = useRef(false);
+    const lastProcessedStateRef = useRef<string | null>(null);
+    const correctedGiftKeysRef = useRef<Set<string>>(new Set());
 
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
@@ -133,11 +144,15 @@ export function FreeGiftProvider({ children, locale }: FreeGiftProviderProps) {
     return rules.map((rule) => rule.product_id);
   }, [rules]);
 
-  const getGiftMessages = useCallback((locale: string): string[] => {
-    return activeGifts
-      .map((gift) => locale === "ar" ? gift.message_ar : gift.message_en)
-      .filter((msg) => msg && msg.trim() !== "");
-  }, [activeGifts]);
+    const getGiftMessages = useCallback((locale: string): string[] => {
+      return activeGifts
+        .map((gift) => locale === "ar" ? gift.message_ar : gift.message_en)
+        .filter((msg) => msg && msg.trim() !== "");
+    }, [activeGifts]);
+
+    const dismissGiftCelebration = useCallback(() => {
+      setNewGiftCelebration({ isVisible: false, giftName: null });
+    }, []);
 
   const getGiftProgress = useCallback((): GiftProgress => {
     // Calculate subtotal without gift items
@@ -283,6 +298,12 @@ export function FreeGiftProvider({ children, locale }: FreeGiftProviderProps) {
             await addToCartRef.current(rule.product_id, 1, undefined, undefined, {
               [FREE_GIFT_ITEM_DATA_KEY]: true,
             });
+            
+            const giftName = rule.product?.name || rule.name;
+            setNewGiftCelebration({
+              isVisible: true,
+              giftName: giftName,
+            });
           } catch (error) {
             console.error("Failed to add gift:", error);
           }
@@ -321,6 +342,8 @@ export function FreeGiftProvider({ children, locale }: FreeGiftProviderProps) {
         refreshRules: fetchRules,
         getGiftMessages,
         getGiftProgress,
+        newGiftCelebration,
+        dismissGiftCelebration,
       }}
     >
       {children}
