@@ -45,13 +45,15 @@ export function BuildYourOwnSetClient({
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
 
-  const [selections, setSelections] = useState<(ProductOption | null)[]>([
-    null,
-    null,
-    null,
-    null,
-    null,
-  ]);
+  // Get required and optional slots from bundle config
+  const requiredSlots = bundleConfig?.required_slots || 3;
+  const optionalSlots = bundleConfig?.optional_slots ?? 2;
+  const totalSlots = requiredSlots + optionalSlots;
+
+  // Initialize selections array based on total slots
+  const [selections, setSelections] = useState<(ProductOption | null)[]>(() => 
+    Array(totalSlots).fill(null)
+  );
 
   // Get eligible product IDs from bundle config (if configured)
   const eligibleProductIds = useMemo(() => {
@@ -196,8 +198,8 @@ export function BuildYourOwnSetClient({
   const hasSelections = selections.some((s) => s !== null);
   const total = hasSelections ? productsTotal + boxPrice : 0;
 
-  const requiredCount = selections.slice(0, 3).filter((s) => s !== null).length;
-  const isValid = requiredCount === 3;
+  const requiredCount = selections.slice(0, requiredSlots).filter((s) => s !== null).length;
+  const isValid = requiredCount === requiredSlots;
 
   const handleSlotClick = (index: number) => {
     setActiveSlot(index);
@@ -368,13 +370,13 @@ export function BuildYourOwnSetClient({
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">{t.yourBox}</h2>
               <span className="text-sm text-gray-500">
-                {requiredCount}/3 {t.requiredItems}
+                {requiredCount}/{requiredSlots} {t.requiredItems}
               </span>
             </div>
 
-            {/* Required Slots (3) */}
+            {/* Required Slots */}
             <div className="space-y-3">
-              {[0, 1, 2].map((index) => (
+              {Array.from({ length: requiredSlots }, (_, i) => i).map((index) => (
                 <div
                   key={`slot-${index}`}
                   className={`relative flex items-center gap-4 rounded-xl border-2 p-3 transition-all ${
@@ -439,10 +441,11 @@ export function BuildYourOwnSetClient({
               ))}
             </div>
 
-            {/* Optional Slots (2) */}
+            {/* Optional Slots - only show if optionalSlots > 0 */}
+            {optionalSlots > 0 && (
             <div className="space-y-3 pt-2">
               <p className="text-sm font-medium text-gray-500">{t.optional}</p>
-              {[3, 4].map((index) => (
+              {Array.from({ length: optionalSlots }, (_, i) => requiredSlots + i).map((index) => (
                 <div
                   key={`slot-${index}`}
                   className={`relative flex items-center gap-4 rounded-xl border-2 p-3 transition-all ${
@@ -501,6 +504,7 @@ export function BuildYourOwnSetClient({
                 </div>
               ))}
             </div>
+            )}
           </div>
 
           {/* Total */}
