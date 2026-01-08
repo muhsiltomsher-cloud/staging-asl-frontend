@@ -3,6 +3,8 @@ import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForPro
 import { getProductAddons } from "@/lib/api/wcpa";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { ProductDetail } from "./ProductDetail";
+import { BuildYourOwnSetClient } from "../../build-your-own-set/BuildYourOwnSetClient";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { siteConfig, type Locale } from "@/config/site";
 import { decodeHtmlEntities } from "@/lib/utils";
 import type { Metadata } from "next";
@@ -104,9 +106,38 @@ export default async function ProductPage({ params }: ProductPageProps) {
   // Check if this product has a bundle configuration
   const bundleConfig = await getBundleConfig(slug);
   
-  // If bundle is enabled for this product, redirect to the bundle builder page
+  // If bundle is enabled for this product, show the bundle builder inline
   if (bundleConfig && bundleConfig.enabled) {
-    redirect(`/${locale}/build-your-own-set`);
+    const isRTL = locale === "ar";
+    
+    // Fetch all products for bundle selection
+    const { products: bundleProducts } = await getProducts({
+      per_page: 100,
+      locale: locale as Locale,
+    });
+    
+    const breadcrumbItems = [
+      {
+        name: isRTL ? "المتجر" : "Shop",
+        href: `/${locale}/shop`,
+      },
+      {
+        name: product.name,
+        href: `/${locale}/product/${slug}`,
+      },
+    ];
+    
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
+        <BuildYourOwnSetClient
+          products={bundleProducts}
+          locale={locale as Locale}
+          bundleProduct={product}
+          bundleConfig={bundleConfig}
+        />
+      </div>
+    );
   }
 
   // Fetch related products, addon forms, and English product (for English category slug) in parallel

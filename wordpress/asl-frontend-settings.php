@@ -914,7 +914,7 @@ function asl_bundle_metabox_render($post) {
     }
     
     // Get frontend URL from options or use default
-    $frontend_url = get_option('asl_frontend_url', 'https://aslfrontend.stagingndemo.com');
+    $frontend_url = get_option('asl_frontend_url', 'https://staging.aromaticscentslab.com');
     ?>
     <div class="asl-bundle-metabox">
         <p>
