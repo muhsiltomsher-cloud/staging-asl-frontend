@@ -184,7 +184,7 @@ export function WCProductListCard({
               >
                 <Link href={`/${locale}/product/${productSlug}`}>
                   <Eye className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
-                  {isRTL ? "عرض الخيارات" : "View Options"}
+                  {isRTL ? "تخصيص" : "Customize"}
                 </Link>
               </Button>
             ) : !isOutOfStock && product.is_purchasable && (

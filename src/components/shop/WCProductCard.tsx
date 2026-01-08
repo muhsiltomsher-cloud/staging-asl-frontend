@@ -141,7 +141,7 @@ export function WCProductCard({
                   className="w-full flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium uppercase tracking-wide text-white bg-[#C4885B] rounded-full shadow-lg transition-all duration-300 hover:text-[#C4885B] hover:bg-white/70 hover:backdrop-blur-md hover:border hover:border-[#C4885B]/30"
                 >
                   <Eye className="h-4 w-4" />
-                  {isRTL ? "عرض الخيارات" : "View Options"}
+                  {isRTL ? "تخصيص" : "Customize"}
                 </Link>
               ) : (
                 <button

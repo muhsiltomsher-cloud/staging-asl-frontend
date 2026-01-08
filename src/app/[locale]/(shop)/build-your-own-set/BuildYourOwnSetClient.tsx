@@ -245,6 +245,7 @@ export function BuildYourOwnSetClient({
 
       await addToCart(bundleProduct.id, quantity, undefined, undefined, {
         bundle_items: selectedProducts,
+        bundle_total: total,
       });
       
       notify("success", isRTL ? "تمت إضافة الحزمة إلى السلة" : "Bundle added to cart");
@@ -267,7 +268,7 @@ export function BuildYourOwnSetClient({
         "Create a set that's as unique as your fragrance personality. Pick 3 or more products of your choice.",
       yourBox: "Your Box",
       required: "Required",
-      optional: "Optional",
+      optional: "Add on (optional)",
       chooseItem: "Choose item",
       addExtra: "Add extra",
       addExtraWithPrice: "Add extra (with price)",
@@ -296,7 +297,7 @@ export function BuildYourOwnSetClient({
         "أنشئ مجموعة فريدة مثل شخصيتك العطرية. اختر 3 منتجات أو أكثر من اختيارك.",
       yourBox: "صندوقك",
       required: "مطلوب",
-      optional: "اختياري",
+      optional: "إضافة (اختياري)",
       chooseItem: "اختر منتج",
       addExtra: "أضف إضافي",
       addExtraWithPrice: "أضف إضافي (بسعر)",
