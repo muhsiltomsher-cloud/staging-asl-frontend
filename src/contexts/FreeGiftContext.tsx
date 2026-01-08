@@ -9,6 +9,7 @@ export interface FreeGiftRule {
   enabled: boolean;
   name: string;
   min_cart_value: number;
+  max_cart_value?: number;
   currency: string;
   product_id: number;
   priority: number;
@@ -26,12 +27,13 @@ export interface FreeGiftRule {
 interface FreeGiftContextType {
   rules: FreeGiftRule[];
   isLoading: boolean;
-  activeGift: FreeGiftRule | null;
-  freeGiftItemKey: string | null;
+  activeGifts: FreeGiftRule[];
+  freeGiftItemKeys: string[];
   isFreeGiftItem: (itemKey: string) => boolean;
   isFreeGiftProduct: (productId: number) => boolean;
   getFreeGiftProductIds: () => number[];
   refreshRules: () => Promise<void>;
+  getGiftMessages: (locale: string) => string[];
 }
 
 const FreeGiftContext = createContext<FreeGiftContextType | undefined>(undefined);
@@ -49,21 +51,19 @@ export function FreeGiftProvider({ children }: { children: React.ReactNode }) {
   const { currency } = useCurrency();
   const [rules, setRules] = useState<FreeGiftRule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeGift, setActiveGift] = useState<FreeGiftRule | null>(null);
-  const [freeGiftItemKey, setFreeGiftItemKey] = useState<string | null>(null);
+  const [activeGifts, setActiveGifts] = useState<FreeGiftRule[]>([]);
+  const [freeGiftItemKeys, setFreeGiftItemKeys] = useState<string[]>([]);
   const isProcessingRef = useRef(false);
   const lastProcessedStateRef = useRef<string | null>(null);
-  const lastCorrectedGiftKeyRef = useRef<string | null>(null);
+  const correctedGiftKeysRef = useRef<Set<string>>(new Set());
 
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
 
-  // Store cart operations in refs to avoid triggering useEffect when they change
   const addToCartRef = useRef(addToCart);
   const removeCartItemRef = useRef(removeCartItem);
   const updateCartItemRef = useRef(updateCartItem);
-  
-  // Keep refs updated with latest functions
+
   useEffect(() => {
     addToCartRef.current = addToCart;
     removeCartItemRef.current = removeCartItem;
@@ -93,16 +93,16 @@ export function FreeGiftProvider({ children }: { children: React.ReactNode }) {
   const isFreeGiftItem = useCallback((itemKey: string): boolean => {
     const item = cartItems.find((i) => i.item_key === itemKey);
     if (!item) return false;
-    
+
     // Primary check: cart_item_data flag (if CoCart preserves it)
     if (item.cart_item_data?.[FREE_GIFT_ITEM_DATA_KEY] === true) {
       return true;
     }
-    
+
     // Fallback check: product ID is in gift rules AND price is 0 (free)
     const isGiftProduct = rules.some((rule) => rule.product_id === item.id);
     const isFreePrice = parseFloat(item.price) === 0;
-    
+
     return isGiftProduct && isFreePrice;
   }, [cartItems, rules]);
 
@@ -114,134 +114,115 @@ export function FreeGiftProvider({ children }: { children: React.ReactNode }) {
     return rules.map((rule) => rule.product_id);
   }, [rules]);
 
-  // Single consolidated useEffect for all free gift logic
-  // This prevents cascading triggers between multiple useEffects
+  const getGiftMessages = useCallback((locale: string): string[] => {
+    return activeGifts
+      .map((gift) => locale === "ar" ? gift.message_ar : gift.message_en)
+      .filter((msg) => msg && msg.trim() !== "");
+  }, [activeGifts]);
+
   useEffect(() => {
     const processGiftLogic = async () => {
-      // Skip if already processing or no rules/cart
       if (isProcessingRef.current) return;
       if (rules.length === 0) return;
       if (!cart) return;
 
-      // Generate a hash of current cart state for comparison
       const currentStateHash = getCartStateHash(cartItems, cartSubtotal);
-      
-      // Skip if we've already processed this exact cart state
+
       if (lastProcessedStateRef.current === currentStateHash) {
         return;
       }
 
-      // Find existing free gift item using inline logic (not a callback)
-      let existingFreeGift = null;
+      const existingFreeGifts: Array<{ item: typeof cartItems[0]; rule: FreeGiftRule | undefined }> = [];
       for (const item of cartItems) {
-        if (item.cart_item_data?.[FREE_GIFT_ITEM_DATA_KEY] === true) {
-          existingFreeGift = item;
-          break;
-        }
+        const isFreeGift = item.cart_item_data?.[FREE_GIFT_ITEM_DATA_KEY] === true;
         const isGiftProduct = rules.some((rule) => rule.product_id === item.id);
         const isFreePrice = parseFloat(item.price) === 0;
-        if (isGiftProduct && isFreePrice) {
-          existingFreeGift = item;
-          break;
+
+        if (isFreeGift || (isGiftProduct && isFreePrice)) {
+          const rule = rules.find((r) => r.product_id === item.id);
+          existingFreeGifts.push({ item, rule });
         }
       }
 
-      // Calculate subtotal without the gift
       const subtotalValue = parseFloat(cartSubtotal) / divisor;
-      const subtotalWithoutGift = existingFreeGift
-        ? subtotalValue - (parseFloat(existingFreeGift.price) / divisor * existingFreeGift.quantity.value)
-        : subtotalValue;
+      const giftsTotalValue = existingFreeGifts.reduce((sum, { item }) => {
+        return sum + (parseFloat(item.price) / divisor * item.quantity.value);
+      }, 0);
+      const subtotalWithoutGifts = subtotalValue - giftsTotalValue;
 
-      // Find matching rule using inline logic (not a callback)
-      const matchingRules = rules.filter(
-        (rule) => rule.enabled && subtotalWithoutGift >= rule.min_cart_value && rule.currency === currency
-      );
+      const matchingRules = rules.filter((rule) => {
+        if (!rule.enabled) return false;
+        if (rule.currency !== currency) return false;
+        if (subtotalWithoutGifts < rule.min_cart_value) return false;
+        if (rule.max_cart_value && subtotalWithoutGifts > rule.max_cart_value) return false;
+        return true;
+      });
       matchingRules.sort((a, b) => a.priority - b.priority);
-      const matchingRule = matchingRules.length > 0 ? matchingRules[0] : null;
 
-      // Update state hash before any async operations
       lastProcessedStateRef.current = currentStateHash;
 
-      // Sync freeGiftItemKey and activeGift state (previously in separate useEffect)
-      if (existingFreeGift) {
-        setFreeGiftItemKey(existingFreeGift.item_key);
-        const ruleForGift = rules.find((r) => r.product_id === existingFreeGift.id);
-        if (ruleForGift) {
-          setActiveGift(ruleForGift);
+      const currentGiftKeys: string[] = [];
+      const currentActiveGifts: FreeGiftRule[] = [];
+
+      for (const { item, rule } of existingFreeGifts) {
+        if (rule) {
+          currentGiftKeys.push(item.item_key);
+          currentActiveGifts.push(rule);
         }
       }
 
-      // Enforce quantity = 1 for free gift items (previously in separate useEffect)
-      if (existingFreeGift && existingFreeGift.quantity.value > 1) {
-        if (lastCorrectedGiftKeyRef.current !== existingFreeGift.item_key) {
+      setFreeGiftItemKeys(currentGiftKeys);
+      setActiveGifts(currentActiveGifts);
+
+      for (const { item } of existingFreeGifts) {
+        if (item.quantity.value > 1 && !correctedGiftKeysRef.current.has(item.item_key)) {
           isProcessingRef.current = true;
-          lastCorrectedGiftKeyRef.current = existingFreeGift.item_key;
+          correctedGiftKeysRef.current.add(item.item_key);
           try {
-            await updateCartItemRef.current(existingFreeGift.item_key, 1);
+            await updateCartItemRef.current(item.item_key, 1);
           } catch (error) {
             console.error("Failed to correct gift quantity:", error);
           } finally {
             isProcessingRef.current = false;
           }
-          return; // Exit early, let next cycle handle gift logic
+          return;
         }
       }
 
-      // Handle gift logic
-      if (matchingRule) {
-        if (existingFreeGift) {
-          if (existingFreeGift.id === matchingRule.product_id) {
-            // Correct gift already in cart - just update state
-            setActiveGift(matchingRule);
-            setFreeGiftItemKey(existingFreeGift.item_key);
-            return;
-          } else {
-            // Wrong gift - swap it
-            isProcessingRef.current = true;
-            try {
-              await removeCartItemRef.current(existingFreeGift.item_key);
-              await addToCartRef.current(matchingRule.product_id, 1, undefined, undefined, {
-                [FREE_GIFT_ITEM_DATA_KEY]: true,
-              });
-              setActiveGift(matchingRule);
-            } catch (error) {
-              console.error("Failed to swap free gift:", error);
-            } finally {
-              isProcessingRef.current = false;
-            }
-          }
-        } else {
-          // No gift - add one
-          isProcessingRef.current = true;
+      const existingGiftProductIds = new Set(existingFreeGifts.map(({ item }) => item.id));
+      const matchingProductIds = new Set(matchingRules.map((r) => r.product_id));
+
+      const giftsToRemove = existingFreeGifts.filter(({ item }) => !matchingProductIds.has(item.id));
+      const rulesToAdd = matchingRules.filter((rule) => !existingGiftProductIds.has(rule.product_id));
+
+      if (giftsToRemove.length === 0 && rulesToAdd.length === 0) {
+        setActiveGifts(matchingRules);
+        return;
+      }
+
+      isProcessingRef.current = true;
+      try {
+        for (const { item } of giftsToRemove) {
           try {
-            await addToCartRef.current(matchingRule.product_id, 1, undefined, undefined, {
+            await removeCartItemRef.current(item.item_key);
+          } catch (error) {
+            console.error("Failed to remove gift:", error);
+          }
+        }
+
+        for (const rule of rulesToAdd) {
+          try {
+            await addToCartRef.current(rule.product_id, 1, undefined, undefined, {
               [FREE_GIFT_ITEM_DATA_KEY]: true,
             });
-            setActiveGift(matchingRule);
           } catch (error) {
-            console.error("Failed to add free gift:", error);
-          } finally {
-            isProcessingRef.current = false;
+            console.error("Failed to add gift:", error);
           }
         }
-      } else {
-        // No matching rule
-        if (existingFreeGift) {
-          // Remove existing gift
-          isProcessingRef.current = true;
-          try {
-            await removeCartItemRef.current(existingFreeGift.item_key);
-            setActiveGift(null);
-            setFreeGiftItemKey(null);
-          } catch (error) {
-            console.error("Failed to remove free gift:", error);
-          } finally {
-            isProcessingRef.current = false;
-          }
-        } else {
-          setActiveGift(null);
-          setFreeGiftItemKey(null);
-        }
+
+        setActiveGifts(matchingRules);
+      } finally {
+        isProcessingRef.current = false;
       }
     };
 
@@ -261,12 +242,13 @@ export function FreeGiftProvider({ children }: { children: React.ReactNode }) {
       value={{
         rules,
         isLoading,
-        activeGift,
-        freeGiftItemKey,
+        activeGifts,
+        freeGiftItemKeys,
         isFreeGiftItem,
         isFreeGiftProduct,
         getFreeGiftProductIds,
         refreshRules: fetchRules,
+        getGiftMessages,
       }}
     >
       {children}
