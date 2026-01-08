@@ -41,8 +41,14 @@ const FreeGiftContext = createContext<FreeGiftContextType | undefined>(undefined
 const FREE_GIFT_ITEM_DATA_KEY = "_asl_free_gift";
 
 // Helper to generate a stable hash of cart state for comparison
-function getCartStateHash(cartItems: Array<{ item_key: string; id: number; quantity: { value: number } }>, subtotal: string): string {
-  const itemsHash = cartItems.map(i => `${i.item_key}:${i.id}:${i.quantity.value}`).join('|');
+// Only include non-gift items in the hash to prevent re-processing when gifts are added
+function getCartStateHash(
+  cartItems: Array<{ item_key: string; id: number; quantity: { value: number } }>,
+  subtotal: string,
+  giftProductIds: Set<number>
+): string {
+  const nonGiftItems = cartItems.filter(i => !giftProductIds.has(i.id));
+  const itemsHash = nonGiftItems.map(i => `${i.id}:${i.quantity.value}`).join('|');
   return `${subtotal}::${itemsHash}`;
 }
 
@@ -99,11 +105,10 @@ export function FreeGiftProvider({ children }: { children: React.ReactNode }) {
       return true;
     }
 
-    // Fallback check: product ID is in gift rules AND price is 0 (free)
-    const isGiftProduct = rules.some((rule) => rule.product_id === item.id);
-    const isFreePrice = parseFloat(item.price) === 0;
-
-    return isGiftProduct && isFreePrice;
+    // Fallback check: product ID matches a gift rule
+    // This handles cases where CoCart doesn't preserve the flag
+    // and where the gift product has a non-zero price
+    return rules.some((rule) => rule.product_id === item.id);
   }, [cartItems, rules]);
 
   const isFreeGiftProduct = useCallback((productId: number): boolean => {
@@ -126,21 +131,27 @@ export function FreeGiftProvider({ children }: { children: React.ReactNode }) {
       if (rules.length === 0) return;
       if (!cart) return;
 
-      const currentStateHash = getCartStateHash(cartItems, cartSubtotal);
+      // Get all gift product IDs for hash calculation
+      const giftProductIds = new Set(rules.map(r => r.product_id));
+      const currentStateHash = getCartStateHash(cartItems, cartSubtotal, giftProductIds);
 
       if (lastProcessedStateRef.current === currentStateHash) {
         return;
       }
 
+      // Find existing gift items in cart
+      // A gift item is identified by:
+      // 1. Having the _asl_free_gift flag in cart_item_data (if CoCart preserves it)
+      // 2. OR having a product_id that matches a gift rule (regardless of price)
       const existingFreeGifts: Array<{ item: typeof cartItems[0]; rule: FreeGiftRule | undefined }> = [];
       for (const item of cartItems) {
-        const isFreeGift = item.cart_item_data?.[FREE_GIFT_ITEM_DATA_KEY] === true;
-        const isGiftProduct = rules.some((rule) => rule.product_id === item.id);
-        const isFreePrice = parseFloat(item.price) === 0;
-
-        if (isFreeGift || (isGiftProduct && isFreePrice)) {
-          const rule = rules.find((r) => r.product_id === item.id);
-          existingFreeGifts.push({ item, rule });
+        const isFreeGiftFlag = item.cart_item_data?.[FREE_GIFT_ITEM_DATA_KEY] === true;
+        const matchingRule = rules.find((rule) => rule.product_id === item.id);
+        
+        // If the product matches a gift rule, treat it as a gift
+        // This handles cases where CoCart doesn't preserve the flag
+        if (isFreeGiftFlag || matchingRule) {
+          existingFreeGifts.push({ item, rule: matchingRule });
         }
       }
 
