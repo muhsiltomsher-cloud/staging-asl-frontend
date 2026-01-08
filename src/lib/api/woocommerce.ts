@@ -284,6 +284,8 @@ export const getCategories = cache(async function getCategories(locale?: Locale,
 });
 
 // Memoized version for request deduplication
+// Handles the case where URLs use English slugs but the locale is non-English (e.g., Arabic)
+// WPML assigns different slugs for each language, so we need to map English slugs to localized categories
 export const getCategoryBySlug = cache(async function getCategoryBySlug(
   slug: string,
   locale?: Locale,
@@ -291,7 +293,55 @@ export const getCategoryBySlug = cache(async function getCategoryBySlug(
 ): Promise<WCCategory | null> {
   try {
     const categories = await getCategories(locale, currency);
-    return categories.find((cat) => cat.slug === slug) || null;
+    
+    // First, try to find by exact slug match
+    const exactMatch = categories.find((cat) => cat.slug === slug);
+    if (exactMatch) {
+      return exactMatch;
+    }
+    
+    // If no exact match and locale is not English, the slug might be an English slug
+    // We need to find the corresponding localized category by matching with English categories
+    if (locale && locale !== "en") {
+      const englishCategories = await getCategories("en", currency);
+      
+      // Find the English category with this slug
+      const englishCategory = englishCategories.find((cat) => cat.slug === slug);
+      if (englishCategory) {
+        // Find the corresponding localized category by matching position among root categories
+        // or by finding a category at the same index
+        const englishRootCategories = englishCategories.filter((cat) => cat.parent === 0);
+        const localizedRootCategories = categories.filter((cat) => cat.parent === 0);
+        
+        const englishIndex = englishRootCategories.findIndex((cat) => cat.slug === slug);
+        
+        if (englishIndex !== -1 && englishIndex < localizedRootCategories.length) {
+          return localizedRootCategories[englishIndex];
+        }
+        
+        // Fallback: try to match by name similarity or other heuristics
+        // For subcategories, try matching by parent relationship
+        if (englishCategory.parent !== 0) {
+          const englishParent = englishCategories.find((cat) => cat.id === englishCategory.parent);
+          if (englishParent) {
+            const englishParentIndex = englishRootCategories.findIndex((cat) => cat.id === englishParent.id);
+            if (englishParentIndex !== -1 && englishParentIndex < localizedRootCategories.length) {
+              const localizedParent = localizedRootCategories[englishParentIndex];
+              // Find subcategories of this parent
+              const englishSubcategories = englishCategories.filter((cat) => cat.parent === englishParent.id);
+              const localizedSubcategories = categories.filter((cat) => cat.parent === localizedParent.id);
+              
+              const subIndex = englishSubcategories.findIndex((cat) => cat.slug === slug);
+              if (subIndex !== -1 && subIndex < localizedSubcategories.length) {
+                return localizedSubcategories[subIndex];
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    return null;
   } catch {
     return null;
   }
