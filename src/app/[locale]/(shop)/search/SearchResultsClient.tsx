@@ -14,11 +14,13 @@ import { cn } from "@/lib/utils";
 interface SearchResultsClientProps {
   locale: Locale;
   initialQuery: string;
+  hiddenGiftProductIds?: number[];
 }
 
 export function SearchResultsClient({
   locale,
   initialQuery,
+  hiddenGiftProductIds = [],
 }: SearchResultsClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -42,14 +44,18 @@ export function SearchResultsClient({
         per_page: 24,
         locale,
       });
-      setProducts(response.products);
+      // Filter out hidden gift products from search results
+      const filteredProducts = response.products.filter(
+        (product) => !hiddenGiftProductIds.includes(product.id)
+      );
+      setProducts(filteredProducts);
     } catch (error) {
       console.error("Search error:", error);
       setProducts([]);
     } finally {
       setLoading(false);
     }
-  }, [locale]);
+  }, [locale, hiddenGiftProductIds]);
 
   useEffect(() => {
     const q = searchParams.get("q") || "";

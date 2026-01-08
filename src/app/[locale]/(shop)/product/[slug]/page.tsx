@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct, getBundleConfig } from "@/lib/api/woocommerce";
+import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct, getBundleConfig, getFreeGiftProductIds } from "@/lib/api/woocommerce";
 import { getProductAddons } from "@/lib/api/wcpa";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { ProductDetail } from "./ProductDetail";
@@ -91,6 +91,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const product = await getProductBySlug(slug, locale as Locale);
 
   if (!product) {
+    notFound();
+  }
+
+  // Check if this product is a hidden gift product
+  // If so, return 404 to prevent direct URL access
+  const hiddenGiftProductIds = await getFreeGiftProductIds();
+  if (hiddenGiftProductIds.includes(product.id)) {
     notFound();
   }
 

@@ -15,6 +15,7 @@ export interface FreeGiftRule {
   priority: number;
   message_en: string;
   message_ar: string;
+  hide_from_shop?: boolean;
   product?: {
     id: number;
     name: string;

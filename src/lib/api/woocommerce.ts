@@ -483,6 +483,7 @@ export async function getBundleConfig(
 
 // Fetch free gift product IDs from the backend
 // Used to filter out gift products from shop listings
+// Only returns product IDs where hide_from_shop is true
 export async function getFreeGiftProductIds(currency?: string): Promise<number[]> {
   try {
     let url = `${siteConfig.apiUrl}/wp-json/asl-free-gifts/v1/rules`;
@@ -504,7 +505,10 @@ export async function getFreeGiftProductIds(currency?: string): Promise<number[]
     const data = await response.json();
     
     if (data.rules && Array.isArray(data.rules)) {
-      return data.rules.map((rule: { product_id: number }) => rule.product_id);
+      // Only return product IDs where hide_from_shop is true
+      return data.rules
+        .filter((rule: { hide_from_shop?: boolean }) => rule.hide_from_shop === true)
+        .map((rule: { product_id: number }) => rule.product_id);
     }
     
     return [];
