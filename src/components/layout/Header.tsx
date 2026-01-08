@@ -79,16 +79,16 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
             <div className="flex items-center gap-4">
               <LanguageSwitcher locale={locale} />
               {/* Desktop only: Currency next to language */}
-              <div className="hidden md:block">
+              <div className="hidden lg:block">
                 <CurrencySwitcher locale={locale} />
               </div>
             </div>
             {/* Mobile: Currency on right | Desktop: Promotional text */}
-            <div className="md:hidden">
+            <div className="lg:hidden">
               <CurrencySwitcher locale={locale} />
             </div>
             {topbarText && (
-              <div className="hidden text-sm text-gray-600 md:block">
+              <div className="hidden text-sm text-gray-600 lg:block">
                 {topbarText}
               </div>
             )}
@@ -97,11 +97,11 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
 
         {/* Main header */}
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-20 md:h-24">
+          <div className="flex items-center justify-between h-20 lg:h-24">
             {/* Mobile: Left side - Menu button only */}
             <button
               type="button"
-              className="inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 md:hidden"
+              className="inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 lg:hidden"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               <span className="sr-only">{dictionary.navigation.menu}</span>
@@ -125,14 +125,14 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                   priority
                 />
               ) : (
-                <span className="font-bold tracking-tight text-gray-900 dark:text-white text-xl md:text-2xl">
+                <span className="font-bold tracking-tight text-gray-900 dark:text-white text-xl lg:text-2xl">
                   {siteSettings?.site_name || "Aromatic Scents Lab"}
                 </span>
               )}
             </Link>
 
             {/* Desktop navigation */}
-            <nav className="hidden md:flex md:gap-x-8">
+            <nav className="hidden lg:flex lg:gap-x-8">
               {navigation.map((item) => {
                 if (item.hasMegaMenu) {
                   return (
@@ -194,20 +194,20 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
             </div>
 
                         {/* Right side icons - Desktop: all icons | Mobile: cart only */}
-                        <div className="flex items-center gap-2 md:gap-4">
+                        <div className="flex items-center gap-2 lg:gap-4">
                           {/* Desktop Search with Dropdown */}
                           <DesktopSearchDropdown locale={locale} dictionary={dictionary} />
                             <button
                               type="button"
                               onClick={() => setIsAccountDrawerOpen(true)}
-                              className="hidden p-2 text-[#7a3205] hover:text-[#5a2504] md:block"
+                              className="hidden p-2 text-[#7a3205] hover:text-[#5a2504] lg:block"
                               aria-label={dictionary.account.myAccount}
                             >
                               <User className="h-5 w-5" />
                             </button>
                             <Link
                               href={`/${locale}/wishlist`}
-                              className="relative hidden p-2 text-[#7a3205] hover:text-[#5a2504] md:block"
+                              className="relative hidden p-2 text-[#7a3205] hover:text-[#5a2504] lg:block"
                               aria-label={dictionary.account.wishlist}
                             >
                               <Heart className="h-5 w-5" />
@@ -238,7 +238,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
         {/* Mobile menu */}
         <div
           className={cn(
-            "md:hidden",
+            "lg:hidden",
             isMobileMenuOpen ? "block" : "hidden"
           )}
         >

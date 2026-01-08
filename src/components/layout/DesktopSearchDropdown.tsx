@@ -144,7 +144,7 @@ export function DesktopSearchDropdown({
   const showDropdown = isOpen && (query.trim().length > 0 || hasSearched);
 
   return (
-    <div ref={containerRef} className="relative hidden md:block">
+    <div ref={containerRef} className="relative hidden lg:block">
       <form onSubmit={handleSubmit}>
         <div className="relative">
           <input
