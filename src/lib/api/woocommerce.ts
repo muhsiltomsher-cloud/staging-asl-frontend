@@ -228,6 +228,12 @@ export const getEnglishSlugForCategory = cache(async function getEnglishSlugForC
       return null;
     }
     
+    // First, try to use the slug mapping (most reliable for known categories)
+    const englishSlugFromMapping = getEnglishSlugFromLocalizedSlug(localizedCategory.slug);
+    if (englishSlugFromMapping) {
+      return englishSlugFromMapping;
+    }
+    
     // Find the index of the localized category among root categories
     const localizedRootCategories = localizedCategories.filter((cat) => cat.parent === 0);
     const englishRootCategories = englishCategories.filter((cat) => cat.parent === 0);
@@ -298,6 +304,44 @@ const ENGLISH_TO_ARABIC_CATEGORY_SLUGS: Record<string, string> = {
   "air-fresheners": "%d9%85%d8%b9%d8%b7%d8%b1%d8%a7%d8%aa-%d8%a7%d9%84%d8%ac%d9%88",
   "reed-diffusers": "%d9%85%d9%88%d8%b2%d8%b9-%d8%a7%d9%84%d8%b9%d8%b7%d8%b1",
 };
+
+// Create a reverse mapping from Arabic slugs to English slugs
+// This is used to convert Arabic category slugs back to English slugs for URL generation
+const ARABIC_TO_ENGLISH_CATEGORY_SLUGS: Record<string, string> = Object.fromEntries(
+  Object.entries(ENGLISH_TO_ARABIC_CATEGORY_SLUGS).map(([en, ar]) => [ar, en])
+);
+
+// Helper function to get English slug from an Arabic/localized category slug
+// Uses the reverse mapping for reliable slug conversion
+function getEnglishSlugFromLocalizedSlug(localizedSlug: string): string | null {
+  // If the slug is already in English (exists in the English-to-Arabic mapping), return it
+  if (ENGLISH_TO_ARABIC_CATEGORY_SLUGS[localizedSlug]) {
+    return localizedSlug;
+  }
+  
+  // Try to find the English slug from the reverse mapping
+  // The localized slug might be URL-encoded or decoded, so try both
+  const englishSlug = ARABIC_TO_ENGLISH_CATEGORY_SLUGS[localizedSlug];
+  if (englishSlug) {
+    return englishSlug;
+  }
+  
+  // Try with URL-decoded version (in case the slug is already encoded)
+  try {
+    const decodedSlug = decodeURIComponent(localizedSlug);
+    // Check if decoded slug matches any Arabic slug pattern
+    for (const [arabicSlug, enSlug] of Object.entries(ARABIC_TO_ENGLISH_CATEGORY_SLUGS)) {
+      const decodedArabicSlug = decodeURIComponent(arabicSlug);
+      if (decodedSlug === decodedArabicSlug) {
+        return enSlug;
+      }
+    }
+  } catch {
+    // Ignore decoding errors
+  }
+  
+  return null;
+}
 
 // Memoized version for request deduplication
 // Handles the case where URLs use English slugs but the locale is non-English (e.g., Arabic)

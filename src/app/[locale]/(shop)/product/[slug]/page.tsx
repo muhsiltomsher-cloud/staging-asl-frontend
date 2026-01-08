@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct, getBundleConfig, getFreeGiftProductIds, getCategoryBySlug } from "@/lib/api/woocommerce";
+import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct, getBundleConfig, getFreeGiftProductIds, getCategoryBySlug, getEnglishSlugForCategory } from "@/lib/api/woocommerce";
 import { getProductAddons } from "@/lib/api/wcpa";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { ProductDetail } from "./ProductDetail";
@@ -152,14 +152,23 @@ export default async function ProductPage({ params }: ProductPageProps) {
   ]);
 
   // Get the English category slug from the English product
-  const englishCategorySlug = englishProduct?.categories?.[0]?.slug || null;
+  // If the English product doesn't exist (WPML assigns different slugs per locale),
+  // fall back to getting the English slug from the localized category ID
+  let englishCategorySlug = englishProduct?.categories?.[0]?.slug || null;
+  
+  // If we couldn't get the English slug from the English product,
+  // try to get it from the localized category using getEnglishSlugForCategory
+  const primaryCategory = product.categories?.[0];
+  if (!englishCategorySlug && primaryCategory?.id) {
+    englishCategorySlug = await getEnglishSlugForCategory(primaryCategory.id, locale as Locale);
+  }
 
   // Fetch the localized category to get the properly localized category name
   // The category name embedded in the product response may not be properly localized
   const localizedCategory = englishCategorySlug 
     ? await getCategoryBySlug(englishCategorySlug, locale as Locale)
     : null;
-  const localizedCategoryName = localizedCategory?.name || null;
+  const localizedCategoryName = localizedCategory?.name || primaryCategory?.name || null;
 
   return (
     <ProductDetail
