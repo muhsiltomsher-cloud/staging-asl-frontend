@@ -163,6 +163,17 @@ export function BuildYourOwnSetClient({
     return new Set(selections.filter((s) => s !== null).map((s) => s!.id));
   }, [selections]);
 
+  // Compute which categories have available products
+  const availableCategories = useMemo(() => {
+    const categoriesWithProducts = new Set<CategoryFilter>(["all"]);
+    productOptions.forEach((product) => {
+      if (product.category !== "all") {
+        categoriesWithProducts.add(product.category);
+      }
+    });
+    return categoriesWithProducts;
+  }, [productOptions]);
+
   const filteredProducts = useMemo(() => {
     return productOptions.filter((product) => {
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -300,13 +311,16 @@ export function BuildYourOwnSetClient({
 
   const t = translations[isRTL ? "ar" : "en"];
 
-  const categories:{ key: CategoryFilter; label: string }[] = [
+  const allCategories: { key: CategoryFilter; label: string }[] = [
     { key: "all", label: t.all },
     { key: "perfumes", label: t.perfumes },
     { key: "oils", label: t.oils },
     { key: "lotions", label: t.lotions },
     { key: "home", label: t.home },
   ];
+
+  // Only show categories that have available products
+  const categories = allCategories.filter((cat) => availableCategories.has(cat.key));
 
   return (
     <>
