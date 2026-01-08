@@ -187,16 +187,28 @@ export function BuildYourOwnSetClient({
   // Get box price from bundle config (if configured)
   const boxPrice = bundleConfig?.with_box_price || 0;
 
-  // Calculate total: sum of selected products + box price (if any products selected)
-  const productsTotal = useMemo(() => {
-    return selections.reduce((sum, selection) => {
+  // Calculate required products total (first requiredSlots items)
+  const requiredProductsTotal = useMemo(() => {
+    return selections.slice(0, requiredSlots).reduce((sum, selection) => {
       return sum + (selection?.price || 0);
     }, 0);
-  }, [selections]);
+  }, [selections, requiredSlots]);
 
-  // Only add box price if at least one product is selected
-  const hasSelections = selections.some((s) => s !== null);
-  const total = hasSelections ? productsTotal + boxPrice : 0;
+  // Calculate add-on products total (items after requiredSlots)
+  const addOnProductsTotal = useMemo(() => {
+    return selections.slice(requiredSlots).reduce((sum, selection) => {
+      return sum + (selection?.price || 0);
+    }, 0);
+  }, [selections, requiredSlots]);
+
+  // Total products price (required + add-ons)
+  const productsTotal = requiredProductsTotal + addOnProductsTotal;
+
+  // Check if any add-on products are selected
+  const hasAddOns = selections.slice(requiredSlots).some((s) => s !== null);
+  
+  // Total = box price + products (box price always shown, products added when selected)
+  const total = boxPrice + productsTotal;
 
   const requiredCount = selections.slice(0, requiredSlots).filter((s) => s !== null).length;
   const isValid = requiredCount === requiredSlots;
@@ -274,6 +286,9 @@ export function BuildYourOwnSetClient({
       addExtraWithPrice: "Add extra (with price)",
       change: "Change",
       total: "Total",
+      boxPrice: "Box",
+      products: "Products",
+      addOns: "Add-ons",
       addToCart: "Add to cart",
       adding: "Adding...",
       selectProduct: "Select a Product",
@@ -303,6 +318,9 @@ export function BuildYourOwnSetClient({
       addExtraWithPrice: "أضف إضافي (بسعر)",
       change: "تغيير",
       total: "المجموع",
+      boxPrice: "الصندوق",
+      products: "المنتجات",
+      addOns: "الإضافات",
       addToCart: "أضف إلى السلة",
       adding: "جاري الإضافة...",
       selectProduct: "اختر منتج",
@@ -355,9 +373,9 @@ export function BuildYourOwnSetClient({
             {bundleProduct?.name || t.title}
           </h1>
 
-          {/* Price */}
+          {/* Price - Show box price as starting price */}
           <div className="text-xl font-bold text-gray-900">
-            <FormattedPrice price={total} iconSize="md" />
+            <FormattedPrice price={boxPrice > 0 ? boxPrice : total} iconSize="md" />
           </div>
 
           {/* Description */}
@@ -508,12 +526,36 @@ export function BuildYourOwnSetClient({
             )}
           </div>
 
-          {/* Total */}
-          <div className="flex items-center justify-between border-t border-gray-200 pt-4">
-            <span className="text-lg font-bold text-gray-900">{t.total}</span>
-            <span className="text-xl font-bold text-gray-900">
-              <FormattedPrice price={total} iconSize="md" />
-            </span>
+          {/* Price Breakdown */}
+          <div className="space-y-2 border-t border-gray-200 pt-4">
+            {/* Box Price */}
+            {boxPrice > 0 && (
+              <div className="flex items-center justify-between text-sm text-gray-600">
+                <span>{t.boxPrice}</span>
+                <span><FormattedPrice price={boxPrice} iconSize="sm" /></span>
+              </div>
+            )}
+            {/* Products Price */}
+            {productsTotal > 0 && (
+              <div className="flex items-center justify-between text-sm text-gray-600">
+                <span>{t.products}</span>
+                <span><FormattedPrice price={productsTotal} iconSize="sm" /></span>
+              </div>
+            )}
+            {/* Add-ons Price */}
+            {hasAddOns && addOnProductsTotal > 0 && (
+              <div className="flex items-center justify-between text-sm text-amber-600">
+                <span>{t.addOns}</span>
+                <span>+<FormattedPrice price={addOnProductsTotal} iconSize="sm" /></span>
+              </div>
+            )}
+            {/* Total */}
+            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+              <span className="text-lg font-bold text-gray-900">{t.total}</span>
+              <span className="text-xl font-bold text-gray-900">
+                <FormattedPrice price={total} iconSize="md" />
+              </span>
+            </div>
           </div>
 
           {/* Quantity and Add to Cart */}
