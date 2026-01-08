@@ -6,7 +6,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/contexts/CartContext";
 import { useFreeGift } from "@/contexts/FreeGiftContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { BundleItemsList } from "@/components/cart/BundleItemsList";
 import { CartItemSkeleton } from "@/components/common/Skeleton";
@@ -43,7 +42,6 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
 
     const { isFreeGiftItem, activeGifts, getGiftProgress } = useFreeGift();
     const giftProgress = getGiftProgress();
-    const { currency } = useCurrency();
 
     const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
     const isRTL = locale === "ar";
@@ -82,7 +80,6 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
           price={parseFloat(cartSubtotal) / divisor}
           className="text-lg font-semibold"
           iconSize="sm"
-          sourceCurrency={currency}
         />
       </div>
 
@@ -239,7 +236,6 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
                         <FormattedPrice
                           price={parseFloat(item.price) / divisor}
                           iconSize="xs"
-                          sourceCurrency={currency}
                         /> x {item.quantity.value}
                       </p>
                     )}

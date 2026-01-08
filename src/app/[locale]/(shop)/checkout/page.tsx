@@ -12,7 +12,6 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import { getCustomer, type Customer } from "@/lib/api/customer";
 import { featureFlags, type Locale } from "@/config/site";
 import { MapPin, Check, ChevronDown, ChevronUp, User, UserCheck, Tag, X } from "lucide-react";
@@ -66,7 +65,6 @@ export default function CheckoutPage() {
   const router = useRouter();
     const { cart, cartItems, cartSubtotal, cartTotal, clearCart, applyCoupon, removeCoupon, selectedCoupons, couponDiscount, clearSelectedCoupons } = useCart();
     const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
-    const { currency } = useCurrency();
     const isRTL = locale === "ar";
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -657,7 +655,6 @@ export default function CheckoutPage() {
                                     price={parseFloat(item.price) * item.quantity.value / divisor}
                                     className="text-sm font-medium"
                                     iconSize="xs"
-                                    sourceCurrency={currency}
                                   />
                                 </div>
                               ))}
@@ -762,7 +759,6 @@ export default function CheckoutPage() {
                                 <FormattedPrice
                                   price={parseFloat(cartSubtotal) / divisor}
                                   iconSize="xs"
-                                  sourceCurrency={currency}
                                 />
                               </div>
                               {couponDiscount > 0 && (
@@ -772,7 +768,6 @@ export default function CheckoutPage() {
                                     -<FormattedPrice
                                       price={couponDiscount / divisor}
                                       iconSize="xs"
-                                      sourceCurrency={currency}
                                     />
                                   </span>
                                 </div>
@@ -782,7 +777,6 @@ export default function CheckoutPage() {
                                 <FormattedPrice
                                   price={parseFloat(cart?.totals?.shipping_total || "0") / divisor}
                                   iconSize="xs"
-                                  sourceCurrency={currency}
                                 />
                               </div>
                             </div>
@@ -792,7 +786,6 @@ export default function CheckoutPage() {
                 <FormattedPrice
                   price={parseFloat(cartTotal) / divisor}
                   iconSize="sm"
-                  sourceCurrency={currency}
                 />
               </div>
 
@@ -826,7 +819,6 @@ export default function CheckoutPage() {
               price={parseFloat(cartTotal) / divisor}
               className="text-lg font-bold text-gray-900"
               iconSize="sm"
-              sourceCurrency={currency}
             />
           </div>
           <Button 

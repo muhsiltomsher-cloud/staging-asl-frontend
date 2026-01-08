@@ -13,7 +13,6 @@ import { BundleItemsList } from "@/components/cart/BundleItemsList";
 import { useCart } from "@/contexts/CartContext";
 import { useFreeGift } from "@/contexts/FreeGiftContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import { featureFlags, type Locale } from "@/config/site";
 
 interface PublicCoupon {
@@ -44,7 +43,6 @@ export default function CartPage() {
     const { isAuthenticated, user } = useAuth();
     const { isFreeGiftItem, activeGifts, getGiftProgress } = useFreeGift();
     const giftProgress = getGiftProgress();
-    const { currency } = useCurrency();
 
     const isRTL = locale === "ar";
   const isEmpty = cartItems.length === 0;
@@ -419,7 +417,6 @@ export default function CartPage() {
                                           price={parseFloat(item.price) / divisor}
                                           className="font-medium"
                                           iconSize="xs"
-                                          sourceCurrency={currency}
                                         />
                                       )}
                                     </div>
@@ -478,7 +475,6 @@ export default function CartPage() {
                                           price={parseFloat(item.price) * item.quantity.value / divisor}
                                           className="font-semibold"
                                           iconSize="xs"
-                                          sourceCurrency={currency}
                                         />
                                       )}
                                     </div>
@@ -606,7 +602,6 @@ export default function CartPage() {
                   <FormattedPrice
                     price={parseFloat(cartSubtotal) / divisor}
                     iconSize="xs"
-                    sourceCurrency={currency}
                   />
                 </div>
                 {couponDiscount > 0 && (
@@ -616,7 +611,6 @@ export default function CartPage() {
                         -<FormattedPrice
                           price={couponDiscount / divisor}
                           iconSize="xs"
-                          sourceCurrency={currency}
                         />
                       </span>
                     </div>
@@ -629,7 +623,6 @@ export default function CartPage() {
                       ? <FormattedPrice
                           price={parseFloat(cart.totals.shipping_total) / divisor}
                           iconSize="xs"
-                          sourceCurrency={currency}
                         />
                       : texts.calculatedAtCheckout}
                   </span>
@@ -641,7 +634,6 @@ export default function CartPage() {
                 <FormattedPrice
                   price={parseFloat(cartTotal) / divisor}
                   iconSize="sm"
-                  sourceCurrency={currency}
                 />
               </div>
 
@@ -673,7 +665,6 @@ export default function CartPage() {
                 price={parseFloat(cartTotal) / divisor}
                 className="text-lg font-bold text-gray-900"
                 iconSize="sm"
-                sourceCurrency={currency}
               />
             </div>
             <Button size="lg" className="flex-1 max-w-[200px]" asChild>
