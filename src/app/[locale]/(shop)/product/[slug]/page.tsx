@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct, getBundleConfig, getFreeGiftProductIds } from "@/lib/api/woocommerce";
+import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct, getBundleConfig, getFreeGiftProductIds, getCategoryBySlug } from "@/lib/api/woocommerce";
 import { getProductAddons } from "@/lib/api/wcpa";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { ProductDetail } from "./ProductDetail";
@@ -154,6 +154,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
   // Get the English category slug from the English product
   const englishCategorySlug = englishProduct?.categories?.[0]?.slug || null;
 
+  // Fetch the localized category to get the properly localized category name
+  // The category name embedded in the product response may not be properly localized
+  const localizedCategory = englishCategorySlug 
+    ? await getCategoryBySlug(englishCategorySlug, locale as Locale)
+    : null;
+  const localizedCategoryName = localizedCategory?.name || null;
+
   return (
     <ProductDetail
       product={product}
@@ -161,6 +168,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       relatedProducts={relatedProducts}
       addonForms={productAddons?.forms}
       englishCategorySlug={englishCategorySlug}
+      localizedCategoryName={localizedCategoryName}
     />
   );
 }

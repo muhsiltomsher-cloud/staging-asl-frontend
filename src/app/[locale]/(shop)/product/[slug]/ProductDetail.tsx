@@ -154,9 +154,10 @@ interface ProductDetailProps {
   relatedProducts?: WCProduct[];
   addonForms?: WCPAForm[];
   englishCategorySlug?: string | null;
+  localizedCategoryName?: string | null;
 }
 
-export function ProductDetail({ product, locale, relatedProducts = [], addonForms = [], englishCategorySlug }: ProductDetailProps) {
+export function ProductDetail({ product, locale, relatedProducts = [], addonForms = [], englishCategorySlug, localizedCategoryName }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -181,9 +182,11 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
   const primaryCategory = product.categories?.[0];
   // Use English category slug for URLs (falls back to localized slug if English slug not available)
   const categorySlugForUrl = englishCategorySlug || primaryCategory?.slug;
+  // Use the localized category name from the API (properly localized) or fall back to the embedded category name
+  const categoryNameForBreadcrumb = localizedCategoryName || primaryCategory?.name;
   const breadcrumbItems = [
     { name: isRTL ? "المتجر" : "Shop", href: `/${locale}/shop` },
-    ...(primaryCategory && categorySlugForUrl ? [{ name: decodeHtmlEntities(primaryCategory.name), href: `/${locale}/category/${categorySlugForUrl}` }] : []),
+    ...(primaryCategory && categorySlugForUrl && categoryNameForBreadcrumb ? [{ name: decodeHtmlEntities(categoryNameForBreadcrumb), href: `/${locale}/category/${categorySlugForUrl}` }] : []),
     { name: decodeHtmlEntities(product.name), href: `/${locale}/product/${product.slug}` },
   ];
 
