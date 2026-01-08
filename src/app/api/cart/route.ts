@@ -6,6 +6,7 @@ const API_BASE = siteConfig.apiUrl;
 const CART_KEY_COOKIE = "cocart_cart_key";
 const AUTH_TOKEN_COOKIE = "asl_auth_token";
 const CURRENCY_COOKIE = "wcml_currency";
+const LOCALE_COOKIE = "NEXT_LOCALE";
 
 async function getCartKey(): Promise<string | null> {
   const cookieStore = await cookies();
@@ -22,11 +23,34 @@ async function getCurrency(): Promise<string | null> {
   return cookieStore.get(CURRENCY_COOKIE)?.value || null;
 }
 
-// Helper to append currency parameter to URL
-function appendCurrencyToUrl(url: string, currency: string | null): string {
-  if (!currency) return url;
-  const separator = url.includes("?") ? "&" : "?";
-  return `${url}${separator}currency=${currency}`;
+// Get locale from cookie or referer URL
+async function getLocale(request: NextRequest): Promise<string | null> {
+  const cookieStore = await cookies();
+  const localeCookie = cookieStore.get(LOCALE_COOKIE)?.value;
+  if (localeCookie) return localeCookie;
+  
+  // Try to extract locale from referer URL (e.g., /ar/product/... or /en/product/...)
+  const referer = request.headers.get("referer");
+  if (referer) {
+    const match = referer.match(/\/(ar|en)\//);
+    if (match) return match[1];
+  }
+  
+  return null;
+}
+
+// Helper to append currency and lang parameters to URL
+function appendParamsToUrl(url: string, currency: string | null, lang: string | null): string {
+  let result = url;
+  if (currency) {
+    const separator = result.includes("?") ? "&" : "?";
+    result = `${result}${separator}currency=${currency}`;
+  }
+  if (lang) {
+    const separator = result.includes("?") ? "&" : "?";
+    result = `${result}${separator}lang=${lang}`;
+  }
+  return result;
 }
 
 function getAuthHeaders(request: NextRequest, authToken: string | null): HeadersInit {
@@ -105,13 +129,14 @@ export async function GET(request: NextRequest) {
     const cartKey = await getCartKey();
     const authToken = await getAuthToken();
     const currency = await getCurrency();
+    const locale = await getLocale(request);
     
     // For authenticated users, don't use cart_key (use JWT identity)
-    // Append currency parameter for WPML multicurrency support
-    const authUrl = appendCurrencyToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency);
+    // Append currency and lang parameters for WPML multicurrency and multilingual support
+    const authUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, locale);
     const guestUrl = cartKey
-      ? appendCurrencyToUrl(`${API_BASE}/wp-json/cocart/v2/cart?cart_key=${cartKey}`, currency)
-      : appendCurrencyToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency);
+      ? appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart?cart_key=${cartKey}`, currency, locale)
+      : appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, locale);
 
     // First attempt: try with auth if token exists
     const url = authToken ? authUrl : guestUrl;
@@ -169,13 +194,14 @@ export async function POST(request: NextRequest) {
     const cartKey = await getCartKey();
     const authToken = await getAuthToken();
     const currency = await getCurrency();
+    const locale = await getLocale(request);
     const body = await request.json().catch(() => ({}));
     let baseUrl: string;
     let method: string = "POST";
 
     switch (action) {
       case "add":
-        baseUrl = appendCurrencyToUrl(`${API_BASE}/wp-json/cocart/v2/cart/add-item`, currency);
+        baseUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart/add-item`, currency, locale);
         break;
       case "update": {
         const itemKey = searchParams.get("item_key");
@@ -185,7 +211,7 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        baseUrl = appendCurrencyToUrl(`${API_BASE}/wp-json/cocart/v2/cart/item/${itemKey}`, currency);
+        baseUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart/item/${itemKey}`, currency, locale);
         break;
       }
       case "remove": {
@@ -196,12 +222,12 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        baseUrl = appendCurrencyToUrl(`${API_BASE}/wp-json/cocart/v2/cart/item/${removeKey}`, currency);
+        baseUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart/item/${removeKey}`, currency, locale);
         method = "DELETE";
         break;
       }
       case "clear":
-        baseUrl = appendCurrencyToUrl(`${API_BASE}/wp-json/cocart/v2/cart/clear`, currency);
+        baseUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart/clear`, currency, locale);
         break;
       case "apply-coupon":
       case "remove-coupon": {
@@ -247,8 +273,8 @@ export async function POST(request: NextRequest) {
         
         // After successful coupon operation, fetch the cart via CoCart to return consistent data format
         const coCartUrl = cartKey
-          ? appendCurrencyToUrl(`${API_BASE}/wp-json/cocart/v2/cart?cart_key=${cartKey}`, currency)
-          : appendCurrencyToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency);
+          ? appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart?cart_key=${cartKey}`, currency, locale)
+          : appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, locale);
         
         const coCartResponse = await fetch(coCartUrl, {
           method: "GET",
