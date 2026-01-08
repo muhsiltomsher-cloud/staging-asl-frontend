@@ -42,7 +42,7 @@ export default function CartPage() {
     couponDiscount,
   } = useCart();
     const { isAuthenticated, user } = useAuth();
-    const { isFreeGiftItem } = useFreeGift();
+    const { isFreeGiftItem, getGiftMessages, activeGifts } = useFreeGift();
     const { currency } = useCurrency();
 
     const isRTL = locale === "ar";
@@ -416,6 +416,22 @@ export default function CartPage() {
                                 );
                               })}
                             </ul>
+
+              {/* Free Gift Messages */}
+              {activeGifts.length > 0 && (
+                <div className="border-t p-4 bg-gradient-to-r from-amber-50 to-orange-50">
+                  <div className="flex items-start gap-3">
+                    <Gift className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      {getGiftMessages(locale).map((message, index) => (
+                        <p key={index} className="text-sm font-medium text-amber-800">
+                          {message}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
