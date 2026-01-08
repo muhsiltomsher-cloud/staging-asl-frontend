@@ -182,11 +182,19 @@ export function BuildYourOwnSetClient({
     });
   }, [productOptions, searchQuery, categoryFilter]);
 
-  const total = useMemo(() => {
+  // Get box price from bundle config (if configured)
+  const boxPrice = bundleConfig?.with_box_price || 0;
+
+  // Calculate total: sum of selected products + box price (if any products selected)
+  const productsTotal = useMemo(() => {
     return selections.reduce((sum, selection) => {
       return sum + (selection?.price || 0);
     }, 0);
   }, [selections]);
+
+  // Only add box price if at least one product is selected
+  const hasSelections = selections.some((s) => s !== null);
+  const total = hasSelections ? productsTotal + boxPrice : 0;
 
   const requiredCount = selections.slice(0, 3).filter((s) => s !== null).length;
   const isValid = requiredCount === 3;
