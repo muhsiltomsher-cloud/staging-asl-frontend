@@ -340,7 +340,7 @@ export function BuildYourOwnSetClient({
         <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
           <Image
             src={bundleImage}
-            alt={t.title}
+            alt={bundleProduct?.name || t.title}
             fill
             sizes="(max-width: 1024px) 100vw, 50vw"
             className="object-cover"
@@ -352,7 +352,7 @@ export function BuildYourOwnSetClient({
         <div className="space-y-6">
           {/* Title */}
           <h1 className="font-serif text-2xl sm:text-3xl font-medium uppercase tracking-normal sm:tracking-wide text-amber-800 md:text-4xl leading-tight">
-            {t.title}
+            {bundleProduct?.name || t.title}
           </h1>
 
           {/* Price */}
