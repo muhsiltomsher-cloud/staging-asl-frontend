@@ -4,7 +4,7 @@ import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
-import { getCategoryBySlug, getProductsByCategory, getCategories, getFreeGiftProductIds } from "@/lib/api/woocommerce";
+import { getCategoryBySlug, getProductsByCategory, getCategories, getFreeGiftProductIds, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import { siteConfig, type Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { CategoryClient } from "./CategoryClient";
@@ -66,10 +66,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     notFound();
   }
 
-  // Fetch products and gift product IDs in parallel
-  const [{ products: allProducts }, giftProductIds] = await Promise.all([
+  // Fetch products, gift product IDs, and bundle product slugs in parallel
+  const [{ products: allProducts }, giftProductIds, bundleProductSlugs] = await Promise.all([
     getProductsByCategory(slug, { per_page: 24, locale: locale as Locale }),
     getFreeGiftProductIds(),
+    getBundleEnabledProductSlugs(),
   ]);
 
   // Filter out gift products from the category listing
@@ -94,7 +95,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       </div>
 
       <Suspense fallback={<ProductGridSkeleton count={12} />}>
-        <CategoryClient products={products} locale={locale as Locale} />
+        <CategoryClient products={products} locale={locale as Locale} bundleProductSlugs={bundleProductSlugs} />
       </Suspense>
     </div>
   );

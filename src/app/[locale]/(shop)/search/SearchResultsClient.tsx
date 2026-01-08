@@ -15,12 +15,14 @@ interface SearchResultsClientProps {
   locale: Locale;
   initialQuery: string;
   hiddenGiftProductIds?: number[];
+  bundleProductSlugs?: string[];
 }
 
 export function SearchResultsClient({
   locale,
   initialQuery,
   hiddenGiftProductIds = [],
+  bundleProductSlugs = [],
 }: SearchResultsClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -238,6 +240,7 @@ export function SearchResultsClient({
             products={products} 
             locale={locale}
             showToolbar={true}
+            bundleProductSlugs={bundleProductSlugs}
           />
         )}
       </div>

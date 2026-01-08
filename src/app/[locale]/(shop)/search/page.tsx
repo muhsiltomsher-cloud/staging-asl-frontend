@@ -4,7 +4,7 @@ import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { SearchResultsClient } from "./SearchResultsClient";
 import { ProductGridSkeleton } from "@/components/common/Skeleton";
-import { getFreeGiftProductIds } from "@/lib/api/woocommerce";
+import { getFreeGiftProductIds, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 
 interface SearchPageProps {
   params: Promise<{ locale: string }>;
@@ -37,8 +37,11 @@ export default async function SearchPage({ params, searchParams }: SearchPagePro
   const { q } = await searchParams;
   const query = typeof q === "string" ? q : "";
 
-  // Fetch hidden gift product IDs to filter from search results
-  const hiddenGiftProductIds = await getFreeGiftProductIds();
+  // Fetch hidden gift product IDs and bundle product slugs in parallel
+  const [hiddenGiftProductIds, bundleProductSlugs] = await Promise.all([
+    getFreeGiftProductIds(),
+    getBundleEnabledProductSlugs(),
+  ]);
 
   return (
     <Suspense fallback={<SearchPageSkeleton />}>
@@ -46,6 +49,7 @@ export default async function SearchPage({ params, searchParams }: SearchPagePro
         locale={locale as Locale} 
         initialQuery={query}
         hiddenGiftProductIds={hiddenGiftProductIds}
+        bundleProductSlugs={bundleProductSlugs}
       />
     </Suspense>
   );
