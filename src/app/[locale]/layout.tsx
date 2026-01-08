@@ -88,7 +88,7 @@ export default async function LocaleLayout({
     <AuthProvider>
       <CurrencyProvider>
         <NotificationProvider>
-                    <CartProvider>
+                    <CartProvider locale={validLocale}>
                       <FreeGiftProvider>
                       <WishlistProvider>
               <JsonLd data={generateOrganizationJsonLd()} />

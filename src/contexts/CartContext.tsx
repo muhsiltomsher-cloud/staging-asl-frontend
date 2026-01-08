@@ -6,7 +6,8 @@ import type { CoCartResponse, CoCartItem } from "@/lib/api/cocart";
 import { getAuthToken } from "@/lib/api/auth";
 import { useNotification } from "./NotificationContext";
 
-const CART_CACHE_KEY = "/api/cart";
+// Cache key now includes locale for proper multilingual support
+const getCartCacheKey = (locale: string) => `/api/cart?locale=${locale}`;
 
 function getHeaders(): HeadersInit {
   const headers: HeadersInit = {
@@ -21,8 +22,9 @@ function getHeaders(): HeadersInit {
   return headers;
 }
 
-async function cartFetcher(): Promise<CoCartResponse | null> {
-  const response = await fetch(CART_CACHE_KEY, {
+// Fetcher that extracts locale from the cache key URL
+async function cartFetcher(url: string): Promise<CoCartResponse | null> {
+  const response = await fetch(url, {
     method: "GET",
     headers: getHeaders(),
   });
@@ -74,17 +76,25 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+interface CartProviderProps {
+  children: React.ReactNode;
+  locale: string;
+}
+
+export function CartProvider({ children, locale }: CartProviderProps) {
+  // Use locale-aware cache key for proper multilingual support
+  const cacheKey = getCartCacheKey(locale);
+  
   // Use SWR for cart data with automatic caching and deduplication
   const { data: cart, isLoading: swrLoading, isValidating } = useSWR<CoCartResponse | null>(
-    CART_CACHE_KEY,
+    cacheKey,
     cartFetcher,
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
       dedupingInterval: 5000, // Dedupe requests within 5 seconds
       errorRetryCount: 2,
-      keepPreviousData: true, // Keep showing old data while revalidating
+      keepPreviousData: false, // Don't keep previous data when locale changes
     }
   );
 
@@ -97,8 +107,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const isLoading = swrLoading || isOperationLoading || isValidating;
 
   const refreshCart = useCallback(async () => {
-    await mutate(CART_CACHE_KEY);
-  }, []);
+    await mutate(cacheKey);
+  }, [cacheKey]);
 
   const addToCart = useCallback(
     async (productId: number, quantity = 1, variationId?: number, variation?: Record<string, string>, itemData?: CartItemData) => {
@@ -122,7 +132,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       // Optimistically update the cache
       await mutate(
-        CART_CACHE_KEY,
+        cacheKey,
         (currentCart: CoCartResponse | null | undefined) => {
           if (!currentCart) return currentCart;
           return {
@@ -150,25 +160,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
         if (!data.success) {
           // Rollback on error
-          await mutate(CART_CACHE_KEY);
+          await mutate(cacheKey);
           notify("error", data.error?.message || "Failed to add item to cart");
           throw new Error(data.error?.message || "Failed to add item to cart");
         }
 
         // Update cache with actual data
-        await mutate(CART_CACHE_KEY, data.cart, false);
+        await mutate(cacheKey, data.cart, false);
         setIsCartOpen(true);
         notify("cart", "Item added to cart");
       } catch (error) {
         // Rollback on error
-        await mutate(CART_CACHE_KEY);
+        await mutate(cacheKey);
         console.error("Error adding to cart:", error);
         throw error;
       } finally {
         setIsOperationLoading(false);
       }
     },
-    [notify]
+    [notify, cacheKey]
   );
 
   const updateCartItem = useCallback(
@@ -177,7 +187,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       // Optimistically update the quantity
       await mutate(
-        CART_CACHE_KEY,
+        cacheKey,
         (currentCart: CoCartResponse | null | undefined) => {
           if (!currentCart) return currentCart;
           return {
@@ -200,22 +210,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const data = await response.json();
 
         if (!data.success) {
-          await mutate(CART_CACHE_KEY);
+          await mutate(cacheKey);
           notify("error", data.error?.message || "Failed to update cart");
           throw new Error(data.error?.message || "Failed to update cart");
         }
 
-        await mutate(CART_CACHE_KEY, data.cart, false);
+        await mutate(cacheKey, data.cart, false);
         notify("cart", "Cart updated");
       } catch (error) {
-        await mutate(CART_CACHE_KEY);
+        await mutate(cacheKey);
         console.error("Error updating cart:", error);
         throw error;
       } finally {
         setIsOperationLoading(false);
       }
     },
-    [notify]
+    [notify, cacheKey]
   );
 
   const removeCartItem = useCallback(
@@ -224,7 +234,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       // Optimistically remove the item
       await mutate(
-        CART_CACHE_KEY,
+        cacheKey,
         (currentCart: CoCartResponse | null | undefined) => {
           if (!currentCart) return currentCart;
           const removedItem = currentCart.items.find((item) => item.item_key === key);
@@ -246,22 +256,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const data = await response.json();
 
         if (!data.success) {
-          await mutate(CART_CACHE_KEY);
+          await mutate(cacheKey);
           notify("error", data.error?.message || "Failed to remove item");
           throw new Error(data.error?.message || "Failed to remove item");
         }
 
-        await mutate(CART_CACHE_KEY, data.cart, false);
+        await mutate(cacheKey, data.cart, false);
         notify("cart", "Item removed from cart");
       } catch (error) {
-        await mutate(CART_CACHE_KEY);
+        await mutate(cacheKey);
         console.error("Error removing from cart:", error);
         throw error;
       } finally {
         setIsOperationLoading(false);
       }
     },
-    [notify]
+    [notify, cacheKey]
   );
 
   const clearCart = useCallback(async () => {
@@ -269,7 +279,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     // Optimistically clear the cart
     await mutate(
-      CART_CACHE_KEY,
+      cacheKey,
       (currentCart: CoCartResponse | null | undefined) => {
         if (!currentCart) return currentCart;
         return { ...currentCart, items: [], item_count: 0 };
@@ -286,19 +296,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json();
 
       if (!data.success) {
-        await mutate(CART_CACHE_KEY);
+        await mutate(cacheKey);
         throw new Error(data.error?.message || "Failed to clear cart");
       }
 
-      await mutate(CART_CACHE_KEY, data.cart, false);
+      await mutate(cacheKey, data.cart, false);
     } catch (error) {
-      await mutate(CART_CACHE_KEY);
+      await mutate(cacheKey);
       console.error("Error clearing cart:", error);
       throw error;
     } finally {
       setIsOperationLoading(false);
     }
-  }, []);
+  }, [cacheKey]);
 
   const applyCoupon = useCallback(async (code: string, couponData?: SelectedCoupon): Promise<{ success: boolean; error?: string }> => {
     const normalizedCode = code.toLowerCase().trim();
