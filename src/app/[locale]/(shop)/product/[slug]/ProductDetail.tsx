@@ -164,7 +164,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
   const [openAccordion, setOpenAccordion] = useState<string | null>("characteristics");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
-  const [viewMode, setViewMode] = useState<"grid" | "slider">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "slider">("slider");
   const [addonValues, setAddonValues] = useState<WCPAFormValues>({});
   const [addonPrice, setAddonPrice] = useState(0);
   const [addonErrors, setAddonErrors] = useState<Record<string, string>>({});
@@ -496,17 +496,17 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
               <>
                 <button
                   type="button"
-                  className="gallery-prev absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1.5 shadow-md transition-all hover:bg-white hover:shadow-lg disabled:opacity-50 sm:left-3 sm:p-2"
+                  className="gallery-prev absolute left-1 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1 shadow-md transition-all hover:bg-white hover:shadow-lg disabled:opacity-50 sm:left-3 sm:p-2"
                   aria-label={isRTL ? "الصورة السابقة" : "Previous image"}
                 >
-                  <ChevronLeft className="h-4 w-4 text-gray-800 sm:h-5 sm:w-5" />
+                  <ChevronLeft className="h-3 w-3 text-gray-800 sm:h-5 sm:w-5" />
                 </button>
                 <button
                   type="button"
-                  className="gallery-next absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1.5 shadow-md transition-all hover:bg-white hover:shadow-lg disabled:opacity-50 sm:right-3 sm:p-2"
+                  className="gallery-next absolute right-1 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1 shadow-md transition-all hover:bg-white hover:shadow-lg disabled:opacity-50 sm:right-3 sm:p-2"
                   aria-label={isRTL ? "الصورة التالية" : "Next image"}
                 >
-                  <ChevronRight className="h-4 w-4 text-gray-800 sm:h-5 sm:w-5" />
+                  <ChevronRight className="h-3 w-3 text-gray-800 sm:h-5 sm:w-5" />
                 </button>
               </>
             )}
