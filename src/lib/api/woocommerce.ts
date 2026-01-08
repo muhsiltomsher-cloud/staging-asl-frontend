@@ -283,6 +283,22 @@ export const getCategories = cache(async function getCategories(locale?: Locale,
   }
 });
 
+// Mapping of English category slugs to Arabic category slugs
+// This is needed because WPML assigns different slugs for each language
+// and the API returns categories in different orders, making position-based matching unreliable
+const ENGLISH_TO_ARABIC_CATEGORY_SLUGS: Record<string, string> = {
+  "perfumes": "%d8%a7%d9%84%d8%b9%d8%b7%d9%88%d8%b1",
+  "perfumes-oils": "%d8%a7%d9%84%d8%b9%d8%b7%d9%88%d8%b1-%d9%88%d8%a7%d9%84%d8%b2%d9%8a%d9%88%d8%aa",
+  "home-fragrances": "%d9%85%d8%b9%d8%b7%d8%b1%d8%a7%d8%aa-%d8%a7%d9%84%d9%85%d9%86%d8%b2%d9%84",
+  "personal-care": "%d8%a7%d9%84%d8%b9%d9%86%d8%a7%d9%8a%d8%a9-%d8%a7%d9%84%d8%b4%d8%ae%d8%b5%d9%8a%d8%a9",
+  "gifts-set": "%d8%a3%d8%b7%d9%82%d9%85-%d8%a7%d9%84%d9%87%d8%af%d8%a7%d9%8a%d8%a7",
+  "fragrance-oils": "%d8%b2%d9%8a%d9%88%d8%aa-%d8%b9%d8%b7%d8%b1%d9%8a%d8%a9",
+  "hair-body-mist": "%d8%b9%d8%b7%d9%88%d8%b1-%d8%a7%d9%84%d8%b4%d8%b9%d8%b1-%d9%88%d8%a7%d9%84%d8%ac%d8%b3%d9%85",
+  "hand-body-lotion": "%d9%84%d9%88%d8%b4%d9%86-%d8%a7%d9%84%d8%ac%d8%b3%d9%85-%d9%88%d8%a7%d9%84%d9%8a%d8%af%d9%8a%d9%86",
+  "air-fresheners": "%d9%85%d8%b9%d8%b7%d8%b1%d8%a7%d8%aa-%d8%a7%d9%84%d8%ac%d9%88",
+  "reed-diffusers": "%d9%85%d9%88%d8%b2%d8%b9-%d8%a7%d9%84%d8%b9%d8%b7%d8%b1",
+};
+
 // Memoized version for request deduplication
 // Handles the case where URLs use English slugs but the locale is non-English (e.g., Arabic)
 // WPML assigns different slugs for each language, so we need to map English slugs to localized categories
@@ -300,40 +316,43 @@ export const getCategoryBySlug = cache(async function getCategoryBySlug(
       return exactMatch;
     }
     
-    // If no exact match and locale is not English, the slug might be an English slug
-    // We need to find the corresponding localized category by matching with English categories
+    // If no exact match and locale is Arabic, try to map English slug to Arabic slug
+    if (locale === "ar") {
+      const arabicSlug = ENGLISH_TO_ARABIC_CATEGORY_SLUGS[slug];
+      if (arabicSlug) {
+        const arabicMatch = categories.find((cat) => cat.slug === arabicSlug);
+        if (arabicMatch) {
+          return arabicMatch;
+        }
+      }
+    }
+    
+    // Fallback: If locale is not English, try to find by matching with English categories
+    // This handles cases where the mapping might be incomplete
     if (locale && locale !== "en") {
       const englishCategories = await getCategories("en", currency);
       
       // Find the English category with this slug
       const englishCategory = englishCategories.find((cat) => cat.slug === slug);
       if (englishCategory) {
-        // Find the corresponding localized category by matching position among root categories
-        // or by finding a category at the same index
-        const englishRootCategories = englishCategories.filter((cat) => cat.parent === 0);
-        const localizedRootCategories = categories.filter((cat) => cat.parent === 0);
-        
-        const englishIndex = englishRootCategories.findIndex((cat) => cat.slug === slug);
-        
-        if (englishIndex !== -1 && englishIndex < localizedRootCategories.length) {
-          return localizedRootCategories[englishIndex];
-        }
-        
-        // Fallback: try to match by name similarity or other heuristics
-        // For subcategories, try matching by parent relationship
+        // Try to find a localized category with the same parent structure
+        // For subcategories, find the parent first and then match by position
         if (englishCategory.parent !== 0) {
           const englishParent = englishCategories.find((cat) => cat.id === englishCategory.parent);
           if (englishParent) {
-            const englishParentIndex = englishRootCategories.findIndex((cat) => cat.id === englishParent.id);
-            if (englishParentIndex !== -1 && englishParentIndex < localizedRootCategories.length) {
-              const localizedParent = localizedRootCategories[englishParentIndex];
-              // Find subcategories of this parent
-              const englishSubcategories = englishCategories.filter((cat) => cat.parent === englishParent.id);
-              const localizedSubcategories = categories.filter((cat) => cat.parent === localizedParent.id);
-              
-              const subIndex = englishSubcategories.findIndex((cat) => cat.slug === slug);
-              if (subIndex !== -1 && subIndex < localizedSubcategories.length) {
-                return localizedSubcategories[subIndex];
+            // Find the Arabic parent using the slug mapping
+            const arabicParentSlug = ENGLISH_TO_ARABIC_CATEGORY_SLUGS[englishParent.slug];
+            if (arabicParentSlug) {
+              const localizedParent = categories.find((cat) => cat.slug === arabicParentSlug);
+              if (localizedParent) {
+                // Find subcategories of this parent
+                const englishSubcategories = englishCategories.filter((cat) => cat.parent === englishParent.id);
+                const localizedSubcategories = categories.filter((cat) => cat.parent === localizedParent.id);
+                
+                const subIndex = englishSubcategories.findIndex((cat) => cat.slug === slug);
+                if (subIndex !== -1 && subIndex < localizedSubcategories.length) {
+                  return localizedSubcategories[subIndex];
+                }
               }
             }
           }
