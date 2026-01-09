@@ -11,6 +11,7 @@ declare global {
         country: string;
         currency: string;
         publicKey: string;
+        css?: string;
       }) => void;
       render: () => void;
     };
@@ -19,6 +20,7 @@ declare global {
       country: string;
       currency: string;
       publicKey: string;
+      css?: string;
     };
   }
 }
@@ -61,12 +63,22 @@ export function TamaraPromoWidget({ price, currency, locale }: TamaraPromoWidget
 
     if (!publicKey || price <= 0) return;
 
-    // Set up Tamara widget config with required country parameter
+    // Custom CSS for transparent background and website font
+    const customCss = `:host {
+      --tamara-bg-color: transparent !important;
+      --font-primary: inherit !important;
+      --font-secondary: inherit !important;
+      background: transparent !important;
+      font-size: 12px !important;
+    }`;
+
+    // Set up Tamara widget config with required country parameter and custom CSS
     window.tamaraWidgetConfig = {
       lang: locale === "ar" ? "ar" : "en",
       country: country,
       currency: currency.toUpperCase(),
       publicKey: publicKey,
+      css: customCss,
     };
 
     // Load Tamara product widget script

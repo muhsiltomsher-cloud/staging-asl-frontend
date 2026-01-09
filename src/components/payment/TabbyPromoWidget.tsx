@@ -18,6 +18,7 @@ declare global {
       source: string;
       publicKey: string;
       merchantCode: string;
+      shouldInheritBg?: boolean;
     }) => void;
   }
 }
@@ -54,6 +55,7 @@ export function TabbyPromoWidget({ price, currency, locale }: TabbyPromoWidgetPr
           source: "product",
           publicKey: publicKey,
           merchantCode: merchantCode,
+          shouldInheritBg: true,
         });
         initialized.current = true;
       }
