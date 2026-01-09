@@ -30,7 +30,7 @@ function ProductCardSkeleton() {
   );
 }
 
-export function ProductSectionSkeleton({ count = 6 }: { count?: number }) {
+export function ProductSectionSkeleton({ count = 5 }: { count?: number }) {
   return (
     <section className="bg-[#f7f6f2] py-12 md:py-16">
       <div className="container mx-auto px-4">
@@ -38,7 +38,7 @@ export function ProductSectionSkeleton({ count = 6 }: { count?: number }) {
           <Skeleton className="h-8 w-48 md:h-9" />
           <Skeleton className="mt-2 h-5 w-64" />
         </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6 md:gap-6">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:gap-6">
           {Array.from({ length: count }).map((_, i) => (
             <ProductCardSkeleton key={i} />
           ))}
@@ -110,7 +110,7 @@ export function ProductSection({
         <WCProductGrid
           products={products.slice(0, settings.products_count)}
           locale={locale}
-          columns={6}
+          columns={5}
           bundleProductSlugs={bundleProductSlugs}
         />
 

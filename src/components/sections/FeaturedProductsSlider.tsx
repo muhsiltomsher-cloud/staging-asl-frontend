@@ -45,8 +45,8 @@ export function FeaturedProductsSliderSkeleton() {
           <Skeleton className="h-8 w-48 md:h-9" />
           <Skeleton className="mt-2 h-5 w-64" />
         </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6 md:gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:gap-6">
+          {Array.from({ length: 5 }).map((_, i) => (
             <FeaturedProductCardSkeleton key={i} />
           ))}
         </div>
@@ -117,7 +117,7 @@ export function FeaturedProductsSlider({
             modules={[Autoplay, Navigation]}
             spaceBetween={16}
             slidesPerView={2}
-            loop={displayProducts.length > 6}
+            loop={displayProducts.length > 5}
             autoplay={
               settings.autoplay
                 ? {
@@ -140,7 +140,7 @@ export function FeaturedProductsSlider({
                 spaceBetween: 20,
               },
               1024: {
-                slidesPerView: 6,
+                slidesPerView: 5,
                 spaceBetween: 24,
               },
             }}
@@ -153,7 +153,7 @@ export function FeaturedProductsSlider({
             ))}
           </Swiper>
 
-          {displayProducts.length > 6 && (
+          {displayProducts.length > 5 && (
             <>
               <button
                 type="button"
