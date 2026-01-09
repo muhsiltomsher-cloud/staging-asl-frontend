@@ -610,54 +610,69 @@ export default function CheckoutPage() {
                               </div>
                             ) : (
                               paymentGateways.map((gateway) => {
-                                const getGatewayLabel = (id: string, title: string) => {
-                                  const labels: Record<string, { en: string; ar: string }> = {
-                                    cod: { en: "Cash on Delivery", ar: "الدفع عند الاستلام" },
-                                    tabby_installments: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
-                                    tabby_checkout: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
-                                    tabby: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
-                                    tamara: { en: "Pay with Tamara", ar: "الدفع مع تمارا" },
-                                    bacs: { en: "Bank Transfer", ar: "تحويل بنكي" },
-                                    cheque: { en: "Check Payment", ar: "الدفع بشيك" },
-                                    paypal: { en: "PayPal", ar: "باي بال" },
-                                    stripe: { en: "Credit Card", ar: "بطاقة ائتمان" },
-                                    card: { en: "Credit Card", ar: "بطاقة ائتمان" },
-                                  };
-                                  return labels[id]?.[isRTL ? "ar" : "en"] || title;
-                                };
+                                                                const getGatewayLabel = (id: string, title: string) => {
+                                                                  const labels: Record<string, { en: string; ar: string }> = {
+                                                                    cod: { en: "Cash on Delivery", ar: "الدفع عند الاستلام" },
+                                                                    tabby_installments: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
+                                                                    tabby_checkout: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
+                                                                    tabby: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
+                                                                    tamara: { en: "Pay with Tamara", ar: "الدفع مع تمارا" },
+                                                                    bacs: { en: "Bank Transfer", ar: "تحويل بنكي" },
+                                                                    cheque: { en: "Check Payment", ar: "الدفع بشيك" },
+                                                                    paypal: { en: "PayPal", ar: "باي بال" },
+                                                                    stripe: { en: "Credit Card", ar: "بطاقة ائتمان" },
+                                                                    card: { en: "Credit Card", ar: "بطاقة ائتمان" },
+                                                                    myfatoorah_v2: { en: "Pay with MyFatoorah", ar: "الدفع مع ماي فاتورة" },
+                                                                    myfatoorah: { en: "Pay with MyFatoorah", ar: "الدفع مع ماي فاتورة" },
+                                                                    myfatoorah_cards: { en: "Pay with Card (MyFatoorah)", ar: "الدفع بالبطاقة (ماي فاتورة)" },
+                                                                    myfatoorah_embedded: { en: "Pay with MyFatoorah", ar: "الدفع مع ماي فاتورة" },
+                                                                  };
+                                                                  return labels[id]?.[isRTL ? "ar" : "en"] || title;
+                                                                };
 
-                                const getGatewayDescription = (id: string, description: string) => {
-                                  const descriptions: Record<string, { en: string; ar: string }> = {
-                                    cod: { en: "Pay cash when you receive your order", ar: "ادفع نقداً عند التسليم" },
-                                    tabby_installments: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
-                                    tabby_checkout: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
-                                    tabby: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
-                                    tamara: { en: "Buy now, pay later with Tamara", ar: "اشترِ الآن وادفع لاحقاً مع تمارا" },
-                                    bacs: { en: "Make payment directly to our bank account", ar: "قم بالدفع مباشرة إلى حسابنا البنكي" },
-                                    cheque: { en: "Pay with a check", ar: "الدفع بشيك" },
-                                    paypal: { en: "Pay securely with PayPal", ar: "ادفع بأمان مع باي بال" },
-                                    stripe: { en: "Pay securely with your card", ar: "ادفع بأمان ببطاقتك" },
-                                    card: { en: "Pay securely with your card", ar: "ادفع بأمان ببطاقتك" },
-                                  };
-                                  return descriptions[id]?.[isRTL ? "ar" : "en"] || description || "";
-                                };
+                                                                const getGatewayDescription = (id: string, description: string) => {
+                                                                  const descriptions: Record<string, { en: string; ar: string }> = {
+                                                                    cod: { en: "Pay cash when you receive your order", ar: "ادفع نقداً عند التسليم" },
+                                                                    tabby_installments: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
+                                                                    tabby_checkout: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
+                                                                    tabby: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
+                                                                    tamara: { en: "Buy now, pay later with Tamara", ar: "اشترِ الآن وادفع لاحقاً مع تمارا" },
+                                                                    bacs: { en: "Make payment directly to our bank account", ar: "قم بالدفع مباشرة إلى حسابنا البنكي" },
+                                                                    cheque: { en: "Pay with a check", ar: "الدفع بشيك" },
+                                                                    paypal: { en: "Pay securely with PayPal", ar: "ادفع بأمان مع باي بال" },
+                                                                    stripe: { en: "Pay securely with your card", ar: "ادفع بأمان ببطاقتك" },
+                                                                    card: { en: "Pay securely with your card", ar: "ادفع بأمان ببطاقتك" },
+                                                                    myfatoorah_v2: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "ادفع بأمان عبر كي نت، فيزا، ماستركارد، مدى، أبل باي" },
+                                                                    myfatoorah: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "ادفع بأمان عبر كي نت، فيزا، ماستركارد، مدى، أبل باي" },
+                                                                    myfatoorah_cards: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "ادفع بأمان عبر كي نت، فيزا، ماستركارد، مدى، أبل باي" },
+                                                                    myfatoorah_embedded: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "ادفع بأمان عبر كي نت، فيزا، ماستركارد، مدى، أبل باي" },
+                                                                  };
+                                                                  return descriptions[id]?.[isRTL ? "ar" : "en"] || description || "";
+                                                                };
 
-                                const getGatewayIcon = (id: string) => {
-                                  if (id === "tabby" || id === "tabby_installments" || id === "tabby_checkout") {
-                                    return (
-                                      <div className="flex h-8 w-12 items-center justify-center rounded bg-[#3BFFC1] px-1">
-                                        <span className="text-xs font-bold text-black">tabby</span>
-                                      </div>
-                                    );
-                                  }
-                                  if (id === "tamara") {
-                                    return (
-                                      <div className="flex h-8 w-12 items-center justify-center rounded bg-[#F5D5C8] px-1">
-                                        <span className="text-xs font-bold text-[#1A1A1A]">tamara</span>
-                                      </div>
-                                    );
-                                  }
-                                  if (id === "cod") {
+                                                                const getGatewayIcon = (id: string) => {
+                                                                  if (id === "tabby" || id === "tabby_installments" || id === "tabby_checkout") {
+                                                                    return (
+                                                                      <div className="flex h-8 w-12 items-center justify-center rounded bg-[#3BFFC1] px-1">
+                                                                        <span className="text-xs font-bold text-black">tabby</span>
+                                                                      </div>
+                                                                    );
+                                                                  }
+                                                                  if (id === "tamara") {
+                                                                    return (
+                                                                      <div className="flex h-8 w-12 items-center justify-center rounded bg-[#F5D5C8] px-1">
+                                                                        <span className="text-xs font-bold text-[#1A1A1A]">tamara</span>
+                                                                      </div>
+                                                                    );
+                                                                  }
+                                                                  if (id === "myfatoorah_v2" || id === "myfatoorah" || id === "myfatoorah_cards" || id === "myfatoorah_embedded") {
+                                                                    return (
+                                                                      <div className="flex h-8 w-16 items-center justify-center rounded bg-[#0066B3] px-1">
+                                                                        <span className="text-[10px] font-bold text-white">MyFatoorah</span>
+                                                                      </div>
+                                                                    );
+                                                                  }
+                                                                  if (id === "cod") {
                                     return (
                                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
                                         <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
