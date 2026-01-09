@@ -111,18 +111,13 @@ export function BundleItemsList({ item, locale, compact = false, showPrices = tr
   const regularItemsTotal = getBundleItemsTotal(regularItems);
   const addonItemsTotal = getBundleItemsTotal(addonItems);
 
+  // Calculate total (items + box)
+  const totalPrice = bundleTotal + (boxPrice || 0);
+
   if (compact) {
     // Compact view for mini-cart drawer - show names with prices
     return (
       <div className="mt-1 text-xs text-gray-500">
-        {/* Box Price */}
-        {showPrices && boxPrice !== null && boxPrice > 0 && (
-          <div className="flex items-center justify-between py-0.5">
-            <span className="font-medium">{isRTL ? "الصندوق:" : "Box:"}</span>
-            <FormattedPrice price={boxPrice} className="text-xs text-gray-500 flex-shrink-0" iconSize="xs" />
-          </div>
-        )}
-        
         {/* Regular Items */}
         {regularItems.length > 0 && (
           <>
@@ -130,11 +125,13 @@ export function BundleItemsList({ item, locale, compact = false, showPrices = tr
             <ul className="mt-0.5 space-y-0.5">
               {regularItems.map((bi, idx) => {
                 const price = typeof bi.price === "string" ? parseFloat(bi.price) : bi.price;
+                const qty = bi.quantity || 1;
                 return (
                   <li key={`${bi.product_id}-${idx}`} className="flex items-center justify-between gap-1">
                     <span className="flex items-center gap-1">
                       <span className="h-1 w-1 rounded-full bg-amber-500 flex-shrink-0"></span>
                       <span className="truncate">{bi.name || `Product #${bi.product_id}`}</span>
+                      <span className="text-gray-400 flex-shrink-0">x{qty}</span>
                     </span>
                     {showPrices && price !== undefined && price > 0 && (
                       <FormattedPrice price={price} className="text-xs text-gray-400 flex-shrink-0" iconSize="xs" />
@@ -161,11 +158,13 @@ export function BundleItemsList({ item, locale, compact = false, showPrices = tr
             <ul className="mt-0.5 space-y-0.5">
               {addonItems.map((bi, idx) => {
                 const price = typeof bi.price === "string" ? parseFloat(bi.price) : bi.price;
+                const qty = bi.quantity || 1;
                 return (
                   <li key={`addon-${bi.product_id}-${idx}`} className="flex items-center justify-between gap-1">
                     <span className="flex items-center gap-1">
                       <span className="h-1 w-1 rounded-full bg-amber-600 flex-shrink-0"></span>
                       <span className="truncate">{bi.name || `Product #${bi.product_id}`}</span>
+                      <span className="text-amber-400 flex-shrink-0">x{qty}</span>
                     </span>
                     {showPrices && price !== undefined && price > 0 && (
                       <FormattedPrice price={price} className="text-xs text-amber-500 flex-shrink-0" iconSize="xs" />
@@ -183,11 +182,27 @@ export function BundleItemsList({ item, locale, compact = false, showPrices = tr
           </>
         )}
         
-        {/* Bundle Total */}
+        {/* Items Total */}
         {showPrices && bundleTotal > 0 && (
           <div className="mt-1 flex items-center justify-between border-t border-gray-200 pt-1">
             <span className="font-medium">{isRTL ? "مجموع المنتجات:" : "Items Total:"}</span>
             <FormattedPrice price={bundleTotal} className="text-xs font-medium text-amber-600" iconSize="xs" />
+          </div>
+        )}
+        
+        {/* Box Price */}
+        {showPrices && boxPrice !== null && boxPrice > 0 && (
+          <div className="flex items-center justify-between py-0.5">
+            <span className="font-medium">{isRTL ? "سعر الصندوق:" : "Box Price:"}</span>
+            <FormattedPrice price={boxPrice} className="text-xs text-gray-500 flex-shrink-0" iconSize="xs" />
+          </div>
+        )}
+        
+        {/* Total */}
+        {showPrices && boxPrice !== null && boxPrice > 0 && (
+          <div className="mt-1 flex items-center justify-between border-t border-gray-200 pt-1">
+            <span className="font-medium">{isRTL ? "الإجمالي:" : "Total:"}</span>
+            <FormattedPrice price={totalPrice} className="text-xs font-medium text-amber-600" iconSize="xs" />
           </div>
         )}
       </div>
@@ -197,14 +212,6 @@ export function BundleItemsList({ item, locale, compact = false, showPrices = tr
   // Full view for cart page - show detailed breakdown with prices
   return (
     <div className="mt-2 rounded-md bg-gray-50 p-3">
-      {/* Box Price */}
-      {showPrices && boxPrice !== null && boxPrice > 0 && (
-        <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-200">
-          <span className="text-xs font-medium text-gray-600">{isRTL ? "الصندوق:" : "Box:"}</span>
-          <FormattedPrice price={boxPrice} className="text-xs font-medium text-gray-600 flex-shrink-0" iconSize="xs" />
-        </div>
-      )}
-      
       {/* Regular Items */}
       {regularItems.length > 0 && (
         <>
@@ -212,14 +219,13 @@ export function BundleItemsList({ item, locale, compact = false, showPrices = tr
           <ul className="space-y-1.5">
             {regularItems.map((bi, idx) => {
               const price = typeof bi.price === "string" ? parseFloat(bi.price) : bi.price;
+              const qty = bi.quantity || 1;
               return (
                 <li key={`${bi.product_id}-${idx}`} className="flex items-center justify-between gap-2 text-xs">
                   <span className="flex items-center gap-1.5 text-gray-600">
                     <span className="h-1.5 w-1.5 rounded-full bg-amber-500 flex-shrink-0"></span>
                     <span>{bi.name || `Product #${bi.product_id}`}</span>
-                    {bi.quantity && bi.quantity > 1 && (
-                      <span className="text-gray-400">x{bi.quantity}</span>
-                    )}
+                    <span className="text-gray-400">x{qty}</span>
                   </span>
                   {showPrices && price !== undefined && price > 0 && (
                     <FormattedPrice price={price} className="text-xs text-gray-500 flex-shrink-0" iconSize="xs" />
@@ -246,14 +252,13 @@ export function BundleItemsList({ item, locale, compact = false, showPrices = tr
           <ul className="space-y-1.5">
             {addonItems.map((bi, idx) => {
               const price = typeof bi.price === "string" ? parseFloat(bi.price) : bi.price;
+              const qty = bi.quantity || 1;
               return (
                 <li key={`addon-${bi.product_id}-${idx}`} className="flex items-center justify-between gap-2 text-xs">
                   <span className="flex items-center gap-1.5 text-amber-700">
                     <span className="h-1.5 w-1.5 rounded-full bg-amber-600 flex-shrink-0"></span>
                     <span>{bi.name || `Product #${bi.product_id}`}</span>
-                    {bi.quantity && bi.quantity > 1 && (
-                      <span className="text-amber-400">x{bi.quantity}</span>
-                    )}
+                    <span className="text-amber-400">x{qty}</span>
                   </span>
                   {showPrices && price !== undefined && price > 0 && (
                     <FormattedPrice price={price} className="text-xs text-amber-500 flex-shrink-0" iconSize="xs" />
@@ -276,6 +281,22 @@ export function BundleItemsList({ item, locale, compact = false, showPrices = tr
         <div className="mt-2 flex items-center justify-between border-t border-gray-200 pt-2">
           <span className="text-xs font-medium text-gray-600">{isRTL ? "مجموع المنتجات:" : "Items Total:"}</span>
           <FormattedPrice price={bundleTotal} className="text-sm font-semibold text-amber-600" iconSize="xs" />
+        </div>
+      )}
+      
+      {/* Box Price */}
+      {showPrices && boxPrice !== null && boxPrice > 0 && (
+        <div className="flex items-center justify-between py-1">
+          <span className="text-xs font-medium text-gray-600">{isRTL ? "سعر الصندوق:" : "Box Price:"}</span>
+          <FormattedPrice price={boxPrice} className="text-xs font-medium text-gray-600 flex-shrink-0" iconSize="xs" />
+        </div>
+      )}
+      
+      {/* Total */}
+      {showPrices && boxPrice !== null && boxPrice > 0 && (
+        <div className="mt-1 flex items-center justify-between border-t border-gray-200 pt-2">
+          <span className="text-xs font-medium text-gray-600">{isRTL ? "الإجمالي:" : "Total:"}</span>
+          <FormattedPrice price={totalPrice} className="text-sm font-semibold text-amber-600" iconSize="xs" />
         </div>
       )}
     </div>
