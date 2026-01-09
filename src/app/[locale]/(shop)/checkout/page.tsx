@@ -335,47 +335,147 @@ export default function CheckoutPage() {
       }
       clearSelectedCoupons();
 
-      // Check if MyFatoorah payment method is selected
-      const isMyFatoorahPayment = formData.paymentMethod.startsWith("myfatoorah");
+            // Check payment method type and handle accordingly
+            const isMyFatoorahPayment = formData.paymentMethod.startsWith("myfatoorah");
+            const isTabbyPayment = formData.paymentMethod.startsWith("tabby");
+            const isTamaraPayment = formData.paymentMethod.startsWith("tamara");
       
-      if (isMyFatoorahPayment) {
-        // Initiate MyFatoorah payment directly
-        const billingInfo = formData.sameAsShipping ? formData.shipping : formData.billing;
-        const baseUrl = window.location.origin;
-        
-        const mfResponse = await fetch("/api/myfatoorah/initiate-payment", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            order_id: data.order_id,
-            order_key: data.order_key,
-            invoice_value: data.order?.total ? parseFloat(data.order.total) : 0,
-            customer_name: `${billingInfo.firstName} ${billingInfo.lastName}`,
-            customer_email: billingInfo.email || formData.shipping.email,
-            customer_phone: billingInfo.phone || formData.shipping.phone,
-            currency_iso: data.order?.currency || "KWD",
-            language: locale === "ar" ? "ar" : "en",
-            callback_url: `${baseUrl}/${locale}/order-confirmation`,
-            error_url: `${baseUrl}/${locale}/checkout`,
-          }),
-        });
+            const billingInfo = formData.sameAsShipping ? formData.shipping : formData.billing;
+            const baseUrl = window.location.origin;
+      
+            if (isMyFatoorahPayment) {
+              // Initiate MyFatoorah payment directly
+              const mfResponse = await fetch("/api/myfatoorah/initiate-payment", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  order_id: data.order_id,
+                  order_key: data.order_key,
+                  invoice_value: data.order?.total ? parseFloat(data.order.total) : 0,
+                  customer_name: `${billingInfo.firstName} ${billingInfo.lastName}`,
+                  customer_email: billingInfo.email || formData.shipping.email,
+                  customer_phone: billingInfo.phone || formData.shipping.phone,
+                  currency_iso: data.order?.currency || "KWD",
+                  language: locale === "ar" ? "ar" : "en",
+                  callback_url: `${baseUrl}/${locale}/order-confirmation`,
+                  error_url: `${baseUrl}/${locale}/checkout`,
+                }),
+              });
 
-        const mfData = await mfResponse.json();
+              const mfData = await mfResponse.json();
 
-        if (mfData.success && mfData.payment_url) {
-          window.location.href = mfData.payment_url;
-        } else {
-          throw new Error(mfData.error?.message || "Failed to initiate MyFatoorah payment");
-        }
-      } else if (data.payment_url) {
-        // Redirect to external payment gateway (for other gateways like Tabby, Tamara)
-        window.location.href = data.payment_url;
-      } else {
-        // For COD and other non-redirect payment methods, go to order confirmation
-        router.push(`/${locale}/order-confirmation?order_id=${data.order_id}&order_key=${data.order_key}`);
-      }
+              if (mfData.success && mfData.payment_url) {
+                window.location.href = mfData.payment_url;
+              } else {
+                throw new Error(mfData.error?.message || "Failed to initiate MyFatoorah payment");
+              }
+            } else if (isTabbyPayment) {
+              // Initiate Tabby payment directly
+              const tabbyResponse = await fetch("/api/tabby/create-session", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  order_id: data.order_id,
+                  order_key: data.order_key,
+                  amount: data.order?.total ? parseFloat(data.order.total) : 0,
+                  currency: data.order?.currency || "AED",
+                  description: `Order #${data.order_id}`,
+                  buyer: {
+                    name: `${billingInfo.firstName} ${billingInfo.lastName}`,
+                    email: billingInfo.email || formData.shipping.email,
+                    phone: billingInfo.phone || formData.shipping.phone,
+                  },
+                  shipping_address: {
+                    city: formData.shipping.city,
+                    address: formData.shipping.address,
+                    zip: formData.shipping.postalCode,
+                  },
+                  order_items: cartItems.map((item) => ({
+                    title: item.name,
+                    quantity: item.quantity,
+                    unit_price: parseFloat(item.totals.line_subtotal) / item.quantity / 100,
+                    category: "General",
+                  })),
+                  language: locale === "ar" ? "ar" : "en",
+                  success_url: `${baseUrl}/${locale}/order-confirmation`,
+                  cancel_url: `${baseUrl}/${locale}/checkout`,
+                  failure_url: `${baseUrl}/${locale}/checkout`,
+                }),
+              });
+
+              const tabbyData = await tabbyResponse.json();
+
+              if (tabbyData.success && tabbyData.payment_url) {
+                window.location.href = tabbyData.payment_url;
+              } else {
+                throw new Error(tabbyData.error?.message || "Failed to initiate Tabby payment");
+              }
+            } else if (isTamaraPayment) {
+              // Initiate Tamara payment directly
+              const tamaraResponse = await fetch("/api/tamara/create-checkout", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  order_id: data.order_id,
+                  order_key: data.order_key,
+                  total_amount: data.order?.total ? parseFloat(data.order.total) : 0,
+                  currency: data.order?.currency || "AED",
+                  country_code: formData.shipping.country || "AE",
+                  locale: locale === "ar" ? "ar_SA" : "en_US",
+                  consumer: {
+                    first_name: billingInfo.firstName,
+                    last_name: billingInfo.lastName,
+                    email: billingInfo.email || formData.shipping.email,
+                    phone_number: billingInfo.phone || formData.shipping.phone,
+                  },
+                  billing_address: {
+                    first_name: billingInfo.firstName,
+                    last_name: billingInfo.lastName,
+                    line1: billingInfo.address,
+                    city: billingInfo.city,
+                    country_code: billingInfo.country || "AE",
+                    phone_number: billingInfo.phone,
+                  },
+                  shipping_address: {
+                    first_name: formData.shipping.firstName,
+                    last_name: formData.shipping.lastName,
+                    line1: formData.shipping.address,
+                    city: formData.shipping.city,
+                    country_code: formData.shipping.country || "AE",
+                    phone_number: formData.shipping.phone,
+                  },
+                  items: cartItems.map((item) => ({
+                    name: item.name,
+                    quantity: item.quantity,
+                    unit_price: parseFloat(item.totals.line_subtotal) / item.quantity / 100,
+                    sku: item.id?.toString() || "",
+                  })),
+                  success_url: `${baseUrl}/${locale}/order-confirmation`,
+                  failure_url: `${baseUrl}/${locale}/checkout`,
+                  cancel_url: `${baseUrl}/${locale}/checkout`,
+                }),
+              });
+
+              const tamaraData = await tamaraResponse.json();
+
+              if (tamaraData.success && tamaraData.checkout_url) {
+                window.location.href = tamaraData.checkout_url;
+              } else {
+                throw new Error(tamaraData.error?.message || "Failed to initiate Tamara payment");
+              }
+            } else if (data.payment_url) {
+              // Redirect to external payment gateway (for other gateways)
+              window.location.href = data.payment_url;
+            } else {
+              // For COD and other non-redirect payment methods, go to order confirmation
+              router.push(`/${locale}/order-confirmation?order_id=${data.order_id}&order_key=${data.order_key}`);
+            }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred while placing your order");
       setIsSubmitting(false);
