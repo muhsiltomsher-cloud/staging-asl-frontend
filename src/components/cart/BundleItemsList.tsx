@@ -89,18 +89,33 @@ export function getBoxPrice(item: CoCartItem, bundleItemsTotal?: number): number
     // Fallback: calculate box price from item price minus bundle items total
     // This handles cases where cart_item_data.box_price is not stored correctly by CoCart
     if (bundleItemsTotal !== undefined && bundleItemsTotal > 0) {
-      // Get the item's total price (the bundle price)
-      const itemPrice = item.totals?.total 
-        ? parseFloat(item.totals.total) / 100 // CoCart returns prices in cents
+      // Get the raw price value from CoCart
+      const rawPrice = item.totals?.total 
+        ? parseFloat(item.totals.total)
         : item.price 
           ? parseFloat(item.price)
           : null;
       
-      if (itemPrice !== null && itemPrice > bundleItemsTotal) {
-        const calculatedBoxPrice = itemPrice - bundleItemsTotal;
-        // Only return if the calculated box price is reasonable (positive and not too small)
-        if (calculatedBoxPrice > 0) {
-          return calculatedBoxPrice;
+      if (rawPrice !== null) {
+        // Try different interpretations of the price format:
+        // 1. Price is already in display format (e.g., 2600.00)
+        // 2. Price is in cents/minor units (e.g., 260000)
+        
+        // First try: assume price is in display format (no division)
+        if (rawPrice > bundleItemsTotal) {
+          const calculatedBoxPrice = rawPrice - bundleItemsTotal;
+          if (calculatedBoxPrice > 0) {
+            return calculatedBoxPrice;
+          }
+        }
+        
+        // Second try: assume price is in cents (divide by 100)
+        const priceInCents = rawPrice / 100;
+        if (priceInCents > bundleItemsTotal) {
+          const calculatedBoxPrice = priceInCents - bundleItemsTotal;
+          if (calculatedBoxPrice > 0) {
+            return calculatedBoxPrice;
+          }
         }
       }
     }
