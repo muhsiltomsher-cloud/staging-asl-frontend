@@ -335,9 +335,42 @@ export default function CheckoutPage() {
       }
       clearSelectedCoupons();
 
-      // Check if payment gateway requires redirect (e.g., MyFatoorah, Tabby, Tamara)
-      if (data.payment_url) {
-        // Redirect to external payment gateway
+      // Check if MyFatoorah payment method is selected
+      const isMyFatoorahPayment = formData.paymentMethod.startsWith("myfatoorah");
+      
+      if (isMyFatoorahPayment) {
+        // Initiate MyFatoorah payment directly
+        const billingInfo = formData.sameAsShipping ? formData.shipping : formData.billing;
+        const baseUrl = window.location.origin;
+        
+        const mfResponse = await fetch("/api/myfatoorah/initiate-payment", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            order_id: data.order_id,
+            order_key: data.order_key,
+            invoice_value: data.order?.total ? parseFloat(data.order.total) : 0,
+            customer_name: `${billingInfo.firstName} ${billingInfo.lastName}`,
+            customer_email: billingInfo.email || formData.shipping.email,
+            customer_phone: billingInfo.phone || formData.shipping.phone,
+            currency_iso: data.order?.currency || "KWD",
+            language: locale === "ar" ? "ar" : "en",
+            callback_url: `${baseUrl}/${locale}/order-confirmation`,
+            error_url: `${baseUrl}/${locale}/checkout`,
+          }),
+        });
+
+        const mfData = await mfResponse.json();
+
+        if (mfData.success && mfData.payment_url) {
+          window.location.href = mfData.payment_url;
+        } else {
+          throw new Error(mfData.error?.message || "Failed to initiate MyFatoorah payment");
+        }
+      } else if (data.payment_url) {
+        // Redirect to external payment gateway (for other gateways like Tabby, Tamara)
         window.location.href = data.payment_url;
       } else {
         // For COD and other non-redirect payment methods, go to order confirmation
