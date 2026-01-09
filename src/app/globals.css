@@ -70,3 +70,16 @@ select:disabled,
 [disabled] {
   cursor: not-allowed;
 }
+
+/* Tabby and Tamara widget transparent backgrounds */
+#tabby-promo-widget,
+#tabby-promo-widget * {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+tamara-widget,
+tamara-widget * {
+  background: transparent !important;
+  background-color: transparent !important;
+}
