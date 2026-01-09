@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
     const merchantCode = process.env.TABBY_MERCHANT_CODE || "default";
 
     if (!secretKey) {
+      console.error("Tabby API Error: TABBY_SECRET_KEY environment variable is not configured");
       return NextResponse.json(
         {
           success: false,
@@ -49,6 +50,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body: TabbySessionRequest = await request.json();
+    
+    console.log("Tabby create-session request:", {
+      order_id: body.order_id,
+      amount: body.amount,
+      currency: body.currency,
+      items_count: body.order_items?.length,
+    });
 
     const {
       order_id,

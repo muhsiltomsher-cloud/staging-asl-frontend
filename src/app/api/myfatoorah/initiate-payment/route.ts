@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.MYFATOORAH_API_KEY;
     
     if (!apiKey) {
+      console.error("MyFatoorah API Error: MYFATOORAH_API_KEY environment variable is not configured");
       return NextResponse.json(
         {
           success: false,
@@ -35,6 +36,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body: InitiatePaymentRequest = await request.json();
+    
+    console.log("MyFatoorah initiate-payment request:", {
+      order_id: body.order_id,
+      invoice_value: body.invoice_value,
+      currency_iso: body.currency_iso,
+    });
     
     const {
       order_id,
@@ -106,6 +113,7 @@ export async function POST(request: NextRequest) {
       invoice_id: data.Data?.InvoiceId,
     });
   } catch (error) {
+    console.error("MyFatoorah initiate-payment error:", error);
     return NextResponse.json(
       {
         success: false,
