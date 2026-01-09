@@ -73,16 +73,38 @@ export function getBundleItemsTotal(bundleItems: BundleItem[]): number {
 }
 
 /**
- * Extracts box price from cart item data
+ * Extracts box price from cart item data, or calculates it from item price minus bundle items total
  */
-export function getBoxPrice(item: CoCartItem): number | null {
+export function getBoxPrice(item: CoCartItem, bundleItemsTotal?: number): number | null {
   try {
     const cartItemData = item.cart_item_data;
-    if (!cartItemData) return null;
     
-    const boxPrice = cartItemData.box_price;
-    if (typeof boxPrice === "number") return boxPrice;
-    if (typeof boxPrice === "string") return parseFloat(boxPrice);
+    // First try to get box_price from cart_item_data
+    if (cartItemData) {
+      const boxPrice = cartItemData.box_price;
+      if (typeof boxPrice === "number" && boxPrice > 0) return boxPrice;
+      if (typeof boxPrice === "string" && parseFloat(boxPrice) > 0) return parseFloat(boxPrice);
+    }
+    
+    // Fallback: calculate box price from item price minus bundle items total
+    // This handles cases where cart_item_data.box_price is not stored correctly by CoCart
+    if (bundleItemsTotal !== undefined && bundleItemsTotal > 0) {
+      // Get the item's total price (the bundle price)
+      const itemPrice = item.totals?.total 
+        ? parseFloat(item.totals.total) / 100 // CoCart returns prices in cents
+        : item.price 
+          ? parseFloat(item.price)
+          : null;
+      
+      if (itemPrice !== null && itemPrice > bundleItemsTotal) {
+        const calculatedBoxPrice = itemPrice - bundleItemsTotal;
+        // Only return if the calculated box price is reasonable (positive and not too small)
+        if (calculatedBoxPrice > 0) {
+          return calculatedBoxPrice;
+        }
+      }
+    }
+    
     return null;
   } catch {
     return null;
@@ -94,7 +116,6 @@ export function getBoxPrice(item: CoCartItem): number | null {
  */
 export function BundleItemsList({ item, locale, compact = false, showPrices = true }: BundleItemsListProps) {
   const bundleItems = getBundleItems(item);
-  const boxPrice = getBoxPrice(item);
   const isRTL = locale === "ar";
 
   if (!bundleItems || bundleItems.length === 0) {
@@ -102,6 +123,9 @@ export function BundleItemsList({ item, locale, compact = false, showPrices = tr
   }
 
   const bundleTotal = getBundleItemsTotal(bundleItems);
+  
+  // Get box price - pass bundleTotal for fallback calculation
+  const boxPrice = getBoxPrice(item, bundleTotal);
   
   // Separate regular items from add-ons
   const regularItems = bundleItems.filter(bi => !bi.is_addon);
