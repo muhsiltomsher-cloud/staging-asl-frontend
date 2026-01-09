@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
     const apiToken = process.env.TAMARA_API_TOKEN;
 
     if (!apiToken) {
+      console.error("Tamara API Error: TAMARA_API_TOKEN environment variable is not configured");
       return NextResponse.json(
         {
           success: false,
@@ -62,6 +63,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body: TamaraCheckoutRequest = await request.json();
+    
+    console.log("Tamara create-checkout request:", {
+      order_id: body.order_id,
+      total_amount: body.total_amount,
+      currency: body.currency,
+      items_count: body.items?.length,
+    });
 
     const {
       order_id,
