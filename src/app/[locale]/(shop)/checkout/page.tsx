@@ -396,8 +396,8 @@ export default function CheckoutPage() {
                   },
                   order_items: cartItems.map((item) => ({
                     title: item.name,
-                    quantity: item.quantity,
-                    unit_price: parseFloat(item.totals.line_subtotal) / item.quantity / 100,
+                    quantity: item.quantity.value,
+                    unit_price: parseFloat(item.totals.subtotal) / item.quantity.value / 100,
                     category: "General",
                   })),
                   language: locale === "ar" ? "ar" : "en",
@@ -452,8 +452,8 @@ export default function CheckoutPage() {
                   },
                   items: cartItems.map((item) => ({
                     name: item.name,
-                    quantity: item.quantity,
-                    unit_price: parseFloat(item.totals.line_subtotal) / item.quantity / 100,
+                    quantity: item.quantity.value,
+                    unit_price: parseFloat(item.totals.subtotal) / item.quantity.value / 100,
                     sku: item.id?.toString() || "",
                   })),
                   success_url: `${baseUrl}/${locale}/order-confirmation`,

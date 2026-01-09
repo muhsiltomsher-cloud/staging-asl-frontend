@@ -625,7 +625,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
           {/* Payment Widgets - Tabby & Tamara installment info */}
           <PaymentWidgets 
             price={productPrice} 
-            currency={currency?.code || "AED"} 
+            currency={currency || "AED"} 
             locale={locale} 
           />
 

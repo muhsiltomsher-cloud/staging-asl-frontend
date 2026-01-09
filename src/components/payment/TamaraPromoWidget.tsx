@@ -2,12 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-interface TamaraPromoWidgetProps {
-  price: number;
-  currency: string;
-  locale: string;
-}
-
+// Declare the custom element for TypeScript
 declare global {
   interface Window {
     TamaraProductWidget?: {
@@ -24,6 +19,30 @@ declare global {
       publicKey: string;
     };
   }
+}
+
+// Extend JSX IntrinsicElements for tamara-widget custom element
+declare module "react" {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace JSX {
+    interface IntrinsicElements {
+      "tamara-widget": React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement> & {
+          type?: string;
+          amount?: string;
+          currency?: string;
+          "inline-type"?: string;
+        },
+        HTMLElement
+      >;
+    }
+  }
+}
+
+interface TamaraPromoWidgetProps {
+  price: number;
+  currency: string;
+  locale: string;
 }
 
 export function TamaraPromoWidget({ price, currency, locale }: TamaraPromoWidgetProps) {
@@ -86,22 +105,4 @@ export function TamaraPromoWidget({ price, currency, locale }: TamaraPromoWidget
       />
     </div>
   );
-}
-
-// Declare the custom element for TypeScript
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace JSX {
-    interface IntrinsicElements {
-      "tamara-widget": React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement> & {
-          type?: string;
-          amount?: string;
-          currency?: string;
-          "inline-type"?: string;
-        },
-        HTMLElement
-      >;
-    }
-  }
 }
