@@ -1,17 +1,13 @@
 import { NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
 
-const API_BASE = `${siteConfig.apiUrl}/wp-json/wc/v3`;
+const STORE_API_BASE = `${siteConfig.apiUrl}/wp-json/wc/store/v1`;
 
-function getWooCommerceCredentials() {
-  const consumerKey = process.env.WC_CONSUMER_KEY || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "";
-  const consumerSecret = process.env.WC_CONSUMER_SECRET || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "";
-  return { consumerKey, consumerSecret };
-}
-
-function getBasicAuthParams(): string {
-  const { consumerKey, consumerSecret } = getWooCommerceCredentials();
-  return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
+export interface StorePaymentGateway {
+  id: string;
+  title: string;
+  description: string;
+  order: number;
 }
 
 export interface PaymentGateway {
@@ -27,7 +23,7 @@ export interface PaymentGateway {
 
 export async function GET() {
   try {
-    const url = `${API_BASE}/payment_gateways?${getBasicAuthParams()}`;
+    const url = `${STORE_API_BASE}/payment-gateways`;
     
     const response = await fetch(url, {
       method: "GET",
@@ -54,19 +50,18 @@ export async function GET() {
       );
     }
 
-    const enabledGateways = data
-      .filter((gateway: PaymentGateway) => gateway.enabled)
-      .sort((a: PaymentGateway, b: PaymentGateway) => (a.order || 0) - (b.order || 0))
-      .map((gateway: PaymentGateway) => ({
+    const gateways = (Array.isArray(data) ? data : [])
+      .sort((a: StorePaymentGateway, b: StorePaymentGateway) => (a.order || 0) - (b.order || 0))
+      .map((gateway: StorePaymentGateway) => ({
         id: gateway.id,
         title: gateway.title,
         description: gateway.description,
-        method_title: gateway.method_title,
+        method_title: gateway.title,
       }));
 
     return NextResponse.json({ 
       success: true, 
-      gateways: enabledGateways,
+      gateways,
     });
   } catch (error) {
     return NextResponse.json(
