@@ -4,6 +4,9 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { useCart } from "./CartContext";
 import { useCurrency } from "./CurrencyContext";
 
+// Event for notifying when a new gift is added (used by MiniCartDrawer)
+export const NEW_GIFT_ADDED_EVENT = "asl:new-gift-added";
+
 export interface FreeGiftRule {
   id: string;
   enabled: boolean;
@@ -74,7 +77,7 @@ interface FreeGiftProviderProps {
 }
 
 export function FreeGiftProvider({ children, locale }: FreeGiftProviderProps) {
-  const { cart, cartItems, cartSubtotal, addToCart, removeCartItem, updateCartItem } = useCart();
+  const { cart, cartItems, cartSubtotal, addToCart, removeCartItem, updateCartItem, setIsCartOpen } = useCart();
   const { currency } = useCurrency();
   const [rules, setRules] = useState<FreeGiftRule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -299,11 +302,14 @@ export function FreeGiftProvider({ children, locale }: FreeGiftProviderProps) {
               [FREE_GIFT_ITEM_DATA_KEY]: true,
             });
             
+            // Open mini cart and dispatch event for gift highlight effect
+            setIsCartOpen(true);
             const giftName = rule.product?.name || rule.name;
-            setNewGiftCelebration({
-              isVisible: true,
-              giftName: giftName,
-            });
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent(NEW_GIFT_ADDED_EVENT, { 
+                detail: { giftName, productId: rule.product_id } 
+              }));
+            }
           } catch (error) {
             console.error("Failed to add gift:", error);
           }

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Minus, Plus, Trash2, ShoppingBag, X, Gift } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/contexts/CartContext";
-import { useFreeGift } from "@/contexts/FreeGiftContext";
+import { useFreeGift, NEW_GIFT_ADDED_EVENT } from "@/contexts/FreeGiftContext";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { BundleItemsList } from "@/components/cart/BundleItemsList";
 import { CartItemSkeleton } from "@/components/common/Skeleton";
@@ -44,7 +44,24 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
     const giftProgress = getGiftProgress();
 
     const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
+    const [newlyAddedGiftId, setNewlyAddedGiftId] = useState<number | null>(null);
     const isRTL = locale === "ar";
+
+    // Listen for new gift added events to show highlight effect
+    useEffect(() => {
+      const handleNewGift = (event: CustomEvent<{ giftName: string; productId: number }>) => {
+        setNewlyAddedGiftId(event.detail.productId);
+        // Clear the highlight after 3 seconds
+        setTimeout(() => {
+          setNewlyAddedGiftId(null);
+        }, 3000);
+      };
+
+      window.addEventListener(NEW_GIFT_ADDED_EVENT, handleNewGift as EventListener);
+      return () => {
+        window.removeEventListener(NEW_GIFT_ADDED_EVENT, handleNewGift as EventListener);
+      };
+    }, []);
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
 
@@ -174,6 +191,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
             {cartItems.map((item) => {
               const isAddingItem = item.item_key.startsWith("temp-");
               const isGiftItem = isFreeGiftItem(item.item_key);
+              const isNewlyAddedGift = isGiftItem && newlyAddedGiftId === item.id;
         
               if (isAddingItem) {
                 return (
@@ -184,7 +202,10 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
               }
         
               return (
-              <li key={item.item_key} className={`p-4 ${isGiftItem ? "bg-gradient-to-r from-amber-50 to-orange-50" : ""}`}>
+              <li 
+                key={item.item_key} 
+                className={`p-4 transition-all duration-500 ${isGiftItem ? "bg-gradient-to-r from-amber-50 to-orange-50" : ""} ${isNewlyAddedGift ? "animate-pulse ring-2 ring-amber-400 ring-inset" : ""}`}
+              >
                 <div className="flex gap-4">
                   <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
                     {item.featured_image ? (
