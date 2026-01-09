@@ -250,15 +250,20 @@ export function BuildYourOwnSetClient({
     try {
       const selectedProducts = selections
         .filter((s): s is ProductOption => s !== null)
-        .map((product) => ({
+        .map((product, index) => ({
           product_id: product.id,
           name: product.name,
           price: product.price,
+          is_addon: index >= requiredSlots,
         }));
 
       await addToCart(bundleProduct.id, quantity, undefined, undefined, {
         bundle_items: selectedProducts,
         bundle_total: total,
+        box_price: boxPrice,
+        products_total: productsTotal,
+        required_items_total: requiredProductsTotal,
+        addon_items_total: addOnProductsTotal,
       });
       
       notify("success", isRTL ? "تمت إضافة الحزمة إلى السلة" : "Bundle added to cart");
