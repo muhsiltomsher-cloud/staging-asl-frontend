@@ -83,7 +83,7 @@ export function HeroSlider({ settings }: HeroSliderProps) {
         fadeEffect={{ crossFade: true }}
         spaceBetween={0}
         slidesPerView={1}
-        loop={settings.loop}
+        loop={true}
         autoplay={
           settings.autoplay
             ? {

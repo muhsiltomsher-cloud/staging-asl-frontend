@@ -467,11 +467,12 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
               key={viewMode}
               modules={[Navigation, Thumbs]}
               thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
+              loop={true}
               navigation={{
                 prevEl: ".gallery-prev",
                 nextEl: ".gallery-next",
               }}
-              onSlideChange={(swiper) => setSelectedImage(swiper.activeIndex)}
+              onSlideChange={(swiper) => setSelectedImage(swiper.realIndex)}
               className="product-gallery-swiper w-full overflow-hidden rounded-lg bg-gray-100"
             >
               {images.map((image, index) => (
