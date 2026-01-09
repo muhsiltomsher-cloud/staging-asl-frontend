@@ -130,3 +130,5 @@ The project can be deployed to any platform that supports Next.js:
 ## License
 
 This project is proprietary software for Aromatic Scents Lab.
+
+<!-- Test PR access verification -->
