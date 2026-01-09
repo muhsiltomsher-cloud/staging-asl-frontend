@@ -26,6 +26,13 @@ interface PublicCoupon {
   free_shipping: boolean;
 }
 
+interface PaymentGateway {
+  id: string;
+  title: string;
+  description: string;
+  method_title: string;
+}
+
 interface AddressFormData {
   firstName: string;
   lastName: string;
@@ -72,11 +79,13 @@ export default function CheckoutPage() {
     const [isLoadingCustomer, setIsLoadingCustomer] = useState(false);
     const [showBillingSection, setShowBillingSection] = useState(false);
   
-    const [couponCode, setCouponCode] = useState("");
-    const [couponError, setCouponError] = useState("");
-    const [couponLoading, setCouponLoading] = useState(false);
-    const [availableCoupons, setAvailableCoupons] = useState<PublicCoupon[]>([]);
-    const [isLoadingCoupons, setIsLoadingCoupons] = useState(false);
+        const [couponCode, setCouponCode] = useState("");
+        const [couponError, setCouponError] = useState("");
+        const [couponLoading, setCouponLoading] = useState(false);
+        const [availableCoupons, setAvailableCoupons] = useState<PublicCoupon[]>([]);
+        const [isLoadingCoupons, setIsLoadingCoupons] = useState(false);
+        const [paymentGateways, setPaymentGateways] = useState<PaymentGateway[]>([]);
+        const [isLoadingGateways, setIsLoadingGateways] = useState(true);
   
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
@@ -143,25 +152,49 @@ export default function CheckoutPage() {
       fetchCustomerData();
     }, [isAuthenticated, user?.user_id]);
 
-    useEffect(() => {
-      const fetchAvailableCoupons = async () => {
-        setIsLoadingCoupons(true);
-        try {
-          const response = await fetch("/api/coupons");
-          const data = await response.json();
-          if (data.success && data.coupons) {
-            setAvailableCoupons(data.coupons);
-          }
-        } catch (err) {
-          console.error("Failed to fetch available coupons:", err);
-        } finally {
-          setIsLoadingCoupons(false);
-        }
-      };
-      fetchAvailableCoupons();
-    }, []);
+        useEffect(() => {
+          const fetchAvailableCoupons = async () => {
+            setIsLoadingCoupons(true);
+            try {
+              const response = await fetch("/api/coupons");
+              const data = await response.json();
+              if (data.success && data.coupons) {
+                setAvailableCoupons(data.coupons);
+              }
+            } catch (err) {
+              console.error("Failed to fetch available coupons:", err);
+            } finally {
+              setIsLoadingCoupons(false);
+            }
+          };
+          fetchAvailableCoupons();
+        }, []);
 
-    const handleApplyCoupon = async () => {
+        useEffect(() => {
+          const fetchPaymentGateways = async () => {
+            setIsLoadingGateways(true);
+            try {
+              const response = await fetch("/api/payment-gateways");
+              const data = await response.json();
+              if (data.success && data.gateways) {
+                setPaymentGateways(data.gateways);
+                if (data.gateways.length > 0) {
+                  setFormData((prev) => ({
+                    ...prev,
+                    paymentMethod: data.gateways[0].id,
+                  }));
+                }
+              }
+            } catch (err) {
+              console.error("Failed to fetch payment gateways:", err);
+            } finally {
+              setIsLoadingGateways(false);
+            }
+          };
+          fetchPaymentGateways();
+        }, []);
+
+        const handleApplyCoupon= async () => {
       if (!couponCode.trim()) return;
       setCouponLoading(true);
       setCouponError("");
@@ -559,35 +592,125 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            {/* Payment Method */}
-            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
-                            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 font-sans">
-                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">4</span>
-                              {isRTL ? "طريقة الدفع" : "Payment Method"}
-                            </h2>
-              <div className="space-y-3">
-                <div className="rounded-lg border border-black/10 p-4 hover:bg-gray-50 transition-colors">
-                  <Radio
-                    name="payment"
-                    value="card"
-                    checked={formData.paymentMethod === "card"}
-                    onChange={(e) => handlePaymentChange(e.target.value)}
-                    label={isRTL ? "بطاقة ائتمان" : "Credit Card"}
-                    description={isRTL ? "ادفع بأمان ببطاقتك" : "Pay securely with your card"}
-                  />
-                </div>
-                <div className="rounded-lg border border-black/10 p-4 hover:bg-gray-50 transition-colors">
-                  <Radio
-                    name="payment"
-                    value="cod"
-                    checked={formData.paymentMethod === "cod"}
-                    onChange={(e) => handlePaymentChange(e.target.value)}
-                    label={isRTL ? "الدفع عند الاستلام" : "Cash on Delivery"}
-                    description={isRTL ? "ادفع نقداً عند التسليم" : "Pay cash when you receive your order"}
-                  />
-                </div>
-              </div>
-            </div>
+                        {/* Payment Method */}
+                        <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
+                                        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 font-sans">
+                                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">4</span>
+                                          {isRTL ? "طريقة الدفع" : "Payment Method"}
+                                        </h2>
+                          <div className="space-y-3">
+                            {isLoadingGateways ? (
+                              <div className="flex items-center justify-center py-4">
+                                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900"></div>
+                                <span className="ml-2 text-gray-600">{isRTL ? "جاري تحميل طرق الدفع..." : "Loading payment methods..."}</span>
+                              </div>
+                            ) : paymentGateways.length === 0 ? (
+                              <div className="text-center py-4 text-gray-500">
+                                {isRTL ? "لا توجد طرق دفع متاحة" : "No payment methods available"}
+                              </div>
+                            ) : (
+                              paymentGateways.map((gateway) => {
+                                const getGatewayLabel = (id: string, title: string) => {
+                                  const labels: Record<string, { en: string; ar: string }> = {
+                                    cod: { en: "Cash on Delivery", ar: "الدفع عند الاستلام" },
+                                    tabby_installments: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
+                                    tabby_checkout: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
+                                    tabby: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
+                                    tamara: { en: "Pay with Tamara", ar: "الدفع مع تمارا" },
+                                    bacs: { en: "Bank Transfer", ar: "تحويل بنكي" },
+                                    cheque: { en: "Check Payment", ar: "الدفع بشيك" },
+                                    paypal: { en: "PayPal", ar: "باي بال" },
+                                    stripe: { en: "Credit Card", ar: "بطاقة ائتمان" },
+                                    card: { en: "Credit Card", ar: "بطاقة ائتمان" },
+                                  };
+                                  return labels[id]?.[isRTL ? "ar" : "en"] || title;
+                                };
+
+                                const getGatewayDescription = (id: string, description: string) => {
+                                  const descriptions: Record<string, { en: string; ar: string }> = {
+                                    cod: { en: "Pay cash when you receive your order", ar: "ادفع نقداً عند التسليم" },
+                                    tabby_installments: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
+                                    tabby_checkout: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
+                                    tabby: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
+                                    tamara: { en: "Buy now, pay later with Tamara", ar: "اشترِ الآن وادفع لاحقاً مع تمارا" },
+                                    bacs: { en: "Make payment directly to our bank account", ar: "قم بالدفع مباشرة إلى حسابنا البنكي" },
+                                    cheque: { en: "Pay with a check", ar: "الدفع بشيك" },
+                                    paypal: { en: "Pay securely with PayPal", ar: "ادفع بأمان مع باي بال" },
+                                    stripe: { en: "Pay securely with your card", ar: "ادفع بأمان ببطاقتك" },
+                                    card: { en: "Pay securely with your card", ar: "ادفع بأمان ببطاقتك" },
+                                  };
+                                  return descriptions[id]?.[isRTL ? "ar" : "en"] || description || "";
+                                };
+
+                                const getGatewayIcon = (id: string) => {
+                                  if (id === "tabby" || id === "tabby_installments" || id === "tabby_checkout") {
+                                    return (
+                                      <div className="flex h-8 w-12 items-center justify-center rounded bg-[#3BFFC1] px-1">
+                                        <span className="text-xs font-bold text-black">tabby</span>
+                                      </div>
+                                    );
+                                  }
+                                  if (id === "tamara") {
+                                    return (
+                                      <div className="flex h-8 w-12 items-center justify-center rounded bg-[#F5D5C8] px-1">
+                                        <span className="text-xs font-bold text-[#1A1A1A]">tamara</span>
+                                      </div>
+                                    );
+                                  }
+                                  if (id === "cod") {
+                                    return (
+                                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
+                                        <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                      </div>
+                                    );
+                                  }
+                                  if (id === "paypal") {
+                                    return (
+                                      <div className="flex h-8 w-12 items-center justify-center rounded bg-[#003087] px-1">
+                                        <span className="text-xs font-bold text-white">PayPal</span>
+                                      </div>
+                                    );
+                                  }
+                                  return (
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
+                                      <svg className="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                      </svg>
+                                    </div>
+                                  );
+                                };
+
+                                return (
+                                  <div
+                                    key={gateway.id}
+                                    className={`rounded-lg border p-4 transition-colors cursor-pointer ${
+                                      formData.paymentMethod === gateway.id
+                                        ? "border-gray-900 bg-gray-50"
+                                        : "border-black/10 hover:bg-gray-50"
+                                    }`}
+                                    onClick={() => handlePaymentChange(gateway.id)}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      {getGatewayIcon(gateway.id)}
+                                      <div className="flex-1">
+                                        <Radio
+                                          name="payment"
+                                          value={gateway.id}
+                                          checked={formData.paymentMethod === gateway.id}
+                                          onChange={(e) => handlePaymentChange(e.target.value)}
+                                          label={getGatewayLabel(gateway.id, gateway.title)}
+                                          description={getGatewayDescription(gateway.id, gateway.description)}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        </div>
 
             {/* Order Notes */}
             <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
