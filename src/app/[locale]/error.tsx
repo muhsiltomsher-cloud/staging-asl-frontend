@@ -3,6 +3,20 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 
+// Check if the error is a ChunkLoadError (happens when deployment changes chunk hashes)
+function isChunkLoadError(error: Error): boolean {
+  return (
+    error.name === 'ChunkLoadError' ||
+    error.message.includes('ChunkLoadError') ||
+    error.message.includes('Failed to load chunk') ||
+    error.message.includes('Loading chunk') ||
+    error.message.includes('Failed to fetch dynamically imported module')
+  );
+}
+
+// Session storage key to prevent infinite reload loops
+const CHUNK_ERROR_RELOAD_KEY = 'chunk_error_reload_attempted';
+
 export default function Error({
   error,
   reset,
@@ -10,9 +24,46 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // Check if this is a chunk load error that should trigger auto-reload
+  const shouldAutoReload = isChunkLoadError(error) && 
+    typeof window !== 'undefined' && 
+    !sessionStorage.getItem(CHUNK_ERROR_RELOAD_KEY);
+
   useEffect(() => {
     console.error('Application error:', error);
+
+    // Handle ChunkLoadError by reloading the page
+    if (isChunkLoadError(error)) {
+      // Check if we already tried reloading to prevent infinite loops
+      const hasReloaded = sessionStorage.getItem(CHUNK_ERROR_RELOAD_KEY);
+      
+      if (!hasReloaded) {
+        // Set flag to prevent infinite reload loop
+        sessionStorage.setItem(CHUNK_ERROR_RELOAD_KEY, 'true');
+        // Reload the page after a brief delay to get fresh chunks
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      } else {
+        // Clear the flag after showing the error UI so future chunk errors can trigger reload
+        sessionStorage.removeItem(CHUNK_ERROR_RELOAD_KEY);
+      }
+    }
   }, [error]);
+
+  // Show loading state while reloading for chunk errors
+  if (shouldAutoReload) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-16">
+        <div className="text-center">
+          <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-amber-900 border-t-transparent mx-auto"></div>
+          <p className="text-lg text-amber-700/70">
+            Updating application...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-16">
