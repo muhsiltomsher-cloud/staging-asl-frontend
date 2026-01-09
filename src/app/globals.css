@@ -71,19 +71,19 @@ select:disabled,
   cursor: not-allowed;
 }
 
-/* Tabby and Tamara widget styling - transparent backgrounds, smaller font, website font */
+/* Tabby and Tamara widget styling - beige backgrounds, smaller font, website font */
 #tabby-promo-widget,
 #tabby-promo-widget * {
-  background: transparent !important;
-  background-color: transparent !important;
+  background: #e7e2d6 !important;
+  background-color: #e7e2d6 !important;
   font-family: var(--font-inter), Arial, Helvetica, sans-serif !important;
   font-size: 12px !important;
 }
 
 tamara-widget,
 tamara-widget * {
-  background: transparent !important;
-  background-color: transparent !important;
+  background: #e7e2d6 !important;
+  background-color: #e7e2d6 !important;
   font-family: var(--font-inter), Arial, Helvetica, sans-serif !important;
   font-size: 12px !important;
 }

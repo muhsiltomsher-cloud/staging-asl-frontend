@@ -4,9 +4,12 @@ import { useState, useMemo } from "react";
 import Image from "next/image";
 import { X, Plus, Minus, Search, Check } from "lucide-react";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
+import { TabbyPromoWidget } from "@/components/payment/TabbyPromoWidget";
+import { TamaraPromoWidget } from "@/components/payment/TamaraPromoWidget";
 import { useCart } from "@/contexts/CartContext";
 import { useNotification } from "@/contexts/NotificationContext";
 import { useFreeGift } from "@/contexts/FreeGiftContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 import type { BundleConfig } from "@/lib/api/woocommerce";
@@ -39,6 +42,7 @@ export function BuildYourOwnSetClient({
   const { addToCart } = useCart();
   const { notify } = useNotification();
   const { getFreeGiftProductIds } = useFreeGift();
+  const { currency } = useCurrency();
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
@@ -563,6 +567,14 @@ export function BuildYourOwnSetClient({
               </span>
             </div>
           </div>
+
+          {/* Payment Widgets */}
+          {total > 0 && (
+            <div className="space-y-2 rounded-lg bg-[#e7e2d6] p-3">
+              <TabbyPromoWidget price={total} currency={currency} locale={locale} />
+              <TamaraPromoWidget price={total} currency={currency} locale={locale} />
+            </div>
+          )}
 
           {/* Quantity and Add to Cart */}
           <div className="flex items-center gap-4">

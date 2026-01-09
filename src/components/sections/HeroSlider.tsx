@@ -3,13 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination, Navigation, EffectFade } from "swiper/modules";
+import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import type { HeroSliderSettings } from "@/types/wordpress";
 
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
-import "swiper/css/effect-fade";
 
 interface HeroSliderProps {
   settings: HeroSliderSettings;
@@ -78,9 +77,8 @@ export function HeroSlider({ settings }: HeroSliderProps) {
   return (
     <section className={`relative w-full ${getVisibilityClass()}`}>
       <Swiper
-        modules={[Autoplay, Pagination, Navigation, EffectFade]}
-        effect="fade"
-        fadeEffect={{ crossFade: true }}
+        modules={[Autoplay, Pagination, Navigation]}
+        effect="slide"
         spaceBetween={0}
         slidesPerView={1}
         loop={true}

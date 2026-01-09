@@ -500,7 +500,7 @@ export default function CartPage() {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm lg:sticky lg:top-32 lg:self-start">
+            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm lg:sticky lg:top-24 lg:self-start">
               <h2 className="mb-4 text-lg font-semibold text-gray-900">
                 {texts.orderSummary}
               </h2>

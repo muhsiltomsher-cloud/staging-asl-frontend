@@ -889,13 +889,13 @@ export default function CheckoutPage() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="lg:sticky lg:top-32 lg:self-start rounded-lg border border-black/10 bg-white p-6 shadow-sm">
+            <div className="lg:sticky lg:top-24 lg:self-start rounded-lg border border-black/10 bg-white p-6 shadow-sm">
                             <h2 className="mb-4 text-lg font-semibold text-gray-900 font-sans">
                               {isRTL ? "ملخص الطلب" : "Order Summary"}
                             </h2>
 
                             {/* Cart Items with Thumbnails */}
-                            <div className="space-y-4 border-b border-black/10 pb-4 md:max-h-60 md:overflow-y-auto">
+                            <div className="space-y-4 border-b border-black/10 pb-4 md:max-h-80 md:overflow-y-auto">
                               {cartItems.map((item) => (
                                 <div key={item.item_key} className="flex items-center gap-3">
                                   {/* Product Thumbnail */}
@@ -1057,6 +1057,16 @@ export default function CheckoutPage() {
                                   iconSize="xs"
                                 />
                               </div>
+                              {/* VAT/Tax */}
+                              {cart?.totals?.total_tax && parseFloat(cart.totals.total_tax) > 0 && (
+                                <div className="flex justify-between text-sm text-gray-600">
+                                  <span>{isRTL ? "ضريبة القيمة المضافة" : "VAT"}</span>
+                                  <FormattedPrice
+                                    price={parseFloat(cart.totals.total_tax) / divisor}
+                                    iconSize="xs"
+                                  />
+                                </div>
+                              )}
                             </div>
 
               <div className="hidden py-4 text-lg font-bold text-gray-900 md:flex md:justify-between">

@@ -2,10 +2,36 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, Check, X, Coins } from "lucide-react";
+import { ChevronDown, Check, X } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { type Currency } from "@/config/site";
 import { cn } from "@/lib/utils";
+
+const currencyFlags: Record<string, string> = {
+  AED: "🇦🇪",
+  SAR: "🇸🇦",
+  QAR: "🇶🇦",
+  KWD: "🇰🇼",
+  BHD: "🇧🇭",
+  OMR: "🇴🇲",
+  USD: "🇺🇸",
+  EUR: "🇪🇺",
+  GBP: "🇬🇧",
+  INR: "🇮🇳",
+  PKR: "🇵🇰",
+  EGP: "🇪🇬",
+  JOD: "🇯🇴",
+  LBP: "🇱🇧",
+  IQD: "🇮🇶",
+  YER: "🇾🇪",
+  SYP: "🇸🇾",
+  TRY: "🇹🇷",
+  MAD: "🇲🇦",
+  TND: "🇹🇳",
+  DZD: "🇩🇿",
+  LYD: "🇱🇾",
+  SDG: "🇸🇩",
+};
 
 interface CurrencySwitcherProps {
   className?: string;
@@ -76,7 +102,7 @@ export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherP
         aria-label={t.selectCurrency}
         aria-haspopup="dialog"
       >
-        <Coins className="h-3.5 w-3.5 text-[#7a3205]" />
+        <span className="text-base">{currencyFlags[currentCurrency?.code || "AED"] || "🌐"}</span>
         <span className="font-semibold text-[#7a3205]">{currentCurrency?.symbol}</span>
         <span className="text-gray-600">{currentCurrency?.code}</span>
         <ChevronDown className="h-3 w-3 text-gray-400" />
@@ -103,7 +129,7 @@ export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherP
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
               <div className="flex items-center gap-2">
-                <Coins className="h-4 w-4 text-[#7a3205]" />
+                <span className="text-base">💱</span>
                 <h2 id="currency-modal-title" className="text-sm font-semibold text-gray-900">
                   {t.selectCurrency}
                 </h2>
@@ -134,12 +160,12 @@ export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherP
                     )}
                   >
                     <span className={cn(
-                      "flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold",
+                      "flex h-10 w-10 items-center justify-center rounded-full text-lg",
                       currency === curr.code
-                        ? "bg-[#7a3205] text-white"
-                        : "bg-white text-gray-700 shadow-sm"
+                        ? "bg-[#7a3205]/10 ring-2 ring-[#7a3205]"
+                        : "bg-white shadow-sm"
                     )}>
-                      {curr.symbol}
+                      {currencyFlags[curr.code] || "🌐"}
                     </span>
                     <div className="text-center">
                       <p className={cn(
@@ -148,11 +174,9 @@ export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherP
                       )}>
                         {curr.code}
                       </p>
-                      {curr.rateFromAED !== 1 && (
-                        <p className="text-xs text-gray-500">
-                          1 AED = {curr.rateFromAED} {curr.code}
-                        </p>
-                      )}
+                      <p className="text-xs text-gray-500">
+                        {curr.symbol}
+                      </p>
                     </div>
                     {currency === curr.code && (
                       <Check className="h-3.5 w-3.5 text-[#7a3205]" />
