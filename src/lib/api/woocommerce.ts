@@ -627,6 +627,141 @@ export async function getBundleEnabledProductSlugs(): Promise<string[]> {
   }
 }
 
+// Get new products (ordered by date, newest first)
+export async function getNewProducts(params?: {
+  page?: number;
+  per_page?: number;
+  locale?: Locale;
+  currency?: Currency;
+}): Promise<WCProductsResponse> {
+  return getProducts({
+    ...params,
+    orderby: "date",
+    order: "desc",
+  });
+}
+
+// Get featured products
+// Note: WooCommerce Store API doesn't have a direct featured filter,
+// so we fetch from the custom endpoint or use a workaround
+export async function getFeaturedProducts(params?: {
+  page?: number;
+  per_page?: number;
+  locale?: Locale;
+  currency?: Currency;
+}): Promise<WCProductsResponse> {
+  try {
+    // Try to fetch featured products from custom endpoint
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set("page", params.page.toString());
+    if (params?.per_page) searchParams.set("per_page", params.per_page.toString());
+    if (params?.locale) searchParams.set("lang", params.locale);
+    
+    const queryString = searchParams.toString();
+    const url = `${siteConfig.apiUrl}/wp-json/wc/v3/products?featured=true${queryString ? `&${queryString}` : ""}`;
+    
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${process.env.WC_CONSUMER_KEY}:${process.env.WC_CONSUMER_SECRET}`).toString("base64")}`,
+      },
+      next: {
+        revalidate: 300,
+        tags: ["products", "featured-products"],
+      },
+    });
+
+    if (!response.ok) {
+      // Fallback to regular products if featured endpoint fails
+      return getProducts(params);
+    }
+
+    const products = await response.json();
+    const total = parseInt(response.headers.get("X-WP-Total") || "0", 10);
+    const totalPages = parseInt(response.headers.get("X-WP-TotalPages") || "1", 10);
+
+    // Transform WC REST API v3 products to Store API format
+    const transformedProducts: WCProduct[] = products.map((product: Record<string, unknown>) => ({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      parent: product.parent_id || 0,
+      type: product.type || "simple",
+      variation: "",
+      permalink: product.permalink,
+      sku: product.sku || "",
+      short_description: product.short_description || "",
+      description: product.description || "",
+      on_sale: product.on_sale || false,
+      prices: {
+        price: String(Math.round(parseFloat(String(product.price || "0")) * 100)),
+        regular_price: String(Math.round(parseFloat(String(product.regular_price || "0")) * 100)),
+        sale_price: product.sale_price ? String(Math.round(parseFloat(String(product.sale_price)) * 100)) : "",
+        price_range: null,
+        currency_code: "AED",
+        currency_symbol: "AED",
+        currency_minor_unit: 2,
+        currency_decimal_separator: ".",
+        currency_thousand_separator: ",",
+        currency_prefix: "",
+        currency_suffix: " AED",
+      },
+      price_html: product.price_html || "",
+      average_rating: product.average_rating || "0",
+      review_count: product.rating_count || 0,
+      images: Array.isArray(product.images) ? (product.images as Array<Record<string, unknown>>).map((img) => ({
+        id: img.id || 0,
+        src: img.src || "",
+        thumbnail: img.src || "",
+        srcset: "",
+        sizes: "",
+        name: img.name || "",
+        alt: img.alt || "",
+      })) : [],
+      categories: Array.isArray(product.categories) ? (product.categories as Array<Record<string, unknown>>).map((cat) => ({
+        id: cat.id || 0,
+        name: cat.name || "",
+        slug: cat.slug || "",
+        link: "",
+      })) : [],
+      tags: [],
+      brands: [],
+      attributes: [],
+      variations: [],
+      grouped_products: [],
+      has_options: false,
+      is_purchasable: product.purchasable !== false,
+      is_in_stock: product.stock_status === "instock",
+      is_on_backorder: product.stock_status === "onbackorder",
+      low_stock_remaining: null,
+      stock_availability: {
+        text: product.stock_status === "instock" ? "In Stock" : "Out of Stock",
+        class: product.stock_status === "instock" ? "in-stock" : "out-of-stock",
+      },
+      sold_individually: product.sold_individually || false,
+      add_to_cart: {
+        text: "Add to Cart",
+        description: "",
+        url: "",
+        single_text: "Add to Cart",
+        minimum: 1,
+        maximum: 9999,
+        multiple_of: 1,
+      },
+      extensions: {},
+    }));
+
+    return {
+      products: transformedProducts,
+      total,
+      totalPages,
+    };
+  } catch (error) {
+    console.error("Failed to fetch featured products:", error);
+    // Fallback to regular products
+    return getProducts(params);
+  }
+}
+
 // Helper function to format price from WooCommerce
 export function formatWCPrice(prices: WCProduct["prices"]): string {
   const price = parseInt(prices.price) / Math.pow(10, prices.currency_minor_unit);

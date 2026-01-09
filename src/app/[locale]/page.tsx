@@ -132,22 +132,22 @@ export default async function HomePage({ params }: HomePageProps) {
     section_subtitle: homeSettings.collections.section_subtitle || sectionTexts.collections.subtitle,
   };
 
-  const categoryExtraItems = [
-    {
-      id: "new-products",
-      name: { en: "New Products", ar: "منتجات جديدة" },
-      slug: "new-products",
-      href: `/${locale}/shop?orderby=date`,
-      image: "",
-    },
-    {
-      id: "featured-products",
-      name: { en: "Featured Products", ar: "منتجات مميزة" },
-      slug: "featured-products",
-      href: `/${locale}/shop?featured=true`,
-      image: "",
-    },
-  ];
+    const categoryExtraItems = [
+      {
+        id: "new-products",
+        name: { en: "New Products", ar: "منتجات جديدة" },
+        slug: "new-products",
+        href: `/${locale}/new-products`,
+        image: "",
+      },
+      {
+        id: "featured-products",
+        name: { en: "Featured Products", ar: "منتجات مميزة" },
+        slug: "featured-products",
+        href: `/${locale}/featured-products`,
+        image: "",
+      },
+    ];
 
   return (
     <div className="flex flex-col">
