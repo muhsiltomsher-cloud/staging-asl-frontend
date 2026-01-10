@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import useSWR, { mutate } from "swr";
 import type { CoCartResponse, CoCartItem } from "@/lib/api/cocart";
 import { getAuthToken } from "@/lib/api/auth";
@@ -86,17 +86,29 @@ export function CartProvider({ children, locale }: CartProviderProps) {
   const cacheKey = getCartCacheKey(locale);
   
   // Use SWR for cart data with automatic caching and deduplication
-  const { data: cart, isLoading: swrLoading, isValidating } = useSWR<CoCartResponse | null>(
+  const { data: cart, isLoading: swrLoading, isValidating, mutate: mutateCart } = useSWR<CoCartResponse | null>(
     cacheKey,
     cartFetcher,
     {
-      revalidateOnFocus: false,
+      revalidateOnFocus: true, // Refresh cart when user returns to tab
       revalidateOnReconnect: true,
-      dedupingInterval: 5000, // Dedupe requests within 5 seconds
+      revalidateIfStale: true, // Always revalidate stale data
+      revalidateOnMount: true, // Always fetch fresh data on mount
+      dedupingInterval: 2000, // Reduced from 5s to 2s for faster updates
       errorRetryCount: 2,
       keepPreviousData: false, // Don't keep previous data when locale changes
     }
   );
+
+  // Ensure cart is fetched on initial mount - this handles cases where
+  // the user returns to the site after closing the browser
+  useEffect(() => {
+    // Small delay to ensure cookies are available after page load
+    const timer = setTimeout(() => {
+      mutateCart();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [mutateCart]);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedCoupons, setSelectedCoupons] = useState<SelectedCoupon[]>([]);
