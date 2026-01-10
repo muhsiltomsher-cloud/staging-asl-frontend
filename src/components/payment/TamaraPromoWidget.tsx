@@ -116,7 +116,7 @@ export function TamaraPromoWidget({ price, currency, locale }: TamaraPromoWidget
   const formattedPrice = currency === "KWD" ? price.toFixed(3) : price.toFixed(2);
 
   return (
-    <div ref={containerRef} className="my-3">
+    <div ref={containerRef} className="my-3 rounded-lg border border-[#e7e2d6] bg-[#e7e2d6] p-3">
       <tamara-widget
         type="tamara-summary"
         amount={formattedPrice}
