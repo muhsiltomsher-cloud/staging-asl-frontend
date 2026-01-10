@@ -100,21 +100,10 @@ tamara-widget * {
 }
 
 /* Mobile font size reduction - smaller text on screens below 1024px */
+/* Note: h1, h2, h3 font sizes are controlled by Tailwind classes for flexibility */
 @media (max-width: 1023px) {
   body {
     font-size: 14px;
-  }
-  
-  h1 {
-    font-size: 1.75rem;
-  }
-  
-  h2 {
-    font-size: 1.5rem;
-  }
-  
-  h3 {
-    font-size: 1.25rem;
   }
   
   p, span, a, li, label, input, button, select, textarea {
