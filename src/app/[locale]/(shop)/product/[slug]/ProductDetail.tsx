@@ -746,18 +746,18 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
             </Link>
           )}
 
-          {/* Title */}
-          <h1 className="text-xl font-medium text-gray-900 md:text-2xl uppercase">{product.name}</h1>
+                    {/* Title */}
+                    <h1 className="text-base font-medium text-gray-900 md:text-2xl uppercase">{product.name}</h1>
 
           {/* Price - Bold and main color */}
           <div className="flex items-center gap-3">
             {product.on_sale ? (
               <>
-                <FormattedPrice
-                  price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
-                  className="text-xl font-bold text-amber-800"
-                  iconSize="md"
-                />
+                                <FormattedPrice
+                                  price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
+                                  className="text-base font-bold text-amber-800 md:text-xl"
+                                  iconSize="md"
+                                />
                 <FormattedPrice
                   price={parseInt(product.prices.regular_price) / Math.pow(10, product.prices.currency_minor_unit)}
                   className="text-base text-gray-400"
@@ -766,13 +766,13 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
                 />
                 <Badge variant="error">{isRTL ? "تخفيض" : "Sale"}</Badge>
               </>
-            ) : (
-              <FormattedPrice
-                price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
-                className="text-xl font-bold text-amber-800"
-                iconSize="md"
-              />
-            )}
+                        ) : (
+                          <FormattedPrice
+                            price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
+                            className="text-base font-bold text-amber-800 md:text-xl"
+                            iconSize="md"
+                          />
+                        )}
           </div>
 
           {/* Payment Widgets - Tabby & Tamara installment info */}
