@@ -78,7 +78,7 @@ export function TabbyPromoWidget({ price, currency, locale }: TabbyPromoWidgetPr
     <div 
       ref={containerRef} 
       id="tabby-promo-widget" 
-      className="my-3"
+      className="my-3 rounded-lg border border-[#e7e2d6] bg-[#e7e2d6] p-3"
     />
   );
 }
