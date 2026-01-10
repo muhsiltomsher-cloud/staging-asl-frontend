@@ -888,8 +888,8 @@ export default function CheckoutPage() {
           </div>
 
           {/* Order Summary */}
-          <div className="lg:col-span-1">
-            <div className="lg:sticky lg:top-24 lg:self-start rounded-lg border border-black/10 bg-white p-6 shadow-sm">
+          <div className="lg:col-span-1 lg:sticky lg:top-24 lg:self-start">
+            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
                             <h2 className="mb-4 text-lg font-semibold text-gray-900 font-sans">
                               {isRTL ? "ملخص الطلب" : "Order Summary"}
                             </h2>
@@ -1069,7 +1069,7 @@ export default function CheckoutPage() {
                               )}
                             </div>
 
-              <div className="hidden py-4 text-lg font-bold text-gray-900 md:flex md:justify-between">
+              <div className="hidden py-4 text-lg font-bold text-gray-900 lg:flex lg:justify-between">
                 <span>{isRTL ? "الإجمالي" : "Total"}</span>
                 <FormattedPrice
                   price={parseFloat(cartTotal) / divisor}
@@ -1079,7 +1079,7 @@ export default function CheckoutPage() {
 
               <Button
                 type="submit"
-                className="hidden w-full md:block"
+                className="hidden w-full lg:block"
                 size="lg"
                 isLoading={isSubmitting || isAuthLoading}
                 disabled={isAuthLoading}
@@ -1087,7 +1087,7 @@ export default function CheckoutPage() {
                 {isRTL ? "تأكيد الطلب" : "Place Order"}
               </Button>
 
-              <p className="mt-4 hidden text-center text-xs text-gray-500 md:block">
+              <p className="mt-4 hidden text-center text-xs text-gray-500 lg:block">
                 {isRTL
                   ? "بالنقر على تأكيد الطلب، فإنك توافق على شروط الخدمة وسياسة الخصوصية."
                   : "By clicking Place Order, you agree to our Terms of Service and Privacy Policy."}
@@ -1099,7 +1099,7 @@ export default function CheckoutPage() {
       </div>
 
       {/* Mobile Sticky Order Summary - positioned above bottom nav bar */}
-      <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-black/10 bg-white px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] md:hidden" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
+      <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-black/10 bg-white px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] lg:hidden" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
         <div className="flex items-center justify-between gap-4">
           <div className="flex flex-col">
             <span className="text-xs text-gray-500">{isRTL ? "الإجمالي" : "Total"}</span>

@@ -138,14 +138,14 @@ export default async function HomePage({ params }: HomePageProps) {
         name: { en: "New Products", ar: "منتجات جديدة" },
         slug: "new-products",
         href: `/${locale}/new-products`,
-        image: "",
+        image: "https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/New-Products.webp",
       },
       {
         id: "featured-products",
         name: { en: "Featured Products", ar: "منتجات مميزة" },
         slug: "featured-products",
         href: `/${locale}/featured-products`,
-        image: "",
+        image: "https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/Featured-Products.webp",
       },
     ];
 

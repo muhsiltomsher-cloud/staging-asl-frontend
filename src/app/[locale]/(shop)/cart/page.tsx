@@ -499,8 +499,8 @@ export default function CartPage() {
             </div>
           </div>
 
-          <div className="lg:col-span-1">
-            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm lg:sticky lg:top-24 lg:self-start">
+          <div className="lg:col-span-1 lg:sticky lg:top-24 lg:self-start">
+            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-semibold text-gray-900">
                 {texts.orderSummary}
               </h2>
@@ -657,7 +657,7 @@ export default function CartPage() {
 
       {/* Mobile Sticky Order Summary - positioned above bottom nav bar */}
       {!isEmpty && (
-        <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-black/10 bg-white px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] md:hidden" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-black/10 bg-white px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] lg:hidden" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col">
               <span className="text-xs text-gray-500">{texts.orderTotal}</span>

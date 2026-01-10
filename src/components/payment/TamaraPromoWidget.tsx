@@ -63,12 +63,13 @@ export function TamaraPromoWidget({ price, currency, locale }: TamaraPromoWidget
 
     if (!publicKey || price <= 0) return;
 
-    // Custom CSS for transparent background and website font
+    // Custom CSS for beige background and website font
     const customCss = `:host {
-      --tamara-bg-color: transparent !important;
+      --tamara-bg-color: #e7e2d6 !important;
       --font-primary: inherit !important;
       --font-secondary: inherit !important;
-      background: transparent !important;
+      background: #e7e2d6 !important;
+      background-color: #e7e2d6 !important;
       font-size: 12px !important;
     }`;
 
