@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, Minus, Plus, ChevronDown, X, ChevronLeft, ChevronRight, ZoomIn, Grid, Layers } from "lucide-react";
+import { Heart, Minus, Plus, ChevronDown, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Grid, Layers, Move } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Thumbs, FreeMode } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
@@ -85,14 +85,53 @@ interface FullscreenGalleryProps {
   onClose: () => void;
   onSelectImage: (index: number) => void;
   productName: string;
+  isRTL?: boolean;
 }
 
-function FullscreenGallery({ images, selectedIndex, onClose, onSelectImage, productName }: FullscreenGalleryProps) {
+function FullscreenGallery({ images, selectedIndex, onClose, onSelectImage, productName, isRTL }: FullscreenGalleryProps) {
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+  const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.5, 3));
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 0.5, 1));
+    if (zoomLevel <= 1.5) setPosition({ x: 0, y: 0 });
+  };
+  const handleResetZoom = () => {
+    setZoomLevel(1);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoomLevel > 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging && zoomLevel > 1) {
+      setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+    }
+  };
+
+  const handleMouseUp = () => setIsDragging(false);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
-      if (e.key === "ArrowLeft") onSelectImage(selectedIndex > 0 ? selectedIndex - 1 : images.length - 1);
-      if (e.key === "ArrowRight") onSelectImage(selectedIndex < images.length - 1 ? selectedIndex + 1 : 0);
+      if (e.key === "ArrowLeft") {
+        onSelectImage(selectedIndex > 0 ? selectedIndex - 1 : images.length - 1);
+        handleResetZoom();
+      }
+      if (e.key === "ArrowRight") {
+        onSelectImage(selectedIndex < images.length - 1 ? selectedIndex + 1 : 0);
+        handleResetZoom();
+      }
+      if (e.key === "+" || e.key === "=") handleZoomIn();
+      if (e.key === "-") handleZoomOut();
     };
     document.addEventListener("keydown", handleKeyDown);
     document.body.style.overflow = "hidden";
@@ -100,46 +139,143 @@ function FullscreenGallery({ images, selectedIndex, onClose, onSelectImage, prod
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
     };
-  }, [selectedIndex, images.length, onClose, onSelectImage]);
+  }, [selectedIndex, images.length, onClose, onSelectImage, zoomLevel]);
+
+  const goToPrev = () => {
+    onSelectImage(selectedIndex > 0 ? selectedIndex - 1 : images.length - 1);
+    handleResetZoom();
+  };
+
+  const goToNext = () => {
+    onSelectImage(selectedIndex < images.length - 1 ? selectedIndex + 1 : 0);
+    handleResetZoom();
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95">
+      {/* Top Controls */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 rounded-full bg-black/50 px-4 py-2 backdrop-blur-sm">
+        <button
+          type="button"
+          onClick={handleZoomOut}
+          disabled={zoomLevel <= 1}
+          className="rounded-full p-1.5 text-white transition-colors hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed"
+          aria-label={isRTL ? "تصغير" : "Zoom out"}
+        >
+          <ZoomOut className="h-5 w-5" />
+        </button>
+        <span className="min-w-[3rem] text-center text-sm font-medium text-white">
+          {Math.round(zoomLevel * 100)}%
+        </span>
+        <button
+          type="button"
+          onClick={handleZoomIn}
+          disabled={zoomLevel >= 3}
+          className="rounded-full p-1.5 text-white transition-colors hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed"
+          aria-label={isRTL ? "تكبير" : "Zoom in"}
+        >
+          <ZoomIn className="h-5 w-5" />
+        </button>
+        {zoomLevel > 1 && (
+          <button
+            type="button"
+            onClick={handleResetZoom}
+            className="ml-2 rounded-full p-1.5 text-white transition-colors hover:bg-white/20"
+            aria-label={isRTL ? "إعادة تعيين" : "Reset zoom"}
+          >
+            <Move className="h-5 w-5" />
+          </button>
+        )}
+      </div>
+
+      {/* Close Button */}
       <button
         type="button"
         onClick={onClose}
-        className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
-        aria-label="Close fullscreen"
+        className="absolute right-4 top-4 z-20 rounded-full bg-black/50 p-2.5 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
+        aria-label={isRTL ? "إغلاق" : "Close fullscreen"}
       >
         <X className="h-6 w-6" />
       </button>
+
+      {/* Navigation Arrows */}
+      {images.length > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={goToPrev}
+            className="absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white backdrop-blur-sm transition-all hover:bg-black/70 hover:scale-110"
+            aria-label={isRTL ? "الصورة السابقة" : "Previous image"}
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <button
+            type="button"
+            onClick={goToNext}
+            className="absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white backdrop-blur-sm transition-all hover:bg-black/70 hover:scale-110"
+            aria-label={isRTL ? "الصورة التالية" : "Next image"}
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+        </>
+      )}
       
-      <div className="relative h-[80vh] w-[90vw] max-w-5xl">
-        <Image
-          src={images[selectedIndex].src}
-          alt={images[selectedIndex].alt || productName}
-          fill
-          sizes="90vw"
-          className="object-contain"
-          priority
-        />
+      {/* Main Image with Zoom */}
+      <div 
+        className={`relative h-[75vh] w-[85vw] max-w-5xl overflow-hidden ${zoomLevel > 1 ? 'cursor-grab' : 'cursor-zoom-in'} ${isDragging ? 'cursor-grabbing' : ''}`}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onClick={() => zoomLevel === 1 && handleZoomIn()}
+      >
+        <div
+          className="relative h-full w-full transition-transform duration-200 ease-out"
+          style={{
+            transform: `scale(${zoomLevel}) translate(${position.x / zoomLevel}px, ${position.y / zoomLevel}px)`,
+          }}
+        >
+          <Image
+            src={images[selectedIndex].src}
+            alt={images[selectedIndex].alt || productName}
+            fill
+            sizes="85vw"
+            className="object-contain pointer-events-none select-none"
+            priority
+            draggable={false}
+          />
+        </div>
       </div>
 
+      {/* Image Counter */}
       {images.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 rounded-full bg-black/50 px-4 py-1.5 text-sm font-medium text-white backdrop-blur-sm">
+          {selectedIndex + 1} / {images.length}
+        </div>
+      )}
+
+      {/* Thumbnails */}
+      {images.length > 1 && (
+        <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2 rounded-xl bg-black/50 p-2 backdrop-blur-sm">
           {images.map((image, index) => (
             <button
               key={image.id}
               type="button"
-              onClick={() => onSelectImage(index)}
-              className={`h-16 w-16 overflow-hidden rounded border-2 transition-all ${
-                selectedIndex === index ? "border-white" : "border-transparent opacity-60 hover:opacity-100"
+              onClick={() => {
+                onSelectImage(index);
+                handleResetZoom();
+              }}
+              className={`relative h-14 w-14 overflow-hidden rounded-lg border-2 transition-all hover:scale-105 ${
+                selectedIndex === index 
+                  ? "border-white shadow-lg shadow-white/20" 
+                  : "border-transparent opacity-60 hover:opacity-100"
               }`}
             >
               <Image
                 src={image.src}
                 alt={image.alt || `${productName} ${index + 1}`}
-                width={64}
-                height={64}
+                width={56}
+                height={56}
                 className="h-full w-full object-cover"
               />
             </button>
@@ -462,7 +598,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
         <ViewToggle />
         <div className="space-y-3">
           {/* Main Slider */}
-          <div className="relative w-full max-w-full">
+          <div className="relative w-full max-w-full group/gallery">
             <Swiper
               key={viewMode}
               modules={[Navigation, Thumbs]}
@@ -473,12 +609,12 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
                 nextEl: ".gallery-next",
               }}
               onSlideChange={(swiper) => setSelectedImage(swiper.realIndex)}
-              className="product-gallery-swiper w-full overflow-hidden rounded-lg bg-gray-100"
+              className="product-gallery-swiper w-full overflow-hidden rounded-xl bg-gray-100 shadow-sm"
             >
               {images.map((image, index) => (
                 <SwiperSlide key={image.id}>
                   <div 
-                    className="relative w-full cursor-pointer"
+                    className="relative w-full cursor-zoom-in group/slide"
                     style={{ paddingBottom: '100%' }}
                     onClick={() => setIsFullscreen(true)}
                   >
@@ -487,9 +623,15 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
                       alt={image.alt || `${product.name} ${index + 1}`}
                       fill
                       sizes="(max-width: 1024px) 100vw, 50vw"
-                      className="object-cover"
+                      className="object-cover transition-transform duration-500 group-hover/slide:scale-105"
                       priority={index === 0}
                     />
+                    {/* Hover Overlay with Zoom Icon */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-300 group-hover/slide:bg-black/10 group-hover/slide:opacity-100">
+                      <div className="rounded-full bg-white/90 p-3 shadow-lg transform scale-75 transition-transform duration-300 group-hover/slide:scale-100">
+                        <ZoomIn className="h-6 w-6 text-gray-800" />
+                      </div>
+                    </div>
                   </div>
                 </SwiperSlide>
               ))}
@@ -501,29 +643,39 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
               }
             `}</style>
 
+            {/* Zoom Button - Always Visible */}
+            <button
+              type="button"
+              onClick={() => setIsFullscreen(true)}
+              className="absolute top-3 right-3 z-10 rounded-full bg-white/90 p-2 shadow-md transition-all hover:bg-white hover:shadow-lg hover:scale-110"
+              aria-label={isRTL ? "تكبير الصورة" : "Zoom image"}
+            >
+              <ZoomIn className="h-4 w-4 text-gray-700" />
+            </button>
+
             {/* Navigation Arrows */}
             {imageCount > 1 && (
               <>
                 <button
                   type="button"
-                  className="gallery-prev absolute left-1 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1 shadow-md transition-all hover:bg-white hover:shadow-lg disabled:opacity-50 sm:left-3 sm:p-2"
+                  className="gallery-prev absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md transition-all hover:bg-white hover:shadow-lg hover:scale-110 opacity-0 group-hover/gallery:opacity-100 sm:left-3 sm:p-2.5"
                   aria-label={isRTL ? "الصورة السابقة" : "Previous image"}
                 >
-                  <ChevronLeft className="h-3 w-3 text-gray-800 sm:h-5 sm:w-5" />
+                  <ChevronLeft className="h-4 w-4 text-gray-800 sm:h-5 sm:w-5" />
                 </button>
                 <button
                   type="button"
-                  className="gallery-next absolute right-1 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1 shadow-md transition-all hover:bg-white hover:shadow-lg disabled:opacity-50 sm:right-3 sm:p-2"
+                  className="gallery-next absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md transition-all hover:bg-white hover:shadow-lg hover:scale-110 opacity-0 group-hover/gallery:opacity-100 sm:right-3 sm:p-2.5"
                   aria-label={isRTL ? "الصورة التالية" : "Next image"}
                 >
-                  <ChevronRight className="h-3 w-3 text-gray-800 sm:h-5 sm:w-5" />
+                  <ChevronRight className="h-4 w-4 text-gray-800 sm:h-5 sm:w-5" />
                 </button>
               </>
             )}
 
             {/* Image Counter */}
             {imageCount > 1 && (
-              <div className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+              <div className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
                 {selectedImage + 1} / {imageCount}
               </div>
             )}
@@ -534,14 +686,14 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
             <Swiper
               modules={[FreeMode, Thumbs]}
               onSwiper={setThumbsSwiper}
-              spaceBetween={6}
+              spaceBetween={8}
               slidesPerView={3}
               freeMode={true}
               watchSlidesProgress={true}
               breakpoints={{
-                360: { slidesPerView: 4, spaceBetween: 8 },
-                480: { slidesPerView: 5, spaceBetween: 8 },
-                640: { slidesPerView: 6, spaceBetween: 8 },
+                360: { slidesPerView: 4, spaceBetween: 10 },
+                480: { slidesPerView: 5, spaceBetween: 10 },
+                640: { slidesPerView: 6, spaceBetween: 10 },
               }}
               className="thumbs-slider w-full max-w-full"
             >
@@ -549,10 +701,10 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
                 <SwiperSlide key={image.id}>
                   <button
                     type="button"
-                    className={`relative aspect-square w-full overflow-hidden rounded-md border-2 transition-all ${
+                    className={`relative aspect-square w-full overflow-hidden rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
                       selectedImage === index 
-                        ? "border-amber-800 ring-1 ring-amber-800" 
-                        : "border-transparent hover:border-gray-300"
+                        ? "border-amber-800 ring-2 ring-amber-800/30 shadow-md" 
+                        : "border-gray-200 hover:border-gray-400"
                     }`}
                   >
                     <Image
@@ -835,6 +987,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
           onClose={() => setIsFullscreen(false)}
           onSelectImage={setSelectedImage}
           productName={product.name}
+          isRTL={isRTL}
         />
       )}
     </div>
