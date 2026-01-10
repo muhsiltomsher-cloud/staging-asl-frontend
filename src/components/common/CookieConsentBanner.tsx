@@ -26,7 +26,7 @@ export function CookieConsentBanner({ locale = "en" }: CookieConsentBannerProps)
 
   const handleAccept = () => {
     setCookie(COOKIE_CONSENT_KEY, "accepted", {
-      maxAge: 60 * 60 * 24 * 365, // 1 year
+      maxAge: 60 * 60 * 24 * 180, // 6 months
       path: "/",
     });
     setIsVisible(false);
@@ -34,7 +34,7 @@ export function CookieConsentBanner({ locale = "en" }: CookieConsentBannerProps)
 
   const handleReject = () => {
     setCookie(COOKIE_CONSENT_KEY, "rejected", {
-      maxAge: 60 * 60 * 24 * 365, // 1 year
+      maxAge: 60 * 60 * 24 * 180, // 6 months
       path: "/",
     });
     setIsVisible(false);
