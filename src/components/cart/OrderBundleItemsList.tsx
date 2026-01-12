@@ -51,10 +51,10 @@ export function getOrderBundleItems(item: OrderLineItem): BundleItem[] | null {
 
     // Validate and map items
     return bundleItems
-      .filter((bi): bi is BundleItem => 
+      .filter((bi: unknown): bi is BundleItem => 
         typeof bi === "object" && 
         bi !== null && 
-        typeof bi.product_id === "number"
+        typeof (bi as BundleItem).product_id === "number"
       )
       .map((bi) => ({
         product_id: bi.product_id,
