@@ -15,12 +15,18 @@ function getBasicAuthParams(): string {
   return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
 }
 
+interface OrderLineItemMeta {
+  key: string;
+  value: string;
+}
+
 interface OrderLineItem {
   product_id: number;
   quantity: number;
   variation_id?: number;
   subtotal?: string;
   total?: string;
+  meta_data?: OrderLineItemMeta[];
 }
 
 interface OrderAddress {

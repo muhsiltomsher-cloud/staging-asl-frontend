@@ -15,7 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getCustomer, type Customer } from "@/lib/api/customer";
 import { featureFlags, type Locale } from "@/config/site";
 import { MapPin, Check, ChevronDown, ChevronUp, User, UserCheck, Tag, X } from "lucide-react";
-import { BundleItemsList } from "@/components/cart/BundleItemsList";
+import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice } from "@/components/cart/BundleItemsList";
 
 interface PublicCoupon {
   code: string;
@@ -283,6 +283,7 @@ export default function CheckoutPage() {
           variation_id?: number;
           subtotal?: string;
           total?: string;
+          meta_data?: Array<{ key: string; value: string }>;
         } = {
           product_id: item.id,
           quantity: item.quantity.value,
@@ -291,15 +292,59 @@ export default function CheckoutPage() {
 
         // Include subtotal and total to override WooCommerce's default product price
         // This is essential for bundle products where the total includes bundled items
+        // Note: item.totals.subtotal and item.totals.total are already in decimal format (not minor units)
         if (item.totals?.subtotal) {
-          // Convert from minor units (cents) to decimal format
-          const subtotalValue = parseFloat(item.totals.subtotal) / divisor;
+          const subtotalValue = parseFloat(item.totals.subtotal);
           lineItem.subtotal = subtotalValue.toFixed(2);
         }
         if (item.totals?.total) {
-          // Convert from minor units (cents) to decimal format
-          const totalValue = parseFloat(item.totals.total) / divisor;
+          const totalValue = parseFloat(item.totals.total);
           lineItem.total = totalValue.toFixed(2);
+        }
+
+        // Include bundle items as meta_data so they display in WooCommerce admin
+        const bundleItems = getBundleItems(item);
+        if (bundleItems && bundleItems.length > 0) {
+          const metaData: Array<{ key: string; value: string }> = [];
+          
+          // Add each bundle item as a separate meta entry for better display in WooCommerce
+          bundleItems.forEach((bundleItem, index) => {
+            const itemName = bundleItem.name || `Product #${bundleItem.product_id}`;
+            const itemQty = bundleItem.quantity || 1;
+            const itemPrice = typeof bundleItem.price === "string" 
+              ? parseFloat(bundleItem.price) 
+              : (bundleItem.price || 0);
+            
+            // Format: "Product Name x1 - 145.00 AED"
+            const displayValue = itemPrice > 0 
+              ? `${itemName} x${itemQty} - ${itemPrice.toFixed(2)} AED`
+              : `${itemName} x${itemQty}`;
+            
+            metaData.push({
+              key: bundleItem.is_addon ? `Add-on ${index + 1}` : `Bundled Product ${index + 1}`,
+              value: displayValue,
+            });
+          });
+          
+          // Add bundle totals
+          const bundleItemsTotal = getBundleItemsTotal(bundleItems);
+          const boxPrice = getBoxPrice(item, bundleItemsTotal);
+          
+          if (bundleItemsTotal > 0) {
+            metaData.push({
+              key: "Items Total",
+              value: `${bundleItemsTotal.toFixed(2)} AED`,
+            });
+          }
+          
+          if (boxPrice && boxPrice > 0) {
+            metaData.push({
+              key: "Box Price",
+              value: `${boxPrice.toFixed(2)} AED`,
+            });
+          }
+          
+          lineItem.meta_data = metaData;
         }
 
         return lineItem;
