@@ -274,11 +274,36 @@ export default function CheckoutPage() {
     setError(null);
 
     try {
-      const lineItems = cartItems.map((item) => ({
-        product_id: item.id,
-        quantity: item.quantity.value,
-        variation_id: item.variation_id || undefined,
-      }));
+      // Create line items with price information to ensure bundle totals are correct
+      // The subtotal/total from cart items include the full bundle price (box + bundled items)
+      const lineItems = cartItems.map((item) => {
+        const lineItem: {
+          product_id: number;
+          quantity: number;
+          variation_id?: number;
+          subtotal?: string;
+          total?: string;
+        } = {
+          product_id: item.id,
+          quantity: item.quantity.value,
+          variation_id: item.variation_id || undefined,
+        };
+
+        // Include subtotal and total to override WooCommerce's default product price
+        // This is essential for bundle products where the total includes bundled items
+        if (item.totals?.subtotal) {
+          // Convert from minor units (cents) to decimal format
+          const subtotalValue = parseFloat(item.totals.subtotal) / divisor;
+          lineItem.subtotal = subtotalValue.toFixed(2);
+        }
+        if (item.totals?.total) {
+          // Convert from minor units (cents) to decimal format
+          const totalValue = parseFloat(item.totals.total) / divisor;
+          lineItem.total = totalValue.toFixed(2);
+        }
+
+        return lineItem;
+      });
 
       const billingData = formData.sameAsShipping ? formData.shipping : formData.billing;
 

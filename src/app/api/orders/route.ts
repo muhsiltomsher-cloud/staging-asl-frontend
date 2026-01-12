@@ -19,6 +19,8 @@ interface OrderLineItem {
   product_id: number;
   quantity: number;
   variation_id?: number;
+  subtotal?: string;
+  total?: string;
 }
 
 interface OrderAddress {
