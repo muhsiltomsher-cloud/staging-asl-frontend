@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         hostname: "staging.aromaticscentslab.com",
         pathname: "/wp-content/uploads/**",
       },
+      {
+        protocol: "https",
+        hostname: "flagcdn.com",
+        pathname: "/**",
+      },
     ],
   },
   // Increase static page generation timeout to handle slow API responses during build

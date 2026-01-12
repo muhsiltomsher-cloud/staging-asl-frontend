@@ -2,36 +2,51 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import { ChevronDown, Check, X } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { type Currency } from "@/config/site";
 import { cn } from "@/lib/utils";
 
-const currencyFlags: Record<string, string> = {
-  AED: "🇦🇪",
-  SAR: "🇸🇦",
-  QAR: "🇶🇦",
-  KWD: "🇰🇼",
-  BHD: "🇧🇭",
-  OMR: "🇴🇲",
-  USD: "🇺🇸",
-  EUR: "🇪🇺",
-  GBP: "🇬🇧",
-  INR: "🇮🇳",
-  PKR: "🇵🇰",
-  EGP: "🇪🇬",
-  JOD: "🇯🇴",
-  LBP: "🇱🇧",
-  IQD: "🇮🇶",
-  YER: "🇾🇪",
-  SYP: "🇸🇾",
-  TRY: "🇹🇷",
-  MAD: "🇲🇦",
-  TND: "🇹🇳",
-  DZD: "🇩🇿",
-  LYD: "🇱🇾",
-  SDG: "🇸🇩",
+const currencyCountryCodes: Record<string, string> = {
+  AED: "ae",
+  SAR: "sa",
+  QAR: "qa",
+  KWD: "kw",
+  BHD: "bh",
+  OMR: "om",
+  USD: "us",
+  EUR: "eu",
+  GBP: "gb",
+  INR: "in",
+  PKR: "pk",
+  EGP: "eg",
+  JOD: "jo",
+  LBP: "lb",
+  IQD: "iq",
+  YER: "ye",
+  SYP: "sy",
+  TRY: "tr",
+  MAD: "ma",
+  TND: "tn",
+  DZD: "dz",
+  LYD: "ly",
+  SDG: "sd",
 };
+
+function CountryFlag({ currencyCode, size = 20 }: { currencyCode: string; size?: number }) {
+  const countryCode = currencyCountryCodes[currencyCode] || "un";
+  return (
+    <Image
+      src={`https://flagcdn.com/w40/${countryCode}.png`}
+      alt={currencyCode}
+      width={size}
+      height={Math.round(size * 0.75)}
+      className="rounded-sm object-cover"
+      unoptimized
+    />
+  );
+}
 
 interface CurrencySwitcherProps {
   className?: string;
@@ -102,7 +117,7 @@ export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherP
         aria-label={t.selectCurrency}
         aria-haspopup="dialog"
       >
-        <span className="text-base">{currencyFlags[currentCurrency?.code || "AED"] || "🌐"}</span>
+        <CountryFlag currencyCode={currentCurrency?.code || "AED"} size={20} />
         <span className="font-semibold text-[#7a3205]">{currentCurrency?.symbol}</span>
         <span className="text-gray-600">{currentCurrency?.code}</span>
         <ChevronDown className="h-3 w-3 text-gray-400" />
@@ -165,7 +180,7 @@ export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherP
                         ? "bg-[#7a3205]/10 ring-2 ring-[#7a3205]"
                         : "bg-white shadow-sm"
                     )}>
-                      {currencyFlags[curr.code] || "🌐"}
+                      <CountryFlag currencyCode={curr.code} size={24} />
                     </span>
                     <div className="text-center">
                       <p className={cn(
