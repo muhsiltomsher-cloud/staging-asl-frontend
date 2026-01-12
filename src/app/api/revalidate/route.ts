@@ -13,7 +13,7 @@ import { revalidateTag, revalidatePath } from "next/cache";
  *   x-revalidate-token: <REVALIDATE_SECRET_TOKEN>
  * Body (JSON):
  *   {
- *     "type": "products" | "categories" | "pages" | "all",
+ *     "type": "products" | "categories" | "pages" | "free-gifts" | "all",
  *     "slug": "optional-product-slug",
  *     "id": "optional-product-id",
  *     "path": "optional-path-to-revalidate"
@@ -29,6 +29,7 @@ const CACHE_TAGS = {
   categories: "categories",
   pages: "pages",
   bundleConfig: "bundle-config",
+  freeGifts: "free-gifts",
 } as const;
 
 export async function POST(request: NextRequest) {
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
     // Parse the request body
     const body = await request.json().catch(() => ({}));
     const { type, slug, id, path } = body as {
-      type?: "products" | "categories" | "pages" | "all";
+      type?: "products" | "categories" | "pages" | "free-gifts" | "all";
       slug?: string;
       id?: string | number;
       path?: string;
@@ -135,6 +136,17 @@ export async function POST(request: NextRequest) {
         }
         break;
 
+      case "free-gifts":
+        // Revalidate free gift rules cache
+        revalidateTag(CACHE_TAGS.freeGifts, revalidateOptions);
+        revalidatedTags.push(CACHE_TAGS.freeGifts);
+
+        // Revalidate cart pages where free gifts are displayed
+        revalidatePath("/en/cart");
+        revalidatePath("/ar/cart");
+        revalidatedPaths.push("/en/cart", "/ar/cart");
+        break;
+
       case "all":
         // Revalidate everything
         Object.values(CACHE_TAGS).forEach((tag) => {
@@ -157,7 +169,7 @@ export async function POST(request: NextRequest) {
           revalidatedPaths.push(path);
         } else {
           return NextResponse.json(
-            { error: "Invalid revalidation type. Use: products, categories, pages, all, or provide a path" },
+            { error: "Invalid revalidation type. Use: products, categories, pages, free-gifts, all, or provide a path" },
             { status: 400 }
           );
         }
@@ -186,7 +198,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const token = searchParams.get("token");
-  const type = searchParams.get("type") as "products" | "categories" | "pages" | "all" | undefined;
+  const type = searchParams.get("type") as "products" | "categories" | "pages" | "free-gifts" | "all" | undefined;
   const slug = searchParams.get("slug") || undefined;
   const id = searchParams.get("id") || undefined;
   const path = searchParams.get("path") || undefined;
