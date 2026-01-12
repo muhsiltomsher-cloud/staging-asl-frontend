@@ -577,8 +577,11 @@ export async function getFreeGiftProductInfo(currency?: string): Promise<FreeGif
       const ids = hiddenRules.map((rule: { product_id: number }) => rule.product_id);
       
       // Try to get slugs from the rules first (if API provides them)
+      // The API returns slugs in rule.product.slug (nested object)
       let slugs = hiddenRules
-        .map((rule: { product_slug?: string }) => rule.product_slug)
+        .map((rule: { product?: { slug?: string }; product_slug?: string }) => 
+          rule.product?.slug || rule.product_slug
+        )
         .filter((slug: string | undefined): slug is string => !!slug);
       
       // If no slugs from rules, fetch product details to get slugs
