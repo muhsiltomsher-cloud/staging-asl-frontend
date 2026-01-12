@@ -70,16 +70,17 @@ const emptyAddress: AddressFormData = {
 export default function CheckoutPage() {
   const { locale } = useParams<{ locale: string }>();
   const router = useRouter();
-    const { cart, cartItems, cartSubtotal, cartTotal, clearCart, applyCoupon, removeCoupon, selectedCoupons, couponDiscount, clearSelectedCoupons } = useCart();
+    const { cart, cartItems, cartSubtotal, cartTotal, clearCart, applyCoupon, removeCoupon, selectedCoupons, couponDiscount, clearSelectedCoupons, isLoading: isCartLoading } = useCart();
     const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
     const isRTL = locale === "ar";
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [customerData, setCustomerData] = useState<Customer | null>(null);
     const [isLoadingCustomer, setIsLoadingCustomer] = useState(false);
-    const [showBillingSection, setShowBillingSection] = useState(false);
+        const [showBillingSection, setShowBillingSection] = useState(false);
+        const [emptyCartCountdown, setEmptyCartCountdown] = useState<number | null>(null);
   
-        const [couponCode, setCouponCode] = useState("");
+            const [couponCode, setCouponCode] = useState("");
         const [couponError, setCouponError] = useState("");
         const [couponLoading, setCouponLoading] = useState(false);
         const [availableCoupons, setAvailableCoupons] = useState<PublicCoupon[]>([]);
@@ -189,10 +190,37 @@ export default function CheckoutPage() {
               setIsLoadingGateways(false);
             }
           };
-          fetchPaymentGateways();
-        }, []);
+                  fetchPaymentGateways();
+                }, []);
 
-        const handleApplyCoupon= async () => {
+                // Empty cart detection and auto-redirect
+                const isEmptyCart = !isCartLoading && cartItems.length === 0 && parseFloat(cartTotal) === 0;
+        
+                useEffect(() => {
+                  if (isEmptyCart) {
+                    setEmptyCartCountdown(10);
+                  } else {
+                    setEmptyCartCountdown(null);
+                  }
+                }, [isEmptyCart]);
+
+                useEffect(() => {
+                  if (emptyCartCountdown === null || emptyCartCountdown <= 0) return;
+          
+                  const timer = setInterval(() => {
+                    setEmptyCartCountdown((prev) => {
+                      if (prev === null || prev <= 1) {
+                        router.push(`/${locale}`);
+                        return 0;
+                      }
+                      return prev - 1;
+                    });
+                  }, 1000);
+
+                  return () => clearInterval(timer);
+                }, [emptyCartCountdown, router, locale]);
+
+                const handleApplyCoupon= async () => {
       if (!couponCode.trim()) return;
       setCouponLoading(true);
       setCouponError("");
@@ -598,14 +626,46 @@ export default function CheckoutPage() {
           </div>
         )}
 
-        {isLoadingCustomer && (
-          <div className="mb-6 flex items-center justify-center py-4">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900"></div>
-            <span className="ml-2 text-gray-600">{isRTL ? "جاري تحميل بياناتك..." : "Loading your data..."}</span>
-          </div>
-        )}
+              {isLoadingCustomer && (
+                <div className="mb-6 flex items-center justify-center py-4">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900"></div>
+                  <span className="ml-2 text-gray-600">{isRTL ? "جاري تحميل بياناتك..." : "Loading your data..."}</span>
+                </div>
+              )}
 
-      <form id="checkout-form" onSubmit={handleSubmit}>
+              {/* Empty Cart Message with Auto-Redirect */}
+              {isEmptyCart && emptyCartCountdown !== null && (
+                <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-6 text-center">
+                  <div className="mb-4">
+                    <svg className="mx-auto h-16 w-16 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                  </div>
+                  <h2 className="mb-2 text-xl font-semibold text-gray-900">
+                    {isRTL ? "سلة التسوق فارغة" : "Your cart is empty"}
+                  </h2>
+                  <p className="mb-4 text-gray-600">
+                    {isRTL 
+                      ? "لا يمكنك المتابعة للدفع بدون منتجات في السلة." 
+                      : "You cannot proceed to checkout without any products in your cart."}
+                  </p>
+                  <p className="text-sm text-amber-700">
+                    {isRTL 
+                      ? `سيتم توجيهك إلى الصفحة الرئيسية خلال ${emptyCartCountdown} ثانية...` 
+                      : `Redirecting to home page in ${emptyCartCountdown} seconds...`}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/${locale}`)}
+                    className="mt-4 inline-flex items-center rounded-lg bg-gray-900 px-6 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+                  >
+                    {isRTL ? "العودة للرئيسية الآن" : "Go to Home Now"}
+                  </button>
+                </div>
+              )}
+
+            {!isEmptyCart && (
+            <form id="checkout-form" onSubmit={handleSubmit}>
         <div className="grid gap-8 lg:grid-cols-3 lg:items-start">
           <div className="space-y-6 lg:col-span-2">
             {/* Contact Information */}
@@ -1174,9 +1234,11 @@ export default function CheckoutPage() {
           </div>
         </div>
       </form>
+      )}
       </div>
 
       {/* Mobile Sticky Order Summary - positioned above bottom nav bar */}
+      {!isEmptyCart && (
       <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-black/10 bg-white px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] lg:hidden" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
         <div className="flex items-center justify-between gap-4">
           <div className="flex flex-col">
@@ -1199,6 +1261,7 @@ export default function CheckoutPage() {
           </Button>
         </div>
       </div>
+      )}
     </div>
   );
 }
