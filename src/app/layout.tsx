@@ -35,6 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="overflow-x-clip">
       <body
+        suppressHydrationWarning
         className={`${inter.variable} ${notoSansArabic.variable} ${accentGraphic.variable} antialiased overflow-x-clip`}
       >
         {children}
