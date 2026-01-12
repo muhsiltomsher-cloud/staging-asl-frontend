@@ -301,8 +301,8 @@ function PaymentSection({ order, locale, t }: PaymentSectionProps) {
             items: order.line_items.map((item) => ({
               name: item.name,
               quantity: item.quantity,
-              unit_price: parseFloat(item.price),
-              total_amount: parseFloat(item.total),
+              unit_price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
+              total_amount: typeof item.total === 'string' ? parseFloat(item.total) : parseFloat(String(item.total)),
             })),
             consumer: {
               first_name: order.billing.first_name,
