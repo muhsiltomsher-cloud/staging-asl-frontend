@@ -14,8 +14,47 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCustomer, type Customer } from "@/lib/api/customer";
 import { featureFlags, type Locale } from "@/config/site";
-import { MapPin, Check, ChevronDown, ChevronUp, User, UserCheck, Tag, X } from "lucide-react";
+import { MapPin, Check, ChevronDown, ChevronUp, User, UserCheck, Tag, X, Truck } from "lucide-react";
 import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice } from "@/components/cart/BundleItemsList";
+
+interface ShippingRate {
+  rate_id: string;
+  name: string;
+  description: string;
+  delivery_time: string;
+  price: string;
+  taxes: string;
+  instance_id: number;
+  method_id: string;
+  meta_data: Array<{ key: string; value: string }>;
+  selected: boolean;
+  currency_code: string;
+  currency_symbol: string;
+  currency_minor_unit: number;
+  currency_decimal_separator: string;
+  currency_thousand_separator: string;
+  currency_prefix: string;
+  currency_suffix: string;
+}
+
+interface ShippingPackage {
+  package_id: number;
+  name: string;
+  destination: {
+    address_1: string;
+    address_2: string;
+    city: string;
+    state: string;
+    postcode: string;
+    country: string;
+  };
+  items: Array<{
+    key: string;
+    name: string;
+    quantity: number;
+  }>;
+  shipping_rates: ShippingRate[];
+}
 
 interface PublicCoupon {
   code: string;
@@ -86,6 +125,10 @@ export default function CheckoutPage() {
         const [isLoadingCoupons, setIsLoadingCoupons] = useState(false);
         const [paymentGateways, setPaymentGateways] = useState<PaymentGateway[]>([]);
         const [isLoadingGateways, setIsLoadingGateways] = useState(true);
+        const [shippingPackages, setShippingPackages] = useState<ShippingPackage[]>([]);
+        const [isLoadingShipping, setIsLoadingShipping] = useState(false);
+        const [selectedShippingRate, setSelectedShippingRate] = useState<string | null>(null);
+        const [shippingTotal, setShippingTotal] = useState<string>("0");
   
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
@@ -191,6 +234,72 @@ export default function CheckoutPage() {
           };
           fetchPaymentGateways();
         }, []);
+
+        const fetchShippingMethods = async (country: string, city: string, postcode: string) => {
+          setIsLoadingShipping(true);
+          try {
+            const params = new URLSearchParams({
+              country: country || "AE",
+              city: city || "",
+              postcode: postcode || "",
+            });
+            const response = await fetch(`/api/shipping?${params.toString()}`);
+            const data = await response.json();
+            if (data.success && data.shipping_rates) {
+              setShippingPackages(data.shipping_rates);
+              if (data.totals?.shipping_total) {
+                setShippingTotal(data.totals.shipping_total);
+              }
+              const allRates = data.shipping_rates.flatMap((pkg: ShippingPackage) => pkg.shipping_rates || []);
+              const selectedRate = allRates.find((rate: ShippingRate) => rate.selected);
+              if (selectedRate) {
+                setSelectedShippingRate(selectedRate.rate_id);
+              } else if (allRates.length > 0) {
+                setSelectedShippingRate(allRates[0].rate_id);
+                handleSelectShippingRate(allRates[0].rate_id, 0);
+              }
+            }
+          } catch (err) {
+            console.error("Failed to fetch shipping methods:", err);
+          } finally {
+            setIsLoadingShipping(false);
+          }
+        };
+
+        useEffect(() => {
+          if (formData.shipping.country) {
+            const timeoutId = setTimeout(() => {
+              fetchShippingMethods(
+                formData.shipping.country,
+                formData.shipping.city,
+                formData.shipping.postalCode
+              );
+            }, 500);
+            return () => clearTimeout(timeoutId);
+          }
+        }, [formData.shipping.country, formData.shipping.city, formData.shipping.postalCode]);
+
+        const handleSelectShippingRate = async (rateId: string, packageId: number = 0) => {
+          setSelectedShippingRate(rateId);
+          try {
+            const response = await fetch("/api/shipping", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ rate_id: rateId, package_id: packageId }),
+            });
+            const data = await response.json();
+            if (data.success) {
+              if (data.shipping_rates) {
+                setShippingPackages(data.shipping_rates);
+              }
+              if (data.totals?.shipping_total) {
+                setShippingTotal(data.totals.shipping_total);
+              }
+            }
+          } catch (err) {
+            console.error("Failed to select shipping rate:", err);
+          }
+        };
 
         const handleApplyCoupon= async () => {
       if (!couponCode.trim()) return;
@@ -715,11 +824,86 @@ export default function CheckoutPage() {
               </div>
             </div>
 
+            {/* Shipping Method Selection */}
+            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 font-sans">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">3</span>
+                {isRTL ? "طريقة الشحن" : "Shipping Method"}
+              </h2>
+              
+              {isLoadingShipping ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900"></div>
+                  <span className="ml-2 text-gray-600">{isRTL ? "جاري تحميل طرق الشحن..." : "Loading shipping methods..."}</span>
+                </div>
+              ) : shippingPackages.length === 0 || shippingPackages.every(pkg => !pkg.shipping_rates || pkg.shipping_rates.length === 0) ? (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                  <p className="text-sm text-amber-800">
+                    {isRTL 
+                      ? "يرجى إدخال عنوان الشحن لعرض طرق الشحن المتاحة" 
+                      : "Please enter your shipping address to see available shipping methods"}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {shippingPackages.map((pkg) => (
+                    <div key={pkg.package_id}>
+                      {pkg.shipping_rates && pkg.shipping_rates.map((rate) => {
+                        const ratePrice = parseFloat(rate.price) / Math.pow(10, rate.currency_minor_unit || 2);
+                        const isSelected = selectedShippingRate === rate.rate_id;
+                        
+                        return (
+                          <div
+                            key={rate.rate_id}
+                            className={`rounded-lg border p-4 transition-colors cursor-pointer ${
+                              isSelected
+                                ? "border-gray-900 bg-gray-50"
+                                : "border-black/10 hover:bg-gray-50"
+                            }`}
+                            onClick={() => handleSelectShippingRate(rate.rate_id, pkg.package_id)}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
+                                <Truck className="h-5 w-5 text-gray-600" />
+                              </div>
+                              <div className="flex-1">
+                                <Radio
+                                  name="shipping_method"
+                                  value={rate.rate_id}
+                                  checked={isSelected}
+                                  onChange={() => handleSelectShippingRate(rate.rate_id, pkg.package_id)}
+                                  label={rate.name}
+                                  description={rate.delivery_time || rate.description || ""}
+                                />
+                              </div>
+                              <div className="text-right">
+                                {ratePrice === 0 ? (
+                                  <span className="font-semibold text-green-600">
+                                    {isRTL ? "مجاني" : "Free"}
+                                  </span>
+                                ) : (
+                                  <FormattedPrice
+                                    price={ratePrice}
+                                    className="font-semibold"
+                                    iconSize="xs"
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Billing Address */}
             <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
                                 <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900 font-sans">
-                                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">3</span>
+                                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">4</span>
                                   {isRTL ? "عنوان الفاتورة" : "Billing Address"}
                                 </h2>
                 <button
@@ -813,7 +997,7 @@ export default function CheckoutPage() {
                         {/* Payment Method */}
                         <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
                                         <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 font-sans">
-                                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">4</span>
+                                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">5</span>
                                           {isRTL ? "طريقة الدفع" : "Payment Method"}
                                         </h2>
                           <div className="space-y-3">
@@ -948,7 +1132,7 @@ export default function CheckoutPage() {
             {/* Order Notes */}
             <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
                             <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 font-sans">
-                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">5</span>
+                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">6</span>
                               {isRTL ? "ملاحظات الطلب" : "Order Notes"}
                             </h2>
               <textarea
@@ -1130,10 +1314,19 @@ export default function CheckoutPage() {
                               )}
                               <div className="flex justify-between text-sm text-gray-600">
                                 <span>{isRTL ? "الشحن" : "Shipping"}</span>
-                                <FormattedPrice
-                                  price={parseFloat(cart?.totals?.shipping_total || "0") / divisor}
-                                  iconSize="xs"
-                                />
+                                {parseFloat(shippingTotal) > 0 ? (
+                                  <FormattedPrice
+                                    price={parseFloat(shippingTotal) / divisor}
+                                    iconSize="xs"
+                                  />
+                                ) : parseFloat(cart?.totals?.shipping_total || "0") > 0 ? (
+                                  <FormattedPrice
+                                    price={parseFloat(cart?.totals?.shipping_total || "0") / divisor}
+                                    iconSize="xs"
+                                  />
+                                ) : (
+                                  <span className="text-green-600 font-medium">{isRTL ? "مجاني" : "Free"}</span>
+                                )}
                               </div>
                               {/* VAT/Tax */}
                               {cart?.totals?.total_tax && parseFloat(cart.totals.total_tax) > 0 && (
