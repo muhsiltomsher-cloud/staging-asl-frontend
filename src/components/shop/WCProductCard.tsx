@@ -136,13 +136,12 @@ export function WCProductCard({
           {!isOutOfStock && product.is_purchasable && (
             <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 translate-y-full transition-all duration-500 ease-out group-hover:opacity-100 group-hover:translate-y-0">
               {isBundleProduct ? (
-                <Link
-                  href={`/${locale}/product/${productSlug}`}
+                <span
                   className="w-full flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium uppercase tracking-wide text-white bg-[#C4885B] rounded-full shadow-lg transition-all duration-300 hover:text-[#C4885B] hover:bg-white/70 hover:backdrop-blur-md hover:border hover:border-[#C4885B]/30"
                 >
                   <Eye className="h-4 w-4" />
                   {isRTL ? "تخصيص" : "Customize"}
-                </Link>
+                </span>
               ) : (
                 <button
                   onClick={handleAddToCart}
