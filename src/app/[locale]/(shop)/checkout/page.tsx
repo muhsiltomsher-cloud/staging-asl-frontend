@@ -405,6 +405,29 @@ export default function CheckoutPage() {
     setFormData((prev) => ({ ...prev, orderNotes: value }));
   };
 
+  const handleUseSavedAddress = () => {
+    if (customerData?.shipping) {
+      const savedShippingAddress: AddressFormData = {
+        firstName: customerData.shipping.first_name || "",
+        lastName: customerData.shipping.last_name || "",
+        address: customerData.shipping.address_1 || "",
+        address2: customerData.shipping.address_2 || "",
+        city: customerData.shipping.city || "",
+        state: customerData.shipping.state || "",
+        postalCode: customerData.shipping.postcode || "",
+        country: customerData.shipping.country || "AE",
+        phone: customerData.shipping.phone || customerData.billing?.phone || "",
+        email: customerData.billing?.email || customerData.email || "",
+      };
+      
+      setFormData(prev => ({
+        ...prev,
+        shipping: savedShippingAddress,
+        billing: prev.sameAsShipping ? savedShippingAddress : prev.billing,
+      }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -810,7 +833,10 @@ export default function CheckoutPage() {
 
               {/* Show saved address info for authenticated users */}
               {isAuthenticated && customerData?.shipping && customerData.shipping.address_1 && (
-                <div className="mb-4 rounded-lg border border-black/10 bg-gray-50 p-4">
+                <div 
+                  className="mb-4 rounded-lg border border-black/10 bg-gray-50 p-4 cursor-pointer hover:bg-gray-100 hover:border-gray-300 transition-colors"
+                  onClick={handleUseSavedAddress}
+                >
                   <div className="flex items-start gap-3">
                     <MapPin className="mt-0.5 h-5 w-5 text-gray-600" />
                     <div className="flex-1">
@@ -823,6 +849,16 @@ export default function CheckoutPage() {
                         {customerData.shipping.city && `, ${customerData.shipping.city}`}
                         {customerData.shipping.country && `, ${customerData.shipping.country}`}
                       </p>
+                      <button
+                        type="button"
+                        className="mt-2 text-sm font-medium text-gray-900 hover:text-gray-700 underline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUseSavedAddress();
+                        }}
+                      >
+                        {isRTL ? "استخدم هذا العنوان" : "Use this address"}
+                      </button>
                     </div>
                     <Check className="h-5 w-5 text-green-600" />
                   </div>
