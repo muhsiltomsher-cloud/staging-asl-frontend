@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
+import { Heart, Trash2, ShoppingBag, ArrowLeft, Eye } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
@@ -11,16 +11,38 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import { useCart } from "@/contexts/CartContext";
 import type { Locale } from "@/config/site";
 
+function getSlugFromProductUrl(productUrl: string | undefined): string | null {
+  if (!productUrl) return null;
+  const match = productUrl.match(/\/product\/([^/?]+)/);
+  return match ? match[1] : null;
+}
+
 interface WishlistPageProps {
   params: Promise<{ locale: string }>;
 }
 
 export default function WishlistPage({ params }: WishlistPageProps) {
   const [locale, setLocale] = useState<string>("en");
+  const [bundleProductSlugs, setBundleProductSlugs] = useState<string[]>([]);
 
   useEffect(() => {
     params.then((p) => setLocale(p.locale));
   }, [params]);
+
+  useEffect(() => {
+    async function fetchBundleSlugs() {
+      try {
+        const response = await fetch("/api/bundle-slugs");
+        if (response.ok) {
+          const data = await response.json();
+          setBundleProductSlugs(data.slugs || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch bundle slugs:", error);
+      }
+    }
+    fetchBundleSlugs();
+  }, []);
 
   const {
     wishlistItems,
@@ -39,6 +61,11 @@ export default function WishlistPage({ params }: WishlistPageProps) {
     { name: isRTL ? "قائمة الرغبات" : "Wishlist", href: `/${locale}/wishlist` },
   ];
 
+  const isBundleProduct = (productUrl: string | undefined): boolean => {
+    const slug = getSlugFromProductUrl(productUrl);
+    return slug ? bundleProductSlugs.includes(slug) : false;
+  };
+
   const t = {
     en: {
       wishlist: "My Wishlist",
@@ -56,6 +83,7 @@ export default function WishlistPage({ params }: WishlistPageProps) {
       outOfStock: "Out of Stock",
       backToShop: "Continue Shopping",
       items: "items",
+      customize: "Customize",
     },
     ar: {
       wishlist: "قائمة الرغبات",
@@ -73,6 +101,7 @@ export default function WishlistPage({ params }: WishlistPageProps) {
       outOfStock: "غير متوفر",
       backToShop: "متابعة التسوق",
       items: "منتجات",
+      customize: "تخصيص",
     },
   };
 
@@ -207,15 +236,28 @@ export default function WishlistPage({ params }: WishlistPageProps) {
                     </div>
 
                     <div className="flex items-center gap-2 md:col-span-3 md:justify-center">
-                      <Button
-                        onClick={() => handleAddToCart(item.product_id)}
-                        disabled={item.is_in_stock === false || isCartLoading || addingToCart === item.product_id}
-                        isLoading={addingToCart === item.product_id}
-                        size="sm"
-                        className="flex-1 md:flex-none"
-                      >
-                        {texts.addToCart}
-                      </Button>
+                      {isBundleProduct(item.product_url) ? (
+                        <Button
+                          asChild
+                          size="sm"
+                          className="flex-1 md:flex-none"
+                        >
+                          <Link href={item.product_url || `/${locale}/product/${item.product_id}`}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            {texts.customize}
+                          </Link>
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() => handleAddToCart(item.product_id)}
+                          disabled={item.is_in_stock === false || isCartLoading || addingToCart === item.product_id}
+                          isLoading={addingToCart === item.product_id}
+                          size="sm"
+                          className="flex-1 md:flex-none"
+                        >
+                          {texts.addToCart}
+                        </Button>
+                      )}
                       <button
                         onClick={() => handleRemoveItem(item.product_id)}
                         className="hidden rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-red-500 md:block"
