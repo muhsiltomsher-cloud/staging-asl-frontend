@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useState, useRef, useCallback } from "react";
 import { Menu, X, ShoppingBag, User, Heart } from "lucide-react";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
@@ -33,6 +34,10 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
         const megaMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
       const isRTL = locale === "ar";
+  const pathname = usePathname();
+  
+  // Hide top bar on cart and checkout pages
+  const hideTopBar = pathname?.includes("/cart") || pathname?.includes("/checkout");
 
   // Get topbar text based on locale
   const topbarText = topbarSettings?.enabled !== false
@@ -73,27 +78,30 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
     <>
             <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-[#dad6cd] backdrop-blur supports-[backdrop-filter]:bg-[#dad6cd]/95">
               {/* Top bar - Mobile: Arabic left, Currency right | Desktop: both left */}
-              <div className="border-b border-gray-100 bg-[#f7f6f2] h-8">
-          <div className="container mx-auto flex h-8 items-center justify-between px-4">
-            {/* Mobile: Arabic on left */}
-            <div className="flex items-center gap-4">
-              <LanguageSwitcher locale={locale} />
-              {/* Desktop only: Currency next to language */}
-              <div className="hidden xl:block">
-                <CurrencySwitcher locale={locale} />
-              </div>
-            </div>
-            {/* Mobile: Currency on right | Desktop: Promotional text */}
-            <div className="xl:hidden">
-              <CurrencySwitcher locale={locale} />
-            </div>
-            {topbarText && (
-              <div className="hidden text-sm text-gray-600 xl:block">
-                {topbarText}
-              </div>
-            )}
-          </div>
-        </div>
+              {/* Hidden on cart and checkout pages */}
+              {!hideTopBar && (
+                <div className="border-b border-gray-100 bg-[#f7f6f2] h-8">
+                  <div className="container mx-auto flex h-8 items-center justify-between px-4">
+                    {/* Mobile: Arabic on left */}
+                    <div className="flex items-center gap-4">
+                      <LanguageSwitcher locale={locale} />
+                      {/* Desktop only: Currency next to language */}
+                      <div className="hidden xl:block">
+                        <CurrencySwitcher locale={locale} />
+                      </div>
+                    </div>
+                    {/* Mobile: Currency on right | Desktop: Promotional text */}
+                    <div className="xl:hidden">
+                      <CurrencySwitcher locale={locale} />
+                    </div>
+                    {topbarText && (
+                      <div className="hidden text-sm text-gray-600 xl:block">
+                        {topbarText}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
         {/* Main header */}
         <div className="container mx-auto px-4">
