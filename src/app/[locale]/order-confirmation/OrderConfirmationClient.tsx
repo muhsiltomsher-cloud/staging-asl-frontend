@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/common/Button";
+import { OrderPrice, OrderCurrencyBadge } from "@/components/common/OrderPrice";
 import { useCart } from "@/contexts/CartContext";
 
 interface OrderData {
@@ -141,6 +142,14 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
               ? `رقم الطلب: #${order.id}`
               : `Order number: #${order.id}`}
           </p>
+          {order.currency && (
+            <div className="mt-3">
+              <OrderCurrencyBadge 
+                orderCurrency={order.currency} 
+                isRTL={isRTL}
+              />
+            </div>
+          )}
         </div>
 
         <div className="mb-8 rounded-lg border bg-gray-50 p-6">
@@ -154,7 +163,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                 <span className="text-gray-600">
                   {item.name} x {item.quantity}
                 </span>
-                <span className="font-medium">{item.total} {order.currency}</span>
+                <OrderPrice price={item.total} orderCurrency={order.currency} className="font-medium" iconSize="xs" />
               </div>
             ))}
           </div>
@@ -162,7 +171,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           <div className="space-y-2">
             <div className="flex justify-between text-lg font-semibold">
               <span>{isRTL ? "الإجمالي" : "Total"}</span>
-              <span>{order.total} {order.currency}</span>
+              <OrderPrice price={order.total} orderCurrency={order.currency} iconSize="sm" showConversion={true} isRTL={isRTL} />
             </div>
             <div className="flex justify-between text-sm text-gray-600">
               <span>{isRTL ? "طريقة الدفع" : "Payment Method"}</span>

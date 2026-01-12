@@ -7,6 +7,7 @@ import { ArrowLeft, Package, Truck, CheckCircle, Clock, MapPin, CreditCard, Load
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/common/Button";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
+import { OrderPrice, OrderCurrencyBadge } from "@/components/common/OrderPrice";
 import { Radio } from "@/components/common/Radio";
 import { getOrder, formatOrderStatus, getOrderStatusColor, formatDate, type Order } from "@/lib/api/customer";
 import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/components/cart/OrderBundleItemsList";
@@ -58,6 +59,8 @@ const translations = {
     paymentError: "Payment failed. Please try again.",
     qty: "Qty",
     freeGift: "Free Gift",
+    paidIn: "Paid in",
+    conversionNote: "Prices shown in order currency",
   },
   ar: {
     orderDetails: "تفاصيل الطلب",
@@ -101,6 +104,8 @@ const translations = {
     paymentError: "فشل الدفع. يرجى المحاولة مرة أخرى.",
     qty: "الكمية",
     freeGift: "هدية مجانية",
+    paidIn: "تم الدفع بـ",
+    conversionNote: "الأسعار معروضة بعملة الطلب",
   },
 };
 
@@ -537,6 +542,15 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
         <p className="mt-2 text-gray-500">
           {t.orderDate}: {formatDate(order.date_created, locale)}
         </p>
+        {order.currency && (
+          <div className="mt-3">
+            <OrderCurrencyBadge 
+              orderCurrency={order.currency} 
+              orderCurrencySymbol={order.currency_symbol}
+              isRTL={isRTL}
+            />
+          </div>
+        )}
       </div>
 
       <div className="space-y-6">
@@ -595,7 +609,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                       <p className="text-sm text-gray-500 inline-flex items-center gap-1">
                         {t.qty}: {item.quantity}
                         {!isFreeGift && !isBundle && (
-                          <> × <FormattedPrice price={item.price} iconSize="xs" /></>
+                          <> × <OrderPrice price={item.price} orderCurrency={order.currency} orderCurrencySymbol={order.currency_symbol} iconSize="xs" /></>
                         )}
                       </p>
                       {/* Bundle Items Breakdown */}
@@ -604,8 +618,10 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                       )}
                     </div>
                     <div className="flex items-start pt-1">
-                      <FormattedPrice
+                      <OrderPrice
                         price={isFreeGift ? 0 : item.total}
+                        orderCurrency={order.currency}
+                        orderCurrencySymbol={order.currency_symbol}
                         className={`font-medium ${isFreeGift ? "text-amber-600" : "text-gray-900"}`}
                         iconSize="xs"
                       />
@@ -618,29 +634,29 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           <div className="border-t bg-gray-50 p-4 space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">{t.subtotal}</span>
-              <FormattedPrice price={subtotal} className="text-gray-900" iconSize="xs" />
+              <OrderPrice price={subtotal} orderCurrency={order.currency} orderCurrencySymbol={order.currency_symbol} className="text-gray-900" iconSize="xs" />
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">{t.shipping}</span>
-              <FormattedPrice price={order.shipping_total} className="text-gray-900" iconSize="xs" />
+              <OrderPrice price={order.shipping_total} orderCurrency={order.currency} orderCurrencySymbol={order.currency_symbol} className="text-gray-900" iconSize="xs" />
             </div>
             {parseFloat(order.discount_total) > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">{t.discount}</span>
                 <span className="text-green-600 inline-flex items-center gap-1">
-                  -<FormattedPrice price={order.discount_total} iconSize="xs" />
+                  -<OrderPrice price={order.discount_total} orderCurrency={order.currency} orderCurrencySymbol={order.currency_symbol} iconSize="xs" />
                 </span>
               </div>
             )}
             {parseFloat(order.total_tax) > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">{t.vat}</span>
-                <FormattedPrice price={order.total_tax} className="text-gray-900" iconSize="xs" />
+                <OrderPrice price={order.total_tax} orderCurrency={order.currency} orderCurrencySymbol={order.currency_symbol} className="text-gray-900" iconSize="xs" />
               </div>
             )}
             <div className="flex justify-between border-t pt-2 text-base font-semibold">
               <span className="text-gray-900">{t.total}</span>
-              <FormattedPrice price={order.total} className="text-gray-900" iconSize="sm" />
+              <OrderPrice price={order.total} orderCurrency={order.currency} orderCurrencySymbol={order.currency_symbol} className="text-gray-900" iconSize="sm" showConversion={true} isRTL={isRTL} />
             </div>
           </div>
         </div>

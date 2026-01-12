@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Package, Eye, CreditCard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/common/Button";
-import { FormattedPrice } from "@/components/common/FormattedPrice";
+import { OrderPrice } from "@/components/common/OrderPrice";
 import { getCustomerOrders, formatOrderStatus, getOrderStatusColor, formatDate, type Order } from "@/lib/api/customer";
 
 interface OrdersPageProps {
@@ -179,8 +179,10 @@ export default function OrdersPage({ params }: OrdersPageProps) {
                     <span>
                       {order.line_items.length} {t.items}
                     </span>
-                    <FormattedPrice
+                    <OrderPrice
                       price={order.total}
+                      orderCurrency={order.currency}
+                      orderCurrencySymbol={order.currency_symbol}
                       className="font-medium text-gray-900"
                       iconSize="xs"
                     />
