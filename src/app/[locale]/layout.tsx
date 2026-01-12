@@ -18,6 +18,7 @@ import { generateOrganizationJsonLd } from "@/lib/utils/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { LocationCurrencyBanner } from "@/components/common/LocationCurrencyBanner";
 import { CookieConsentBanner } from "@/components/common/CookieConsentBanner";
+import { WhatsAppFloatingButton } from "@/components/common/WhatsAppFloatingButton";
 import { getSiteSettings, getHeaderSettings, getMobileBarSettings, getPrimaryMenu, getTopbarSettings } from "@/lib/api/wordpress";
 
 interface LocaleLayoutProps {
@@ -150,8 +151,9 @@ export default async function LocaleLayout({
                               more: dictionary.common.more,
                             }}
                           />
-                                                <LocationCurrencyBanner locale={validLocale} />
-                                                <CookieConsentBanner locale={validLocale} />
+                                                                                                <LocationCurrencyBanner locale={validLocale} />
+                                                                                                <CookieConsentBanner locale={validLocale} />
+                                                                                                <WhatsAppFloatingButton phoneNumber="971506071405" />
                                                         </WishlistProvider>
                                             </FreeGiftProvider>
                     </CartProvider>
