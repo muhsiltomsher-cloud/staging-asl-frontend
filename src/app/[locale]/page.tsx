@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Button } from "@/components/common/Button";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
-import { getProducts, getCategories, getFreeGiftProductIds, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
+import { getProducts, getCategories, getFreeGiftProductInfo, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import { getHomePageSettings } from "@/lib/api/wordpress";
 import {
   HeroSlider,
@@ -44,12 +44,12 @@ export default async function HomePage({ params }: HomePageProps) {
 
   // Fetch all data in parallel
   // Fetch both localized categories (for names) and English categories (for URL slugs)
-  const [{ products: allProducts }, categories, englishCategories, homeSettings, giftProductIds, bundleProductSlugs] = await Promise.all([
+  const [{ products: allProducts }, categories, englishCategories, homeSettings, giftProductInfo, bundleProductSlugs] = await Promise.all([
     getProducts({ per_page: 20, locale: locale as Locale }),
     getCategories(locale as Locale),
     getCategories("en"), // Always fetch English categories for URL slugs
     getHomePageSettings(locale as Locale),
-    getFreeGiftProductIds(),
+    getFreeGiftProductInfo(),
     getBundleEnabledProductSlugs(),
   ]);
 
@@ -62,17 +62,31 @@ export default async function HomePage({ params }: HomePageProps) {
   const localizedRootCategories = categories.filter((cat) => cat.parent === 0 && cat.slug !== "uncategorized");
   const englishRootCategories = englishCategories.filter((cat) => cat.parent === 0 && cat.slug !== "uncategorized");
   
-  // Map localized category IDs to English slugs by matching index position
+  // Map localized category IDs to English slugs and images by matching index position
   // The API returns categories in a consistent order across locales
+  // Also create a fallback image map for categories without images (common in Arabic locale)
+  const englishCategoryImages: Record<number, { src: string; alt: string } | undefined> = {};
+  
   localizedRootCategories.forEach((localizedCat, index) => {
     if (index < englishRootCategories.length) {
       englishCategorySlugs[localizedCat.id] = englishRootCategories[index].slug;
+      // If the localized category doesn't have an image but the English one does, use English image as fallback
+      if (!localizedCat.image?.src && englishRootCategories[index].image?.src) {
+        englishCategoryImages[localizedCat.id] = {
+          src: englishRootCategories[index].image!.src,
+          alt: englishRootCategories[index].image!.alt || englishRootCategories[index].name,
+        };
+      }
     }
   });
 
   // Filter out gift products from the home page
+  // Use both ID and slug for filtering since WPML assigns different IDs per locale
+  // but slugs remain consistent across translations
   const products = allProducts.filter(
-    (product) => !giftProductIds.includes(product.id)
+    (product) => 
+      !giftProductInfo.ids.includes(product.id) && 
+      !giftProductInfo.slugs.includes(product.slug)
   );
 
   // Translations for sections - using dictionary for dynamic content
@@ -178,6 +192,7 @@ export default async function HomePage({ params }: HomePageProps) {
         productsText={sectionTexts.products}
         englishCategorySlugs={englishCategorySlugs}
         extraItems={categoryExtraItems}
+        fallbackImages={englishCategoryImages}
       />
 
       {/* Featured Products Slider */}

@@ -27,6 +27,7 @@ interface CategorySectionProps {
   isLoading?: boolean;
   englishCategorySlugs?: Record<number, string>;
   extraItems?: ExtraCategoryItem[];
+  fallbackImages?: Record<number, { src: string; alt: string } | undefined>;
 }
 
 function CategoryCardSkeleton() {
@@ -69,6 +70,7 @@ export function CategorySection({
   isLoading = false,
   englishCategorySlugs = {},
   extraItems = [],
+  fallbackImages = {},
 }: CategorySectionProps) {
   if (isLoading) {
     return <CategorySectionSkeleton count={settings.categories_count || 6} />;
@@ -126,38 +128,42 @@ export function CategorySection({
         </div>
 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6 md:gap-6">
-          {displayCategories.map((category) => {
-            const categorySlugForUrl = englishCategorySlugs[category.id] || category.slug;
-            return (
-              <Link
-                key={category.slug}
-                href={`/${locale}/category/${categorySlugForUrl}`}
-                className="group flex flex-col"
-              >
-                <div className="relative aspect-[3/2] overflow-hidden rounded-xl bg-white transition-shadow duration-300 hover:shadow-lg">
-                  {category.image?.src ? (
-                    <Image
-                      src={category.image.src}
-                      alt={category.image.alt || decodeHtmlEntities(category.name)}
-                      fill
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
-                      className="object-contain transition-transform duration-300 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center bg-stone-200">
-                      <span className="text-stone-400">No image</span>
-                    </div>
-                  )}
-                </div>
-                <div className="mt-3 text-center">
-                  <h3 className="text-base font-semibold text-amber-900 transition-colors group-hover:text-amber-700 md:text-lg">
-                    {decodeHtmlEntities(category.name)}
-                  </h3>
-                </div>
-              </Link>
-            );
-          })}
+            {displayCategories.map((category) => {
+              const categorySlugForUrl = englishCategorySlugs[category.id] || category.slug;
+              // Use category image if available, otherwise use fallback image from English locale
+              const categoryImage = category.image?.src 
+                ? { src: category.image.src, alt: category.image.alt || decodeHtmlEntities(category.name) }
+                : fallbackImages[category.id];
+              return (
+                <Link
+                  key={category.slug}
+                  href={`/${locale}/category/${categorySlugForUrl}`}
+                  className="group flex flex-col"
+                >
+                  <div className="relative aspect-[3/2] overflow-hidden rounded-xl bg-white transition-shadow duration-300 hover:shadow-lg">
+                    {categoryImage?.src ? (
+                      <Image
+                        src={categoryImage.src}
+                        alt={categoryImage.alt || decodeHtmlEntities(category.name)}
+                        fill
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                        className="object-contain transition-transform duration-300 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center bg-stone-200">
+                        <span className="text-stone-400">No image</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-3 text-center">
+                    <h3 className="text-base font-semibold text-amber-900 transition-colors group-hover:text-amber-700 md:text-lg">
+                      {decodeHtmlEntities(category.name)}
+                    </h3>
+                  </div>
+                </Link>
+              );
+            })}
           {extraItems.map((item) => (
             <Link
               key={item.id}

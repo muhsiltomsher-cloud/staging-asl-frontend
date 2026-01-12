@@ -536,7 +536,19 @@ export async function getBundleConfig(
 // Fetch free gift product IDs from the backend
 // Used to filter out gift products from shop listings
 // Only returns product IDs where hide_from_shop is true
+export interface FreeGiftInfo {
+  ids: number[];
+  slugs: string[];
+}
+
 export async function getFreeGiftProductIds(currency?: string): Promise<number[]> {
+  const info = await getFreeGiftProductInfo(currency);
+  return info.ids;
+}
+
+// Get both IDs and slugs for free gift products
+// Slugs are needed for filtering across WPML locales since product IDs differ per locale
+export async function getFreeGiftProductInfo(currency?: string): Promise<FreeGiftInfo> {
   try {
     let url = `${siteConfig.apiUrl}/wp-json/asl-free-gifts/v1/rules`;
     if (currency) {
@@ -551,21 +563,28 @@ export async function getFreeGiftProductIds(currency?: string): Promise<number[]
     });
 
     if (!response.ok) {
-      return [];
+      return { ids: [], slugs: [] };
     }
 
     const data = await response.json();
     
     if (data.rules && Array.isArray(data.rules)) {
-      // Only return product IDs where hide_from_shop is true
-      return data.rules
-        .filter((rule: { hide_from_shop?: boolean }) => rule.hide_from_shop === true)
-        .map((rule: { product_id: number }) => rule.product_id);
+      // Only return products where hide_from_shop is true
+      const hiddenRules = data.rules.filter(
+        (rule: { hide_from_shop?: boolean }) => rule.hide_from_shop === true
+      );
+      
+      return {
+        ids: hiddenRules.map((rule: { product_id: number }) => rule.product_id),
+        slugs: hiddenRules
+          .map((rule: { product_slug?: string }) => rule.product_slug)
+          .filter((slug: string | undefined): slug is string => !!slug),
+      };
     }
     
-    return [];
+    return { ids: [], slugs: [] };
   } catch {
-    return [];
+    return { ids: [], slugs: [] };
   }
 }
 
