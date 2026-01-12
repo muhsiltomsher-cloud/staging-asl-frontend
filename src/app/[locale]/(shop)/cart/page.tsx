@@ -132,6 +132,7 @@ export default function CartPage() {
       subtotal: "Subtotal",
       shipping: "Shipping",
       discount: "Discount",
+      vat: "VAT",
       orderTotal: "Total",
       checkout: "Proceed to Checkout",
       calculatedAtCheckout: "Calculated at checkout",
@@ -159,6 +160,7 @@ export default function CartPage() {
       subtotal: "المجموع الفرعي",
       shipping: "الشحن",
       discount: "الخصم",
+      vat: "ضريبة القيمة المضافة",
       orderTotal: "الإجمالي",
       checkout: "المتابعة للدفع",
       calculatedAtCheckout: "يحسب عند الدفع",
@@ -615,21 +617,30 @@ export default function CartPage() {
                       </span>
                     </div>
                   )}
-                <div className="flex justify-between text-gray-600">
-                  <span>{texts.shipping}</span>
-                  <span>
-                    {cart?.totals?.shipping_total &&
-                    parseFloat(cart.totals.shipping_total) > 0
-                      ? <FormattedPrice
-                          price={parseFloat(cart.totals.shipping_total) / divisor}
-                          iconSize="xs"
-                        />
-                      : texts.calculatedAtCheckout}
-                  </span>
-                </div>
-              </div>
+                              <div className="flex justify-between text-gray-600">
+                                <span>{texts.shipping}</span>
+                                <span>
+                                  {cart?.totals?.shipping_total &&
+                                  parseFloat(cart.totals.shipping_total) > 0
+                                    ? <FormattedPrice
+                                        price={parseFloat(cart.totals.shipping_total) / divisor}
+                                        iconSize="xs"
+                                      />
+                                    : texts.calculatedAtCheckout}
+                                </span>
+                              </div>
+                              {cart?.totals?.total_tax && parseFloat(cart.totals.total_tax) > 0 && (
+                                <div className="flex justify-between text-gray-600">
+                                  <span>{texts.vat}</span>
+                                  <FormattedPrice
+                                    price={parseFloat(cart.totals.total_tax) / divisor}
+                                    iconSize="xs"
+                                  />
+                                </div>
+                              )}
+                            </div>
 
-              <div className="flex justify-between py-4 text-lg font-semibold text-gray-900">
+                            <div className="flex justify-between py-4 text-lg font-semibold text-gray-900">
                 <span>{texts.orderTotal}</span>
                 <FormattedPrice
                   price={parseFloat(cartTotal) / divisor}
