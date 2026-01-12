@@ -3,11 +3,12 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Package, Truck, CheckCircle, Clock, MapPin } from "lucide-react";
+import { ArrowLeft, Package, Truck, CheckCircle, Clock, MapPin, Gift } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/common/Button";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { getOrder, formatOrderStatus, getOrderStatusColor, formatDate, type Order } from "@/lib/api/customer";
+import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/components/cart/OrderBundleItemsList";
 
 interface OrderDetailPageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -26,6 +27,7 @@ const translations = {
     shipping: "Shipping",
     discount: "Discount",
     tax: "Tax",
+    vat: "VAT",
     total: "Total",
     shippingAddress: "Shipping Address",
     billingAddress: "Billing Address",
@@ -40,6 +42,8 @@ const translations = {
     processing: "Processing",
     shipped: "Shipped",
     delivered: "Delivered",
+    qty: "Qty",
+    freeGift: "Free Gift",
   },
   ar: {
     orderDetails: "تفاصيل الطلب",
@@ -53,6 +57,7 @@ const translations = {
     shipping: "الشحن",
     discount: "الخصم",
     tax: "الضريبة",
+    vat: "ضريبة القيمة المضافة",
     total: "المجموع",
     shippingAddress: "عنوان الشحن",
     billingAddress: "عنوان الفواتير",
@@ -67,6 +72,8 @@ const translations = {
     processing: "قيد المعالجة",
     shipped: "تم الشحن",
     delivered: "تم التسليم",
+    qty: "الكمية",
+    freeGift: "هدية مجانية",
   },
 };
 
@@ -298,39 +305,67 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             </h3>
           </div>
           <ul className="divide-y">
-            {order.line_items.map((item) => (
-              <li key={item.id} className="p-4">
-                <div className="flex gap-4">
-                  <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                    {item.image?.src ? (
-                      <Image
-                        src={item.image.src}
-                        alt={item.name}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center">
-                        <Package className="h-8 w-8 text-gray-400" />
+            {order.line_items.map((item) => {
+              const isFreeGift = isOrderFreeGift(item);
+              const isBundle = isOrderBundleProduct(item);
+              
+              return (
+                <li key={item.id} className="p-4">
+                  <div className="flex gap-4">
+                    <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                      {item.image?.src ? (
+                        <Image
+                          src={item.image.src}
+                          alt={item.name}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                          {isFreeGift ? (
+                            <Gift className="h-8 w-8 text-amber-500" />
+                          ) : (
+                            <Package className="h-8 w-8 text-gray-400" />
+                          )}
+                        </div>
+                      )}
+                      {/* Quantity Badge */}
+                      <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900 text-xs font-medium text-white">
+                        {item.quantity}
+                      </span>
+                    </div>
+                    <div className="flex flex-1 flex-col justify-center min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium text-gray-900 truncate">{item.name}</h4>
+                        {isFreeGift && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                            <Gift className="h-3 w-3" />
+                            {t.freeGift}
+                          </span>
+                        )}
                       </div>
-                    )}
+                      <p className="text-sm text-gray-500 inline-flex items-center gap-1">
+                        {t.qty}: {item.quantity}
+                        {!isFreeGift && !isBundle && (
+                          <> × <FormattedPrice price={item.price} iconSize="xs" /></>
+                        )}
+                      </p>
+                      {/* Bundle Items Breakdown */}
+                      {isBundle && (
+                        <OrderBundleItemsList item={item} locale={locale} />
+                      )}
+                    </div>
+                    <div className="flex items-start pt-1">
+                      <FormattedPrice
+                        price={isFreeGift ? 0 : item.total}
+                        className={`font-medium ${isFreeGift ? "text-amber-600" : "text-gray-900"}`}
+                        iconSize="xs"
+                      />
+                    </div>
                   </div>
-                  <div className="flex flex-1 flex-col justify-center">
-                    <h4 className="font-medium text-gray-900">{item.name}</h4>
-                    <p className="text-sm text-gray-500 inline-flex items-center gap-1">
-                      Qty: {item.quantity} × <FormattedPrice price={item.price} iconSize="xs" />
-                    </p>
-                  </div>
-                  <div className="flex items-center">
-                    <FormattedPrice
-                      price={item.total}
-                      className="font-medium text-gray-900"
-                      iconSize="xs"
-                    />
-                  </div>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
           <div className="border-t bg-gray-50 p-4 space-y-2">
             <div className="flex justify-between text-sm">
@@ -351,7 +386,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             )}
             {parseFloat(order.total_tax) > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">{t.tax}</span>
+                <span className="text-gray-600">{t.vat}</span>
                 <FormattedPrice price={order.total_tax} className="text-gray-900" iconSize="xs" />
               </div>
             )}

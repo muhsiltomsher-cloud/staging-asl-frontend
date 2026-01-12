@@ -27,6 +27,14 @@ export interface Customer {
   avatar_url: string;
 }
 
+export interface OrderLineItemMetaData {
+  id: number;
+  key: string;
+  value: string | number | boolean | Record<string, unknown> | Array<unknown>;
+  display_key?: string;
+  display_value?: string;
+}
+
 export interface OrderLineItem {
   id: number;
   name: string;
@@ -39,7 +47,7 @@ export interface OrderLineItem {
   total: string;
   total_tax: string;
   taxes: Array<{ id: number; total: string; subtotal: string }>;
-  meta_data: Array<{ id: number; key: string; value: string }>;
+  meta_data: OrderLineItemMetaData[];
   sku: string;
   price: number;
   image: {
