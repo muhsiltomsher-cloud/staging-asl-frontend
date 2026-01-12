@@ -347,6 +347,11 @@ export default function CheckoutPage() {
       
             const billingInfo = formData.sameAsShipping ? formData.shipping : formData.billing;
             const baseUrl = window.location.origin;
+            
+            // Calculate the actual payment amount from the cart total (in minor units)
+            // This ensures the payment gateway receives the same amount shown to the user
+            const cartTotalInMinorUnits = parseFloat(cartTotal) || 0;
+            const paymentAmount = (cartTotalInMinorUnits / divisor) - couponDiscount;
       
             if (isMyFatoorahPayment) {
               // Initiate MyFatoorah payment directly
@@ -358,7 +363,7 @@ export default function CheckoutPage() {
                 body: JSON.stringify({
                   order_id: data.order_id,
                   order_key: data.order_key,
-                  invoice_value: data.order?.total ? parseFloat(data.order.total) : 0,
+                  invoice_value: paymentAmount,
                   customer_name: `${billingInfo.firstName} ${billingInfo.lastName}`,
                   customer_email: billingInfo.email || formData.shipping.email,
                   customer_phone: billingInfo.phone || formData.shipping.phone,
@@ -386,7 +391,7 @@ export default function CheckoutPage() {
                 body: JSON.stringify({
                   order_id: data.order_id,
                   order_key: data.order_key,
-                  amount: data.order?.total ? parseFloat(data.order.total) : 0,
+                  amount: paymentAmount,
                   currency: data.order?.currency || "AED",
                   description: `Order #${data.order_id}`,
                   buyer: {
@@ -429,7 +434,7 @@ export default function CheckoutPage() {
                 body: JSON.stringify({
                   order_id: data.order_id,
                   order_key: data.order_key,
-                  total_amount: data.order?.total ? parseFloat(data.order.total) : 0,
+                  total_amount: paymentAmount,
                   currency: data.order?.currency || "AED",
                   country_code: formData.shipping.country || "AE",
                   locale: locale === "ar" ? "ar_SA" : "en_US",
