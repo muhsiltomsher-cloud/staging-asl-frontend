@@ -447,6 +447,7 @@ Ensure WordPress media files are served through a CDN (Cloudflare, AWS CloudFron
 | 10 | API Compression | LOW | Performance | Verify |
 | 11 | Third-Party Scripts | LOW | Performance | N/A |
 | 12 | Backend Optimizations | MEDIUM | Backend | Verify |
+| 13 | Cloudflare Cache Rules | HIGH | CDN/Caching | Documented |
 
 ---
 
@@ -463,3 +464,158 @@ Ensure WordPress media files are served through a CDN (Cloudflare, AWS CloudFron
 - Test thoroughly after enabling caches to ensure data freshness meets requirements
 - Use Lighthouse and Web Vitals to measure improvements
 - Consider implementing cache invalidation webhooks from WordPress for real-time updates
+
+---
+
+# PART 3: CLOUDFLARE CACHING CONFIGURATION
+
+This section documents the recommended Cloudflare Cache Rules for the SSR Next.js app with cart/checkout and multi-currency support.
+
+## Overview
+
+For SSR Next.js with Cloudflare:
+- **Do NOT cache HTML globally** - This breaks cart, checkout, and auth flows
+- **Aggressively cache static assets** - `/_next/static/*` can be cached for months
+- **Let Next.js ISR handle SSR page caching** - Uses built-in `revalidate` values
+- **Bypass cache for dynamic routes** - Cart, checkout, account, API routes
+
+## Cloudflare Cache Rules
+
+Create these rules in Cloudflare Dashboard → Rules → Cache Rules. **Order matters** - Rule 1 should have highest priority.
+
+### Rule 1: BYPASS - Dynamic Cart/Checkout/Auth (Highest Priority)
+
+**Expression:**
+```
+(http.host eq "app.aromaticscentslab.com" and (
+  http.request.uri.path contains "/cart" or
+  http.request.uri.path contains "/checkout" or
+  http.request.uri.path contains "/account" or
+  http.request.uri.path contains "/login" or
+  http.request.uri.path contains "/register" or
+  http.request.uri.path contains "/wishlist" or
+  http.request.uri.path contains "/order-confirmation" or
+  http.request.uri.path contains "/forgot-password" or
+  http.request.uri.path contains "/reset-password" or
+  starts_with(http.request.uri.path, "/api/")
+))
+```
+
+**Action:** Cache → Bypass cache
+
+**Why:** These routes use React contexts (CartContext, AuthContext) and must always return fresh data. Caching would break user sessions, cart state, and payment flows.
+
+---
+
+### Rule 2: CACHE - Static Assets (1 month)
+
+**Expression:**
+```
+(http.host eq "app.aromaticscentslab.com" and (
+  starts_with(http.request.uri.path, "/_next/static/") or
+  starts_with(http.request.uri.path, "/static/") or
+  starts_with(http.request.uri.path, "/images/") or
+  ends_with(http.request.uri.path, ".css") or
+  ends_with(http.request.uri.path, ".js") or
+  ends_with(http.request.uri.path, ".jpg") or
+  ends_with(http.request.uri.path, ".jpeg") or
+  ends_with(http.request.uri.path, ".png") or
+  ends_with(http.request.uri.path, ".webp") or
+  ends_with(http.request.uri.path, ".svg") or
+  ends_with(http.request.uri.path, ".ico") or
+  ends_with(http.request.uri.path, ".woff") or
+  ends_with(http.request.uri.path, ".woff2")
+))
+```
+
+**Action:** Cache → Cache everything  
+**Edge TTL:** 1 month (2592000 seconds)
+
+**Why:** Next.js static assets are content-hashed (e.g., `app-abc123.js`). When you deploy new code, the hash changes, so users automatically get new files. Safe to cache aggressively.
+
+---
+
+### Rule 3: DEFAULT/HTML - Let ISR Control Freshness
+
+**No additional rule needed.** Keep Cloudflare's default cache level (Standard).
+
+Next.js ISR (`revalidate`) controls page regeneration:
+- Home page: `revalidate = 60` (1 minute)
+- Product pages: `revalidate = 300` (5 minutes)
+- Categories: `revalidate = 600` (10 minutes)
+
+Cloudflare accelerates static assets and leaves HTML behavior to Next.js.
+
+---
+
+## Dynamic Updates & Cache Invalidation
+
+### How Updates Work
+
+| Content Type | Cache Behavior | Update Delay |
+|--------------|----------------|--------------|
+| Cart, Checkout, Account | Never cached (bypass) | Instant |
+| Product listings | ISR (5 min revalidate) | Up to 5 minutes |
+| Static pages (About, FAQ) | ISR (varies) | Up to 15 minutes |
+| Static assets (JS, CSS) | Cached 1 month | Instant (hash changes) |
+
+### On-Demand Revalidation
+
+The app has `/api/revalidate` endpoint for instant cache purge. Can be triggered from WooCommerce webhooks when products are updated.
+
+### Cloudflare Cache Purge
+
+For immediate updates, use Cloudflare API to purge specific URLs:
+```bash
+curl -X POST "https://api.cloudflare.com/client/v4/zones/{zone_id}/purge_cache" \
+  -H "Authorization: Bearer {api_token}" \
+  -H "Content-Type: application/json" \
+  --data '{"files":["https://app.aromaticscentslab.com/en/product/example"]}'
+```
+
+---
+
+## Next.js Cache Headers (Already Configured)
+
+### Static Assets
+Next.js automatically emits: `Cache-Control: public, max-age=31536000, immutable`
+
+### ISR HTML Pages
+Controlled by `revalidate` values. Do NOT override with long-lived `max-age`.
+
+### Dynamic Routes (Cart, Checkout, API)
+Should send `Cache-Control: no-store, no-cache, must-revalidate` to match Cloudflare bypass rule.
+
+---
+
+## Verification Checklist
+
+After configuring Cloudflare rules:
+
+- [ ] Visit cart page → Should NOT be cached (check `CF-Cache-Status: BYPASS`)
+- [ ] Visit checkout page → Should NOT be cached
+- [ ] Visit product page → Should use ISR (check `CF-Cache-Status: DYNAMIC` or `HIT`)
+- [ ] Check `/_next/static/*` files → Should be cached (`CF-Cache-Status: HIT`)
+- [ ] Test login/logout → Session should work correctly
+- [ ] Test add to cart → Cart should update immediately
+- [ ] Test checkout flow → Payment should process correctly
+
+---
+
+## Troubleshooting
+
+### Page not updating after content change
+1. Check ISR `revalidate` value for that page
+2. Wait for revalidation window to pass
+3. Use `/api/revalidate` for instant purge
+4. Check Cloudflare cache status headers
+
+### Cart/checkout showing stale data
+1. Verify Rule 1 (bypass) is active and has highest priority
+2. Check that the URL pattern matches the rule expression
+3. Verify `CF-Cache-Status: BYPASS` in response headers
+
+### Static assets not updating after deploy
+1. Next.js uses content hashing - new deploys create new file names
+2. Old cached files won't be served (different URL)
+3. If issues persist, purge Cloudflare cache for `/_next/static/*`

@@ -127,6 +127,31 @@ The project can be deployed to any platform that supports Next.js:
 - AWS Amplify
 - Self-hosted with Node.js
 
+## Caching Strategy
+
+This app uses a multi-layer caching strategy optimized for SSR with Cloudflare CDN.
+
+### Next.js ISR (Incremental Static Regeneration)
+
+Pages use `revalidate` for time-based cache invalidation:
+- Home page: 60 seconds
+- Product pages: 300 seconds (5 minutes)
+- Categories: 600 seconds (10 minutes)
+
+### Cloudflare Cache Rules
+
+When using Cloudflare as CDN, configure these cache rules:
+
+| Route Pattern | Cache Behavior | Reason |
+|---------------|----------------|--------|
+| `/cart`, `/checkout`, `/account/*`, `/api/*` | **Bypass** | User-specific, session-dependent |
+| `/_next/static/*`, images, fonts | **Cache 1 month** | Content-hashed, safe to cache |
+| All other HTML | **Default (ISR)** | Let Next.js control freshness |
+
+**Important:** Never enable "Cache Everything" for HTML pages - this breaks cart, checkout, and authentication flows.
+
+See `TODO-LIVE.md` for detailed Cloudflare rule expressions and verification checklist.
+
 ## License
 
 This project is proprietary software for Aromatic Scents Lab.
