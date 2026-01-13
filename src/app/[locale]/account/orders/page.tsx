@@ -193,14 +193,10 @@ export default function OrdersPage({ params }: OrdersPageProps) {
                     </Link>
                   </Button>
                   <Button asChild variant="outline" size="sm">
-                    <a 
-                      href={`${process.env.NEXT_PUBLIC_WC_API_URL || "https://staging.aromaticscentslab.com"}/my-account/view-order/${order.id}/?key=${order.order_key}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
+                    <Link href={`/${locale}/account/orders/${order.id}/invoice`}>
                       <FileText className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
                       {t.showInvoice}
-                    </a>
+                    </Link>
                   </Button>
                 </div>
               </div>
