@@ -16,7 +16,6 @@ import { getCustomer, type Customer } from "@/lib/api/customer";
 import { featureFlags, type Locale } from "@/config/site";
 import { MapPin, Check, ChevronDown, ChevronUp, User, UserCheck, Tag, X, Truck } from "lucide-react";
 import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice } from "@/components/cart/BundleItemsList";
-import { MyFatoorahEmbeddedPayment } from "@/components/checkout/MyFatoorahEmbeddedPayment";
 
 interface ShippingRate {
   rate_id: string;
@@ -134,19 +133,6 @@ export default function CheckoutClient() {
         const [isLoadingShipping, setIsLoadingShipping] = useState(false);
         const [selectedShippingRate, setSelectedShippingRate] = useState<string | null>(null);
         const [shippingTotal, setShippingTotal] = useState<string>("0");
-        
-        const [embeddedPaymentSession, setEmbeddedPaymentSession] = useState<{
-          sessionId: string;
-          scriptUrl: string;
-          encryptionKey: string;
-          orderId: number;
-          orderKey: string;
-        } | null>(null);
-        const [pendingOrderData, setPendingOrderData] = useState<{
-          orderId: number;
-          orderKey: string;
-          currency: string;
-        } | null>(null);
   
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
@@ -650,8 +636,8 @@ export default function CheckoutClient() {
             const paymentAmount = (cartTotalInMinorUnits / divisor) - couponDiscount;
       
             if (isMyFatoorahPayment) {
-              // Create MyFatoorah embedded payment session
-              const mfResponse = await fetch("/api/myfatoorah/create-session", {
+              // Initiate MyFatoorah payment (redirect flow)
+              const mfResponse = await fetch("/api/myfatoorah/initiate-payment", {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
@@ -659,11 +645,11 @@ export default function CheckoutClient() {
                 body: JSON.stringify({
                   order_id: data.order_id,
                   order_key: data.order_key,
-                  amount: paymentAmount,
+                  invoice_value: paymentAmount,
                   customer_name: `${billingInfo.firstName} ${billingInfo.lastName}`,
                   customer_email: billingInfo.email || formData.shipping.email,
                   customer_phone: billingInfo.phone || formData.shipping.phone,
-                  currency: data.order?.currency || "KWD",
+                  currency_iso: data.order?.currency || "KWD",
                   language: locale === "ar" ? "ar" : "en",
                   callback_url: `${baseUrl}/${locale}/order-confirmation`,
                   error_url: `${baseUrl}/${locale}/checkout`,
@@ -672,24 +658,11 @@ export default function CheckoutClient() {
 
               const mfData = await mfResponse.json();
 
-              if (mfData.success && mfData.session_id) {
-                // Store order data and show embedded payment form
-                setPendingOrderData({
-                  orderId: data.order_id,
-                  orderKey: data.order_key,
-                  currency: data.order?.currency || "KWD",
-                });
-                setEmbeddedPaymentSession({
-                  sessionId: mfData.session_id,
-                  scriptUrl: mfData.script_url,
-                  encryptionKey: mfData.encryption_key,
-                  orderId: data.order_id,
-                  orderKey: data.order_key,
-                });
-                setIsSubmitting(false);
-                return;
+              if (mfData.success && mfData.payment_url) {
+                // Redirect to MyFatoorah payment page
+                window.location.href = mfData.payment_url;
               } else {
-                throw new Error(mfData.error?.message || "Failed to create MyFatoorah payment session");
+                throw new Error(mfData.error?.message || "Failed to initiate MyFatoorah payment");
               }
             } else if (isTabbyPayment) {
               // Initiate Tabby payment directly
@@ -800,32 +773,6 @@ export default function CheckoutClient() {
       setError(err instanceof Error ? err.message : "An error occurred while placing your order");
       setIsSubmitting(false);
     }
-  };
-
-  const handleEmbeddedPaymentComplete = async (response: { isSuccess: boolean; sessionId: string; paymentCompleted: boolean; paymentData?: string; redirectionUrl?: string }) => {
-    if (response.isSuccess && response.paymentCompleted && pendingOrderData) {
-      if (clearCart) {
-        await clearCart();
-      }
-      clearSelectedCoupons();
-      
-      if (response.redirectionUrl) {
-        window.location.href = response.redirectionUrl;
-      } else {
-        router.push(`/${locale}/order-confirmation?order_id=${pendingOrderData.orderId}&order_key=${pendingOrderData.orderKey}`);
-      }
-    }
-  };
-
-  const handleEmbeddedPaymentError = (errorMessage: string) => {
-    setPaymentError(errorMessage);
-    setEmbeddedPaymentSession(null);
-    setPendingOrderData(null);
-  };
-
-  const handleCancelEmbeddedPayment = () => {
-    setEmbeddedPaymentSession(null);
-    setPendingOrderData(null);
   };
 
   return (
@@ -1374,49 +1321,6 @@ export default function CheckoutClient() {
                             )}
                           </div>
                         </div>
-
-            {/* Embedded Payment Form */}
-            {embeddedPaymentSession && (
-              <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900 font-sans">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                      </svg>
-                    </span>
-                    {isRTL ? "أدخل بيانات الدفع" : "Enter Payment Details"}
-                  </h2>
-                  <button
-                    type="button"
-                    onClick={handleCancelEmbeddedPayment}
-                    className="text-sm text-gray-500 hover:text-gray-700 underline"
-                  >
-                    {isRTL ? "إلغاء" : "Cancel"}
-                  </button>
-                </div>
-                
-                <div className="mb-4 rounded-lg bg-blue-50 p-3">
-                  <p className="text-sm text-blue-700">
-                    {isRTL 
-                      ? `طلب رقم #${embeddedPaymentSession.orderId} - يرجى إكمال الدفع أدناه`
-                      : `Order #${embeddedPaymentSession.orderId} - Please complete payment below`
-                    }
-                  </p>
-                </div>
-
-                <MyFatoorahEmbeddedPayment
-                  sessionId={embeddedPaymentSession.sessionId}
-                  scriptUrl={embeddedPaymentSession.scriptUrl}
-                  encryptionKey={embeddedPaymentSession.encryptionKey}
-                  orderId={embeddedPaymentSession.orderId}
-                  orderKey={embeddedPaymentSession.orderKey}
-                  locale={locale}
-                  onPaymentComplete={handleEmbeddedPaymentComplete}
-                  onPaymentError={handleEmbeddedPaymentError}
-                />
-              </div>
-            )}
 
             {/* Order Notes */}
             <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
