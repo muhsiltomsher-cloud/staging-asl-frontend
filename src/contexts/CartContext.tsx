@@ -1,11 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from "react";
 import useSWR, { mutate } from "swr";
 import type { CoCartResponse, CoCartItem } from "@/lib/api/cocart";
 import { getAuthToken } from "@/lib/api/auth";
 import { useNotification } from "./NotificationContext";
 import { useAuth } from "./AuthContext";
+import { getBundleItems, getBundleItemsTotal } from "@/components/cart/BundleItemsList";
 
 // Cache key now includes locale for proper multilingual support
 const getCartCacheKey = (locale: string) => `/api/cart?locale=${locale}`;
@@ -411,10 +412,36 @@ export function CartProvider({ children, locale }: CartProviderProps) {
     setSelectedCoupons([]);
   }, []);
 
-  const cartItems = cart?.items || [];
+  const cartItems = useMemo(() => cart?.items || [], [cart?.items]);
   const cartItemsCount = cart?.item_count || 0;
-  const cartSubtotal = cart?.totals?.subtotal || "0";
+  const rawCartSubtotal = cart?.totals?.subtotal || "0";
   const cartTotal = cart?.totals?.total || "0";
+
+  // Calculate the total bundle items price across all cart items
+  // This is needed because CoCart only knows about the base product price, not the bundle items
+  const bundleItemsAdjustment = useMemo(() => {
+    if (!cartItems || cartItems.length === 0) return 0;
+    
+    const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
+    const divisor = Math.pow(10, currencyMinorUnit);
+    
+    return cartItems.reduce((total, item) => {
+      const bundleItems = getBundleItems(item);
+      if (bundleItems && bundleItems.length > 0) {
+        const bundleItemsTotal = getBundleItemsTotal(bundleItems);
+        const quantity = item.quantity?.value || 1;
+        // Convert to minor units (same format as CoCart subtotal)
+        return total + (bundleItemsTotal * quantity * divisor);
+      }
+      return total;
+    }, 0);
+  }, [cartItems, cart?.currency?.currency_minor_unit]);
+
+  // Adjusted cart subtotal that includes bundle items price
+  const cartSubtotal = useMemo(() => {
+    const rawSubtotal = parseFloat(rawCartSubtotal) || 0;
+    return (rawSubtotal + bundleItemsAdjustment).toString();
+  }, [rawCartSubtotal, bundleItemsAdjustment]);
 
   const couponDiscount = selectedCoupons.reduce((total, coupon) => {
     const subtotal = parseFloat(cartSubtotal);
