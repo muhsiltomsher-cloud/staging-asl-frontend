@@ -45,6 +45,13 @@ interface CouponLine {
   code: string;
 }
 
+interface FeeLine {
+  name: string;
+  total: string;
+  tax_status?: string;
+  tax_class?: string;
+}
+
 interface CreateOrderRequest {
   payment_method: string;
   payment_method_title: string;
@@ -53,6 +60,7 @@ interface CreateOrderRequest {
   shipping: OrderAddress;
   line_items: OrderLineItem[];
   coupon_lines?: CouponLine[];
+  fee_lines?: FeeLine[];
   customer_note?: string;
   customer_id?: number;
 }
@@ -155,6 +163,10 @@ export async function POST(request: NextRequest) {
 
     if (body.coupon_lines && body.coupon_lines.length > 0) {
       orderData.coupon_lines = body.coupon_lines;
+    }
+
+    if (body.fee_lines && body.fee_lines.length > 0) {
+      orderData.fee_lines = body.fee_lines;
     }
 
     if (body.customer_id) {
