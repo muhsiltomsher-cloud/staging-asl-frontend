@@ -77,6 +77,9 @@ export function AccountDrawer({
   const alternateLocale: Locale = locale === "en" ? "ar" : "en";
   const pathWithoutLocale = getPathWithoutLocale(pathname);
   const alternateHref = `/${alternateLocale}${pathWithoutLocale}`;
+  
+  // Hide settings section (language/currency switchers) on cart and checkout pages
+  const hideSettingsSection = pathname?.includes("/cart") || pathname?.includes("/checkout");
 
   const menuItems: MenuItem[] = [
     {
@@ -332,7 +335,7 @@ export function AccountDrawer({
               ? renderAuthenticatedContent()
               : renderGuestContent()}
           </div>
-          {renderSettingsSection()}
+          {!hideSettingsSection && renderSettingsSection()}
         </Box>
       </Box>
     </MuiDrawer>
