@@ -196,6 +196,12 @@ export function BuildYourOwnSetClient({
   // Get box price from bundle config (if configured)
   const boxPrice = bundleConfig?.with_box_price || 0;
 
+  // Get the bundle product's base price from WooCommerce
+  const bundleProductPrice = useMemo(() => {
+    if (!bundleProduct?.prices?.price) return 0;
+    return parseInt(bundleProduct.prices.price) / Math.pow(10, bundleProduct.prices.currency_minor_unit);
+  }, [bundleProduct]);
+
   // Calculate required products total (first requiredSlots items)
   const requiredProductsTotal = useMemo(() => {
     return selections.slice(0, requiredSlots).reduce((sum, selection) => {
@@ -392,9 +398,9 @@ export function BuildYourOwnSetClient({
             {bundleProduct?.name || t.title}
           </h1>
 
-          {/* Price - Show box price as starting price */}
+          {/* Price - Show bundle product price or calculated total */}
           <div className="text-xl font-bold text-gray-900">
-            <FormattedPrice price={boxPrice > 0 ? boxPrice : total} iconSize="md" />
+            <FormattedPrice price={bundleProductPrice > 0 ? bundleProductPrice : total} iconSize="md" />
           </div>
 
           {/* Description */}
