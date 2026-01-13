@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { User, Package, MapPin, Heart, Settings, LogOut, X, ChevronRight, Globe, ChevronDown, Check, Coins } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -13,6 +14,32 @@ import Typography from "@mui/material/Typography";
 import { Button } from "@/components/common/Button";
 import { localeConfig, type Locale, type Currency } from "@/config/site";
 import { getPathWithoutLocale, cn } from "@/lib/utils";
+
+const currencyCountryCodes: Record<string, string> = {
+  AED: "ae",
+  SAR: "sa",
+  QAR: "qa",
+  KWD: "kw",
+  BHD: "bh",
+  OMR: "om",
+  USD: "us",
+  EUR: "eu",
+  GBP: "gb",
+  INR: "in",
+  PKR: "pk",
+  EGP: "eg",
+  JOD: "jo",
+  LBP: "lb",
+  IQD: "iq",
+  YER: "ye",
+  SYP: "sy",
+  TRY: "tr",
+  MAD: "ma",
+  TND: "tn",
+  DZD: "dz",
+  LYD: "ly",
+  SDG: "sd",
+};
 
 interface AccountDrawerProps {
   locale: string;
@@ -188,97 +215,99 @@ export function AccountDrawer({
   );
 
   const renderSettingsSection = () => (
-    <div className="border-t bg-gray-50 p-4">
-      <div className="space-y-3">
-        {/* Language Switcher */}
-        <div className="flex items-center justify-between rounded-lg bg-white px-4 py-3 shadow-sm">
+    <div className="border-t border-gray-200">
+      {/* Language Switcher Row */}
+      <Link
+        href={alternateHref}
+        onClick={onClose}
+        className="flex items-center justify-between px-5 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+        hrefLang={localeConfig[alternateLocale].hrefLang}
+      >
+        <div className="flex items-center gap-3">
+          <Globe className="h-5 w-5 text-gray-400" />
+          <span className="text-sm font-medium text-gray-700">
+            {locale === "en" ? "Language" : "اللغة"}
+          </span>
+        </div>
+        <span className="rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-600">
+          {localeConfig[alternateLocale].name}
+        </span>
+      </Link>
+
+      {/* Currency Switcher Row */}
+      <div ref={currencyDropdownRef} className="relative">
+        <button
+          type="button"
+          onClick={() => setIsCurrencyDropdownOpen(!isCurrencyDropdownOpen)}
+          className="flex w-full items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
+        >
           <div className="flex items-center gap-3">
-            <Globe className="h-5 w-5 text-gray-500" />
+            <Coins className="h-5 w-5 text-gray-400" />
             <span className="text-sm font-medium text-gray-700">
-              {locale === "en" ? "Language" : "اللغة"}
+              {locale === "en" ? "Currency" : "العملة"}
             </span>
           </div>
-          <Link
-            href={alternateHref}
-            onClick={onClose}
-            className="flex items-center gap-2 rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
-            hrefLang={localeConfig[alternateLocale].hrefLang}
-          >
-            {localeConfig[alternateLocale].name}
-          </Link>
-        </div>
+          <div className="flex items-center gap-2">
+            <span className="rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-600">
+              {currentCurrency?.symbol} {currentCurrency?.code}
+            </span>
+            <ChevronDown className={cn("h-4 w-4 text-gray-400 transition-transform", isCurrencyDropdownOpen && "rotate-180")} />
+          </div>
+        </button>
 
-        {/* Currency Switcher */}
-        <div ref={currencyDropdownRef} className="relative">
-          <button
-            type="button"
-            onClick={() => setIsCurrencyDropdownOpen(!isCurrencyDropdownOpen)}
-            className="flex w-full items-center justify-between rounded-lg bg-white px-4 py-3 shadow-sm"
-          >
-            <div className="flex items-center gap-3">
-              <Coins className="h-5 w-5 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">
-                {locale === "en" ? "Currency" : "العملة"}
-              </span>
+        {isCurrencyDropdownOpen && (
+          <div className="border-t border-gray-100 bg-white">
+            <div className="px-5 py-3 border-b border-gray-100">
+              <p className="text-xs font-medium uppercase tracking-wider text-gray-400">
+                {locale === "en" ? "Select Currency" : "اختر العملة"}
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700">
-                {currentCurrency?.symbol} {currentCurrency?.code}
-              </span>
-              <ChevronDown className={cn("h-4 w-4 text-gray-400 transition-transform", isCurrencyDropdownOpen && "rotate-180")} />
-            </div>
-          </button>
-
-          {isCurrencyDropdownOpen && (
-            <div className={cn(
-              "absolute z-50 mt-2 w-full overflow-hidden rounded-xl border border-gray-100 bg-white shadow-xl",
-              isRTL ? "right-0" : "left-0"
-            )}>
-              <div className="border-b border-gray-100 bg-gray-50/50 px-4 py-2.5">
-                <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
-                  {locale === "en" ? "Select Currency" : "اختر العملة"}
-                </p>
-              </div>
-              <ul role="listbox" className="max-h-[200px] overflow-y-auto py-1">
-                {currencies.map((curr) => (
-                  <li key={curr.code}>
-                    <button
-                      type="button"
-                      onClick={() => handleCurrencyChange(curr.code as Currency)}
-                      className={cn(
-                        "flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-gray-50",
-                        currency === curr.code && "bg-[#7a3205]/5"
-                      )}
-                      role="option"
-                      aria-selected={currency === curr.code}
-                    >
+            <ul role="listbox" className="max-h-[240px] overflow-y-auto">
+              {currencies.map((curr) => (
+                <li key={curr.code}>
+                  <button
+                    type="button"
+                    onClick={() => handleCurrencyChange(curr.code as Currency)}
+                    className={cn(
+                      "flex w-full items-center gap-3 px-5 py-3 text-sm transition-colors hover:bg-gray-50",
+                      currency === curr.code && "bg-gray-50"
+                    )}
+                    role="option"
+                    aria-selected={currency === curr.code}
+                  >
+                    <span className={cn(
+                      "flex h-8 w-8 items-center justify-center rounded-full overflow-hidden border",
+                      currency === curr.code 
+                        ? "border-[#7a3205] ring-2 ring-[#7a3205]" 
+                        : "border-gray-200"
+                    )}>
+                      <Image
+                        src={`https://flagcdn.com/w40/${currencyCountryCodes[curr.code] || "un"}.png`}
+                        alt={curr.code}
+                        width={32}
+                        height={24}
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </span>
+                    <div className="flex flex-1 flex-col items-start">
                       <span className={cn(
-                        "flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold",
-                        currency === curr.code 
-                          ? "bg-[#7a3205] text-white" 
-                          : "bg-gray-100 text-gray-600"
+                        "font-medium",
+                        currency === curr.code ? "text-[#7a3205]" : "text-gray-900"
                       )}>
-                        {curr.symbol}
+                        {curr.code}
                       </span>
-                      <div className="flex flex-1 flex-col items-start">
-                        <span className={cn(
-                          "font-medium",
-                          currency === curr.code ? "text-[#7a3205]" : "text-gray-900"
-                        )}>
-                          {curr.code}
-                        </span>
-                        <span className="text-xs text-gray-500">{curr.label.replace(` (${curr.code})`, "")}</span>
-                      </div>
-                      {currency === curr.code && (
-                        <Check className="h-4 w-4 text-[#7a3205]" />
-                      )}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
+                      <span className="text-xs text-gray-500">{curr.label.replace(` (${curr.code})`, "")}</span>
+                    </div>
+                    {currency === curr.code && (
+                      <Check className="h-4 w-4 text-[#7a3205]" />
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );
