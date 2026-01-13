@@ -12,6 +12,18 @@ export interface CustomerAddress {
   phone?: string;
 }
 
+export interface SavedAddress extends CustomerAddress {
+  id: string;
+  label: string;
+  is_default: boolean;
+}
+
+export interface CustomerMetaData {
+  id?: number;
+  key: string;
+  value: string | SavedAddress[];
+}
+
 export interface Customer {
   id: number;
   date_created: string;
@@ -25,6 +37,7 @@ export interface Customer {
   shipping: CustomerAddress;
   is_paying_customer: boolean;
   avatar_url: string;
+  meta_data?: CustomerMetaData[];
 }
 
 export interface OrderLineItemMetaData {
@@ -399,4 +412,183 @@ export function formatDate(dateString: string, locale: string = "en"): string {
     month: "long",
     day: "numeric",
   });
+}
+
+const SAVED_ADDRESSES_KEY = "asl_saved_addresses";
+
+export function getSavedAddressesFromCustomer(customer: Customer): SavedAddress[] {
+  if (!customer.meta_data) return [];
+  
+  const addressesMeta = customer.meta_data.find(
+    (meta) => meta.key === SAVED_ADDRESSES_KEY
+  );
+  
+  if (!addressesMeta) return [];
+  
+  if (typeof addressesMeta.value === "string") {
+    try {
+      return JSON.parse(addressesMeta.value) as SavedAddress[];
+    } catch {
+      return [];
+    }
+  }
+  
+  return addressesMeta.value as SavedAddress[];
+}
+
+export function getDefaultAddress(addresses: SavedAddress[]): SavedAddress | null {
+  return addresses.find((addr) => addr.is_default) || addresses[0] || null;
+}
+
+export async function getSavedAddresses(
+  customerId: number
+): Promise<CustomerOperationResponse<SavedAddress[]>> {
+  try {
+    const customerResponse = await getCustomer(customerId);
+    if (!customerResponse.success || !customerResponse.data) {
+      return {
+        success: false,
+        error: customerResponse.error || {
+          code: "customer_error",
+          message: "Failed to get customer.",
+        },
+      };
+    }
+
+    const addresses = getSavedAddressesFromCustomer(customerResponse.data);
+    return { success: true, data: addresses };
+  } catch (error) {
+    return {
+      success: false,
+      error: {
+        code: "network_error",
+        message: error instanceof Error ? error.message : "Network error occurred",
+      },
+    };
+  }
+}
+
+export async function saveSavedAddresses(
+  customerId: number,
+  addresses: SavedAddress[]
+): Promise<CustomerOperationResponse<Customer>> {
+  try {
+    const response = await fetch(`/api/customer?customerId=${customerId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        meta_data: [
+          {
+            key: SAVED_ADDRESSES_KEY,
+            value: JSON.stringify(addresses),
+          },
+        ],
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      return {
+        success: false,
+        error: result.error || {
+          code: "address_save_error",
+          message: "Failed to save addresses.",
+        },
+      };
+    }
+
+    return {
+      success: true,
+      data: result.data,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: {
+        code: "network_error",
+        message: error instanceof Error ? error.message : "Network error occurred",
+      },
+    };
+  }
+}
+
+export async function addSavedAddress(
+  customerId: number,
+  address: Omit<SavedAddress, "id">,
+  existingAddresses: SavedAddress[]
+): Promise<CustomerOperationResponse<Customer>> {
+  const newAddress: SavedAddress = {
+    ...address,
+    id: `addr_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+  };
+
+  let updatedAddresses = [...existingAddresses];
+  
+  if (newAddress.is_default) {
+    updatedAddresses = updatedAddresses.map((addr) => ({
+      ...addr,
+      is_default: false,
+    }));
+  }
+  
+  updatedAddresses.push(newAddress);
+
+  return saveSavedAddresses(customerId, updatedAddresses);
+}
+
+export async function updateSavedAddress(
+  customerId: number,
+  addressId: string,
+  updates: Partial<SavedAddress>,
+  existingAddresses: SavedAddress[]
+): Promise<CustomerOperationResponse<Customer>> {
+  let updatedAddresses = existingAddresses.map((addr) => {
+    if (addr.id === addressId) {
+      return { ...addr, ...updates };
+    }
+    return addr;
+  });
+
+  if (updates.is_default) {
+    updatedAddresses = updatedAddresses.map((addr) => ({
+      ...addr,
+      is_default: addr.id === addressId,
+    }));
+  }
+
+  return saveSavedAddresses(customerId, updatedAddresses);
+}
+
+export async function deleteSavedAddress(
+  customerId: number,
+  addressId: string,
+  existingAddresses: SavedAddress[]
+): Promise<CustomerOperationResponse<Customer>> {
+  const updatedAddresses = existingAddresses.filter((addr) => addr.id !== addressId);
+  
+  if (updatedAddresses.length > 0 && !updatedAddresses.some((addr) => addr.is_default)) {
+    updatedAddresses[0].is_default = true;
+  }
+
+  return saveSavedAddresses(customerId, updatedAddresses);
+}
+
+export async function setDefaultAddress(
+  customerId: number,
+  addressId: string,
+  existingAddresses: SavedAddress[]
+): Promise<CustomerOperationResponse<Customer>> {
+  const updatedAddresses = existingAddresses.map((addr) => ({
+    ...addr,
+    is_default: addr.id === addressId,
+  }));
+
+  return saveSavedAddresses(customerId, updatedAddresses);
+}
+
+export function generateAddressId(): string {
+  return `addr_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }

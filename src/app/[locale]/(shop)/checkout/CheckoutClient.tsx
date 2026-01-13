@@ -12,7 +12,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { getCustomer, type Customer } from "@/lib/api/customer";
+import { getCustomer, getSavedAddressesFromCustomer, type Customer, type SavedAddress } from "@/lib/api/customer";
 import { featureFlags, type Locale } from "@/config/site";
 import { MapPin, Check, ChevronDown, ChevronUp, User, UserCheck, Tag, X, Truck } from "lucide-react";
 import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice } from "@/components/cart/BundleItemsList";
@@ -117,6 +117,9 @@ export default function CheckoutClient() {
     const [error, setError] = useState<string | null>(null);
     const [customerData, setCustomerData] = useState<Customer | null>(null);
     const [isLoadingCustomer, setIsLoadingCustomer] = useState(false);
+    const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+    const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+    const [showAddressSelector, setShowAddressSelector] = useState(false);
         const [showBillingSection, setShowBillingSection] = useState(false);
         const [emptyCartCountdown, setEmptyCartCountdown] = useState<number | null>(null);
         const [paymentError, setPaymentError] = useState<string | null>(null);
@@ -155,37 +158,64 @@ export default function CheckoutClient() {
             const customer = response.data;
             setCustomerData(customer);
             
-            const shippingAddress: AddressFormData = {
-              firstName: customer.shipping?.first_name || "",
-              lastName: customer.shipping?.last_name || "",
-              address: customer.shipping?.address_1 || "",
-              address2: customer.shipping?.address_2 || "",
-              city: customer.shipping?.city || "",
-              state: customer.shipping?.state || "",
-              postalCode: customer.shipping?.postcode || "",
-              country: customer.shipping?.country || "AE",
-              phone: customer.shipping?.phone || customer.billing?.phone || "",
-              email: customer.billing?.email || customer.email || "",
-            };
+            const addresses = getSavedAddressesFromCustomer(customer);
+            setSavedAddresses(addresses);
             
-            const billingAddress: AddressFormData = {
-              firstName: customer.billing?.first_name || "",
-              lastName: customer.billing?.last_name || "",
-              address: customer.billing?.address_1 || "",
-              address2: customer.billing?.address_2 || "",
-              city: customer.billing?.city || "",
-              state: customer.billing?.state || "",
-              postalCode: customer.billing?.postcode || "",
-              country: customer.billing?.country || "AE",
-              phone: customer.billing?.phone || "",
-              email: customer.billing?.email || customer.email || "",
-            };
+            const defaultAddress = addresses.find(addr => addr.is_default) || addresses[0];
             
-            setFormData(prev => ({
-              ...prev,
-              shipping: shippingAddress,
-              billing: prev.sameAsShipping ? shippingAddress : billingAddress,
-            }));
+            if (defaultAddress) {
+              setSelectedAddressId(defaultAddress.id);
+              const addressFormData: AddressFormData = {
+                firstName: defaultAddress.first_name || "",
+                lastName: defaultAddress.last_name || "",
+                address: defaultAddress.address_1 || "",
+                address2: defaultAddress.address_2 || "",
+                city: defaultAddress.city || "",
+                state: defaultAddress.state || "",
+                postalCode: defaultAddress.postcode || "",
+                country: defaultAddress.country || "AE",
+                phone: defaultAddress.phone || "",
+                email: defaultAddress.email || customer.email || "",
+              };
+              
+              setFormData(prev => ({
+                ...prev,
+                shipping: addressFormData,
+                billing: prev.sameAsShipping ? addressFormData : prev.billing,
+              }));
+            } else {
+              const shippingAddress: AddressFormData = {
+                firstName: customer.shipping?.first_name || "",
+                lastName: customer.shipping?.last_name || "",
+                address: customer.shipping?.address_1 || "",
+                address2: customer.shipping?.address_2 || "",
+                city: customer.shipping?.city || "",
+                state: customer.shipping?.state || "",
+                postalCode: customer.shipping?.postcode || "",
+                country: customer.shipping?.country || "AE",
+                phone: customer.shipping?.phone || customer.billing?.phone || "",
+                email: customer.billing?.email || customer.email || "",
+              };
+              
+              const billingAddress: AddressFormData = {
+                firstName: customer.billing?.first_name || "",
+                lastName: customer.billing?.last_name || "",
+                address: customer.billing?.address_1 || "",
+                address2: customer.billing?.address_2 || "",
+                city: customer.billing?.city || "",
+                state: customer.billing?.state || "",
+                postalCode: customer.billing?.postcode || "",
+                country: customer.billing?.country || "AE",
+                phone: customer.billing?.phone || "",
+                email: customer.billing?.email || customer.email || "",
+              };
+              
+              setFormData(prev => ({
+                ...prev,
+                shipping: shippingAddress,
+                billing: prev.sameAsShipping ? shippingAddress : billingAddress,
+              }));
+            }
           }
         } catch (err) {
           console.error("Failed to fetch customer data:", err);
@@ -459,28 +489,30 @@ export default function CheckoutClient() {
     setFormData((prev) => ({ ...prev, orderNotes: value }));
   };
 
-  const handleUseSavedAddress = () => {
-    if (customerData?.shipping) {
-      const savedShippingAddress: AddressFormData = {
-        firstName: customerData.shipping.first_name || "",
-        lastName: customerData.shipping.last_name || "",
-        address: customerData.shipping.address_1 || "",
-        address2: customerData.shipping.address_2 || "",
-        city: customerData.shipping.city || "",
-        state: customerData.shipping.state || "",
-        postalCode: customerData.shipping.postcode || "",
-        country: customerData.shipping.country || "AE",
-        phone: customerData.shipping.phone || customerData.billing?.phone || "",
-        email: customerData.billing?.email || customerData.email || "",
-      };
-      
-      setFormData(prev => ({
-        ...prev,
-        shipping: savedShippingAddress,
-        billing: prev.sameAsShipping ? savedShippingAddress : prev.billing,
-      }));
-    }
+  const handleSelectSavedAddress = (address: SavedAddress) => {
+    setSelectedAddressId(address.id);
+    setShowAddressSelector(false);
+    
+    const addressFormData: AddressFormData = {
+      firstName: address.first_name || "",
+      lastName: address.last_name || "",
+      address: address.address_1 || "",
+      address2: address.address_2 || "",
+      city: address.city || "",
+      state: address.state || "",
+      postalCode: address.postcode || "",
+      country: address.country || "AE",
+      phone: address.phone || "",
+      email: address.email || customerData?.email || "",
+    };
+    
+    setFormData(prev => ({
+      ...prev,
+      shipping: addressFormData,
+      billing: prev.sameAsShipping ? addressFormData : prev.billing,
+    }));
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -928,36 +960,81 @@ export default function CheckoutClient() {
                               {isRTL ? "عنوان الشحن" : "Shipping Address"}
                             </h2>
 
-              {/* Show saved address info for authenticated users */}
-              {isAuthenticated && customerData?.shipping && customerData.shipping.address_1 && (
-                <div 
-                  className="mb-4 rounded-lg border border-black/10 bg-gray-50 p-4 cursor-pointer hover:bg-gray-100 hover:border-gray-300 transition-colors"
-                  onClick={handleUseSavedAddress}
-                >
-                  <div className="flex items-start gap-3">
-                    <MapPin className="mt-0.5 h-5 w-5 text-gray-600" />
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">
-                        {isRTL ? "العنوان المحفوظ" : "Saved Address"}
-                      </p>
-                      <p className="mt-1 text-sm text-gray-600">
-                        {customerData.shipping.first_name} {customerData.shipping.last_name}
-                        {customerData.shipping.address_1 && `, ${customerData.shipping.address_1}`}
-                        {customerData.shipping.city && `, ${customerData.shipping.city}`}
-                        {customerData.shipping.country && `, ${customerData.shipping.country}`}
-                      </p>
-                      <button
-                        type="button"
-                        className="mt-2 text-sm font-medium text-gray-900 hover:text-gray-700 underline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleUseSavedAddress();
-                        }}
-                      >
-                        {isRTL ? "استخدم هذا العنوان" : "Use this address"}
-                      </button>
-                    </div>
-                    <Check className="h-5 w-5 text-green-600" />
+              {/* Show saved addresses selector for authenticated users */}
+              {isAuthenticated && savedAddresses.length > 0 && (
+                <div className="mb-4">
+                  <div className="relative">
+                    <button
+                      type="button"
+                      className="w-full rounded-lg border border-black/10 bg-gray-50 p-4 text-left hover:bg-gray-100 hover:border-gray-300 transition-colors"
+                      onClick={() => setShowAddressSelector(!showAddressSelector)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-start gap-3">
+                          <MapPin className="mt-0.5 h-5 w-5 text-gray-600" />
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {selectedAddressId 
+                                ? savedAddresses.find(a => a.id === selectedAddressId)?.label || (isRTL ? "العنوان المحدد" : "Selected Address")
+                                : (isRTL ? "اختر عنوان محفوظ" : "Select a saved address")}
+                            </p>
+                            {selectedAddressId && (
+                              <p className="mt-1 text-sm text-gray-600">
+                                {(() => {
+                                  const addr = savedAddresses.find(a => a.id === selectedAddressId);
+                                  if (!addr) return "";
+                                  return `${addr.first_name} ${addr.last_name}${addr.address_1 ? `, ${addr.address_1}` : ""}${addr.city ? `, ${addr.city}` : ""}`;
+                                })()}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        {showAddressSelector ? (
+                          <ChevronUp className="h-5 w-5 text-gray-600" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-gray-600" />
+                        )}
+                      </div>
+                    </button>
+                    
+                    {showAddressSelector && (
+                      <div className="absolute z-10 mt-1 w-full rounded-lg border border-black/10 bg-white shadow-lg max-h-64 overflow-y-auto">
+                        {savedAddresses.map((address) => (
+                          <button
+                            key={address.id}
+                            type="button"
+                            className={`w-full p-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                              selectedAddressId === address.id ? "bg-gray-50" : ""
+                            }`}
+                            onClick={() => handleSelectSavedAddress(address)}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium text-gray-900">{address.label}</p>
+                                  {address.is_default && (
+                                    <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
+                                      {isRTL ? "افتراضي" : "Default"}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="mt-1 text-sm text-gray-600">
+                                  {address.first_name} {address.last_name}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  {address.address_1}
+                                  {address.city && `, ${address.city}`}
+                                  {address.country && `, ${address.country}`}
+                                </p>
+                              </div>
+                              {selectedAddressId === address.id && (
+                                <Check className="h-5 w-5 text-green-600 flex-shrink-0" />
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
