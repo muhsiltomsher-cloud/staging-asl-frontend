@@ -1,10 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnvVar } from "@/lib/utils/loadEnv";
 
-function getMyFatoorahApiUrl(): string {
-  return getEnvVar("MYFATOORAH_TEST_MODE") === "true"
-    ? "https://apitest.myfatoorah.com/v2/SendPayment"
-    : "https://api.myfatoorah.com/v2/SendPayment";
+function getMyFatoorahApiBaseUrl(): string {
+  if (getEnvVar("MYFATOORAH_TEST_MODE") === "true") {
+    return "https://apitest.myfatoorah.com";
+  }
+  
+  const country = (getEnvVar("MYFATOORAH_COUNTRY") || "KWT").toUpperCase();
+  
+  switch (country) {
+    case "AE":
+    case "UAE":
+      return "https://api-ae.myfatoorah.com";
+    case "SA":
+    case "SAU":
+      return "https://api-sa.myfatoorah.com";
+    case "QA":
+    case "QAT":
+      return "https://api-qa.myfatoorah.com";
+    case "EG":
+    case "EGY":
+      return "https://api-eg.myfatoorah.com";
+    case "KW":
+    case "KWT":
+    case "BH":
+    case "BHR":
+    case "JO":
+    case "JOR":
+    case "OM":
+    case "OMN":
+    default:
+      return "https://api.myfatoorah.com";
+  }
 }
 
 interface InitiatePaymentRequest {
@@ -86,7 +113,7 @@ export async function POST(request: NextRequest) {
       UserDefinedField: order_key,
     };
 
-    const response = await fetch(getMyFatoorahApiUrl(), {
+    const response = await fetch(`${getMyFatoorahApiBaseUrl()}/v2/SendPayment`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

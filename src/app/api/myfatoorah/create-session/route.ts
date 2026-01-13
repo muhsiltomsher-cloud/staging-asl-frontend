@@ -2,15 +2,69 @@ import { NextRequest, NextResponse } from "next/server";
 import { getEnvVar } from "@/lib/utils/loadEnv";
 
 function getMyFatoorahApiBaseUrl(): string {
-  return getEnvVar("MYFATOORAH_TEST_MODE") === "true"
-    ? "https://apitest.myfatoorah.com"
-    : "https://api.myfatoorah.com";
+  if (getEnvVar("MYFATOORAH_TEST_MODE") === "true") {
+    return "https://apitest.myfatoorah.com";
+  }
+  
+  const country = (getEnvVar("MYFATOORAH_COUNTRY") || "KWT").toUpperCase();
+  
+  switch (country) {
+    case "AE":
+    case "UAE":
+      return "https://api-ae.myfatoorah.com";
+    case "SA":
+    case "SAU":
+      return "https://api-sa.myfatoorah.com";
+    case "QA":
+    case "QAT":
+      return "https://api-qa.myfatoorah.com";
+    case "EG":
+    case "EGY":
+      return "https://api-eg.myfatoorah.com";
+    case "KW":
+    case "KWT":
+    case "BH":
+    case "BHR":
+    case "JO":
+    case "JOR":
+    case "OM":
+    case "OMN":
+    default:
+      return "https://api.myfatoorah.com";
+  }
 }
 
 function getMyFatoorahSessionScriptUrl(): string {
-  return getEnvVar("MYFATOORAH_TEST_MODE") === "true"
-    ? "https://demo.myfatoorah.com/sessions/v1/session.js"
-    : "https://portal.myfatoorah.com/sessions/v1/session.js";
+  if (getEnvVar("MYFATOORAH_TEST_MODE") === "true") {
+    return "https://demo.myfatoorah.com/sessions/v1/session.js";
+  }
+  
+  const country = (getEnvVar("MYFATOORAH_COUNTRY") || "KWT").toUpperCase();
+  
+  switch (country) {
+    case "AE":
+    case "UAE":
+      return "https://ae.myfatoorah.com/sessions/v1/session.js";
+    case "SA":
+    case "SAU":
+      return "https://sa.myfatoorah.com/sessions/v1/session.js";
+    case "QA":
+    case "QAT":
+      return "https://qa.myfatoorah.com/sessions/v1/session.js";
+    case "EG":
+    case "EGY":
+      return "https://eg.myfatoorah.com/sessions/v1/session.js";
+    case "KW":
+    case "KWT":
+    case "BH":
+    case "BHR":
+    case "JO":
+    case "JOR":
+    case "OM":
+    case "OMN":
+    default:
+      return "https://portal.myfatoorah.com/sessions/v1/session.js";
+  }
 }
 
 interface CreateSessionRequest {
