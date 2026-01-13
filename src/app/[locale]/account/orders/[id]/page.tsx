@@ -3,12 +3,10 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Package, Truck, CheckCircle, Clock, MapPin, CreditCard, Loader2, Gift } from "lucide-react";
+import { ArrowLeft, Package, Truck, CheckCircle, Clock, MapPin, Gift } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/common/Button";
-import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { OrderPrice, OrderCurrencyBadge } from "@/components/common/OrderPrice";
-import { Radio } from "@/components/common/Radio";
 import { getOrder, formatOrderStatus, getOrderStatusColor, formatDate, type Order } from "@/lib/api/customer";
 import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/components/cart/OrderBundleItemsList";
 
@@ -44,19 +42,6 @@ const translations = {
     processing: "Processing",
     shipped: "Shipped",
     delivered: "Delivered",
-    payNow: "Pay Now",
-    completePayment: "Complete Payment",
-    selectPaymentMethod: "Select Payment Method",
-    paymentPending: "Payment Pending",
-    paymentPendingDesc: "This order is awaiting payment. Please select a payment method below to complete your purchase.",
-    myfatoorah: "Credit/Debit Card",
-    myfatoorahDesc: "Pay securely with your credit or debit card",
-    tabby: "Tabby - Pay in 4",
-    tabbyDesc: "Split your purchase into 4 interest-free payments",
-    tamara: "Tamara - Buy Now Pay Later",
-    tamaraDesc: "Buy now and pay later with Tamara",
-    processingPayment: "Processing payment...",
-    paymentError: "Payment failed. Please try again.",
     qty: "Qty",
     freeGift: "Free Gift",
     paidIn: "Paid in",
@@ -89,31 +74,12 @@ const translations = {
     processing: "قيد المعالجة",
     shipped: "تم الشحن",
     delivered: "تم التسليم",
-    payNow: "ادفع الآن",
-    completePayment: "إتمام الدفع",
-    selectPaymentMethod: "اختر طريقة الدفع",
-    paymentPending: "في انتظار الدفع",
-    paymentPendingDesc: "هذا الطلب في انتظار الدفع. يرجى اختيار طريقة الدفع أدناه لإتمام عملية الشراء.",
-    myfatoorah: "بطاقة ائتمان/خصم",
-    myfatoorahDesc: "ادفع بأمان باستخدام بطاقة الائتمان أو الخصم",
-    tabby: "تابي - ادفع على 4 دفعات",
-    tabbyDesc: "قسّم مشترياتك إلى 4 دفعات بدون فوائد",
-    tamara: "تمارا - اشتر الآن وادفع لاحقاً",
-    tamaraDesc: "اشتر الآن وادفع لاحقاً مع تمارا",
-    processingPayment: "جاري معالجة الدفع...",
-    paymentError: "فشل الدفع. يرجى المحاولة مرة أخرى.",
     qty: "الكمية",
     freeGift: "هدية مجانية",
     paidIn: "تم الدفع بـ",
     conversionNote: "الأسعار معروضة بعملة الطلب",
   },
 };
-
-type PaymentMethod = "myfatoorah" | "tabby" | "tamara";
-
-function canPayOrder(status: string): boolean {
-  return status === "pending" || status === "on-hold" || status === "cancelled";
-}
 
 function getStatusStep(status: string): number {
   const statusMap: Record<string, number> = {
@@ -201,217 +167,6 @@ function AddressCard({ title, address, icon: Icon }: { title: string; address: O
         <p>{address.country}</p>
         {address.phone && <p>{address.phone}</p>}
       </div>
-    </div>
-  );
-}
-
-interface PaymentSectionProps {
-  order: Order;
-  locale: "en" | "ar";
-  t: typeof translations.en;
-}
-
-function PaymentSection({ order, locale, t }: PaymentSectionProps) {
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("myfatoorah");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
-
-  const paymentMethods = [
-    {
-      id: "myfatoorah" as PaymentMethod,
-      name: t.myfatoorah,
-      description: t.myfatoorahDesc,
-      icon: "/images/payment/myfatoorah.png",
-    },
-    {
-      id: "tabby" as PaymentMethod,
-      name: t.tabby,
-      description: t.tabbyDesc,
-      icon: "/images/payment/tabby.png",
-    },
-    {
-      id: "tamara" as PaymentMethod,
-      name: t.tamara,
-      description: t.tamaraDesc,
-      icon: "/images/payment/tamara.png",
-    },
-  ];
-
-  const handlePayment = async () => {
-    setIsProcessing(true);
-    setPaymentError(null);
-
-    try {
-      const orderTotal = parseFloat(order.total);
-      const returnUrl = `${window.location.origin}/${locale}/order-confirmation?order_id=${order.id}&order_key=${order.order_key}`;
-
-      if (selectedMethod === "myfatoorah") {
-        const response = await fetch("/api/myfatoorah/initiate-payment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            invoice_value: orderTotal,
-            customer_name: `${order.billing.first_name} ${order.billing.last_name}`,
-            customer_email: order.billing.email,
-            customer_mobile: order.billing.phone || "",
-            callback_url: returnUrl,
-            error_url: `${window.location.origin}/${locale}/account/orders/${order.id}?payment_error=true`,
-            language: locale === "ar" ? "ar" : "en",
-            order_id: order.id.toString(),
-            order_key: order.order_key,
-          }),
-        });
-
-        const data = await response.json();
-        if (data.success && data.payment_url) {
-          window.location.href = data.payment_url;
-        } else {
-          throw new Error(data.error || "Payment initiation failed");
-        }
-      } else if (selectedMethod === "tabby") {
-        const response = await fetch("/api/tabby/create-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            amount: orderTotal,
-            currency: order.currency || "AED",
-            buyer: {
-              email: order.billing.email,
-              phone: order.billing.phone || "",
-              name: `${order.billing.first_name} ${order.billing.last_name}`,
-            },
-            order_id: order.id.toString(),
-            order_key: order.order_key,
-            success_url: returnUrl,
-            cancel_url: `${window.location.origin}/${locale}/account/orders/${order.id}?payment_cancelled=true`,
-            failure_url: `${window.location.origin}/${locale}/account/orders/${order.id}?payment_error=true`,
-          }),
-        });
-
-        const data = await response.json();
-        if (data.success && data.checkout_url) {
-          window.location.href = data.checkout_url;
-        } else {
-          throw new Error(data.error || "Payment initiation failed");
-        }
-      } else if (selectedMethod === "tamara") {
-        const response = await fetch("/api/tamara/create-checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            total_amount: orderTotal,
-            currency: order.currency || "AED",
-            order_id: order.id.toString(),
-            order_key: order.order_key,
-            items: order.line_items.map((item) => ({
-              name: item.name,
-              quantity: item.quantity,
-              unit_price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
-              total_amount: typeof item.total === 'string' ? parseFloat(item.total) : parseFloat(String(item.total)),
-            })),
-            consumer: {
-              first_name: order.billing.first_name,
-              last_name: order.billing.last_name,
-              email: order.billing.email,
-              phone_number: order.billing.phone || "",
-            },
-            shipping_address: {
-              first_name: order.shipping.first_name,
-              last_name: order.shipping.last_name,
-              line1: order.shipping.address_1,
-              line2: order.shipping.address_2 || "",
-              city: order.shipping.city,
-              country_code: order.shipping.country || "AE",
-            },
-            billing_address: {
-              first_name: order.billing.first_name,
-              last_name: order.billing.last_name,
-              line1: order.billing.address_1,
-              line2: order.billing.address_2 || "",
-              city: order.billing.city,
-              country_code: order.billing.country || "AE",
-            },
-            success_url: returnUrl,
-            cancel_url: `${window.location.origin}/${locale}/account/orders/${order.id}?payment_cancelled=true`,
-            failure_url: `${window.location.origin}/${locale}/account/orders/${order.id}?payment_error=true`,
-          }),
-        });
-
-        const data = await response.json();
-        if (data.success && data.checkout_url) {
-          window.location.href = data.checkout_url;
-        } else {
-          throw new Error(data.error || "Payment initiation failed");
-        }
-      }
-    } catch (error) {
-      console.error("Payment error:", error);
-      setPaymentError(t.paymentError);
-      setIsProcessing(false);
-    }
-  };
-
-  return (
-    <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
-          <CreditCard className="h-5 w-5 text-amber-600" />
-        </div>
-        <div>
-          <h3 className="font-semibold text-gray-900">{t.paymentPending}</h3>
-          <p className="text-sm text-gray-600">{t.paymentPendingDesc}</p>
-        </div>
-      </div>
-
-      <div className="space-y-3 mb-6">
-        <h4 className="font-medium text-gray-900">{t.selectPaymentMethod}</h4>
-        {paymentMethods.map((method) => (
-          <div
-            key={method.id}
-            className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-              selectedMethod === method.id
-                ? "border-black bg-white"
-                : "border-gray-200 bg-white hover:border-gray-300"
-            }`}
-            onClick={() => setSelectedMethod(method.id)}
-          >
-            <Radio
-              name="payment_method"
-              value={method.id}
-              checked={selectedMethod === method.id}
-              onChange={() => setSelectedMethod(method.id)}
-              label={method.name}
-              description={method.description}
-            />
-          </div>
-        ))}
-      </div>
-
-      {paymentError && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-          {paymentError}
-        </div>
-      )}
-
-      <Button
-        variant="primary"
-        size="lg"
-        className="w-full"
-        onClick={handlePayment}
-        disabled={isProcessing}
-      >
-        {isProcessing ? (
-          <>
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            {t.processingPayment}
-          </>
-        ) : (
-          <>
-            <CreditCard className="mr-2 h-5 w-5" />
-            {t.completePayment} - <FormattedPrice price={order.total} iconSize="sm" />
-          </>
-        )}
-      </Button>
     </div>
   );
 }
@@ -556,9 +311,6 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
       <div className="space-y-6">
         <OrderTimeline status={order.status} t={t} />
 
-        {canPayOrder(order.status) && (
-          <PaymentSection order={order} locale={locale} t={t} />
-        )}
 
         <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
           <div className="border-b p-4">

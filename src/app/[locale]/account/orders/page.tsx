@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { ArrowLeft, Package, Eye, CreditCard } from "lucide-react";
+import { ArrowLeft, Package, Eye, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/common/Button";
 import { OrderPrice } from "@/components/common/OrderPrice";
@@ -25,7 +25,7 @@ const translations = {
     total: "Total",
     items: "items",
     viewOrder: "View Order",
-    payNow: "Pay Now",
+    showInvoice: "Show Invoice",
     notLoggedIn: "Please log in to view your orders",
     login: "Login",
     loading: "Loading orders...",
@@ -42,16 +42,13 @@ const translations = {
     total: "المجموع",
     items: "عناصر",
     viewOrder: "عرض الطلب",
-    payNow: "ادفع الآن",
+    showInvoice: "عرض الفاتورة",
     notLoggedIn: "يرجى تسجيل الدخول لعرض طلباتك",
     login: "تسجيل الدخول",
     loading: "جاري تحميل الطلبات...",
   },
 };
 
-function canPayOrder(status: string): boolean {
-  return status === "pending" || status === "on-hold" || status === "cancelled";
-}
 
 export default function OrdersPage({ params }: OrdersPageProps) {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -189,19 +186,21 @@ export default function OrdersPage({ params }: OrdersPageProps) {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  {canPayOrder(order.status) && (
-                    <Button asChild variant="primary" size="sm">
-                      <Link href={`/${locale}/account/orders/${order.id}?pay=true`}>
-                        <CreditCard className="mr-2 h-4 w-4" />
-                        {t.payNow}
-                      </Link>
-                    </Button>
-                  )}
                   <Button asChild variant="outline" size="sm">
                     <Link href={`/${locale}/account/orders/${order.id}`}>
-                      <Eye className="mr-2 h-4 w-4" />
+                      <Eye className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
                       {t.viewOrder}
                     </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <a 
+                      href={`${process.env.NEXT_PUBLIC_WC_API_URL || "https://staging.aromaticscentslab.com"}/my-account/view-order/${order.id}/?key=${order.order_key}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <FileText className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
+                      {t.showInvoice}
+                    </a>
                   </Button>
                 </div>
               </div>
