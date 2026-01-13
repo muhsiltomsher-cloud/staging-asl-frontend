@@ -6,6 +6,8 @@ import Link from "next/link";
 import { Button } from "@/components/common/Button";
 import { OrderPrice, OrderCurrencyBadge } from "@/components/common/OrderPrice";
 import { useCart } from "@/contexts/CartContext";
+import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/components/cart/OrderBundleItemsList";
+import type { OrderLineItem } from "@/lib/api/customer";
 
 interface OrderData {
   id: number;
@@ -23,12 +25,7 @@ interface OrderData {
     city: string;
     country: string;
   };
-  line_items: Array<{
-    id: number;
-    name: string;
-    quantity: number;
-    total: string;
-  }>;
+  line_items: OrderLineItem[];
   payment_method_title: string;
 }
 
@@ -285,14 +282,35 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           </h2>
 
           <div className="mb-6 space-y-4 border-b pb-4">
-            {order.line_items.map((item) => (
-              <div key={item.id} className="flex justify-between">
-                <span className="text-gray-600">
-                  {item.name} x {item.quantity}
-                </span>
-                <OrderPrice price={item.total} orderCurrency={order.currency} className="font-medium" iconSize="xs" />
-              </div>
-            ))}
+            {order.line_items.map((item) => {
+              const isFreeGift = isOrderFreeGift(item);
+              const isBundle = isOrderBundleProduct(item);
+              
+              return (
+                <div key={item.id}>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">
+                      {item.name} x {item.quantity}
+                      {isFreeGift && (
+                        <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                          {isRTL ? "هدية مجانية" : "Free Gift"}
+                        </span>
+                      )}
+                    </span>
+                    <OrderPrice 
+                      price={isFreeGift ? 0 : item.total} 
+                      orderCurrency={order.currency} 
+                      className={`font-medium ${isFreeGift ? "text-amber-600" : ""}`} 
+                      iconSize="xs" 
+                    />
+                  </div>
+                  {/* Bundle Items Breakdown */}
+                  {isBundle && (
+                    <OrderBundleItemsList item={item} locale={locale} compact />
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           <div className="space-y-2">
