@@ -10,6 +10,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useNotification } from "@/contexts/NotificationContext";
 import { useFreeGift } from "@/contexts/FreeGiftContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { saveBundleData } from "@/lib/utils/bundleStorage";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 import type { BundleConfig } from "@/lib/api/woocommerce";
@@ -264,14 +265,19 @@ export function BuildYourOwnSetClient({
           is_addon: index >= requiredSlots,
         }));
 
-      await addToCart(bundleProduct.id, quantity, undefined, undefined, {
+      const bundleData = {
         bundle_items: selectedProducts,
         bundle_total: total,
         box_price: boxPrice,
         products_total: productsTotal,
         required_items_total: requiredProductsTotal,
         addon_items_total: addOnProductsTotal,
-      });
+      };
+
+      // Save bundle data to localStorage as fallback since CoCart doesn't persist cart_item_data
+      saveBundleData(bundleProduct.id, bundleData);
+
+      await addToCart(bundleProduct.id, quantity, undefined, undefined, bundleData);
       
       notify("success", isRTL ? "تمت إضافة الحزمة إلى السلة" : "Bundle added to cart");
     } catch (error) {

@@ -2,6 +2,7 @@
 
 import type { CoCartItem } from "@/lib/api/cocart";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
+import { getBundleData } from "@/lib/utils/bundleStorage";
 
 interface BundleItem {
   product_id: number;
@@ -20,20 +21,28 @@ interface BundleItemsListProps {
 
 /**
  * Safely extracts bundle items from cart item data
+ * Falls back to localStorage if cart_item_data is empty (CoCart doesn't persist custom data)
  */
 export function getBundleItems(item: CoCartItem): BundleItem[] | null {
   try {
     const cartItemData = item.cart_item_data;
-    if (!cartItemData) return null;
-
-    let bundleItems = cartItemData.bundle_items;
+    let bundleItems = cartItemData?.bundle_items;
 
     // Handle case where bundle_items might be a JSON string
     if (typeof bundleItems === "string") {
       try {
         bundleItems = JSON.parse(bundleItems);
       } catch {
-        return null;
+        bundleItems = null;
+      }
+    }
+
+    // If cart_item_data doesn't have bundle_items, try localStorage fallback
+    // This is needed because CoCart doesn't persist custom cart_item_data without a backend filter
+    if (!Array.isArray(bundleItems) || bundleItems.length === 0) {
+      const storedData = getBundleData(item.id);
+      if (storedData?.bundle_items) {
+        bundleItems = storedData.bundle_items;
       }
     }
 
@@ -44,17 +53,17 @@ export function getBundleItems(item: CoCartItem): BundleItem[] | null {
 
     // Validate and map items
     return bundleItems
-      .filter((item): item is BundleItem => 
-        typeof item === "object" && 
-        item !== null && 
-        typeof item.product_id === "number"
+      .filter((bundleItem): bundleItem is BundleItem => 
+        typeof bundleItem === "object" && 
+        bundleItem !== null && 
+        typeof bundleItem.product_id === "number"
       )
-      .map((item) => ({
-        product_id: item.product_id,
-        name: typeof item.name === "string" ? item.name : undefined,
-        price: typeof item.price === "number" || typeof item.price === "string" ? item.price : undefined,
-        quantity: typeof item.quantity === "number" ? item.quantity : undefined,
-        is_addon: typeof item.is_addon === "boolean" ? item.is_addon : undefined,
+      .map((bundleItem) => ({
+        product_id: bundleItem.product_id,
+        name: typeof bundleItem.name === "string" ? bundleItem.name : undefined,
+        price: typeof bundleItem.price === "number" || typeof bundleItem.price === "string" ? bundleItem.price : undefined,
+        quantity: typeof bundleItem.quantity === "number" ? bundleItem.quantity : undefined,
+        is_addon: typeof bundleItem.is_addon === "boolean" ? bundleItem.is_addon : undefined,
       }));
   } catch {
     return null;
@@ -74,6 +83,7 @@ export function getBundleItemsTotal(bundleItems: BundleItem[]): number {
 
 /**
  * Extracts box price from cart item data, or calculates it from item price minus bundle items total
+ * Falls back to localStorage if cart_item_data is empty (CoCart doesn't persist custom data)
  */
 export function getBoxPrice(item: CoCartItem, bundleItemsTotal?: number): number | null {
   try {
@@ -84,6 +94,13 @@ export function getBoxPrice(item: CoCartItem, bundleItemsTotal?: number): number
       const boxPrice = cartItemData.box_price;
       if (typeof boxPrice === "number" && boxPrice > 0) return boxPrice;
       if (typeof boxPrice === "string" && parseFloat(boxPrice) > 0) return parseFloat(boxPrice);
+    }
+    
+    // Try localStorage fallback for box_price
+    const storedData = getBundleData(item.id);
+    if (storedData?.box_price !== undefined) {
+      const storedBoxPrice = storedData.box_price;
+      if (typeof storedBoxPrice === "number" && storedBoxPrice > 0) return storedBoxPrice;
     }
     
     // Fallback: calculate box price from item price minus bundle items total
