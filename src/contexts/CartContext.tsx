@@ -200,6 +200,8 @@ export function CartProvider({ children, locale }: CartProviderProps) {
         // Update cache with actual data
         await mutate(cacheKey, data.cart, false);
         notify("cart", "Item added to cart");
+        // Open cart drawer after successfully adding item
+        setIsCartOpen(true);
       } catch (error) {
         // Rollback on error
         await mutate(cacheKey);
