@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     const sessionData = {
       PaymentMode: "COMPLETE_PAYMENT",
       Order: {
-        Amount: amount,
+        Amount: String(amount),
         Currency: currency,
         ExternalIdentifier: `WC-${order_id}`,
       },
