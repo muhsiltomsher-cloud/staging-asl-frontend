@@ -1446,7 +1446,7 @@ export default function CheckoutPage() {
 
               <Button
                 type="submit"
-                className="hidden w-full lg:block"
+                className="hidden w-full lg:flex"
                 size="lg"
                 isLoading={isSubmitting || isAuthLoading}
                 disabled={isAuthLoading}
