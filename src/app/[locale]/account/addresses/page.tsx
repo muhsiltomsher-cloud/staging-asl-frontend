@@ -42,6 +42,9 @@ const translations = {
     saving: "Saving...",
     saved: "Address saved successfully",
     error: "Failed to save address",
+    copyFromBilling: "Copy from Billing",
+    copyFromShipping: "Copy from Shipping",
+    copying: "Copying...",
   },
   ar: {
     addresses: "العناوين",
@@ -72,6 +75,9 @@ const translations = {
     saving: "جاري الحفظ...",
     saved: "تم حفظ العنوان بنجاح",
     error: "فشل في حفظ العنوان",
+    copyFromBilling: "نسخ من عنوان الفواتير",
+    copyFromShipping: "نسخ من عنوان الشحن",
+    copying: "جاري النسخ...",
   },
 };
 
@@ -93,11 +99,19 @@ function AddressCard({
   title,
   address,
   onEdit,
+  onCopyFrom,
+  copyFromLabel,
+  canCopyFrom,
+  isCopying,
   t,
 }: {
   title: string;
   address: CustomerAddress | null;
   onEdit: () => void;
+  onCopyFrom?: () => void;
+  copyFromLabel?: string;
+  canCopyFrom?: boolean;
+  isCopying?: boolean;
   t: typeof translations.en;
 }) {
   const hasAddress = address && (address.address_1 || address.city);
@@ -106,10 +120,22 @@ function AddressCard({
     <div className="rounded-xl border border-gray-200 bg-white p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-gray-900">{title}</h3>
-        <Button variant="ghost" size="sm" onClick={onEdit}>
-          <Edit2 className="mr-1 h-4 w-4" />
-          {t.editAddress}
-        </Button>
+        <div className="flex items-center gap-2">
+          {canCopyFrom && onCopyFrom && copyFromLabel && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onCopyFrom}
+              disabled={isCopying}
+            >
+              {isCopying ? t.copying : copyFromLabel}
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={onEdit}>
+            <Edit2 className="mr-1 h-4 w-4" />
+            {t.editAddress}
+          </Button>
+        </div>
       </div>
 
       {hasAddress ? (
@@ -136,10 +162,22 @@ function AddressCard({
             </div>
           </div>
           <p className="text-gray-500 mb-4">{t.noAddress}</p>
-          <Button variant="outline" size="sm" onClick={onEdit}>
-            <Plus className="mr-1 h-4 w-4" />
-            {t.addAddress}
-          </Button>
+          <div className="flex flex-col gap-2 items-center">
+            <Button variant="outline" size="sm" onClick={onEdit}>
+              <Plus className="mr-1 h-4 w-4" />
+              {t.addAddress}
+            </Button>
+            {canCopyFrom && onCopyFrom && copyFromLabel && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={onCopyFrom}
+                disabled={isCopying}
+              >
+                {isCopying ? t.copying : copyFromLabel}
+              </Button>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -380,6 +418,35 @@ export default function AddressesPage({ params }: AddressesPageProps) {
     }
   };
 
+  const handleCopyAddress = async (from: "billing" | "shipping", to: "billing" | "shipping") => {
+    if (!user?.user_id || !customer) return;
+
+    const sourceAddress = from === "billing" ? customer.billing : customer.shipping;
+    if (!sourceAddress || (!sourceAddress.address_1 && !sourceAddress.city)) return;
+
+    setIsSaving(true);
+    setMessage(null);
+
+    try {
+      const response = await updateCustomerAddress(user.user_id, to, sourceAddress);
+      if (response.success && response.data) {
+        setCustomer(response.data);
+        setMessage({ type: "success", text: t.saved });
+        setTimeout(() => setMessage(null), 3000);
+      } else {
+        setMessage({ type: "error", text: response.error?.message || t.error });
+      }
+    } catch (error) {
+      console.error("Failed to copy address:", error);
+      setMessage({ type: "error", text: t.error });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const hasBillingAddress = customer?.billing && (customer.billing.address_1 || customer.billing.city);
+  const hasShippingAddress = customer?.shipping && (customer.shipping.address_1 || customer.shipping.city);
+
   if (authLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -451,12 +518,20 @@ export default function AddressesPage({ params }: AddressesPageProps) {
             title={t.billingAddress}
             address={customer?.billing || null}
             onEdit={() => setEditingAddress("billing")}
+            onCopyFrom={() => handleCopyAddress("shipping", "billing")}
+            copyFromLabel={t.copyFromShipping}
+            canCopyFrom={!!hasShippingAddress}
+            isCopying={isSaving}
             t={t}
           />
           <AddressCard
             title={t.shippingAddress}
             address={customer?.shipping || null}
             onEdit={() => setEditingAddress("shipping")}
+            onCopyFrom={() => handleCopyAddress("billing", "shipping")}
+            copyFromLabel={t.copyFromBilling}
+            canCopyFrom={!!hasBillingAddress}
+            isCopying={isSaving}
             t={t}
           />
         </div>
