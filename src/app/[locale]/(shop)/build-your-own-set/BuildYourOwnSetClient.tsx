@@ -548,11 +548,11 @@ export function BuildYourOwnSetClient({
                 <span><FormattedPrice price={boxPrice} iconSize="sm" /></span>
               </div>
             )}
-            {/* Products Price */}
-            {productsTotal > 0 && (
+            {/* Products Price (required items only) */}
+            {requiredProductsTotal > 0 && (
               <div className="flex items-center justify-between text-sm text-gray-600">
                 <span>{t.products}</span>
-                <span><FormattedPrice price={productsTotal} iconSize="sm" /></span>
+                <span><FormattedPrice price={requiredProductsTotal} iconSize="sm" /></span>
               </div>
             )}
             {/* Add-ons Price */}
