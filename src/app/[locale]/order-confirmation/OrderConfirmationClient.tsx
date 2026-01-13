@@ -54,7 +54,9 @@ interface OrderConfirmationClientProps {
 export default function OrderConfirmationClient({ locale }: OrderConfirmationClientProps) {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("order_id");
-  const paymentId = searchParams.get("paymentId");
+  const myFatoorahPaymentId = searchParams.get("paymentId");
+  const tabbyPaymentId = searchParams.get("payment_id");
+  const tamaraOrderId = searchParams.get("orderId");
   const isRTL = locale === "ar";
   const { clearCart } = useCart();
   const cartClearedRef = useRef(false);
@@ -76,26 +78,40 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
       }
 
       try {
-        if (paymentId && !paymentVerifiedRef.current) {
+        const hasExternalPayment = myFatoorahPaymentId || tabbyPaymentId || tamaraOrderId;
+        
+        if (hasExternalPayment && !paymentVerifiedRef.current) {
           paymentVerifiedRef.current = true;
           setVerifyingPayment(true);
           
           try {
-            const verifyResponse = await fetch(`/api/myfatoorah/verify-payment?paymentId=${paymentId}`);
-            const verifyData: PaymentVerificationResult = await verifyResponse.json();
+            let verifyUrl = "";
             
-            if (verifyData.success && verifyData.payment_status) {
-              setPaymentStatus(verifyData.payment_status);
-              setPaymentMessage(verifyData.status_message || null);
+            if (myFatoorahPaymentId) {
+              verifyUrl = `/api/myfatoorah/verify-payment?paymentId=${myFatoorahPaymentId}`;
+            } else if (tabbyPaymentId) {
+              verifyUrl = `/api/tabby/verify-payment?payment_id=${tabbyPaymentId}`;
+            } else if (tamaraOrderId) {
+              verifyUrl = `/api/tamara/verify-payment?order_id=${tamaraOrderId}`;
+            }
+            
+            if (verifyUrl) {
+              const verifyResponse = await fetch(verifyUrl);
+              const verifyData: PaymentVerificationResult = await verifyResponse.json();
               
-              if (verifyData.payment_status === "failed") {
-                console.error("Payment verification failed:", {
-                  error_code: verifyData.error_code,
-                  error_message: verifyData.error_message,
-                });
+              if (verifyData.success && verifyData.payment_status) {
+                setPaymentStatus(verifyData.payment_status);
+                setPaymentMessage(verifyData.status_message || null);
+                
+                if (verifyData.payment_status === "failed") {
+                  console.error("Payment verification failed:", {
+                    error_code: verifyData.error_code,
+                    error_message: verifyData.error_message,
+                  });
+                }
+              } else {
+                console.error("Payment verification error:", verifyData.error);
               }
-            } else {
-              console.error("Payment verification error:", verifyData.error);
             }
           } catch (verifyError) {
             console.error("Failed to verify payment:", verifyError);
@@ -129,7 +145,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
     };
 
     verifyPaymentAndFetchOrder();
-  }, [orderId, paymentId, clearCart]);
+  }, [orderId, myFatoorahPaymentId, tabbyPaymentId, tamaraOrderId, clearCart]);
 
   if (loading) {
     return (
