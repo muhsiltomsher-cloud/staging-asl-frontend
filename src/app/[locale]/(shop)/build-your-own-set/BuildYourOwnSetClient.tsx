@@ -193,14 +193,15 @@ export function BuildYourOwnSetClient({
     });
   }, [productOptions, searchQuery, categoryFilter]);
 
-  // Get box price from bundle config (if configured)
-  const boxPrice = bundleConfig?.with_box_price || 0;
-
   // Get the bundle product's base price from WooCommerce
   const bundleProductPrice = useMemo(() => {
     if (!bundleProduct?.prices?.price) return 0;
     return parseInt(bundleProduct.prices.price) / Math.pow(10, bundleProduct.prices.currency_minor_unit);
   }, [bundleProduct]);
+
+  // Get box price: use config value if set, otherwise use bundle product's WooCommerce price
+  // This represents the cost of the box/packaging itself
+  const boxPrice = bundleConfig?.with_box_price || bundleProductPrice;
 
   // Calculate required products total (first requiredSlots items)
   const requiredProductsTotal = useMemo(() => {
