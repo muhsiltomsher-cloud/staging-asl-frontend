@@ -574,7 +574,7 @@ export default function CheckoutClient() {
           
           // Add bundle totals
           const bundleItemsTotal = getBundleItemsTotal(bundleItems);
-          const boxPrice = getBoxPrice(item, bundleItemsTotal);
+          const boxPrice = getBoxPrice(item);
           
           if (bundleItemsTotal > 0) {
             metaData.push({
