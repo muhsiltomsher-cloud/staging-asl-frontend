@@ -32,6 +32,21 @@ interface OrderData {
   payment_method_title: string;
 }
 
+interface PaymentVerificationResult {
+  success: boolean;
+  payment_status?: "success" | "failed" | "pending";
+  status_message?: string;
+  invoice_id?: string;
+  transaction_id?: string;
+  payment_method?: string;
+  error_code?: string;
+  error_message?: string;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
 interface OrderConfirmationClientProps {
   locale: string;
 }
@@ -39,16 +54,21 @@ interface OrderConfirmationClientProps {
 export default function OrderConfirmationClient({ locale }: OrderConfirmationClientProps) {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("order_id");
+  const paymentId = searchParams.get("paymentId");
   const isRTL = locale === "ar";
   const { clearCart } = useCart();
   const cartClearedRef = useRef(false);
+  const paymentVerifiedRef = useRef(false);
 
   const [order, setOrder] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<"success" | "failed" | "pending" | null>(null);
+  const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
 
   useEffect(() => {
-    const fetchOrder = async () => {
+    const verifyPaymentAndFetchOrder = async () => {
       if (!orderId) {
         setError("Order ID not found");
         setLoading(false);
@@ -56,6 +76,34 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
       }
 
       try {
+        if (paymentId && !paymentVerifiedRef.current) {
+          paymentVerifiedRef.current = true;
+          setVerifyingPayment(true);
+          
+          try {
+            const verifyResponse = await fetch(`/api/myfatoorah/verify-payment?paymentId=${paymentId}`);
+            const verifyData: PaymentVerificationResult = await verifyResponse.json();
+            
+            if (verifyData.success && verifyData.payment_status) {
+              setPaymentStatus(verifyData.payment_status);
+              setPaymentMessage(verifyData.status_message || null);
+              
+              if (verifyData.payment_status === "failed") {
+                console.error("Payment verification failed:", {
+                  error_code: verifyData.error_code,
+                  error_message: verifyData.error_message,
+                });
+              }
+            } else {
+              console.error("Payment verification error:", verifyData.error);
+            }
+          } catch (verifyError) {
+            console.error("Failed to verify payment:", verifyError);
+          } finally {
+            setVerifyingPayment(false);
+          }
+        }
+
         const response = await fetch(`/api/orders?orderId=${orderId}`);
         const data = await response.json();
 
@@ -65,8 +113,6 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
 
         setOrder(data.data);
         
-        // Clear cart after successfully fetching order (for external payment methods)
-        // Use ref to prevent clearing cart multiple times
         if (!cartClearedRef.current) {
           cartClearedRef.current = true;
           try {
@@ -82,8 +128,8 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
       }
     };
 
-    fetchOrder();
-  }, [orderId, clearCart]);
+    verifyPaymentAndFetchOrder();
+  }, [orderId, paymentId, clearCart]);
 
   if (loading) {
     return (
@@ -115,27 +161,92 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
     );
   }
 
+  const isPaymentFailed = paymentStatus === "failed";
+  const isPaymentPending = paymentStatus === "pending";
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mx-auto max-w-3xl">
+        {verifyingPayment && (
+          <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-center">
+            <div className="flex items-center justify-center gap-2">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600"></div>
+              <span className="text-blue-700">
+                {isRTL ? "جاري التحقق من حالة الدفع..." : "Verifying payment status..."}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {isPaymentFailed && (
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-red-100">
+                <svg className="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-red-800">
+                  {isRTL ? "فشل الدفع" : "Payment Failed"}
+                </h3>
+                <p className="mt-1 text-sm text-red-700">
+                  {paymentMessage || (isRTL ? "لم يتم إتمام الدفع. يرجى المحاولة مرة أخرى." : "Payment was not completed. Please try again.")}
+                </p>
+                <Link href={`/${locale}/checkout`} className="mt-3 inline-block">
+                  <Button size="sm" variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
+                    {isRTL ? "إعادة المحاولة" : "Try Again"}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isPaymentPending && (
+          <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100">
+                <svg className="h-5 w-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-yellow-800">
+                  {isRTL ? "الدفع قيد المعالجة" : "Payment Processing"}
+                </h3>
+                <p className="mt-1 text-sm text-yellow-700">
+                  {paymentMessage || (isRTL ? "جاري معالجة الدفع. سيتم تحديث حالة الطلب قريباً." : "Your payment is being processed. Order status will be updated shortly.")}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-            <svg
-              className="h-8 w-8 text-green-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+          <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
+            isPaymentFailed ? "bg-red-100" : isPaymentPending ? "bg-yellow-100" : "bg-green-100"
+          }`}>
+            {isPaymentFailed ? (
+              <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : isPaymentPending ? (
+              <svg className="h-8 w-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : (
+              <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            )}
           </div>
           <h1 className="mb-2 text-3xl font-bold text-gray-900">
-            {isRTL ? "شكراً لطلبك!" : "Thank you for your order!"}
+            {isPaymentFailed 
+              ? (isRTL ? "فشل الدفع" : "Payment Failed")
+              : isPaymentPending
+              ? (isRTL ? "الطلب قيد المعالجة" : "Order Processing")
+              : (isRTL ? "شكراً لطلبك!" : "Thank you for your order!")}
           </h1>
           <p className="text-gray-600">
             {isRTL
