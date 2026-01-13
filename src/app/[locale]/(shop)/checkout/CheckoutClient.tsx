@@ -794,8 +794,9 @@ export default function CheckoutClient() {
               } else {
                 throw new Error(tamaraData.error?.message || "Failed to initiate Tamara payment");
               }
-            } else if (data.payment_url) {
-              // Redirect to external payment gateway (for other gateways)
+            } else if (data.payment_url && formData.paymentMethod !== "cod") {
+              // Redirect to external payment gateway (for other gateways, but not COD)
+              // COD orders should stay on the Next.js frontend, not redirect to WordPress
               window.location.href = data.payment_url;
             } else {
               // For COD and other non-redirect payment methods, go to order confirmation
@@ -1357,14 +1358,16 @@ export default function CheckoutClient() {
                                                                     );
                                                                   }
                                                                   if (id === "cod") {
-                                    return (
-                                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
-                                        <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                                        </svg>
-                                      </div>
-                                    );
-                                  }
+                                                                    return (
+                                                                      <Image
+                                                                        src="/images/payment/cod.png"
+                                                                        alt="Cash on Delivery"
+                                                                        width={60}
+                                                                        height={32}
+                                                                        className="h-8 w-auto object-contain"
+                                                                      />
+                                                                    );
+                                                                  }
                                   if (id === "paypal") {
                                     return (
                                       <div className="flex h-8 w-12 items-center justify-center rounded bg-[#003087] px-1">
