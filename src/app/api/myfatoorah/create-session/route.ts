@@ -68,11 +68,13 @@ export async function POST(request: NextRequest) {
 
     const body: CreateSessionRequest = await request.json();
     
-    console.log("MyFatoorah create-session request:", {
+    console.log("MyFatoorah create-session request:", JSON.stringify({
       order_id: body.order_id,
       amount: body.amount,
       currency: body.currency,
-    });
+      customer_name: body.customer_name,
+      customer_email: body.customer_email,
+    }));
     
     const {
       order_id,
@@ -101,25 +103,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const sessionData = {
+    const sessionData: Record<string, unknown> = {
       PaymentMode: "COMPLETE_PAYMENT",
       Order: {
-        Amount: String(amount),
+        Amount: Number(amount),
         Currency: currency,
         ExternalIdentifier: `WC-${order_id}`,
-      },
-      Customer: {
-        Name: customer_name || "",
-        Email: customer_email || "",
-        Mobile: customer_phone || "",
-        Reference: customer_reference || `WC-${order_id}`,
       },
       IntegrationUrls: {
         Redirection: `${callback_url}?order_id=${order_id}&order_key=${order_key}`,
         Error: `${error_url}?order_id=${order_id}&order_key=${order_key}`,
       },
-      Language: language.toUpperCase(),
+      Language: language.toUpperCase() as "EN" | "AR",
     };
+
+    if (customer_name || customer_email || customer_phone || customer_reference) {
+      sessionData.Customer = {
+        ...(customer_name && { Name: customer_name }),
+        ...(customer_email && { Email: customer_email }),
+        ...(customer_phone && { Mobile: customer_phone }),
+        Reference: customer_reference || `WC-${order_id}`,
+      };
+    }
 
     const url = `${getMyFatoorahApiBaseUrl()}/v3/sessions`;
     
@@ -134,11 +139,12 @@ export async function POST(request: NextRequest) {
 
     const data: MyFatoorahSessionResponse = await response.json();
 
-    console.log("MyFatoorah create-session response:", {
+    console.log("MyFatoorah create-session response:", JSON.stringify({
       isSuccess: data.IsSuccess,
       sessionId: data.Data?.SessionId,
       message: data.Message,
-    });
+      validationErrors: data.ValidationErrors,
+    }));
 
     if (!response.ok || !data.IsSuccess) {
       return NextResponse.json(
