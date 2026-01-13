@@ -158,19 +158,19 @@ export function ProductSection({
             ))}
           </Swiper>
 
-          {/* Navigation Arrows */}
+          {/* Navigation Arrows - positioned to center on product image area */}
           {products.length > 2 && (
             <>
               <button
                 type="button"
-                className={`product-slider-prev-${settings.section_title?.replace(/\s+/g, '-').toLowerCase() || 'default'} absolute ${isRTL ? 'right-0' : 'left-0'} top-1/2 z-10 -translate-y-1/2 -translate-x-2 rounded-full bg-white p-2 shadow-lg transition-all hover:bg-amber-50 disabled:opacity-50 hidden md:flex items-center justify-center`}
+                className={`product-slider-prev-${settings.section_title?.replace(/\s+/g, '-').toLowerCase() || 'default'} absolute ${isRTL ? 'right-0' : 'left-0'} top-[calc(50%-3rem)] z-10 -translate-y-1/2 -translate-x-2 rounded-full bg-white p-2 shadow-lg transition-all hover:bg-amber-50 disabled:opacity-50 hidden md:flex items-center justify-center`}
                 aria-label="Previous"
               >
                 <ChevronLeft className={`h-5 w-5 text-amber-900 ${isRTL ? 'rotate-180' : ''}`} />
               </button>
               <button
                 type="button"
-                className={`product-slider-next-${settings.section_title?.replace(/\s+/g, '-').toLowerCase() || 'default'} absolute ${isRTL ? 'left-0' : 'right-0'} top-1/2 z-10 -translate-y-1/2 translate-x-2 rounded-full bg-white p-2 shadow-lg transition-all hover:bg-amber-50 disabled:opacity-50 hidden md:flex items-center justify-center`}
+                className={`product-slider-next-${settings.section_title?.replace(/\s+/g, '-').toLowerCase() || 'default'} absolute ${isRTL ? 'left-0' : 'right-0'} top-[calc(50%-3rem)] z-10 -translate-y-1/2 translate-x-2 rounded-full bg-white p-2 shadow-lg transition-all hover:bg-amber-50 disabled:opacity-50 hidden md:flex items-center justify-center`}
                 aria-label="Next"
               >
                 <ChevronRight className={`h-5 w-5 text-amber-900 ${isRTL ? 'rotate-180' : ''}`} />
