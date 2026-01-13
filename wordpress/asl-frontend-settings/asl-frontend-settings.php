@@ -1127,6 +1127,16 @@ function asl_free_gifts_render_admin_page() {
                             <th>Message (AR)</th>
                             <td><input type="text" name="asl_free_gifts_rules[${ruleIndex}][message_ar]" class="large-text" dir="rtl" placeholder="تهانينا! لقد حصلت على هدية مجانية!"></td>
                         </tr>
+                        <tr>
+                            <th>Hide from Shop</th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="asl_free_gifts_rules[${ruleIndex}][hide_from_shop]" value="1" checked>
+                                    Hide this gift product from shop listing and search results
+                                </label>
+                                <p class="description">When enabled, this product will not appear in shop listings or search results (applies to both EN and AR).</p>
+                            </td>
+                        </tr>
                     </table>
                 </div>`;
                 $('#asl-free-gifts-rules').append(template);
@@ -1153,6 +1163,7 @@ function asl_free_gifts_render_rule_row($index, $rule, $products, $currencies) {
     $priority = isset($rule['priority']) ? $rule['priority'] : 10;
     $message_en = isset($rule['message_en']) ? $rule['message_en'] : '';
     $message_ar = isset($rule['message_ar']) ? $rule['message_ar'] : '';
+    $hide_from_shop = isset($rule['hide_from_shop']) ? $rule['hide_from_shop'] : true;
     ?>
     <div class="asl-free-gift-rule" style="background:#fff;border:1px solid #ccd0d4;padding:20px;margin-bottom:20px;">
         <h3>Rule #<?php echo $index + 1; ?> <button type="button" class="button asl-remove-rule" style="float:right;color:#a00;">Remove Rule</button></h3>
@@ -1205,6 +1216,16 @@ function asl_free_gifts_render_rule_row($index, $rule, $products, $currencies) {
                 <th>Message (AR)</th>
                 <td><input type="text" name="asl_free_gifts_rules[<?php echo $index; ?>][message_ar]" value="<?php echo esc_attr($message_ar); ?>" class="large-text" dir="rtl" placeholder="تهانينا! لقد حصلت على هدية مجانية!"></td>
             </tr>
+            <tr>
+                <th>Hide from Shop</th>
+                <td>
+                    <label>
+                        <input type="checkbox" name="asl_free_gifts_rules[<?php echo $index; ?>][hide_from_shop]" value="1" <?php checked($hide_from_shop); ?>>
+                        Hide this gift product from shop listing and search results
+                    </label>
+                    <p class="description">When enabled, this product will not appear in shop listings or search results (applies to both EN and AR).</p>
+                </td>
+            </tr>
         </table>
     </div>
     <?php
@@ -1230,6 +1251,7 @@ function asl_free_gifts_save_rules() {
                 'priority' => intval($rule['priority'] ?? 10),
                 'message_en' => sanitize_text_field($rule['message_en'] ?? ''),
                 'message_ar' => sanitize_text_field($rule['message_ar'] ?? ''),
+                'hide_from_shop' => isset($rule['hide_from_shop']) ? true : false,
             );
         }
     }
@@ -1340,12 +1362,14 @@ function asl_free_gifts_api_get_settings() {
 }
 
 // Get array of free gift product IDs (for hiding from shop)
+// Only returns products where hide_from_shop is true per rule
 function asl_free_gifts_get_product_ids() {
     $rules = get_option('asl_free_gifts_rules', array());
     $product_ids = array();
     
     foreach ($rules as $rule) {
-        if (!empty($rule['product_id'])) {
+        // Only include products where hide_from_shop is explicitly true
+        if (!empty($rule['product_id']) && !empty($rule['hide_from_shop'])) {
             $product_ids[] = intval($rule['product_id']);
         }
     }
@@ -1353,10 +1377,9 @@ function asl_free_gifts_get_product_ids() {
     return array_unique($product_ids);
 }
 
-// Hide free gift products from shop if setting is enabled
+// Hide free gift products from shop based on per-rule hide_from_shop setting
 add_action('woocommerce_product_query', function($query) {
     if (is_admin()) return;
-    if (!get_option('asl_free_gifts_hide_from_shop', true)) return;
     
     $free_gift_ids = asl_free_gifts_get_product_ids();
     if (empty($free_gift_ids)) return;
@@ -1369,8 +1392,6 @@ add_action('woocommerce_product_query', function($query) {
 
 // Also hide from WooCommerce Store API (for headless/Next.js frontend)
 add_filter('woocommerce_rest_product_object_query', function($args, $request) {
-    if (!get_option('asl_free_gifts_hide_from_shop', true)) return $args;
-    
     $free_gift_ids = asl_free_gifts_get_product_ids();
     if (empty($free_gift_ids)) return $args;
     
@@ -1382,8 +1403,6 @@ add_filter('woocommerce_rest_product_object_query', function($args, $request) {
 
 // Hide from search results
 add_filter('woocommerce_product_search_results', function($product_ids) {
-    if (!get_option('asl_free_gifts_hide_from_shop', true)) return $product_ids;
-    
     $free_gift_ids = asl_free_gifts_get_product_ids();
     if (empty($free_gift_ids)) return $product_ids;
     
