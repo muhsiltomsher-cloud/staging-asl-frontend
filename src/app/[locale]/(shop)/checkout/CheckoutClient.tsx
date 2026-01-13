@@ -1289,7 +1289,8 @@ export default function CheckoutClient() {
                                                                     tabby_installments: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
                                                                     tabby_checkout: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
                                                                     tabby: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
-                                                                    tamara: { en: "Pay with Tamara", ar: "الدفع مع تمارا" },
+                                                                    tamara: { en: "Tamara - Buy Now Pay Later", ar: "تمارا - اشترِ الآن وادفع لاحقاً" },
+                                                                    "tamara-gateway": { en: "Tamara - Buy Now Pay Later", ar: "تمارا - اشترِ الآن وادفع لاحقاً" },
                                                                     bacs: { en: "Bank Transfer", ar: "تحويل بنكي" },
                                                                     cheque: { en: "Check Payment", ar: "الدفع بشيك" },
                                                                     paypal: { en: "PayPal", ar: "باي بال" },
@@ -1309,7 +1310,8 @@ export default function CheckoutClient() {
                                                                     tabby_installments: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
                                                                     tabby_checkout: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
                                                                     tabby: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
-                                                                    tamara: { en: "Buy now, pay later with Tamara", ar: "اشترِ الآن وادفع لاحقاً مع تمارا" },
+                                                                    tamara: { en: "Pay in easy installments with Tamara", ar: "ادفع بأقساط سهلة مع تمارا" },
+                                                                    "tamara-gateway": { en: "Pay in easy installments with Tamara", ar: "ادفع بأقساط سهلة مع تمارا" },
                                                                     bacs: { en: "Make payment directly to our bank account", ar: "قم بالدفع مباشرة إلى حسابنا البنكي" },
                                                                     cheque: { en: "Pay with a check", ar: "الدفع بشيك" },
                                                                     paypal: { en: "Pay securely with PayPal", ar: "ادفع بأمان مع باي بال" },
@@ -1335,7 +1337,7 @@ export default function CheckoutClient() {
                                                                       />
                                                                     );
                                                                   }
-                                                                  if (id === "tamara") {
+                                                                  if (id === "tamara" || id === "tamara-gateway" || id.startsWith("tamara")) {
                                                                     return (
                                                                       <Image
                                                                         src="/images/payment/tamara.png"
