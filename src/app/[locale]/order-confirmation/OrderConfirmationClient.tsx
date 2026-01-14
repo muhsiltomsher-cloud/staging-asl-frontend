@@ -55,7 +55,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
   const tabbyPaymentId = searchParams.get("payment_id");
   const tamaraOrderId = searchParams.get("orderId");
   const isRTL = locale === "ar";
-  const { clearCart } = useCart();
+  const { clearCart, setIsCartOpen } = useCart();
   const cartClearedRef = useRef(false);
   const paymentVerifiedRef = useRef(false);
 
@@ -65,6 +65,10 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
   const [paymentStatus, setPaymentStatus] = useState<"success" | "failed" | "pending" | null>(null);
   const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
   const [verifyingPayment, setVerifyingPayment] = useState(false);
+
+  useEffect(() => {
+    setIsCartOpen(false);
+  }, [setIsCartOpen]);
 
   useEffect(() => {
     const verifyPaymentAndFetchOrder = async () => {
