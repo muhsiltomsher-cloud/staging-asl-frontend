@@ -11,6 +11,9 @@ export interface RegisterData {
   username: string;
   email: string;
   password: string;
+  first_name?: string;
+  last_name?: string;
+  newsletter?: boolean;
 }
 
 export interface AuthUser {
@@ -138,7 +141,9 @@ export async function register(data: RegisterData): Promise<RegisterResponse> {
         username: data.username,
         email: data.email,
         password: data.password,
-        first_name: data.username,
+        first_name: data.first_name || data.username,
+        last_name: data.last_name || "",
+        meta_data: data.newsletter ? [{ key: "newsletter_subscribed", value: "yes" }] : [],
       }),
     });
 
