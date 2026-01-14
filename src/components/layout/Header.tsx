@@ -29,6 +29,7 @@ interface HeaderProps {
   topbarSettings?: TopbarSettings | null;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function Header({ locale, dictionary, siteSettings, headerSettings, menuItems: _menuItems, topbarSettings }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);

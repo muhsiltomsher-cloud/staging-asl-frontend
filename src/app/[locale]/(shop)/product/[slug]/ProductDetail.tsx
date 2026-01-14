@@ -139,6 +139,7 @@ function FullscreenGallery({ images, selectedIndex, onClose, onSelectImage, prod
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedIndex, images.length, onClose, onSelectImage, zoomLevel]);
 
   const goToPrev = () => {
@@ -305,7 +306,9 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "slider">("slider");
   const [addonValues, setAddonValues] = useState<WCPAFormValues>({});
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [addonPrice, setAddonPrice] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [addonErrors, setAddonErrors] = useState<Record<string, string>>({});
     const { addToCart } = useCart();
     const { addToWishlist, removeFromWishlist, isInWishlist, getWishlistItemId } = useWishlist();

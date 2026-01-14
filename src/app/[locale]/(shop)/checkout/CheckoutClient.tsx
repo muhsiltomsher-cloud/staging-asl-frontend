@@ -389,6 +389,7 @@ export default function CheckoutClient() {
             }, 500);
             return () => clearTimeout(timeoutId);
           }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [formData.shipping.country, formData.shipping.city, formData.shipping.postalCode]);
 
         const handleSelectShippingRate = async (rateId: string, packageId: number = 0) => {

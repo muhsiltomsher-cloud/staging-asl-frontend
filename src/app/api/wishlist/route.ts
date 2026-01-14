@@ -24,20 +24,24 @@ const USER_COOKIE = "asl_auth_user";
 // }
 // const shareKeyCache = new Map<number, CachedShareKey>();
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getCachedProduct(_productId: number): WCProduct | null {
   // DEV MODE: Cache disabled for faster development
   return null;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function setCachedProduct(_productId: number, _product: WCProduct): void {
   // DEV MODE: Cache disabled for faster development - do nothing
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getCachedShareKey(_userId: number): string | null {
   // DEV MODE: Cache disabled for faster development
   return null;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function setCachedShareKey(_userId: number, _shareKey: string): void {
   // DEV MODE: Cache disabled for faster development - do nothing
 }

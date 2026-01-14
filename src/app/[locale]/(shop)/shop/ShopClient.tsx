@@ -20,15 +20,20 @@ interface CachedProducts {
   locale: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getCachedProducts(_locale: string): CachedProducts | null {
   // DEV MODE: Cache disabled for faster development
   return null;
 }
 
 function setCachedProducts(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _products: WCProduct[],
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _total: number,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _totalPages: number,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _locale: string
 ): void {
   // DEV MODE: Cache disabled for faster development - do nothing
@@ -47,6 +52,7 @@ export function ShopClient({
   products: initialProducts, 
   locale,
   initialTotal = 0,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   initialTotalPages = 1,
   giftProductIds = [],
   bundleProductSlugs = [],

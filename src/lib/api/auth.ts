@@ -11,6 +11,9 @@ export interface RegisterData {
   username: string;
   email: string;
   password: string;
+  first_name?: string;
+  last_name?: string;
+  newsletter?: boolean;
 }
 
 export interface AuthUser {

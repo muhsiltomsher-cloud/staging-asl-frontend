@@ -72,8 +72,11 @@ interface MyFatoorahConfig {
 export function MyFatoorahEmbeddedPayment({
   sessionId,
   scriptUrl,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   encryptionKey: _encryptionKey,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   orderId: _orderId,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   orderKey: _orderKey,
   locale,
   onPaymentComplete,

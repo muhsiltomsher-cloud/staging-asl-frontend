@@ -144,6 +144,7 @@ export async function getProducts(params?: {
 }
 
 // Helper to check if a slug contains non-ASCII characters (e.g., Arabic)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function isNonAsciiSlug(slug: string): boolean {
   return /[^\x00-\x7F]/.test(slug);
 }

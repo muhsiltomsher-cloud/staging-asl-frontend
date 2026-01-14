@@ -214,6 +214,7 @@ export async function GET(request: NextRequest) {
   });
 
   // Override the json method to return our params
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const originalJson = mockRequest.json.bind(mockRequest);
   mockRequest.json = async () => ({ type, slug, id, path });
 

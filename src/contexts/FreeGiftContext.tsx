@@ -332,6 +332,7 @@ export function FreeGiftProvider({ children, locale }: FreeGiftProviderProps) {
 
     const timeoutId = setTimeout(processGiftLogic, 500);
     return () => clearTimeout(timeoutId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     cart,
     cartItems,
