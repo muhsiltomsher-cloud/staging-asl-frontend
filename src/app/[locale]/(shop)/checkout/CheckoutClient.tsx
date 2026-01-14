@@ -14,7 +14,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCustomer, getSavedAddressesFromCustomer, type Customer, type SavedAddress } from "@/lib/api/customer";
 import { featureFlags, type Locale } from "@/config/site";
-import { MapPin, Check, ChevronDown, ChevronUp, User, UserCheck, Tag, X, Truck } from "lucide-react";
+import { MapPin, Check, ChevronDown, ChevronUp, Tag, X, Truck } from "lucide-react";
 import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice, getPricingMode, getFixedPrice, getBundleTotal } from "@/components/cart/BundleItemsList";
 
 interface ShippingRate {
@@ -852,36 +852,35 @@ export default function CheckoutClient() {
   };
 
   return (
-                <div className="min-h-screen pb-32 md:pb-8 overflow-x-clip" style={{ backgroundColor: '#F5F0E8' }}>
-                  <div className="container mx-auto px-2 sm:px-4 py-8">
-        <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
+                <div className="min-h-screen pb-32 md:pb-8 overflow-x-clip" style={{ backgroundColor: '#FAFAFA' }}>
+                  <div className="container mx-auto px-2 sm:px-4 py-6 md:py-8">
 
-        {/* Login Status Indicator */}
-        <div className="mb-6 flex items-center gap-3 rounded-lg border border-black/10 bg-white p-4">
-          {isAuthenticated ? (
-            <>
-              <UserCheck className="h-5 w-5 text-green-600" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-800">
-                  {isRTL ? "تم تسجيل الدخول كـ" : "Logged in as"} <span className="font-semibold">{user?.user_email}</span>
-                </p>
-              </div>
-            </>
-          ) : (
-            <>
-              <User className="h-5 w-5 text-amber-600" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-800">
-                  {isRTL ? "أنت تتسوق كضيف" : "You are checking out as a guest"}
-                </p>
-              </div>
-            </>
+        {/* Modern User Status Card */}
+        <div className="mb-6 flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className={`flex h-10 w-10 items-center justify-center rounded-full text-white text-sm font-semibold ${isAuthenticated ? 'bg-gradient-to-br from-emerald-400 to-emerald-600' : 'bg-gradient-to-br from-amber-400 to-amber-600'}`}>
+              {isAuthenticated ? (user?.user_email?.charAt(0).toUpperCase() || 'U') : 'G'}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">
+                {isAuthenticated ? user?.user_email : (isRTL ? "ضيف" : "Guest")}
+              </p>
+              <p className="text-xs text-gray-500">
+                {isAuthenticated 
+                  ? (isRTL ? "حساب مسجل" : "Registered account")
+                  : (isRTL ? "الدفع كضيف" : "Checkout as guest")}
+              </p>
+            </div>
+          </div>
+          {isAuthenticated && (
+            <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1">
+              <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
+              <span className="text-xs font-medium text-emerald-700">{isRTL ? "متصل" : "Connected"}</span>
+            </div>
           )}
         </div>
 
-        <h1 className="mb-8 text-xl md:text-3xl font-bold text-gray-900 font-sans">
-          {isRTL ? "الدفع" : "Checkout"}
-        </h1>
+        <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 
         {error && (
           <div className="mb-6 rounded-lg border border-black/10 bg-white p-4 text-red-600">
@@ -974,9 +973,9 @@ export default function CheckoutClient() {
         <div className="grid gap-8 lg:grid-cols-3 lg:items-start">
           <div className="space-y-6 lg:col-span-2">
             {/* Contact Information */}
-            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
-                            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 font-sans">
-                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">1</span>
+            <div className="rounded-2xl bg-white p-5 md:p-6 shadow-sm">
+                            <h2 className="mb-5 flex items-center gap-3 text-base md:text-lg font-semibold text-gray-900">
+                              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-xs text-white shadow-sm">1</span>
                               {isRTL ? "معلومات الاتصال" : "Contact Information"}
                             </h2>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -998,10 +997,10 @@ export default function CheckoutClient() {
             </div>
 
             {/* Shipping Address */}
-            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
-                            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 font-sans">
-                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">2</span>
-                              {isRTL ? "عنوان الشحن" : "Shipping Address"}
+            <div className="rounded-2xl bg-white p-5 md:p-6 shadow-sm">
+                            <h2 className="mb-5 flex items-center gap-3 text-base md:text-lg font-semibold text-gray-900">
+                              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-xs text-white shadow-sm">2</span>
+                              {isRTL ? "عنوان الشحن" : "Delivery"}
                             </h2>
 
               {/* Show saved addresses selector for authenticated users */}
@@ -1139,9 +1138,9 @@ export default function CheckoutClient() {
             </div>
 
             {/* Shipping Method Selection */}
-            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
-              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 font-sans">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">3</span>
+            <div className="rounded-2xl bg-white p-5 md:p-6 shadow-sm">
+              <h2 className="mb-5 flex items-center gap-3 text-base md:text-lg font-semibold text-gray-900">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-xs text-white shadow-sm">3</span>
                 {isRTL ? "طريقة الشحن" : "Shipping Method"}
               </h2>
               
@@ -1214,10 +1213,10 @@ export default function CheckoutClient() {
             </div>
 
             {/* Billing Address */}
-            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
+            <div className="rounded-2xl bg-white p-5 md:p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
-                                <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900 font-sans">
-                                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">4</span>
+                                <h2 className="flex items-center gap-3 text-base md:text-lg font-semibold text-gray-900">
+                                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-xs text-white shadow-sm">4</span>
                                   {isRTL ? "عنوان الفاتورة" : "Billing Address"}
                                 </h2>
                 <button
@@ -1309,9 +1308,9 @@ export default function CheckoutClient() {
             </div>
 
                         {/* Payment Method */}
-                        <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
-                                        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 font-sans">
-                                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">5</span>
+                        <div className="rounded-2xl bg-white p-5 md:p-6 shadow-sm">
+                                        <h2 className="mb-5 flex items-center gap-3 text-base md:text-lg font-semibold text-gray-900">
+                                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-xs text-white shadow-sm">5</span>
                                           {isRTL ? "طريقة الدفع" : "Payment Method"}
                                         </h2>
                           <div className="space-y-3">
@@ -1460,9 +1459,9 @@ export default function CheckoutClient() {
                         </div>
 
             {/* Order Notes */}
-            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
-                            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 font-sans">
-                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-xs text-white">6</span>
+            <div className="rounded-2xl bg-white p-5 md:p-6 shadow-sm">
+                            <h2 className="mb-5 flex items-center gap-3 text-base md:text-lg font-semibold text-gray-900">
+                              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-xs text-white shadow-sm">6</span>
                               {isRTL ? "ملاحظات الطلب" : "Order Notes"}
                             </h2>
               <textarea
@@ -1481,17 +1480,17 @@ export default function CheckoutClient() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1 lg:sticky lg:top-24 lg:self-start">
-            <div className="rounded-lg border border-black/10 bg-white p-6 shadow-sm">
-                            <h2 className="mb-4 text-lg font-semibold text-gray-900 font-sans">
+            <div className="rounded-2xl bg-white p-5 md:p-6 shadow-sm">
+                            <h2 className="mb-5 text-base md:text-lg font-semibold text-gray-900">
                               {isRTL ? "ملخص الطلب" : "Order Summary"}
                             </h2>
 
                             {/* Cart Items with Thumbnails */}
-                            <div className="space-y-4 border-b border-black/10 pb-4 md:max-h-80 md:overflow-y-auto">
+                            <div className="space-y-4 border-b border-gray-100 pb-4 md:max-h-80 md:overflow-y-auto">
                               {cartItems.map((item) => (
                                 <div key={item.item_key} className="flex items-center gap-3">
                                   {/* Product Thumbnail */}
-                                  <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-black/10 bg-gray-100">
+                                  <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
                                     {item.featured_image ? (
                                       <Image
                                         src={item.featured_image}
@@ -1532,7 +1531,7 @@ export default function CheckoutClient() {
 
                             {/* Coupon Code Section */}
                             {featureFlags.enableCoupons && (
-                            <div className="border-b border-black/10 py-4">
+                            <div className="border-b border-gray-100 py-4">
                               <div className="mb-3">
                                 <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
                                   <Tag className="h-4 w-4" />
@@ -1623,7 +1622,7 @@ export default function CheckoutClient() {
                             )}
 
                                           {/* Totals */}
-                            <div className="space-y-3 border-b border-black/10 py-4">
+                            <div className="space-y-3 border-b border-gray-100 py-4">
                               <div className="flex justify-between text-sm text-gray-600">
                                 <span>{isRTL ? "المجموع الفرعي" : "Subtotal"}</span>
                                 <FormattedPrice
@@ -1695,7 +1694,7 @@ export default function CheckoutClient() {
               </p>
 
               {/* WhatsApp Help */}
-              <div className="mt-6 rounded-lg border border-green-200 bg-green-50 p-4 text-center">
+              <div className="mt-6 rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-green-50 p-4 text-center">
                 <p className="text-sm text-gray-700">
                   {isRTL ? "هل تحتاج مساعدة في طلبك؟" : "Need help with your order?"}
                 </p>
