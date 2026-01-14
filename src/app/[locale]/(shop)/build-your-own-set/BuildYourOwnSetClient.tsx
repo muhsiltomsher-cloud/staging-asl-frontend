@@ -51,12 +51,9 @@ export function BuildYourOwnSetClient({
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
 
   // Get required and optional slots from bundle config
-  // total_slots = required_slots + optional_slots, so we calculate optional from the difference
-  // Default to 2 optional slots if not configured or if total_slots equals required_slots
+  // Use optional_slots directly from API (defaults to 0 if not set)
   const requiredSlots = bundleConfig?.required_slots || 3;
-  const configuredTotalSlots = bundleConfig?.total_slots || 0;
-  const calculatedOptionalSlots = configuredTotalSlots > requiredSlots ? configuredTotalSlots - requiredSlots : 2;
-  const optionalSlots = calculatedOptionalSlots;
+  const optionalSlots = bundleConfig?.optional_slots ?? 0;
   const totalSlots = requiredSlots + optionalSlots;
 
   // Initialize selections array based on total slots

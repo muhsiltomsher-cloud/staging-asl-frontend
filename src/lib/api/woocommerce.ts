@@ -496,6 +496,7 @@ export interface BundleConfig {
   unique_products: number[];
   total_slots: number;
   required_slots: number;
+  optional_slots?: number;
   with_box_price?: number;
   shipping_fee?: string;
   slot_labels?: Record<string, string>;
