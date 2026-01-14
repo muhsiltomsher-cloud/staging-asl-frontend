@@ -848,6 +848,96 @@ function asl_bundle_items_save_to_cart($cart_item_data, $product_id, $variation_
         $cart_item_data['bundle_total'] = $bundle_total;
     }
     
+    // Get pricing_mode from request
+    $pricing_mode = null;
+    
+    // Try to get from POST data
+    if (isset($_POST['pricing_mode'])) {
+        $pricing_mode = sanitize_text_field($_POST['pricing_mode']);
+    }
+    
+    // Try to get from cart_item_data in POST
+    if (!$pricing_mode && isset($_POST['cart_item_data']['pricing_mode'])) {
+        $pricing_mode = sanitize_text_field($_POST['cart_item_data']['pricing_mode']);
+    }
+    
+    // Try to get from JSON body
+    if (!$pricing_mode) {
+        $json_body = file_get_contents('php://input');
+        if ($json_body) {
+            $body_data = json_decode($json_body, true);
+            if (isset($body_data['cart_item_data']['pricing_mode'])) {
+                $pricing_mode = sanitize_text_field($body_data['cart_item_data']['pricing_mode']);
+            } elseif (isset($body_data['pricing_mode'])) {
+                $pricing_mode = sanitize_text_field($body_data['pricing_mode']);
+            }
+        }
+    }
+    
+    if ($pricing_mode && in_array($pricing_mode, array('sum', 'fixed'))) {
+        $cart_item_data['pricing_mode'] = $pricing_mode;
+    }
+    
+    // Get fixed_price from request
+    $fixed_price = null;
+    
+    // Try to get from POST data
+    if (isset($_POST['fixed_price'])) {
+        $fixed_price = floatval($_POST['fixed_price']);
+    }
+    
+    // Try to get from cart_item_data in POST
+    if (!$fixed_price && isset($_POST['cart_item_data']['fixed_price'])) {
+        $fixed_price = floatval($_POST['cart_item_data']['fixed_price']);
+    }
+    
+    // Try to get from JSON body
+    if (!$fixed_price) {
+        $json_body = file_get_contents('php://input');
+        if ($json_body) {
+            $body_data = json_decode($json_body, true);
+            if (isset($body_data['cart_item_data']['fixed_price'])) {
+                $fixed_price = floatval($body_data['cart_item_data']['fixed_price']);
+            } elseif (isset($body_data['fixed_price'])) {
+                $fixed_price = floatval($body_data['fixed_price']);
+            }
+        }
+    }
+    
+    if ($fixed_price && $fixed_price > 0) {
+        $cart_item_data['fixed_price'] = $fixed_price;
+    }
+    
+    // Get box_price from request
+    $box_price = null;
+    
+    // Try to get from POST data
+    if (isset($_POST['box_price'])) {
+        $box_price = floatval($_POST['box_price']);
+    }
+    
+    // Try to get from cart_item_data in POST
+    if (!$box_price && isset($_POST['cart_item_data']['box_price'])) {
+        $box_price = floatval($_POST['cart_item_data']['box_price']);
+    }
+    
+    // Try to get from JSON body
+    if (!$box_price) {
+        $json_body = file_get_contents('php://input');
+        if ($json_body) {
+            $body_data = json_decode($json_body, true);
+            if (isset($body_data['cart_item_data']['box_price'])) {
+                $box_price = floatval($body_data['cart_item_data']['box_price']);
+            } elseif (isset($body_data['box_price'])) {
+                $box_price = floatval($body_data['box_price']);
+            }
+        }
+    }
+    
+    if ($box_price !== null && $box_price >= 0) {
+        $cart_item_data['box_price'] = $box_price;
+    }
+    
     return $cart_item_data;
 }
 
@@ -860,6 +950,15 @@ function asl_bundle_items_get_from_session($cart_item, $values, $key) {
     }
     if (isset($values['bundle_total'])) {
         $cart_item['bundle_total'] = $values['bundle_total'];
+    }
+    if (isset($values['pricing_mode'])) {
+        $cart_item['pricing_mode'] = $values['pricing_mode'];
+    }
+    if (isset($values['fixed_price'])) {
+        $cart_item['fixed_price'] = $values['fixed_price'];
+    }
+    if (isset($values['box_price'])) {
+        $cart_item['box_price'] = $values['box_price'];
     }
     return $cart_item;
 }
@@ -891,13 +990,34 @@ function asl_bundle_set_cart_item_price($cart) {
  */
 function asl_bundle_items_add_to_cocart_response($cart_contents, $cart_item_key, $cart_item, $cart) {
     foreach ($cart_contents as $key => $item) {
+        // Ensure cart_item_data exists
+        if (!isset($cart_contents[$key]['cart_item_data'])) {
+            $cart_contents[$key]['cart_item_data'] = array();
+        }
+        
         // Check if bundle_items exists in the cart item (from session)
         if (isset($item['bundle_items'])) {
-            // Ensure it's in cart_item_data for the frontend
-            if (!isset($cart_contents[$key]['cart_item_data'])) {
-                $cart_contents[$key]['cart_item_data'] = array();
-            }
             $cart_contents[$key]['cart_item_data']['bundle_items'] = $item['bundle_items'];
+        }
+        
+        // Pass pricing_mode to frontend
+        if (isset($item['pricing_mode'])) {
+            $cart_contents[$key]['cart_item_data']['pricing_mode'] = $item['pricing_mode'];
+        }
+        
+        // Pass fixed_price to frontend
+        if (isset($item['fixed_price'])) {
+            $cart_contents[$key]['cart_item_data']['fixed_price'] = $item['fixed_price'];
+        }
+        
+        // Pass box_price to frontend
+        if (isset($item['box_price'])) {
+            $cart_contents[$key]['cart_item_data']['box_price'] = $item['box_price'];
+        }
+        
+        // Pass bundle_total to frontend
+        if (isset($item['bundle_total'])) {
+            $cart_contents[$key]['cart_item_data']['bundle_total'] = $item['bundle_total'];
         }
         
         // Also check if it's already in cart_item_data and enrich with product data
@@ -931,12 +1051,13 @@ function asl_bundle_items_add_to_cocart_response($cart_contents, $cart_item_key,
  * Alternative hook for CoCart v2 - add bundle items to individual cart item
  */
 function asl_bundle_items_add_to_cocart_item($item, $item_key, $cart_item) {
+    // Ensure cart_item_data exists
+    if (!isset($item['cart_item_data'])) {
+        $item['cart_item_data'] = array();
+    }
+    
     // Check if bundle_items exists in the original cart item
     if (isset($cart_item['bundle_items'])) {
-        if (!isset($item['cart_item_data'])) {
-            $item['cart_item_data'] = array();
-        }
-        
         $bundle_items = $cart_item['bundle_items'];
         $enriched_items = array();
         
@@ -956,6 +1077,26 @@ function asl_bundle_items_add_to_cocart_item($item, $item_key, $cart_item) {
         }
         
         $item['cart_item_data']['bundle_items'] = $enriched_items;
+    }
+    
+    // Pass pricing_mode to frontend
+    if (isset($cart_item['pricing_mode'])) {
+        $item['cart_item_data']['pricing_mode'] = $cart_item['pricing_mode'];
+    }
+    
+    // Pass fixed_price to frontend
+    if (isset($cart_item['fixed_price'])) {
+        $item['cart_item_data']['fixed_price'] = $cart_item['fixed_price'];
+    }
+    
+    // Pass box_price to frontend
+    if (isset($cart_item['box_price'])) {
+        $item['cart_item_data']['box_price'] = $cart_item['box_price'];
+    }
+    
+    // Pass bundle_total to frontend
+    if (isset($cart_item['bundle_total'])) {
+        $item['cart_item_data']['bundle_total'] = $cart_item['bundle_total'];
     }
     
     return $item;

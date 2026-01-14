@@ -60,7 +60,7 @@ export function OrderBundleItemsList({ item, locale, compact = false, showPrices
                 );
               })}
             </ul>
-            {showPrices && regularItemsTotal > 0 && (
+            {showPrices && !isFixedPricing && regularItemsTotal > 0 && (
               <div className="mt-0.5 flex items-center justify-between text-gray-500">
                 <span className="text-[10px]">{isRTL ? "مجموع المنتجات:" : "Products Total:"}</span>
                 <FormattedPrice price={regularItemsTotal} className="text-xs text-gray-500 flex-shrink-0" iconSize="xs" />
@@ -152,7 +152,7 @@ export function OrderBundleItemsList({ item, locale, compact = false, showPrices
               );
             })}
           </ul>
-          {showPrices && regularItemsTotal > 0 && (
+          {showPrices && !isFixedPricing && regularItemsTotal > 0 && (
             <div className="mt-1.5 flex items-center justify-between text-gray-500">
               <span className="text-xs">{isRTL ? "مجموع المنتجات:" : "Products Total:"}</span>
               <FormattedPrice price={regularItemsTotal} className="text-xs text-gray-500 flex-shrink-0" iconSize="xs" />
