@@ -44,10 +44,11 @@ add_action('admin_enqueue_scripts', function($hook) {
 /**
  * Include separate module files
  * 
- * The plugin is organized into three main modules:
+ * The plugin is organized into four main modules:
  * 1. ASL Settings - Core settings for homepage, header, SEO, mobile
  * 2. Bundle Builder - Product bundle creation and management
  * 3. Free Gift - Automatic free gift rules based on cart value
+ * 4. Forms - Contact form and newsletter REST API endpoints
  */
 
 // Include ASL Settings module (homepage, header, SEO, mobile settings)
@@ -58,3 +59,6 @@ require_once ASL_SETTINGS_PATH . 'includes/class-asl-bundle-builder.php';
 
 // Include Free Gift module (admin page, REST API, product hiding)
 require_once ASL_SETTINGS_PATH . 'includes/class-asl-free-gift.php';
+
+// Include Forms module (contact form and newsletter REST API)
+require_once ASL_SETTINGS_PATH . 'includes/class-asl-forms.php';

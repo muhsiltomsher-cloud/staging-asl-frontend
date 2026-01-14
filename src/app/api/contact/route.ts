@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
 
-const CF7_FORM_ID = "5988fcb";
-const API_BASE = `${siteConfig.apiUrl}/wp-json/contact-form-7/v1/contact-forms`;
+const API_BASE = `${siteConfig.apiUrl}/wp-json/asl/v1`;
 
 interface ContactFormData {
   firstName: string;
@@ -30,49 +29,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const formData = new FormData();
-    formData.append("your-first-name", body.firstName);
-    formData.append("your-last-name", body.lastName);
-    formData.append("your-email", body.email);
-    formData.append("your-phone", body.phone || "");
-    formData.append("your-subject", body.subject || "General Inquiry");
-    formData.append("your-message", body.message);
-
-    const url = `${API_BASE}/${CF7_FORM_ID}/feedback`;
+    const url = `${API_BASE}/contact`;
 
     const response = await fetch(url, {
       method: "POST",
-      body: formData,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        first_name: body.firstName,
+        last_name: body.lastName,
+        email: body.email,
+        phone: body.phone || "",
+        subject: body.subject || "General Inquiry",
+        message: body.message,
+      }),
     });
 
     const data = await response.json();
 
-    if (data.status === "mail_sent") {
+    if (data.success) {
       return NextResponse.json({
         success: true,
         message: data.message || "Your message has been sent successfully.",
       });
     }
 
-    if (data.status === "validation_failed") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: "validation_failed",
-            message: data.message || "Please check your form inputs.",
-            invalidFields: data.invalid_fields || [],
-          },
-        },
-        { status: 400 }
-      );
-    }
-
     return NextResponse.json(
       {
         success: false,
         error: {
-          code: data.status || "submission_error",
+          code: data.code || "submission_error",
           message: data.message || "Failed to send message. Please try again.",
         },
       },

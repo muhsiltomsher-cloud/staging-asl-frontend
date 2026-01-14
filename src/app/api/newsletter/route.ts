@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
 
-const CF7_FORM_ID = "8005e27";
-const API_BASE = `${siteConfig.apiUrl}/wp-json/contact-form-7/v1/contact-forms`;
+const API_BASE = `${siteConfig.apiUrl}/wp-json/asl/v1`;
 
 interface NewsletterFormData {
   email: string;
@@ -39,44 +38,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const formData = new FormData();
-    formData.append("your-email", body.email);
-
-    const url = `${API_BASE}/${CF7_FORM_ID}/feedback`;
+    const url = `${API_BASE}/newsletter`;
 
     const response = await fetch(url, {
       method: "POST",
-      body: formData,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: body.email,
+      }),
     });
 
     const data = await response.json();
 
-    if (data.status === "mail_sent") {
+    if (data.success) {
       return NextResponse.json({
         success: true,
         message: data.message || "Thank you for subscribing to our newsletter!",
       });
     }
 
-    if (data.status === "validation_failed") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: "validation_failed",
-            message: data.message || "Please check your email address.",
-            invalidFields: data.invalid_fields || [],
-          },
-        },
-        { status: 400 }
-      );
-    }
-
     return NextResponse.json(
       {
         success: false,
         error: {
-          code: data.status || "subscription_error",
+          code: data.code || "subscription_error",
           message: data.message || "Failed to subscribe. Please try again.",
         },
       },
