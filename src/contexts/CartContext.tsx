@@ -158,7 +158,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
   // Use SWR for cart data with caching strategy optimized for cart/checkout load
   // - Uses localStorage cache as fallback data for instant initial render
   // - Increased dedupingInterval to reduce redundant requests during checkout
-  // - keepPreviousData: true to show cached data while revalidating
+  // - keepPreviousData: false to prevent showing wrong locale data when switching locales
   const { data: cart, isLoading: swrLoading, isValidating, mutate: mutateCart } = useSWR<CoCartResponse | null>(
     cacheKey,
     cartFetcher,
@@ -170,7 +170,7 @@ export function CartProvider({ children, locale }: CartProviderProps) {
       revalidateOnMount: !cachedCart, // Skip initial fetch if we have cached data (will revalidate in background)
       dedupingInterval: 5000, // 5 seconds deduplication to reduce requests during checkout flow
       errorRetryCount: 2,
-      keepPreviousData: true, // Keep showing previous data while revalidating
+      keepPreviousData: false, // Don't keep previous data when locale changes
     }
   );
 
