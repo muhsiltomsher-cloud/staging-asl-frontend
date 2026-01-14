@@ -419,6 +419,8 @@ export function CartProvider({ children, locale }: CartProviderProps) {
 
   // Calculate the total bundle items price across all cart items
   // This is needed because CoCart only knows about the base product price, not the bundle items
+  // However, if pricing_mode is set (from PHP backend), the cart item price is already correct
+  // and we should NOT add any adjustment to avoid double-counting
   const bundleItemsAdjustment = useMemo(() => {
     if (!cartItems || cartItems.length === 0) return 0;
     
@@ -428,6 +430,18 @@ export function CartProvider({ children, locale }: CartProviderProps) {
     return cartItems.reduce((total, item) => {
       const bundleItems = getBundleItems(item);
       if (bundleItems && bundleItems.length > 0) {
+        // Check if pricing_mode is set - if so, the PHP backend has already set the correct price
+        // and we should NOT add any adjustment
+        const hasPricingMode = item.cart_item_data?.pricing_mode !== undefined;
+        
+        // If pricing_mode is set (from PHP backend), skip adjustment - price is already correct
+        // For fixed pricing, the cart item price IS the fixed price (no adjustment needed)
+        // For sum pricing, the cart item price IS boxPrice + productsTotal (no adjustment needed)
+        if (hasPricingMode) {
+          return total;
+        }
+        
+        // Legacy fallback: if no pricing_mode, add bundle items total (old behavior)
         const bundleItemsTotal = getBundleItemsTotal(bundleItems);
         const quantity = item.quantity?.value || 1;
         // Convert to minor units (same format as CoCart subtotal)
