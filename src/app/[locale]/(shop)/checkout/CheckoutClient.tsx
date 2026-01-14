@@ -617,28 +617,6 @@ export default function CheckoutClient() {
 
       const couponLines = selectedCoupons.map(coupon => ({ code: coupon.code }));
 
-      // Calculate fee lines for bundle products
-      // WooCommerce REST API may not accept custom line item prices, so we add the bundle items
-      // price as a fee to ensure the correct total is charged
-      const feeLines: Array<{ name: string; total: string; tax_status: string }> = [];
-      
-      cartItems.forEach((item) => {
-        const bundleItems = getBundleItems(item);
-        if (bundleItems && bundleItems.length > 0) {
-          const bundleItemsTotal = getBundleItemsTotal(bundleItems);
-          const quantity = item.quantity?.value || 1;
-          
-          if (bundleItemsTotal > 0) {
-            // Add the bundle items price as a fee (taxable)
-            feeLines.push({
-              name: `Bundle Products (${item.name})`,
-              total: (bundleItemsTotal * quantity).toFixed(2),
-              tax_status: "taxable",
-            });
-          }
-        }
-      });
-
       const orderPayload = {
         payment_method: formData.paymentMethod,
         billing: {
@@ -665,7 +643,6 @@ export default function CheckoutClient() {
         },
         line_items: lineItems,
         coupon_lines: couponLines,
-        fee_lines: feeLines.length > 0 ? feeLines : undefined,
         customer_note: formData.orderNotes,
         ...(isAuthenticated && user?.user_id ? { customer_id: user.user_id } : {}),
       };
