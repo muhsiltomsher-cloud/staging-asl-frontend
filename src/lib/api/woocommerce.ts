@@ -5,6 +5,7 @@ import type {
   WCCategory,
   WCProductsResponse,
 } from "@/types/woocommerce";
+import type { BundlePricing } from "@/types/bundle";
 
 const API_BASE = `${siteConfig.apiUrl}/wp-json/wc/store/v1`;
 
@@ -487,7 +488,7 @@ export const getRelatedProductsByCategoryId = cache(async function getRelatedPro
 // Bundle Configuration API (from ASL Bundles Creator plugin)
 export interface BundleConfig {
   product_id: number;
-  bundle_id?: number;
+  bundle_id?: string;
   bundle_type?: string;
   eligible_categories?: number[];
   exclude_categories?: number[];
@@ -507,6 +508,7 @@ export interface BundleConfig {
   discount_type?: "none" | "percentage" | "fixed";
   discount_value?: number;
   show_individual_prices?: boolean;
+  pricing?: BundlePricing;
 }
 
 export async function getBundleConfig(
