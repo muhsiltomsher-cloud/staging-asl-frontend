@@ -430,18 +430,27 @@ export function CartProvider({ children, locale }: CartProviderProps) {
     return cartItems.reduce((total, item) => {
       const bundleItems = getBundleItems(item);
       if (bundleItems && bundleItems.length > 0) {
-        // Check if pricing_mode is set - if so, the PHP backend has already set the correct price
-        // and we should NOT add any adjustment
-        const hasPricingMode = item.cart_item_data?.pricing_mode !== undefined;
+        // Check if pricing_mode was explicitly set (not just defaulting to "sum")
+        // We check both cart_item_data (from PHP) and localStorage (from bundle builder)
+        const hasExplicitPricingMode = 
+          item.cart_item_data?.pricing_mode !== undefined ||
+          (typeof window !== "undefined" && (() => {
+            try {
+              const stored = localStorage.getItem(`bundle_${item.id}`);
+              return stored && JSON.parse(stored)?.pricing_mode !== undefined;
+            } catch {
+              return false;
+            }
+          })());
         
-        // If pricing_mode is set (from PHP backend), skip adjustment - price is already correct
-        // For fixed pricing, the cart item price IS the fixed price (no adjustment needed)
-        // For sum pricing, the cart item price IS boxPrice + productsTotal (no adjustment needed)
-        if (hasPricingMode) {
+        // If pricing_mode is explicitly set, skip adjustment - the bundle builder
+        // has already calculated the correct total (either fixed price or sum)
+        // and the cart item price reflects this
+        if (hasExplicitPricingMode) {
           return total;
         }
         
-        // Legacy fallback: if no pricing_mode, add bundle items total (old behavior)
+        // Legacy fallback: if no pricing_mode anywhere, add bundle items total (old behavior)
         const bundleItemsTotal = getBundleItemsTotal(bundleItems);
         const quantity = item.quantity?.value || 1;
         // Convert to minor units (same format as CoCart subtotal)
