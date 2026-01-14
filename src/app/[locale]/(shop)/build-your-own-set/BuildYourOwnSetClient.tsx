@@ -327,6 +327,7 @@ export function BuildYourOwnSetClient({
       boxPrice: "Box",
       products: "Products",
       addOns: "Add-ons",
+      fixedPrice: "Fixed Price",
       addToCart: "Add to cart",
       adding: "Adding...",
       selectProduct: "Select a Product",
@@ -359,6 +360,7 @@ export function BuildYourOwnSetClient({
       boxPrice: "الصندوق",
       products: "المنتجات",
       addOns: "الإضافات",
+      fixedPrice: "سعر ثابت",
       addToCart: "أضف إلى السلة",
       adding: "جاري الإضافة...",
       selectProduct: "اختر منتج",
@@ -566,25 +568,37 @@ export function BuildYourOwnSetClient({
 
           {/* Price Breakdown */}
           <div className="space-y-2 border-t border-gray-200 pt-4">
-            {/* Box Price */}
-            {boxPrice > 0 && (
-              <div className="flex items-center justify-between text-sm text-gray-600">
-                <span>{t.boxPrice}</span>
-                <span><FormattedPrice price={boxPrice} iconSize="sm" /></span>
-              </div>
+            {/* For "sum" pricing mode: show breakdown of box price + products */}
+            {pricingMode === "sum" && (
+              <>
+                {/* Box Price */}
+                {boxPrice > 0 && (
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>{t.boxPrice}</span>
+                    <span><FormattedPrice price={boxPrice} iconSize="sm" /></span>
+                  </div>
+                )}
+                {/* Products Price (required items only) */}
+                {requiredProductsTotal > 0 && (
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>{t.products}</span>
+                    <span><FormattedPrice price={requiredProductsTotal} iconSize="sm" /></span>
+                  </div>
+                )}
+                {/* Add-ons Price */}
+                {hasAddOns && addOnProductsTotal > 0 && (
+                  <div className="flex items-center justify-between text-sm text-amber-600">
+                    <span>{t.addOns}</span>
+                    <span>+<FormattedPrice price={addOnProductsTotal} iconSize="sm" /></span>
+                  </div>
+                )}
+              </>
             )}
-            {/* Products Price (required items only) */}
-            {requiredProductsTotal > 0 && (
+            {/* For "fixed" pricing mode: show fixed price label */}
+            {pricingMode === "fixed" && (
               <div className="flex items-center justify-between text-sm text-gray-600">
-                <span>{t.products}</span>
-                <span><FormattedPrice price={requiredProductsTotal} iconSize="sm" /></span>
-              </div>
-            )}
-            {/* Add-ons Price */}
-            {hasAddOns && addOnProductsTotal > 0 && (
-              <div className="flex items-center justify-between text-sm text-amber-600">
-                <span>{t.addOns}</span>
-                <span>+<FormattedPrice price={addOnProductsTotal} iconSize="sm" /></span>
+                <span>{t.fixedPrice}</span>
+                <span><FormattedPrice price={fixedPrice} iconSize="sm" /></span>
               </div>
             )}
             {/* Total */}
