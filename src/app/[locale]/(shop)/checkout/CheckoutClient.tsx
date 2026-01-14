@@ -15,7 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getCustomer, getSavedAddressesFromCustomer, type Customer, type SavedAddress } from "@/lib/api/customer";
 import { featureFlags, type Locale } from "@/config/site";
 import { MapPin, Check, ChevronDown, ChevronUp, User, UserCheck, Tag, X, Truck } from "lucide-react";
-import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice } from "@/components/cart/BundleItemsList";
+import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice, getPricingMode, getFixedPrice, getBundleTotal } from "@/components/cart/BundleItemsList";
 
 interface ShippingRate {
   rate_id: string;
@@ -541,13 +541,25 @@ export default function CheckoutClient() {
         const isBundleProduct = bundleItems && bundleItems.length > 0;
         
         if (isBundleProduct) {
-          // For bundle products, calculate the correct total: Box Price + Products Total
+          // For bundle products, calculate the correct total based on pricing mode
           // CoCart only knows about the base WooCommerce product price, not the bundled items
           const bundleItemsTotal = getBundleItemsTotal(bundleItems);
           const boxPrice = getBoxPrice(item);
+          const pricingMode = getPricingMode(item);
+          const fixedPrice = getFixedPrice(item);
+          const storedBundleTotal = getBundleTotal(item);
           
-          // Calculate the correct bundle total per item
-          const correctBundleTotal = bundleItemsTotal + (boxPrice || 0);
+          // Calculate the correct bundle total per item based on pricing mode
+          let correctBundleTotal: number;
+          
+          if (pricingMode === "fixed") {
+            // For fixed pricing mode, use the fixed price or stored bundle total
+            // The bundle has a fixed total price regardless of what items are selected
+            correctBundleTotal = fixedPrice || storedBundleTotal || boxPrice || 0;
+          } else {
+            // For sum pricing mode, add items total + box price
+            correctBundleTotal = bundleItemsTotal + (boxPrice || 0);
+          }
           
           // Multiply by quantity for the line item total
           const quantity = item.quantity?.value || 1;
@@ -570,6 +582,20 @@ export default function CheckoutClient() {
             metaData.push({
               key: "_box_price",
               value: boxPrice.toString(),
+            });
+          }
+          
+          // Add pricing mode for frontend order display
+          metaData.push({
+            key: "_pricing_mode",
+            value: pricingMode,
+          });
+          
+          // Add fixed price if applicable
+          if (pricingMode === "fixed" && fixedPrice) {
+            metaData.push({
+              key: "_fixed_price",
+              value: fixedPrice.toString(),
             });
           }
           
