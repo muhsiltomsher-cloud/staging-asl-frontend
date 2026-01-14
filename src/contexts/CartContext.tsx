@@ -12,6 +12,66 @@ import { getBundleData } from "@/lib/utils/bundleStorage";
 // Cache key now includes locale for proper multilingual support
 const getCartCacheKey = (locale: string) => `/api/cart?locale=${locale}`;
 
+// LocalStorage cache key for cart data (temporary caching strategy)
+const CART_STORAGE_KEY = "asl_cart_cache";
+const CART_CACHE_TTL = 5 * 60 * 1000; // 5 minutes TTL for localStorage cache
+
+interface CachedCartData {
+  cart: CoCartResponse;
+  locale: string;
+  timestamp: number;
+}
+
+// Get cached cart from localStorage
+function getCachedCart(locale: string): CoCartResponse | null {
+  if (typeof window === "undefined") return null;
+  
+  try {
+    const cached = localStorage.getItem(CART_STORAGE_KEY);
+    if (!cached) return null;
+    
+    const data: CachedCartData = JSON.parse(cached);
+    
+    // Check if cache is for the same locale and not expired
+    if (data.locale !== locale) return null;
+    if (Date.now() - data.timestamp > CART_CACHE_TTL) {
+      localStorage.removeItem(CART_STORAGE_KEY);
+      return null;
+    }
+    
+    return data.cart;
+  } catch {
+    return null;
+  }
+}
+
+// Save cart to localStorage cache
+function setCachedCart(cart: CoCartResponse, locale: string): void {
+  if (typeof window === "undefined") return;
+  
+  try {
+    const data: CachedCartData = {
+      cart,
+      locale,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    // Ignore storage errors (quota exceeded, etc.)
+  }
+}
+
+// Clear cart cache from localStorage
+function clearCachedCart(): void {
+  if (typeof window === "undefined") return;
+  
+  try {
+    localStorage.removeItem(CART_STORAGE_KEY);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 function getHeaders(): HeadersInit {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
@@ -92,20 +152,34 @@ export function CartProvider({ children, locale }: CartProviderProps) {
   const { isAuthenticated, user } = useAuth();
   const wasAuthenticatedRef = useRef(isAuthenticated);
   
-  // Use SWR for cart data with automatic caching and deduplication
+  // Get cached cart from localStorage for faster initial load
+  const cachedCart = useMemo(() => getCachedCart(locale), [locale]);
+  
+  // Use SWR for cart data with caching strategy optimized for cart/checkout load
+  // - Uses localStorage cache as fallback data for instant initial render
+  // - Increased dedupingInterval to reduce redundant requests during checkout
+  // - keepPreviousData: false to prevent showing wrong locale data when switching locales
   const { data: cart, isLoading: swrLoading, isValidating, mutate: mutateCart } = useSWR<CoCartResponse | null>(
     cacheKey,
     cartFetcher,
     {
+      fallbackData: cachedCart, // Use localStorage cache for instant initial render
       revalidateOnFocus: true, // Refresh cart when user returns to tab
       revalidateOnReconnect: true,
-      revalidateIfStale: true, // Always revalidate stale data
-      revalidateOnMount: true, // Always fetch fresh data on mount
-      dedupingInterval: 2000, // Reduced from 5s to 2s for faster updates
+      revalidateIfStale: true, // Revalidate stale data in background
+      revalidateOnMount: !cachedCart, // Skip initial fetch if we have cached data (will revalidate in background)
+      dedupingInterval: 5000, // 5 seconds deduplication to reduce requests during checkout flow
       errorRetryCount: 2,
       keepPreviousData: false, // Don't keep previous data when locale changes
     }
   );
+
+  // Update localStorage cache whenever cart data changes
+  useEffect(() => {
+    if (cart) {
+      setCachedCart(cart, locale);
+    }
+  }, [cart, locale]);
 
   // Ensure cart is fetched on initial mount - this handles cases where
   // the user returns to the site after closing the browser
@@ -122,6 +196,8 @@ export function CartProvider({ children, locale }: CartProviderProps) {
   useEffect(() => {
     // Check if user just logged in (transition from not authenticated to authenticated)
     if (isAuthenticated && !wasAuthenticatedRef.current) {
+      // Clear cached cart on login to ensure fresh data for authenticated user
+      clearCachedCart();
       // Small delay to ensure auth cookies are set before fetching cart
       const timer = setTimeout(() => {
         mutateCart();
@@ -311,6 +387,9 @@ export function CartProvider({ children, locale }: CartProviderProps) {
 
   const clearCart = useCallback(async () => {
     setIsOperationLoading(true);
+
+    // Clear localStorage cache immediately
+    clearCachedCart();
 
     // Optimistically clear the cart
     await mutate(
