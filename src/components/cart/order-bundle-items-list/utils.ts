@@ -119,3 +119,65 @@ export function isOrderBundleProduct(item: OrderLineItem): boolean {
   const bundleItems = getOrderBundleItems(item);
   return bundleItems !== null && bundleItems.length > 0;
 }
+
+export function getOrderPricingMode(item: OrderLineItem): "sum" | "fixed" {
+  try {
+    const metaData = item.meta_data;
+    if (!metaData || !Array.isArray(metaData)) return "sum";
+
+    const pricingModeMeta = metaData.find(
+      (meta: OrderLineItemMetaData) => meta.key === "_pricing_mode" || meta.key === "pricing_mode"
+    );
+
+    if (pricingModeMeta) {
+      const value = pricingModeMeta.value;
+      if (value === "fixed" || value === "sum") return value;
+    }
+
+    return "sum";
+  } catch {
+    return "sum";
+  }
+}
+
+export function getOrderFixedPrice(item: OrderLineItem): number | null {
+  try {
+    const metaData = item.meta_data;
+    if (!metaData || !Array.isArray(metaData)) return null;
+
+    const fixedPriceMeta = metaData.find(
+      (meta: OrderLineItemMetaData) => meta.key === "_fixed_price" || meta.key === "fixed_price"
+    );
+
+    if (fixedPriceMeta) {
+      const fixedPrice = fixedPriceMeta.value;
+      if (typeof fixedPrice === "number" && fixedPrice > 0) return fixedPrice;
+      if (typeof fixedPrice === "string" && parseFloat(fixedPrice) > 0) return parseFloat(fixedPrice);
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function getOrderBundleTotal(item: OrderLineItem): number | null {
+  try {
+    const metaData = item.meta_data;
+    if (!metaData || !Array.isArray(metaData)) return null;
+
+    const bundleTotalMeta = metaData.find(
+      (meta: OrderLineItemMetaData) => meta.key === "_bundle_total" || meta.key === "bundle_total"
+    );
+
+    if (bundleTotalMeta) {
+      const bundleTotal = bundleTotalMeta.value;
+      if (typeof bundleTotal === "number" && bundleTotal > 0) return bundleTotal;
+      if (typeof bundleTotal === "string" && parseFloat(bundleTotal) > 0) return parseFloat(bundleTotal);
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}

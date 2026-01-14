@@ -21,6 +21,8 @@ export interface StoredBundleData {
   products_total?: number;
   required_items_total?: number;
   addon_items_total?: number;
+  pricing_mode?: "sum" | "fixed";
+  fixed_price?: number;
   timestamp: number;
 }
 

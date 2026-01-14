@@ -73,3 +73,67 @@ export function getBoxPrice(item: CoCartItem): number | null {
     return null;
   }
 }
+
+export function getPricingMode(item: CoCartItem): "sum" | "fixed" {
+  try {
+    const cartItemData = item.cart_item_data;
+    
+    if (cartItemData) {
+      const pricingMode = cartItemData.pricing_mode;
+      if (pricingMode === "fixed" || pricingMode === "sum") return pricingMode;
+    }
+    
+    const storedData = getBundleData(item.id);
+    if (storedData?.pricing_mode === "fixed" || storedData?.pricing_mode === "sum") {
+      return storedData.pricing_mode;
+    }
+    
+    return "sum";
+  } catch {
+    return "sum";
+  }
+}
+
+export function getFixedPrice(item: CoCartItem): number | null {
+  try {
+    const cartItemData = item.cart_item_data;
+    
+    if (cartItemData) {
+      const fixedPrice = cartItemData.fixed_price;
+      if (typeof fixedPrice === "number" && fixedPrice > 0) return fixedPrice;
+      if (typeof fixedPrice === "string" && parseFloat(fixedPrice) > 0) return parseFloat(fixedPrice);
+    }
+    
+    const storedData = getBundleData(item.id);
+    if (storedData?.fixed_price !== undefined) {
+      const storedFixedPrice = storedData.fixed_price;
+      if (typeof storedFixedPrice === "number" && storedFixedPrice > 0) return storedFixedPrice;
+    }
+    
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function getBundleTotal(item: CoCartItem): number | null {
+  try {
+    const cartItemData = item.cart_item_data;
+    
+    if (cartItemData) {
+      const bundleTotal = cartItemData.bundle_total;
+      if (typeof bundleTotal === "number" && bundleTotal > 0) return bundleTotal;
+      if (typeof bundleTotal === "string" && parseFloat(bundleTotal) > 0) return parseFloat(bundleTotal);
+    }
+    
+    const storedData = getBundleData(item.id);
+    if (storedData?.bundle_total !== undefined) {
+      const storedBundleTotal = storedData.bundle_total;
+      if (typeof storedBundleTotal === "number" && storedBundleTotal > 0) return storedBundleTotal;
+    }
+    
+    return null;
+  } catch {
+    return null;
+  }
+}
