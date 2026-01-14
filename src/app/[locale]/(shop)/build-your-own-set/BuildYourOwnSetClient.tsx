@@ -199,9 +199,17 @@ export function BuildYourOwnSetClient({
     return parseInt(bundleProduct.prices.price) / Math.pow(10, bundleProduct.prices.currency_minor_unit);
   }, [bundleProduct]);
 
-  // Get box price: use config value if set, otherwise use bundle product's WooCommerce price
+  // Get pricing mode from bundle config (defaults to "sum" for backwards compatibility)
+  const pricingMode = bundleConfig?.pricing_mode || "sum";
+  
+  // Get fixed price for "fixed" pricing mode
+  const fixedPrice = bundleConfig?.fixed_price || bundleProductPrice;
+
+  // Get box price for "sum" pricing mode: use config value if set, otherwise use bundle product's WooCommerce price
   // This represents the cost of the box/packaging itself
-  const boxPrice = bundleConfig?.with_box_price || bundleProductPrice;
+  const boxPrice = pricingMode === "fixed" 
+    ? fixedPrice 
+    : (bundleConfig?.with_box_price || bundleProductPrice);
 
   // Calculate required products total (first requiredSlots items)
   const requiredProductsTotal = useMemo(() => {
@@ -223,8 +231,10 @@ export function BuildYourOwnSetClient({
   // Check if any add-on products are selected
   const hasAddOns = selections.slice(requiredSlots).some((s) => s !== null);
   
-  // Total = box price + products (box price always shown, products added when selected)
-  const total = boxPrice + productsTotal;
+  // Calculate total based on pricing mode:
+  // - "fixed": Total is always the fixed price, regardless of selected products
+  // - "sum": Total = box price + sum of selected product prices
+  const total = pricingMode === "fixed" ? fixedPrice : (boxPrice + productsTotal);
 
   const requiredCount = selections.slice(0, requiredSlots).filter((s) => s !== null).length;
   const isValid = requiredCount === requiredSlots;
@@ -279,6 +289,8 @@ export function BuildYourOwnSetClient({
         products_total: productsTotal,
         required_items_total: requiredProductsTotal,
         addon_items_total: addOnProductsTotal,
+        pricing_mode: pricingMode,
+        fixed_price: pricingMode === "fixed" ? fixedPrice : undefined,
       };
 
       // Save bundle data to localStorage as fallback since CoCart doesn't persist cart_item_data

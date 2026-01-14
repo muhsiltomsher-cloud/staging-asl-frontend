@@ -501,6 +501,11 @@ export interface BundleConfig {
   slot_labels?: Record<string, string>;
   enabled?: boolean;
   title?: string;
+  pricing_mode?: "sum" | "fixed";
+  fixed_price?: number;
+  discount_type?: "none" | "percentage" | "fixed";
+  discount_value?: number;
+  show_individual_prices?: boolean;
 }
 
 export async function getBundleConfig(
