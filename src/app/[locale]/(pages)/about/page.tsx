@@ -162,11 +162,6 @@ export default async function AboutPage({ params }: AboutPageProps) {
                     className="object-cover"
                   />
                 </div>
-                {/* Floating Accent Card */}
-                <div className="absolute -bottom-6 -right-6 rounded-2xl border border-amber-200/50 bg-white/90 p-6 shadow-xl backdrop-blur-sm md:-bottom-8 md:-right-8">
-                  <div className="text-3xl font-bold text-amber-900">2021</div>
-                  <div className="text-sm text-amber-700">{isRTL ? "بداية الرحلة" : "Journey Started"}</div>
-                </div>
                 {/* Decorative Circle */}
                 <div className="absolute -left-4 -top-4 h-20 w-20 rounded-full border-4 border-amber-200/50 bg-gradient-to-br from-amber-100 to-white" />
               </div>

@@ -90,13 +90,6 @@ export default async function ContactPage({ params }: ContactPageProps) {
               ))}
             </div>
           </div>
-
-          {/* Map placeholder */}
-          <div className="aspect-video overflow-hidden rounded-lg bg-gray-200">
-            <div className="flex h-full items-center justify-center text-gray-500">
-              {pageContent.mapPlaceholder}
-            </div>
-          </div>
         </div>
       </div>
     </div>

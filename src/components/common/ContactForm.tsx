@@ -1,5 +1,25 @@
 "use client";
 
+/**
+ * Contact Form Component
+ * 
+ * BACKEND INTEGRATION:
+ * To connect this form to a backend, we recommend using Contact Form 7 (CF7) WordPress plugin
+ * with the CF7 REST API addon. This allows form submissions to be sent to WordPress and
+ * stored/emailed through the existing WordPress backend.
+ * 
+ * Alternative options:
+ * - WPForms with REST API
+ * - Gravity Forms with REST API
+ * - Custom WordPress REST endpoint in the asl-frontend-settings plugin
+ * 
+ * Implementation steps:
+ * 1. Install Contact Form 7 plugin in WordPress
+ * 2. Install CF7 REST API addon (or similar)
+ * 3. Create a form in CF7 and note the form ID
+ * 4. Update handleSubmit to POST to: /wp-json/contact-form-7/v1/contact-forms/{form_id}/feedback
+ */
+
 import { useState } from "react";
 import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
