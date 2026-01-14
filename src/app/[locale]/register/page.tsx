@@ -7,6 +7,7 @@ import { Input } from "@/components/common/Input";
 import { Button } from "@/components/common/Button";
 import { register } from "@/lib/api/auth";
 import { useNotification } from "@/contexts/NotificationContext";
+import Image from "next/image";
 
 interface RegisterPageProps {
   params: Promise<{ locale: string }>;
@@ -18,16 +19,19 @@ export default function RegisterPage({ params }: RegisterPageProps) {
   const [locale, setLocale] = useState<string>("en");
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    username: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
-    confirmPassword: "",
   });
+  const [newsletter, setNewsletter] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [errors, setErrors] = useState<{
-    username?: string;
+    firstName?: string;
+    lastName?: string;
     email?: string;
     password?: string;
-    confirmPassword?: string;
+    terms?: string;
     general?: string;
   }>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -40,52 +44,76 @@ export default function RegisterPage({ params }: RegisterPageProps) {
 
   const t = {
     en: {
-      registerTitle: "Create Account",
-      registerSubtitle: "Join us and start shopping",
-      username: "Username",
-      usernamePlaceholder: "Enter your username",
-      email: "Email Address",
-      emailPlaceholder: "Enter your email",
+      register: "REGISTER",
+      registerTitle: "Create an Account – Start Shopping",
+      firstName: "First name",
+      firstNamePlaceholder: "First name",
+      lastName: "Last name",
+      lastNamePlaceholder: "Last name",
+      email: "E-mail",
+      emailPlaceholder: "E-mail",
       password: "Password",
-      passwordPlaceholder: "Enter your password",
-      confirmPassword: "Confirm Password",
-      confirmPasswordPlaceholder: "Confirm your password",
-      registerButton: "Create Account",
+      passwordPlaceholder: "Password",
+      newsletterLabel: "Register to our newsletter",
+      termsLabel: "By signing up, you are agreeing to our",
+      termsLink: "Terms & Conditions",
+      registerButton: "Create account",
       registering: "Creating account...",
       hasAccount: "Already have an account?",
       signInLink: "Sign in",
-      usernameRequired: "Username is required",
+      firstNameRequired: "First name is required",
+      lastNameRequired: "Last name is required",
       emailRequired: "Email is required",
       emailInvalid: "Please enter a valid email address",
       passwordRequired: "Password is required",
       passwordMinLength: "Password must be at least 6 characters",
-      passwordsNotMatch: "Passwords do not match",
+      termsRequired: "You must accept the Terms & Conditions",
       registerSuccess: "Registration successful! Please login.",
       registerError: "Registration failed. Please try again.",
+      findYourScent: "Find Your Scent",
+      findYourScentDesc: "We carefully cultivate our fragrances that capture the soul of the world's most popular perfumes.",
+      benefits: "Benefits",
+      benefit1: "Saving Up to 90%",
+      benefit2: "Long Lasting",
+      benefit3: "Easy Returns",
+      benefit4: "Secure Checkout",
+      benefit5: "Free Delivery above 200 AED",
     },
     ar: {
-      registerTitle: "إنشاء حساب",
-      registerSubtitle: "انضم إلينا وابدأ التسوق",
-      username: "اسم المستخدم",
-      usernamePlaceholder: "أدخل اسم المستخدم",
+      register: "التسجيل",
+      registerTitle: "إنشاء حساب – ابدأ التسوق",
+      firstName: "الاسم الأول",
+      firstNamePlaceholder: "الاسم الأول",
+      lastName: "اسم العائلة",
+      lastNamePlaceholder: "اسم العائلة",
       email: "البريد الإلكتروني",
-      emailPlaceholder: "أدخل بريدك الإلكتروني",
+      emailPlaceholder: "البريد الإلكتروني",
       password: "كلمة المرور",
-      passwordPlaceholder: "أدخل كلمة المرور",
-      confirmPassword: "تأكيد كلمة المرور",
-      confirmPasswordPlaceholder: "أعد إدخال كلمة المرور",
+      passwordPlaceholder: "كلمة المرور",
+      newsletterLabel: "اشترك في نشرتنا الإخبارية",
+      termsLabel: "بالتسجيل، أنت توافق على",
+      termsLink: "الشروط والأحكام",
       registerButton: "إنشاء حساب",
       registering: "جاري إنشاء الحساب...",
       hasAccount: "لديك حساب بالفعل؟",
       signInLink: "تسجيل الدخول",
-      usernameRequired: "اسم المستخدم مطلوب",
+      firstNameRequired: "الاسم الأول مطلوب",
+      lastNameRequired: "اسم العائلة مطلوب",
       emailRequired: "البريد الإلكتروني مطلوب",
       emailInvalid: "يرجى إدخال بريد إلكتروني صحيح",
       passwordRequired: "كلمة المرور مطلوبة",
       passwordMinLength: "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
-      passwordsNotMatch: "كلمات المرور غير متطابقة",
+      termsRequired: "يجب الموافقة على الشروط والأحكام",
       registerSuccess: "تم إنشاء الحساب بنجاح! يرجى تسجيل الدخول.",
       registerError: "فشل إنشاء الحساب. يرجى المحاولة مرة أخرى.",
+      findYourScent: "اكتشف عطرك",
+      findYourScentDesc: "نحن نصنع بعناية عطورنا التي تجسد روح أشهر العطور في العالم.",
+      benefits: "المزايا",
+      benefit1: "وفر حتى 90%",
+      benefit2: "يدوم طويلاً",
+      benefit3: "إرجاع سهل",
+      benefit4: "دفع آمن",
+      benefit5: "توصيل مجاني فوق 200 درهم",
     },
   };
 
@@ -99,8 +127,12 @@ export default function RegisterPage({ params }: RegisterPageProps) {
   const validateForm = (): boolean => {
     const newErrors: typeof errors = {};
 
-    if (!formData.username.trim()) {
-      newErrors.username = texts.usernameRequired;
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = texts.firstNameRequired;
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = texts.lastNameRequired;
     }
 
     if (!formData.email.trim()) {
@@ -115,8 +147,8 @@ export default function RegisterPage({ params }: RegisterPageProps) {
       newErrors.password = texts.passwordMinLength;
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = texts.passwordsNotMatch;
+    if (!termsAccepted) {
+      newErrors.terms = texts.termsRequired;
     }
 
     setErrors(newErrors);
@@ -133,9 +165,12 @@ export default function RegisterPage({ params }: RegisterPageProps) {
 
     try {
       const response = await register({
-        username: formData.username,
+        username: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
         password: formData.password,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        newsletter: newsletter,
       });
 
       if (response.success) {
@@ -166,106 +201,221 @@ export default function RegisterPage({ params }: RegisterPageProps) {
     }
   };
 
-    return (
-      <div 
-        className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12"
-        style={{ 
-          backgroundImage: 'url(https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
-      >
-      <div className="w-full max-w-md">
-        <div className="rounded-lg border border-[#E8E0D5] bg-white p-8 shadow-sm">
-          <div className={`mb-8 text-center ${isRTL ? "rtl" : ""}`}>
-            <h1 className="text-2xl font-bold text-[#5C4A3D]">{texts.registerTitle}</h1>
-            <p className="mt-2 text-[#8B7355]">{texts.registerSubtitle}</p>
+  const benefits = [
+    { text: texts.benefit1, icon: "percent" },
+    { text: texts.benefit2, icon: "clock" },
+    { text: texts.benefit3, icon: "returns" },
+    { text: texts.benefit4, icon: "secure" },
+    { text: texts.benefit5, icon: "delivery" },
+  ];
+
+  return (
+    <div 
+      className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12"
+      style={{ 
+        backgroundImage: 'url(https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      <div className="w-full max-w-5xl">
+        <div className={`flex flex-col lg:flex-row gap-8 lg:gap-16 ${isRTL ? "lg:flex-row-reverse" : ""}`}>
+          {/* Left Column - Registration Form */}
+          <div className="flex-1 bg-white p-8 lg:p-12">
+            <div className={`mb-6 ${isRTL ? "text-right" : "text-left"}`}>
+              <h1 className="text-sm font-bold tracking-widest text-black uppercase">{texts.register}</h1>
+              <div className="mt-2 border-b border-gray-300"></div>
+            </div>
+
+            <h2 className={`text-xl font-semibold text-black mb-8 ${isRTL ? "text-right" : "text-left"}`}>
+              {texts.registerTitle}
+            </h2>
+
+            {errors.general && (
+              <div className="mb-6 rounded-md bg-red-50 p-4 text-sm text-red-600">
+                {errors.general}
+              </div>
+            )}
+
+            {successMessage && (
+              <div className="mb-6 rounded-md bg-green-50 p-4 text-sm text-green-600">
+                {successMessage}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input
+                name="firstName"
+                type="text"
+                placeholder={texts.firstNamePlaceholder}
+                value={formData.firstName}
+                onChange={handleInputChange}
+                error={errors.firstName}
+                autoComplete="given-name"
+                dir={isRTL ? "rtl" : "ltr"}
+                className="border-gray-300 rounded-none"
+              />
+
+              <Input
+                name="lastName"
+                type="text"
+                placeholder={texts.lastNamePlaceholder}
+                value={formData.lastName}
+                onChange={handleInputChange}
+                error={errors.lastName}
+                autoComplete="family-name"
+                dir={isRTL ? "rtl" : "ltr"}
+                className="border-gray-300 rounded-none"
+              />
+
+              <Input
+                name="email"
+                type="email"
+                placeholder={texts.emailPlaceholder}
+                value={formData.email}
+                onChange={handleInputChange}
+                error={errors.email}
+                autoComplete="email"
+                dir={isRTL ? "rtl" : "ltr"}
+                className="border-gray-300 rounded-none"
+              />
+
+              <Input
+                name="password"
+                type="password"
+                placeholder={texts.passwordPlaceholder}
+                value={formData.password}
+                onChange={handleInputChange}
+                error={errors.password}
+                autoComplete="new-password"
+                dir={isRTL ? "rtl" : "ltr"}
+                className="border-gray-300 rounded-none"
+              />
+
+              {/* Newsletter Checkbox */}
+              <div className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+                <input
+                  type="checkbox"
+                  id="newsletter"
+                  checked={newsletter}
+                  onChange={(e) => setNewsletter(e.target.checked)}
+                  className="w-4 h-4 border-gray-300 rounded accent-[#92400e]"
+                />
+                <label htmlFor="newsletter" className="text-sm text-[#92400e]">
+                  {texts.newsletterLabel}
+                </label>
+              </div>
+
+              {/* Terms Checkbox */}
+              <div className={`flex items-start gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={termsAccepted}
+                  onChange={(e) => {
+                    setTermsAccepted(e.target.checked);
+                    if (errors.terms) {
+                      setErrors((prev) => ({ ...prev, terms: undefined }));
+                    }
+                  }}
+                  className="w-4 h-4 mt-0.5 border-gray-300 rounded accent-[#92400e]"
+                />
+                <label htmlFor="terms" className="text-sm text-black">
+                  {texts.termsLabel}{" "}
+                  <Link href={`/${locale}/terms-and-conditions`} className="text-[#92400e] hover:underline">
+                    {texts.termsLink}
+                  </Link>
+                </label>
+              </div>
+              {errors.terms && (
+                <p className="text-sm text-red-600">{errors.terms}</p>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full bg-white text-black border border-black rounded-full hover:bg-gray-100 focus-visible:ring-black mt-6"
+                isLoading={isLoading}
+                disabled={isLoading}
+              >
+                {isLoading ? texts.registering : texts.registerButton}
+              </Button>
+            </form>
+
+            <div className={`mt-6 text-sm ${isRTL ? "text-right" : "text-left"}`}>
+              <span className="text-gray-600">{texts.hasAccount} </span>
+              <Link
+                href={`/${locale}/login`}
+                className="font-medium text-[#92400e] hover:underline"
+              >
+                {texts.signInLink}
+              </Link>
+            </div>
           </div>
 
-          {errors.general && (
-            <div className="mb-6 rounded-md bg-red-50 p-4 text-sm text-red-600">
-              {errors.general}
+          {/* Right Column - Find Your Scent & Benefits */}
+          <div className={`flex-1 bg-white p-8 lg:p-12 ${isRTL ? "text-right" : "text-left"}`}>
+            {/* Find Your Scent Section */}
+            <div className={`flex items-start gap-4 mb-8 ${isRTL ? "flex-row-reverse" : ""}`}>
+              <div className="flex-shrink-0">
+                <Image
+                  src="https://staging.aromaticscentslab.com/wp-content/uploads/2025/06/find-your-scent.png"
+                  alt="Find Your Scent"
+                  width={80}
+                  height={100}
+                  className="object-contain"
+                />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-black mb-2">{texts.findYourScent}</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">{texts.findYourScentDesc}</p>
+              </div>
             </div>
-          )}
 
-          {successMessage && (
-            <div className="mb-6 rounded-md bg-green-50 p-4 text-sm text-green-600">
-              {successMessage}
+            {/* Benefits Section */}
+            <div>
+              <h4 className="text-lg font-bold text-black mb-4">{texts.benefits}</h4>
+              <div className="space-y-4">
+                {benefits.map((benefit, index) => (
+                  <div key={index} className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}>
+                    <div className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-300">
+                      {benefit.icon === "percent" && (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="12" r="10"/>
+                          <text x="12" y="16" textAnchor="middle" fontSize="10" fill="currentColor" stroke="none">%</text>
+                        </svg>
+                      )}
+                      {benefit.icon === "clock" && (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="12" r="10"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                      )}
+                      {benefit.icon === "returns" && (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M3 12h18M3 12l6-6M3 12l6 6M21 12l-6-6M21 12l-6 6"/>
+                        </svg>
+                      )}
+                      {benefit.icon === "secure" && (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                      )}
+                      {benefit.icon === "delivery" && (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="1" y="3" width="15" height="13"/>
+                          <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                          <circle cx="5.5" cy="18.5" r="2.5"/>
+                          <circle cx="18.5" cy="18.5" r="2.5"/>
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-black font-medium">{benefit.text}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <Input
-              label={texts.username}
-              name="username"
-              type="text"
-              placeholder={texts.usernamePlaceholder}
-              value={formData.username}
-              onChange={handleInputChange}
-              error={errors.username}
-              autoComplete="username"
-              dir={isRTL ? "rtl" : "ltr"}
-              required
-            />
-
-            <Input
-              label={texts.email}
-              name="email"
-              type="email"
-              placeholder={texts.emailPlaceholder}
-              value={formData.email}
-              onChange={handleInputChange}
-              error={errors.email}
-              autoComplete="email"
-              dir={isRTL ? "rtl" : "ltr"}
-              required
-            />
-
-            <Input
-              label={texts.password}
-              name="password"
-              type="password"
-              placeholder={texts.passwordPlaceholder}
-              value={formData.password}
-              onChange={handleInputChange}
-              error={errors.password}
-              autoComplete="new-password"
-              dir={isRTL ? "rtl" : "ltr"}
-              required
-            />
-
-            <Input
-              label={texts.confirmPassword}
-              name="confirmPassword"
-              type="password"
-              placeholder={texts.confirmPasswordPlaceholder}
-              value={formData.confirmPassword}
-              onChange={handleInputChange}
-              error={errors.confirmPassword}
-              autoComplete="new-password"
-              dir={isRTL ? "rtl" : "ltr"}
-              required
-            />
-
-            <Button
-              type="submit"
-              className="w-full bg-[#92400e] hover:bg-[#78350f] focus-visible:ring-[#92400e]"
-              isLoading={isLoading}
-              disabled={isLoading}
-            >
-              {isLoading ? texts.registering : texts.registerButton}
-            </Button>
-          </form>
-
-          <div className={`mt-6 text-center text-sm ${isRTL ? "rtl" : ""}`}>
-            <span className="text-[#8B7355]">{texts.hasAccount} </span>
-            <Link
-              href={`/${locale}/login`}
-              className="font-medium text-[#92400e] hover:underline"
-            >
-              {texts.signInLink}
-            </Link>
           </div>
         </div>
       </div>
