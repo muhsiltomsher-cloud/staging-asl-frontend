@@ -18,12 +18,14 @@ interface RecentlyViewedProps {
   currentProductId: number;
   locale: Locale;
   bundleProductSlugs?: string[];
+  hiddenGiftProductIds?: number[];
 }
 
 export function RecentlyViewed({
   currentProductId,
   locale,
   bundleProductSlugs = [],
+  hiddenGiftProductIds = [],
 }: RecentlyViewedProps) {
   const isRTL = locale === "ar";
   const { getRecentlyViewedIds, addToRecentlyViewed, isLoaded } = useRecentlyViewed();
@@ -50,9 +52,10 @@ export function RecentlyViewed({
 
       try {
         const fetchedProducts = await getProductsByIds(recentIds, locale);
+        const hiddenGiftIdsSet = new Set(hiddenGiftProductIds);
         const orderedProducts = recentIds
           .map((id) => fetchedProducts.find((p) => p.id === id))
-          .filter((p): p is WCProduct => p !== undefined);
+          .filter((p): p is WCProduct => p !== undefined && !hiddenGiftIdsSet.has(p.id));
         setProducts(orderedProducts);
       } catch (error) {
         console.error("Failed to fetch recently viewed products:", error);
@@ -63,7 +66,7 @@ export function RecentlyViewed({
     }
 
     fetchProducts();
-  }, [isLoaded, getRecentlyViewedIds, currentProductId, locale]);
+  }, [isLoaded, getRecentlyViewedIds, currentProductId, locale, hiddenGiftProductIds]);
 
   if (isLoadingProducts || products.length === 0) {
     return null;

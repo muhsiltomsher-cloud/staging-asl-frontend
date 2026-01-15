@@ -141,15 +141,21 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   // Fetch related products, addon forms, and English product (for English category slug) in parallel
-  const [relatedProducts, productAddons, englishProduct] = await Promise.all([
+  const [relatedProductsRaw, productAddons, englishProduct] = await Promise.all([
     getRelatedProducts(product, {
-      per_page: 8,
+      per_page: 12,
       locale: locale as Locale,
     }),
     getProductAddons(product.id, { locale: locale as Locale }),
     // Fetch the same product with English locale to get English category slug
     getProductBySlug(slug, "en"),
   ]);
+
+  // Filter out hidden gift products from related products
+  const hiddenGiftIdsSet = new Set(hiddenGiftProductIds);
+  const relatedProducts = relatedProductsRaw.filter(
+    (p) => !hiddenGiftIdsSet.has(p.id)
+  );
 
   // Get the English category slug from the English product
   // If the English product doesn't exist (WPML assigns different slugs per locale),
@@ -178,6 +184,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       addonForms={productAddons?.forms}
       englishCategorySlug={englishCategorySlug}
       localizedCategoryName={localizedCategoryName}
+      hiddenGiftProductIds={hiddenGiftProductIds}
     />
   );
 }

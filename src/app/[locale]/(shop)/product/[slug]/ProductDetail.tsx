@@ -295,9 +295,10 @@ interface ProductDetailProps {
   addonForms?: WCPAForm[];
   englishCategorySlug?: string | null;
   localizedCategoryName?: string | null;
+  hiddenGiftProductIds?: number[];
 }
 
-export function ProductDetail({ product, locale, relatedProducts = [], addonForms = [], englishCategorySlug, localizedCategoryName }: ProductDetailProps) {
+export function ProductDetail({ product, locale, relatedProducts = [], addonForms = [], englishCategorySlug, localizedCategoryName, hiddenGiftProductIds = [] }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -987,6 +988,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
       <RecentlyViewed
         currentProductId={product.id}
         locale={locale}
+        hiddenGiftProductIds={hiddenGiftProductIds}
       />
 
       {/* Fullscreen Gallery Modal */}
