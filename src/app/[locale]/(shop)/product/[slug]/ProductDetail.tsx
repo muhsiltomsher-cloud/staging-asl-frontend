@@ -11,6 +11,7 @@ import type { Swiper as SwiperType } from "swiper";
 import { Badge } from "@/components/common/Badge";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { RelatedProducts } from "@/components/shop/RelatedProducts";
+import { RecentlyViewed } from "@/components/shop/RecentlyViewed";
 import { ProductAddons } from "@/components/shop/ProductAddons";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { useCart } from "@/contexts/CartContext";
@@ -978,6 +979,12 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
       {/* Related Products */}
       <RelatedProducts
         products={relatedProducts}
+        currentProductId={product.id}
+        locale={locale}
+      />
+
+      {/* Recently Viewed Products */}
+      <RecentlyViewed
         currentProductId={product.id}
         locale={locale}
       />

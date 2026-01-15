@@ -274,6 +274,31 @@ export async function getProductById(
   }
 }
 
+export async function getProductsByIds(
+  ids: number[],
+  locale?: Locale,
+  currency?: Currency
+): Promise<WCProduct[]> {
+  if (ids.length === 0) {
+    return [];
+  }
+
+  try {
+    const products = await fetchAPI<WCProduct[]>(
+      `/products?include=${ids.join(",")}`,
+      {
+        tags: ["products", ...ids.map((id) => `product-${id}`)],
+        locale,
+        currency,
+      }
+    );
+
+    return products;
+  } catch {
+    return [];
+  }
+}
+
 // Categories API - Memoized for request deduplication
 export const getCategories = cache(async function getCategories(locale?: Locale, currency?: Currency): Promise<WCCategory[]> {
   try {
