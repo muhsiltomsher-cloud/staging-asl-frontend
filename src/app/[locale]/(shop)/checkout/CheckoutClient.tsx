@@ -76,8 +76,8 @@ const PAYMENT_METHOD_COUNTRY_AVAILABILITY: Record<string, { type: "include" | "e
   tabby_installments: { type: "include", countries: ["AE", "SA", "KW", "BH", "QA"] },
   tabby_checkout: { type: "include", countries: ["AE", "SA", "KW", "BH", "QA"] },
   tabby: { type: "include", countries: ["AE", "SA", "KW", "BH", "QA"] },
-  "tamara-gateway": { type: "exclude", countries: ["AE", "SA", "BH"] },
-  tamara: { type: "exclude", countries: ["AE", "SA", "BH"] },
+  "tamara-gateway": { type: "include", countries: ["AE", "SA", "BH"] },
+  tamara: { type: "include", countries: ["AE", "SA", "BH"] },
 };
 
 const isPaymentMethodAvailableForCountry = (methodId: string, countryCode: string): boolean => {
