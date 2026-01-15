@@ -12,7 +12,7 @@ interface LocationCurrencyBannerProps {
 }
 
 const BANNER_DISMISSED_COOKIE = "asl_currency_banner_dismissed";
-const UAE_BANNER_DISMISSED_COOKIE = "asl_uae_currency_banner_dismissed";
+const GULF_BANNER_DISMISSED_COOKIE = "asl_gulf_currency_banner_dismissed";
 const CURRENCY_COOKIE = "wcml_currency";
 
 // Map Gulf country codes to their local currencies
@@ -36,13 +36,13 @@ export function LocationCurrencyBanner({ locale = "en" }: LocationCurrencyBanner
   const [isVisible, setIsVisible] = useState(false);
   const [suggestedCurrency, setSuggestedCurrency] = useState<Currency | null>(null);
   const [detectedCountry, setDetectedCountry] = useState<string>("");
-  const [isUaeBanner, setIsUaeBanner] = useState(false);
+  const [isGulfBanner, setIsGulfBanner] = useState(false);
   const isRTL = locale === "ar";
 
   useEffect(() => {
     // Check if banners were already dismissed
     const dismissed = getCookie(BANNER_DISMISSED_COOKIE);
-    const uaeDismissed = getCookie(UAE_BANNER_DISMISSED_COOKIE);
+    const gulfDismissed = getCookie(GULF_BANNER_DISMISSED_COOKIE);
     const existingCurrency = getCookie(CURRENCY_COOKIE);
 
     // Try to detect user's location using a free IP geolocation service
@@ -58,12 +58,13 @@ export function LocationCurrencyBanner({ locale = "en" }: LocationCurrencyBanner
         const countryCode = data.country_code;
         
         if (countryCode) {
-          // Special case: UAE users who have switched to a non-AED currency
-          // Show banner suggesting they switch back to AED
-          if (countryCode === "AE" && currency !== "AED" && !uaeDismissed) {
-            setSuggestedCurrency("AED");
-            setDetectedCountry(data.country_name || "UAE");
-            setIsUaeBanner(true);
+          // Special case: Gulf country users who have switched to a different currency
+          // Show banner suggesting they switch back to their local currency
+          const localGulfCurrency = gulfCountryCurrencies[countryCode];
+          if (localGulfCurrency && currency !== localGulfCurrency && !gulfDismissed) {
+            setSuggestedCurrency(localGulfCurrency);
+            setDetectedCountry(data.country_name || countryCode);
+            setIsGulfBanner(true);
             setIsVisible(true);
             return;
           }
@@ -75,7 +76,7 @@ export function LocationCurrencyBanner({ locale = "en" }: LocationCurrencyBanner
             if (detected !== currency) {
               setSuggestedCurrency(detected);
               setDetectedCountry(data.country_name || countryCode);
-              setIsUaeBanner(false);
+              setIsGulfBanner(false);
               setIsVisible(true);
             }
           }
@@ -95,18 +96,21 @@ export function LocationCurrencyBanner({ locale = "en" }: LocationCurrencyBanner
       setCurrency(suggestedCurrency);
     }
     setIsVisible(false);
-    // Use appropriate cookie based on banner type
-    const cookieName = isUaeBanner ? UAE_BANNER_DISMISSED_COOKIE : BANNER_DISMISSED_COOKIE;
-    setCookie(cookieName, "true", {
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-      path: "/",
-    });
+    // For Gulf banners, don't set cookie on accept - this allows the banner to show again
+    // if the user switches away from their local currency again
+    // For standard banners (first-time visitors), set cookie to prevent showing again
+    if (!isGulfBanner) {
+      setCookie(BANNER_DISMISSED_COOKIE, "true", {
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        path: "/",
+      });
+    }
   };
 
   const handleDismiss = () => {
     setIsVisible(false);
     // Use appropriate cookie based on banner type
-    const cookieName = isUaeBanner ? UAE_BANNER_DISMISSED_COOKIE : BANNER_DISMISSED_COOKIE;
+    const cookieName = isGulfBanner ? GULF_BANNER_DISMISSED_COOKIE : BANNER_DISMISSED_COOKIE;
     setCookie(cookieName, "true", {
       maxAge: 60 * 60 * 24 * 30, // 30 days
       path: "/",
@@ -139,8 +143,8 @@ export function LocationCurrencyBanner({ locale = "en" }: LocationCurrencyBanner
       className={cn(
         "fixed z-50 transform transition-transform duration-300 ease-out",
         "bg-gradient-to-r from-amber-50 to-amber-100 border-amber-200 shadow-lg",
-        // UAE banner: bottom center positioning
-        isUaeBanner
+        // Gulf banner: bottom center positioning
+        isGulfBanner
           ? "bottom-4 left-1/2 -translate-x-1/2 max-w-sm rounded-xl border"
           : "bottom-0 left-0 right-0 border-t md:bottom-4 md:left-4 md:right-auto md:max-w-sm md:rounded-xl md:border"
       )}
