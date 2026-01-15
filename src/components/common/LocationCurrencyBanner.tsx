@@ -23,6 +23,7 @@ const countryToCurrency: Record<string, Currency> = {
   OM: "OMR", // Oman
   QA: "QAR", // Qatar
   US: "USD", // United States
+  CA: "USD", // Canada
 };
 
 export function LocationCurrencyBanner({ locale = "en" }: LocationCurrencyBannerProps) {
