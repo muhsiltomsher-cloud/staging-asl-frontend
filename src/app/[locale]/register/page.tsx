@@ -18,16 +18,16 @@ export default function RegisterPage({ params }: RegisterPageProps) {
   const [locale, setLocale] = useState<string>("en");
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    name: "",
+    phone: "",
     email: "",
     password: "",
   });
-  const [newsletter, setNewsletter] = useState(false);
+  const [newsletter, setNewsletter] = useState(true);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [errors, setErrors] = useState<{
-    firstName?: string;
-    lastName?: string;
+    name?: string;
+    phone?: string;
     email?: string;
     password?: string;
     terms?: string;
@@ -45,10 +45,10 @@ export default function RegisterPage({ params }: RegisterPageProps) {
     en: {
       register: "REGISTER",
       registerTitle: "Create an Account – Start Shopping",
-      firstName: "First name",
-      firstNamePlaceholder: "First name",
-      lastName: "Last name",
-      lastNamePlaceholder: "Last name",
+      name: "Name",
+      namePlaceholder: "Name",
+      phone: "Phone number",
+      phonePlaceholder: "Phone number",
       email: "E-mail",
       emailPlaceholder: "E-mail",
       password: "Password",
@@ -60,8 +60,8 @@ export default function RegisterPage({ params }: RegisterPageProps) {
       registering: "Creating account...",
       hasAccount: "Already have an account?",
       signInLink: "Sign in",
-      firstNameRequired: "First name is required",
-      lastNameRequired: "Last name is required",
+      nameRequired: "Name is required",
+      phoneRequired: "Phone number is required",
       emailRequired: "Email is required",
       emailInvalid: "Please enter a valid email address",
       passwordRequired: "Password is required",
@@ -73,10 +73,10 @@ export default function RegisterPage({ params }: RegisterPageProps) {
     ar: {
       register: "التسجيل",
       registerTitle: "إنشاء حساب – ابدأ التسوق",
-      firstName: "الاسم الأول",
-      firstNamePlaceholder: "الاسم الأول",
-      lastName: "اسم العائلة",
-      lastNamePlaceholder: "اسم العائلة",
+      name: "الاسم",
+      namePlaceholder: "الاسم",
+      phone: "رقم الهاتف",
+      phonePlaceholder: "رقم الهاتف",
       email: "البريد الإلكتروني",
       emailPlaceholder: "البريد الإلكتروني",
       password: "كلمة المرور",
@@ -88,8 +88,8 @@ export default function RegisterPage({ params }: RegisterPageProps) {
       registering: "جاري إنشاء الحساب...",
       hasAccount: "لديك حساب بالفعل؟",
       signInLink: "تسجيل الدخول",
-      firstNameRequired: "الاسم الأول مطلوب",
-      lastNameRequired: "اسم العائلة مطلوب",
+      nameRequired: "الاسم مطلوب",
+      phoneRequired: "رقم الهاتف مطلوب",
       emailRequired: "البريد الإلكتروني مطلوب",
       emailInvalid: "يرجى إدخال بريد إلكتروني صحيح",
       passwordRequired: "كلمة المرور مطلوبة",
@@ -110,12 +110,12 @@ export default function RegisterPage({ params }: RegisterPageProps) {
   const validateForm = (): boolean => {
     const newErrors: typeof errors = {};
 
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = texts.firstNameRequired;
+    if (!formData.name.trim()) {
+      newErrors.name = texts.nameRequired;
     }
 
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = texts.lastNameRequired;
+    if (!formData.phone.trim()) {
+      newErrors.phone = texts.phoneRequired;
     }
 
     if (!formData.email.trim()) {
@@ -151,8 +151,9 @@ export default function RegisterPage({ params }: RegisterPageProps) {
         username: formData.email,
         email: formData.email,
         password: formData.password,
-        first_name: formData.firstName,
-        last_name: formData.lastName,
+        first_name: formData.name,
+        last_name: "",
+        phone: formData.phone,
         newsletter: newsletter,
       });
 
@@ -223,25 +224,25 @@ export default function RegisterPage({ params }: RegisterPageProps) {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
-                name="firstName"
+                name="name"
                 type="text"
-                placeholder={texts.firstNamePlaceholder}
-                value={formData.firstName}
+                placeholder={texts.namePlaceholder}
+                value={formData.name}
                 onChange={handleInputChange}
-                error={errors.firstName}
-                autoComplete="given-name"
+                error={errors.name}
+                autoComplete="name"
                 dir={isRTL ? "rtl" : "ltr"}
                 className="border-gray-300 rounded-none"
               />
 
               <Input
-                name="lastName"
-                type="text"
-                placeholder={texts.lastNamePlaceholder}
-                value={formData.lastName}
+                name="phone"
+                type="tel"
+                placeholder={texts.phonePlaceholder}
+                value={formData.phone}
                 onChange={handleInputChange}
-                error={errors.lastName}
-                autoComplete="family-name"
+                error={errors.phone}
+                autoComplete="tel"
                 dir={isRTL ? "rtl" : "ltr"}
                 className="border-gray-300 rounded-none"
               />
