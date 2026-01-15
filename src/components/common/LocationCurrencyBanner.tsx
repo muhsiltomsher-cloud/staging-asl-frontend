@@ -12,7 +12,6 @@ interface LocationCurrencyBannerProps {
 }
 
 const BANNER_DISMISSED_COOKIE = "asl_currency_banner_dismissed";
-const GULF_BANNER_DISMISSED_COOKIE = "asl_gulf_currency_banner_dismissed";
 const CURRENCY_COOKIE = "wcml_currency";
 
 // Map Gulf country codes to their local currencies
@@ -42,7 +41,6 @@ export function LocationCurrencyBanner({ locale = "en" }: LocationCurrencyBanner
   useEffect(() => {
     // Check if banners were already dismissed
     const dismissed = getCookie(BANNER_DISMISSED_COOKIE);
-    const gulfDismissed = getCookie(GULF_BANNER_DISMISSED_COOKIE);
     const existingCurrency = getCookie(CURRENCY_COOKIE);
 
     // Try to detect user's location using a free IP geolocation service
@@ -60,8 +58,9 @@ export function LocationCurrencyBanner({ locale = "en" }: LocationCurrencyBanner
         if (countryCode) {
           // Special case: Gulf country users who have switched to a different currency
           // Show banner suggesting they switch back to their local currency
+          // This banner shows EVERY time they use a non-local currency (no persistent dismissal)
           const localGulfCurrency = gulfCountryCurrencies[countryCode];
-          if (localGulfCurrency && currency !== localGulfCurrency && !gulfDismissed) {
+          if (localGulfCurrency && currency !== localGulfCurrency) {
             setSuggestedCurrency(localGulfCurrency);
             setDetectedCountry(data.country_name || countryCode);
             setIsGulfBanner(true);
@@ -109,12 +108,14 @@ export function LocationCurrencyBanner({ locale = "en" }: LocationCurrencyBanner
 
   const handleDismiss = () => {
     setIsVisible(false);
-    // Use appropriate cookie based on banner type
-    const cookieName = isGulfBanner ? GULF_BANNER_DISMISSED_COOKIE : BANNER_DISMISSED_COOKIE;
-    setCookie(cookieName, "true", {
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-      path: "/",
-    });
+    // For Gulf banners, don't set a persistent cookie - banner will show again on next page/refresh
+    // For standard banners, set cookie to prevent showing again
+    if (!isGulfBanner) {
+      setCookie(BANNER_DISMISSED_COOKIE, "true", {
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        path: "/",
+      });
+    }
   };
 
   if (!isVisible || !suggestedCurrency) return null;
