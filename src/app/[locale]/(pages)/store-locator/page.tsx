@@ -25,6 +25,8 @@ interface Store {
   cityAr: string;
   region: string;
   regionAr: string;
+  country: string;
+  countryAr: string;
   googleMapsUrl: string;
   image: string;
 }
@@ -34,6 +36,13 @@ interface Region {
   name: string;
   nameAr: string;
   stores: Store[];
+}
+
+interface Country {
+  id: string;
+  name: string;
+  nameAr: string;
+  regions: Region[];
 }
 
 const stores: Store[] = [
@@ -47,6 +56,8 @@ const stores: Store[] = [
     cityAr: "أبوظبي",
     region: "abu-dhabi",
     regionAr: "أبوظبي",
+    country: "uae",
+    countryAr: "الإمارات",
     googleMapsUrl: "https://maps.google.com/?q=Yas+Mall+Abu+Dhabi",
     image: "https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp",
   },
@@ -60,6 +71,8 @@ const stores: Store[] = [
     cityAr: "أبوظبي",
     region: "abu-dhabi",
     regionAr: "أبوظبي",
+    country: "uae",
+    countryAr: "الإمارات",
     googleMapsUrl: "https://maps.google.com/?q=Bawabat+Al+Sharq+Mall+Abu+Dhabi",
     image: "https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp",
   },
@@ -73,6 +86,8 @@ const stores: Store[] = [
     cityAr: "العين",
     region: "al-ain",
     regionAr: "العين",
+    country: "uae",
+    countryAr: "الإمارات",
     googleMapsUrl: "https://maps.google.com/?q=Bawadi+Mall+Al+Ain",
     image: "https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp",
   },
@@ -86,6 +101,8 @@ const stores: Store[] = [
     cityAr: "العين",
     region: "al-ain",
     regionAr: "العين",
+    country: "uae",
+    countryAr: "الإمارات",
     googleMapsUrl: "https://maps.google.com/?q=Makani+Zakher+Mall+Al+Ain",
     image: "https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp",
   },
@@ -99,6 +116,8 @@ const stores: Store[] = [
     cityAr: "الفجيرة",
     region: "fujairah",
     regionAr: "الفجيرة",
+    country: "uae",
+    countryAr: "الإمارات",
     googleMapsUrl: "https://maps.google.com/?q=Fujairah+City+Centre",
     image: "https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp",
   },
@@ -110,14 +129,16 @@ const stores: Store[] = [
     floorAr: "الطابق الأرضي",
     city: "Muscat",
     cityAr: "مسقط",
-    region: "oman",
-    regionAr: "عمان",
+    region: "muscat",
+    regionAr: "مسقط",
+    country: "oman",
+    countryAr: "عمان",
     googleMapsUrl: "https://maps.google.com/?q=Oman+Mall+Muscat",
     image: "https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp",
   },
 ];
 
-const regions: Region[] = [
+const uaeRegions: Region[] = [
   {
     id: "abu-dhabi",
     name: "Abu Dhabi",
@@ -136,11 +157,29 @@ const regions: Region[] = [
     nameAr: "الفجيرة",
     stores: stores.filter((s) => s.region === "fujairah"),
   },
+];
+
+const omanRegions: Region[] = [
+  {
+    id: "muscat",
+    name: "Muscat",
+    nameAr: "مسقط",
+    stores: stores.filter((s) => s.region === "muscat"),
+  },
+];
+
+const countries: Country[] = [
+  {
+    id: "uae",
+    name: "United Arab Emirates",
+    nameAr: "الإمارات العربية المتحدة",
+    regions: uaeRegions,
+  },
   {
     id: "oman",
     name: "Oman",
     nameAr: "عمان",
-    stores: stores.filter((s) => s.region === "oman"),
+    regions: omanRegions,
   },
 ];
 
@@ -159,7 +198,7 @@ export default function StoreLocatorPage() {
       ? "زورونا في أحد فروعنا واستمتعوا بتجربة عطرية فريدة. فريقنا المتخصص في انتظاركم لمساعدتكم في اختيار العطر المثالي."
       : "Visit us at one of our locations and enjoy a unique aromatic experience. Our specialized team is waiting to help you choose the perfect fragrance.",
     storesCount: isRTL ? `${stores.length} متاجر` : `${stores.length} Stores`,
-    regionsCount: isRTL ? `${regions.length} مناطق` : `${regions.length} Regions`,
+    countriesCount: isRTL ? `${countries.length} دول` : `${countries.length} Countries`,
     getDirections: isRTL ? "احصل على الاتجاهات" : "Get Directions",
     openingHours: isRTL ? "ساعات العمل" : "Opening Hours",
     openingHoursValue: isRTL ? "10:00 ص - 10:00 م" : "10:00 AM - 10:00 PM",
@@ -236,7 +275,7 @@ export default function StoreLocatorPage() {
               </div>
               <div className="flex items-center gap-3 rounded-full border border-amber-400/30 bg-white/10 px-6 py-3 backdrop-blur-sm">
                 <MapPin className="h-5 w-5 text-amber-400" />
-                <span className="text-sm font-medium text-amber-100">{content.regionsCount}</span>
+                <span className="text-sm font-medium text-amber-100">{content.countriesCount}</span>
               </div>
             </div>
           </div>
@@ -282,92 +321,116 @@ export default function StoreLocatorPage() {
         </div>
       </section>
 
-      {/* Stores by Region */}
+      {/* Stores by Country */}
       <section className="relative overflow-hidden bg-gradient-to-b from-[#f7f6f2] to-white py-16 md:py-24">
         {/* Decorative Elements */}
         <div className="absolute -left-40 top-20 h-80 w-80 rounded-full bg-amber-100/40 blur-3xl" />
         <div className="absolute -right-40 bottom-20 h-80 w-80 rounded-full bg-stone-100/60 blur-3xl" />
 
         <div className="container relative mx-auto px-4">
-          {regions.map((region, regionIndex) => (
-            <div key={region.id} className={regionIndex > 0 ? "mt-16" : ""}>
-              {/* Region Header */}
-              <div className="mb-8 flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg shadow-amber-500/20">
-                  <MapPin className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-amber-900 md:text-3xl">
-                    {isRTL ? region.nameAr : region.name}
-                  </h2>
-                  <p className="text-sm text-amber-600">
-                    {isRTL
-                      ? `${region.stores.length} ${region.stores.length === 1 ? "متجر" : "متاجر"}`
-                      : `${region.stores.length} ${region.stores.length === 1 ? "Store" : "Stores"}`}
-                  </p>
-                </div>
-              </div>
-
-              {/* Store Cards Grid */}
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {region.stores.map((store) => (
-                  <div
-                    key={store.id}
-                    className="group relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-amber-900/10"
-                  >
-                    {/* Store Image */}
-                    <div className="relative h-48 overflow-hidden">
-                      <Image
-                        src={store.image}
-                        alt={isRTL ? store.nameAr : store.name}
-                        fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                      
-                      {/* City Badge */}
-                      <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-amber-900 backdrop-blur-sm">
-                        {isRTL ? store.cityAr : store.city}
-                      </div>
-
-                      {/* Store Name Overlay */}
-                      <div className="absolute bottom-4 left-4 right-4">
-                        <h3 className="text-xl font-bold text-white drop-shadow-lg">
-                          {isRTL ? store.nameAr : store.name}
-                        </h3>
-                      </div>
-                    </div>
-
-                    {/* Store Details */}
-                    <div className="p-5">
-                      <div className="mb-4 space-y-3">
-                        <div className="flex items-center gap-3 text-amber-700">
-                          <Building2 className="h-4 w-4 flex-shrink-0" />
-                          <span className="text-sm">{isRTL ? store.floorAr : store.floor}</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-amber-700">
-                          <Clock className="h-4 w-4 flex-shrink-0" />
-                          <span className="text-sm">{content.openingHoursValue}</span>
-                        </div>
-                      </div>
-
-                      {/* Action Button */}
-                      <a
-                        href={store.googleMapsUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-amber-500/20 transition-all duration-300 hover:from-amber-600 hover:to-amber-700 hover:shadow-xl hover:shadow-amber-500/30"
-                      >
-                        <Navigation className="h-4 w-4" />
-                        {content.getDirections}
-                      </a>
-                    </div>
-
-                    {/* Decorative Corner */}
-                    <div className="absolute -right-8 -top-8 h-16 w-16 rounded-full bg-amber-100/50 transition-transform duration-500 group-hover:scale-150" />
+          {countries.map((country, countryIndex) => (
+            <div key={country.id} className={countryIndex > 0 ? "mt-20" : ""}>
+              {/* Country Header */}
+              <div className="mb-10 border-b-2 border-amber-200 pb-6">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-600 to-amber-700 shadow-lg shadow-amber-500/30">
+                    <MapPin className="h-7 w-7 text-white" />
                   </div>
-                ))}
+                  <div>
+                    <h2 className="text-3xl font-bold text-amber-900 md:text-4xl">
+                      {isRTL ? country.nameAr : country.name}
+                    </h2>
+                    <p className="text-sm text-amber-600">
+                      {isRTL
+                        ? `${country.regions.reduce((acc, r) => acc + r.stores.length, 0)} متاجر في ${country.regions.length} ${country.regions.length === 1 ? "منطقة" : "مناطق"}`
+                        : `${country.regions.reduce((acc, r) => acc + r.stores.length, 0)} Stores in ${country.regions.length} ${country.regions.length === 1 ? "Region" : "Regions"}`}
+                    </p>
+                  </div>
+                </div>
               </div>
+
+              {/* Regions within Country */}
+              {country.regions.map((region, regionIndex) => (
+                <div key={region.id} className={regionIndex > 0 ? "mt-12" : ""}>
+                  {/* Region Header */}
+                  <div className="mb-6 flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 shadow-md shadow-amber-400/20">
+                      <MapPin className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-amber-800 md:text-2xl">
+                        {isRTL ? region.nameAr : region.name}
+                      </h3>
+                      <p className="text-xs text-amber-500">
+                        {isRTL
+                          ? `${region.stores.length} ${region.stores.length === 1 ? "متجر" : "متاجر"}`
+                          : `${region.stores.length} ${region.stores.length === 1 ? "Store" : "Stores"}`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Store Cards Grid */}
+                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {region.stores.map((store) => (
+                      <div
+                        key={store.id}
+                        className="group relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-amber-900/10"
+                      >
+                        {/* Store Image */}
+                        <div className="relative h-48 overflow-hidden">
+                          <Image
+                            src={store.image}
+                            alt={isRTL ? store.nameAr : store.name}
+                            fill
+                            className="object-cover transition-transform duration-700 group-hover:scale-110"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                          
+                          {/* City Badge */}
+                          <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-amber-900 backdrop-blur-sm">
+                            {isRTL ? region.nameAr : region.name}
+                          </div>
+
+                          {/* Store Name Overlay */}
+                          <div className="absolute bottom-4 left-4 right-4">
+                            <h4 className="text-xl font-bold text-white drop-shadow-lg">
+                              {isRTL ? store.nameAr : store.name}
+                            </h4>
+                          </div>
+                        </div>
+
+                        {/* Store Details */}
+                        <div className="p-5">
+                          <div className="mb-4 space-y-3">
+                            <div className="flex items-center gap-3 text-amber-700">
+                              <Building2 className="h-4 w-4 flex-shrink-0" />
+                              <span className="text-sm">{isRTL ? store.floorAr : store.floor}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-amber-700">
+                              <Clock className="h-4 w-4 flex-shrink-0" />
+                              <span className="text-sm">{content.openingHoursValue}</span>
+                            </div>
+                          </div>
+
+                          {/* Action Button */}
+                          <a
+                            href={store.googleMapsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-amber-500/20 transition-all duration-300 hover:from-amber-600 hover:to-amber-700 hover:shadow-xl hover:shadow-amber-500/30"
+                          >
+                            <Navigation className="h-4 w-4" />
+                            {content.getDirections}
+                          </a>
+                        </div>
+
+                        {/* Decorative Corner */}
+                        <div className="absolute -right-8 -top-8 h-16 w-16 rounded-full bg-amber-100/50 transition-transform duration-500 group-hover:scale-150" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           ))}
         </div>
@@ -399,18 +462,18 @@ export default function StoreLocatorPage() {
                 : "Visit us at the nearest branch and enjoy a unique shopping experience"}
             </p>
 
-            {/* Region Quick Links */}
+            {/* Country Quick Links */}
             <div className="flex flex-wrap items-center justify-center gap-3">
-              {regions.map((region) => (
+              {countries.map((country) => (
                 <a
-                  key={region.id}
-                  href={region.stores[0]?.googleMapsUrl}
+                  key={country.id}
+                  href={country.regions[0]?.stores[0]?.googleMapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex items-center gap-2 rounded-full border border-amber-400/30 bg-white/10 px-5 py-2.5 text-sm font-medium text-amber-100 backdrop-blur-sm transition-all duration-300 hover:border-amber-400 hover:bg-white/20"
                 >
                   <MapPin className="h-4 w-4 text-amber-400" />
-                  {isRTL ? region.nameAr : region.name}
+                  {isRTL ? country.nameAr : country.name}
                   <ChevronRight className={`h-4 w-4 text-amber-400 transition-transform duration-300 group-hover:translate-x-1 ${isRTL ? "rotate-180 group-hover:-translate-x-1" : ""}`} />
                 </a>
               ))}
