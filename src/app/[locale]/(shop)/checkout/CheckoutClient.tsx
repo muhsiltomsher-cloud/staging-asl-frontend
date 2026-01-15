@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/common/Button";
@@ -71,6 +71,25 @@ interface PaymentGateway {
   description: string;
   method_title: string;
 }
+
+const PAYMENT_METHOD_COUNTRY_AVAILABILITY: Record<string, { type: "include" | "exclude"; countries: string[] }> = {
+  tabby_installments: { type: "include", countries: ["AE", "SA", "KW", "BH", "QA"] },
+  tabby_checkout: { type: "include", countries: ["AE", "SA", "KW", "BH", "QA"] },
+  tabby: { type: "include", countries: ["AE", "SA", "KW", "BH", "QA"] },
+  "tamara-gateway": { type: "exclude", countries: ["AE", "SA", "BH"] },
+  tamara: { type: "exclude", countries: ["AE", "SA", "BH"] },
+};
+
+const isPaymentMethodAvailableForCountry = (methodId: string, countryCode: string): boolean => {
+  const availability = PAYMENT_METHOD_COUNTRY_AVAILABILITY[methodId];
+  if (!availability) {
+    return true;
+  }
+  if (availability.type === "include") {
+    return availability.countries.includes(countryCode);
+  }
+  return !availability.countries.includes(countryCode);
+};
 
 interface AddressFormData {
   firstName: string;
@@ -259,12 +278,6 @@ export default function CheckoutClient() {
               const data = await response.json();
               if (data.success && data.gateways) {
                 setPaymentGateways(data.gateways);
-                if (data.gateways.length > 0) {
-                  setFormData((prev) => ({
-                    ...prev,
-                    paymentMethod: data.gateways[0].id,
-                  }));
-                }
               }
             } catch (err) {
               console.error("Failed to fetch payment gateways:", err);
@@ -274,6 +287,27 @@ export default function CheckoutClient() {
           };
                   fetchPaymentGateways();
                 }, []);
+
+        const filteredPaymentGateways = useMemo(() => {
+          const selectedCountry = formData.shipping.country;
+          return paymentGateways.filter((gateway) =>
+            isPaymentMethodAvailableForCountry(gateway.id, selectedCountry)
+          );
+        }, [paymentGateways, formData.shipping.country]);
+
+        useEffect(() => {
+          if (filteredPaymentGateways.length > 0) {
+            const currentMethodAvailable = filteredPaymentGateways.some(
+              (gateway) => gateway.id === formData.paymentMethod
+            );
+            if (!currentMethodAvailable) {
+              setFormData((prev) => ({
+                ...prev,
+                paymentMethod: filteredPaymentGateways[0].id,
+              }));
+            }
+          }
+        }, [filteredPaymentGateways, formData.paymentMethod]);
 
         // Check for payment error from redirect (MyFatoorah, Tabby, Tamara)
         useEffect(() => {
@@ -1472,12 +1506,12 @@ export default function CheckoutClient() {
                                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900"></div>
                                 <span className="ml-2 text-gray-600">{isRTL ? "جاري تحميل طرق الدفع..." : "Loading payment methods..."}</span>
                               </div>
-                            ) : paymentGateways.length === 0 ? (
+                            ) : filteredPaymentGateways.length === 0 ? (
                               <div className="text-center py-4 text-gray-500">
                                 {isRTL ? "لا توجد طرق دفع متاحة" : "No payment methods available"}
                               </div>
                             ) : (
-                              paymentGateways.map((gateway) => {
+                              filteredPaymentGateways.map((gateway) => {
                                                                 const getGatewayLabel = (id: string, title: string) => {
                                                                   const labels: Record<string, { en: string; ar: string }> = {
                                                                     cod: { en: "Cash on Delivery", ar: "الدفع عند الاستلام" },
