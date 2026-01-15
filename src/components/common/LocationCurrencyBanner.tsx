@@ -13,6 +13,8 @@ interface LocationCurrencyBannerProps {
 
 const BANNER_DISMISSED_COOKIE = "asl_currency_banner_dismissed";
 const CURRENCY_COOKIE = "wcml_currency";
+const LOCATION_CACHE_KEY = "asl_location_cache";
+const LOCATION_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 // Map Gulf country codes to their local currencies
 // All other countries will default to USD
@@ -43,8 +45,70 @@ export function LocationCurrencyBanner({ locale = "en" }: LocationCurrencyBanner
     const dismissed = getCookie(BANNER_DISMISSED_COOKIE);
     const existingCurrency = getCookie(CURRENCY_COOKIE);
 
+    // Try to get cached location data from localStorage
+    const getCachedLocation = (): { country_code: string; country_name: string } | null => {
+      try {
+        const cached = localStorage.getItem(LOCATION_CACHE_KEY);
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < LOCATION_CACHE_DURATION) {
+            return data;
+          }
+        }
+      } catch {
+        // Ignore localStorage errors
+      }
+      return null;
+    };
+
+    // Cache location data in localStorage
+    const cacheLocation = (data: { country_code: string; country_name: string }) => {
+      try {
+        localStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify({
+          data,
+          timestamp: Date.now(),
+        }));
+      } catch {
+        // Ignore localStorage errors
+      }
+    };
+
+    // Process location data and show banner if needed
+    const processLocation = (countryCode: string, countryName: string) => {
+      // Special case: Gulf country users who have switched to a different currency
+      // Show banner suggesting they switch back to their local currency
+      // This banner shows EVERY time they use a non-local currency (no persistent dismissal)
+      const localGulfCurrency = gulfCountryCurrencies[countryCode];
+      if (localGulfCurrency && currency !== localGulfCurrency) {
+        setSuggestedCurrency(localGulfCurrency);
+        setDetectedCountry(countryName || countryCode);
+        setIsGulfBanner(true);
+        setIsVisible(true);
+        return;
+      }
+      
+      // Standard case: First-time visitors (no currency set yet)
+      if (!dismissed && !existingCurrency) {
+        const detected = getCurrencyForCountry(countryCode);
+        // Only show banner if detected currency is different from current
+        if (detected !== currency) {
+          setSuggestedCurrency(detected);
+          setDetectedCountry(countryName || countryCode);
+          setIsGulfBanner(false);
+          setIsVisible(true);
+        }
+      }
+    };
+
     // Try to detect user's location using a free IP geolocation service
     const detectLocation = async () => {
+      // First, try to use cached location data for faster response
+      const cachedLocation = getCachedLocation();
+      if (cachedLocation) {
+        processLocation(cachedLocation.country_code, cachedLocation.country_name);
+        return;
+      }
+
       try {
         const response = await fetch("https://ipapi.co/json/", {
           cache: "no-store",
@@ -56,37 +120,17 @@ export function LocationCurrencyBanner({ locale = "en" }: LocationCurrencyBanner
         const countryCode = data.country_code;
         
         if (countryCode) {
-          // Special case: Gulf country users who have switched to a different currency
-          // Show banner suggesting they switch back to their local currency
-          // This banner shows EVERY time they use a non-local currency (no persistent dismissal)
-          const localGulfCurrency = gulfCountryCurrencies[countryCode];
-          if (localGulfCurrency && currency !== localGulfCurrency) {
-            setSuggestedCurrency(localGulfCurrency);
-            setDetectedCountry(data.country_name || countryCode);
-            setIsGulfBanner(true);
-            setIsVisible(true);
-            return;
-          }
-          
-          // Standard case: First-time visitors (no currency set yet)
-          if (!dismissed && !existingCurrency) {
-            const detected = getCurrencyForCountry(countryCode);
-            // Only show banner if detected currency is different from current
-            if (detected !== currency) {
-              setSuggestedCurrency(detected);
-              setDetectedCountry(data.country_name || countryCode);
-              setIsGulfBanner(false);
-              setIsVisible(true);
-            }
-          }
+          // Cache the location data for future visits
+          cacheLocation({ country_code: countryCode, country_name: data.country_name });
+          processLocation(countryCode, data.country_name);
         }
       } catch (error) {
         console.error("Failed to detect location:", error);
       }
     };
 
-    // Small delay to avoid blocking initial render
-    const timer = setTimeout(detectLocation, 1000);
+    // Minimal delay to avoid blocking initial render (reduced from 1000ms to 100ms)
+    const timer = setTimeout(detectLocation, 100);
     return () => clearTimeout(timer);
   }, [currency]);
 
@@ -142,12 +186,13 @@ export function LocationCurrencyBanner({ locale = "en" }: LocationCurrencyBanner
   return (
     <div
       className={cn(
-        "fixed z-50 transform transition-transform duration-300 ease-out",
+        "fixed z-40 transform transition-transform duration-300 ease-out",
         "bg-gradient-to-r from-amber-50 to-amber-100 border-amber-200 shadow-lg",
-        // Gulf banner: bottom center positioning
+        // Gulf banner: bottom center positioning with mobile bottom bar offset
+        // Mobile bottom bar is h-16 (64px) + safe area, visible below xl breakpoint
         isGulfBanner
-          ? "bottom-4 left-1/2 -translate-x-1/2 max-w-sm rounded-xl border"
-          : "bottom-0 left-0 right-0 border-t md:bottom-4 md:left-4 md:right-auto md:max-w-sm md:rounded-xl md:border"
+          ? "bottom-20 left-4 right-4 rounded-xl border xl:bottom-4 xl:left-1/2 xl:right-auto xl:-translate-x-1/2 xl:max-w-sm"
+          : "bottom-20 left-4 right-4 rounded-xl border xl:bottom-4 xl:left-4 xl:right-auto xl:max-w-sm"
       )}
       dir={isRTL ? "rtl" : "ltr"}
     >
