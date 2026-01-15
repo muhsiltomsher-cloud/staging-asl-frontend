@@ -136,6 +136,12 @@ export default function CheckoutClient() {
         const [isLoadingShipping, setIsLoadingShipping] = useState(false);
         const [selectedShippingRate, setSelectedShippingRate] = useState<string | null>(null);
         const [shippingTotal, setShippingTotal] = useState<string>("0");
+        
+        const [createAccount, setCreateAccount] = useState(false);
+        const [accountPassword, setAccountPassword] = useState("");
+        const [confirmPassword, setConfirmPassword] = useState("");
+        const [passwordError, setPasswordError] = useState<string | null>(null);
+        const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
@@ -519,8 +525,85 @@ export default function CheckoutClient() {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
+    setPasswordError(null);
 
     try {
+      // Validate password if creating account
+      let newCustomerId: number | undefined;
+      
+      if (createAccount && !isAuthenticated) {
+        // Validate passwords
+        if (!accountPassword || accountPassword.length < 6) {
+          setPasswordError(isRTL ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل" : "Password must be at least 6 characters");
+          setIsSubmitting(false);
+          return;
+        }
+        
+        if (accountPassword !== confirmPassword) {
+          setPasswordError(isRTL ? "كلمات المرور غير متطابقة" : "Passwords do not match");
+          setIsSubmitting(false);
+          return;
+        }
+        
+        // Create account
+        setIsCreatingAccount(true);
+        try {
+          const customerResponse = await fetch("/api/customer", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: formData.shipping.email,
+              username: formData.shipping.email,
+              password: accountPassword,
+              first_name: formData.shipping.firstName,
+              last_name: formData.shipping.lastName,
+              billing: {
+                first_name: formData.shipping.firstName,
+                last_name: formData.shipping.lastName,
+                address_1: formData.shipping.address,
+                address_2: formData.shipping.address2,
+                city: formData.shipping.city,
+                state: formData.shipping.state,
+                postcode: formData.shipping.postalCode,
+                country: formData.shipping.country,
+                email: formData.shipping.email,
+                phone: formData.shipping.phone,
+              },
+              shipping: {
+                first_name: formData.shipping.firstName,
+                last_name: formData.shipping.lastName,
+                address_1: formData.shipping.address,
+                address_2: formData.shipping.address2,
+                city: formData.shipping.city,
+                state: formData.shipping.state,
+                postcode: formData.shipping.postalCode,
+                country: formData.shipping.country,
+              },
+            }),
+          });
+          
+          const customerData = await customerResponse.json();
+          
+          if (!customerData.success) {
+            const errorMessage = customerData.error?.message || (isRTL ? "فشل إنشاء الحساب" : "Failed to create account");
+            setPasswordError(errorMessage);
+            setIsSubmitting(false);
+            setIsCreatingAccount(false);
+            return;
+          }
+          
+          newCustomerId = customerData.data?.id;
+        } catch {
+          setPasswordError(isRTL ? "حدث خطأ أثناء إنشاء الحساب" : "An error occurred while creating account");
+          setIsSubmitting(false);
+          setIsCreatingAccount(false);
+          return;
+        }
+        setIsCreatingAccount(false);
+      }
+
       // Create line items with price information to ensure bundle totals are correct
       // The subtotal/total from cart items include the full bundle price (box + bundled items)
       const lineItems = cartItems.map((item) => {
@@ -671,7 +754,7 @@ export default function CheckoutClient() {
         line_items: lineItems,
         coupon_lines: couponLines,
         customer_note: formData.orderNotes,
-        ...(isAuthenticated && user?.user_id ? { customer_id: user.user_id } : {}),
+        ...(isAuthenticated && user?.user_id ? { customer_id: user.user_id } : newCustomerId ? { customer_id: newCustomerId } : {}),
       };
 
       const response = await fetch("/api/orders", {
@@ -995,6 +1078,74 @@ export default function CheckoutClient() {
                   onChange={(e) => handleShippingChange("phone", e.target.value)}
                 />
               </div>
+              
+              {/* Create Account Option - Only for guest users */}
+              {!isAuthenticated && (
+                <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="create-account"
+                      checked={createAccount}
+                      onCheckedChange={(checked) => {
+                        setCreateAccount(checked === true);
+                        if (!checked) {
+                          setAccountPassword("");
+                          setConfirmPassword("");
+                          setPasswordError(null);
+                        }
+                      }}
+                    />
+                    <div className="flex-1">
+                      <label htmlFor="create-account" className="cursor-pointer text-sm font-medium text-gray-900">
+                        {isRTL ? "إنشاء حساب لتتبع طلباتك" : "Create an account to track your orders"}
+                      </label>
+                      <p className="mt-0.5 text-xs text-gray-500">
+                        {isRTL ? "يمكنك تتبع طلباتك وحفظ عناوينك" : "Track your orders and save your addresses"}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {createAccount && (
+                    <div className="mt-4 space-y-3 border-t border-gray-200 pt-4">
+                      {passwordError && (
+                        <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
+                          {passwordError}
+                        </div>
+                      )}
+                      {isCreatingAccount && (
+                        <div className="flex items-center gap-2 rounded-md bg-blue-50 p-3 text-sm text-blue-600">
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600"></div>
+                          {isRTL ? "جاري إنشاء الحساب..." : "Creating account..."}
+                        </div>
+                      )}
+                      <Input
+                        label={isRTL ? "كلمة المرور" : "Password"}
+                        type="password"
+                        required={createAccount}
+                        value={accountPassword}
+                        onChange={(e) => {
+                          setAccountPassword(e.target.value);
+                          setPasswordError(null);
+                        }}
+                        placeholder={isRTL ? "أدخل كلمة المرور" : "Enter password"}
+                        disabled={isCreatingAccount}
+                      />
+                      <Input
+                        label={isRTL ? "تأكيد كلمة المرور" : "Confirm Password"}
+                        type="password"
+                        required={createAccount}
+                        value={confirmPassword}
+                        onChange={(e) => {
+                          setConfirmPassword(e.target.value);
+                          setPasswordError(null);
+                        }}
+                        placeholder={isRTL ? "أعد إدخال كلمة المرور" : "Re-enter password"}
+                        disabled={isCreatingAccount}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Shipping Address */}
