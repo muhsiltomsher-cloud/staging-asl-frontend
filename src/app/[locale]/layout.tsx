@@ -106,21 +106,27 @@ export default async function LocaleLayout({
                 shadow="0 0 10px #92400e,0 0 5px #92400e"
               />
               <div dir={dir} lang={validLocale} className="flex min-h-screen flex-col bg-[#f7f6f2] overflow-x-clip max-w-full">
-                <Header
-                  locale={validLocale}
-                  dictionary={dictionary}
-                  siteSettings={siteSettings}
-                  headerSettings={headerSettings}
-                  menuItems={menuItems?.items}
-                  topbarSettings={topbarSettings}
-                />
+                <div className="print:hidden">
+                  <Header
+                    locale={validLocale}
+                    dictionary={dictionary}
+                    siteSettings={siteSettings}
+                    headerSettings={headerSettings}
+                    menuItems={menuItems?.items}
+                    topbarSettings={topbarSettings}
+                  />
+                </div>
                 <main className="flex-1">{children}</main>
-                <Footer locale={validLocale} dictionary={dictionary} siteSettings={siteSettings} />
-                <MobileBottomBar
-                  locale={validLocale}
-                  settings={mobileBarSettings}
-                  dictionary={dictionary}
-                />
+                <div className="print:hidden">
+                  <Footer locale={validLocale} dictionary={dictionary} siteSettings={siteSettings} />
+                </div>
+                <div className="print:hidden">
+                  <MobileBottomBar
+                    locale={validLocale}
+                    settings={mobileBarSettings}
+                    dictionary={dictionary}
+                  />
+                </div>
               </div>
               <MiniCartDrawer
                 locale={validLocale}
