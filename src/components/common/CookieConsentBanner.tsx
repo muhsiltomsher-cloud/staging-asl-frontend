@@ -41,6 +41,11 @@ export function CookieConsentBanner({ locale = "en" }: CookieConsentBannerProps)
   };
 
   const handleDismiss = () => {
+    // Set cookie when dismissed via X button so it doesn't show again after refresh
+    setCookie(COOKIE_CONSENT_KEY, "dismissed", {
+      maxAge: 60 * 60 * 24 * 180, // 6 months
+      path: "/",
+    });
     setIsVisible(false);
   };
 
