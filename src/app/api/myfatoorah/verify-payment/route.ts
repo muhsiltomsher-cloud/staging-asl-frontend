@@ -153,18 +153,14 @@ export async function GET(request: NextRequest) {
 
     console.log("MyFatoorah verify-payment request:", { paymentId });
 
-    const url = `${getMyFatoorahApiBaseUrl()}/v2/GetPaymentStatus`;
+    const url = `${getMyFatoorahApiBaseUrl()}/v3/payments/${paymentId}`;
     
     const response = await fetch(url, {
-      method: "POST",
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        Key: paymentId,
-        KeyType: "PaymentId",
-      }),
     });
 
     const data: MyFatoorahPaymentResponse = await response.json();
