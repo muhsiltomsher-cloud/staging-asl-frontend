@@ -104,7 +104,28 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                 setPaymentStatus(verifyData.payment_status);
                 setPaymentMessage(verifyData.status_message || null);
                 
-                if (verifyData.payment_status === "failed") {
+                if (verifyData.payment_status === "success") {
+                  try {
+                    const updateResponse = await fetch("/api/orders", {
+                      method: "PUT",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        order_id: parseInt(orderId, 10),
+                        status: "processing",
+                        set_paid: true,
+                        transaction_id: verifyData.transaction_id || verifyData.invoice_id,
+                      }),
+                    });
+                    const updateData = await updateResponse.json();
+                    if (!updateData.success) {
+                      console.error("Failed to update order status:", updateData.error);
+                    }
+                  } catch (updateError) {
+                    console.error("Failed to update order status:", updateError);
+                  }
+                } else if (verifyData.payment_status === "failed") {
                   console.error("Payment verification failed:", {
                     error_code: verifyData.error_code,
                     error_message: verifyData.error_message,

@@ -218,3 +218,97 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+interface UpdateOrderRequest {
+  order_id: number;
+  status?: string;
+  set_paid?: boolean;
+  transaction_id?: string;
+  payment_method?: string;
+  payment_method_title?: string;
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const body: UpdateOrderRequest = await request.json();
+    
+    if (!body.order_id) {
+      return NextResponse.json(
+        { success: false, error: { code: "missing_params", message: "Order ID is required" } },
+        { status: 400 }
+      );
+    }
+
+    const updateData: Record<string, unknown> = {};
+    
+    if (body.status) {
+      updateData.status = body.status;
+    }
+    
+    if (body.set_paid !== undefined) {
+      updateData.set_paid = body.set_paid;
+    }
+    
+    if (body.transaction_id) {
+      updateData.transaction_id = body.transaction_id;
+    }
+    
+    if (body.payment_method) {
+      updateData.payment_method = body.payment_method;
+    }
+    
+    if (body.payment_method_title) {
+      updateData.payment_method_title = body.payment_method_title;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json(
+        { success: false, error: { code: "no_updates", message: "No update fields provided" } },
+        { status: 400 }
+      );
+    }
+
+    const url = `${API_BASE}/orders/${body.order_id}?${getBasicAuthParams()}`;
+    
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updateData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: data.code || "order_update_error",
+            message: data.message || "Failed to update order.",
+          },
+        },
+        { status: response.status }
+      );
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      order: data,
+      order_id: data.id,
+      status: data.status,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: "network_error",
+          message: error instanceof Error ? error.message : "Network error occurred",
+        },
+      },
+      { status: 500 }
+    );
+  }
+}
