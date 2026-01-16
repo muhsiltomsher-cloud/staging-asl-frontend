@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/common/Button";
@@ -26,6 +26,7 @@ interface OrderData {
     country: string;
   };
   line_items: OrderLineItem[];
+  payment_method: string;
   payment_method_title: string;
 }
 
@@ -83,10 +84,157 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
   const [paymentStatus, setPaymentStatus] = useState<"success" | "failed" | "pending" | null>(null);
   const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
   const [verifyingPayment, setVerifyingPayment] = useState(false);
+  const [retryingPayment, setRetryingPayment] = useState(false);
+  const [retryError, setRetryError] = useState<string | null>(null);
 
   useEffect(() => {
     setIsCartOpen(false);
   }, [setIsCartOpen]);
+
+  const handleRetryPayment = useCallback(async () => {
+    if (!order || !orderId) return;
+    
+    setRetryingPayment(true);
+    setRetryError(null);
+    
+    try {
+      const baseUrl = window.location.origin;
+      const paymentMethod = order.payment_method;
+      const orderTotal = parseFloat(order.total);
+      
+      const isMyFatoorahPayment = paymentMethod.startsWith("myfatoorah");
+      const isTabbyPayment = paymentMethod.startsWith("tabby");
+      const isTamaraPayment = paymentMethod.startsWith("tamara");
+      
+      if (isMyFatoorahPayment) {
+        const mfResponse = await fetch("/api/myfatoorah/initiate-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            order_id: order.id,
+            order_key: order.order_key,
+            invoice_value: orderTotal,
+            customer_name: `${order.billing.first_name} ${order.billing.last_name}`,
+            customer_email: order.billing.email,
+            customer_phone: order.billing.phone,
+            currency_iso: order.currency || "KWD",
+            language: locale === "ar" ? "ar" : "en",
+            callback_url: `${baseUrl}/${locale}/order-confirmation`,
+            error_url: `${baseUrl}/${locale}/order-confirmation`,
+          }),
+        });
+        
+        const mfData = await mfResponse.json();
+        
+        if (mfData.success && mfData.payment_url) {
+          window.location.href = mfData.payment_url;
+          return;
+        } else {
+          throw new Error(mfData.error?.message || "Failed to initiate payment");
+        }
+      } else if (isTabbyPayment) {
+        const tabbyResponse = await fetch("/api/tabby/create-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            order_id: order.id,
+            order_key: order.order_key,
+            amount: orderTotal,
+            currency: order.currency || "AED",
+            description: `Order #${order.id}`,
+            buyer: {
+              name: `${order.billing.first_name} ${order.billing.last_name}`,
+              email: order.billing.email,
+              phone: order.billing.phone,
+            },
+            shipping_address: {
+              city: order.billing.city,
+              address: order.billing.address_1,
+              zip: "",
+            },
+            order_items: order.line_items.map((item) => ({
+              title: item.name,
+              quantity: item.quantity,
+              unit_price: parseFloat(item.total) / item.quantity,
+              category: "General",
+            })),
+            language: locale === "ar" ? "ar" : "en",
+            success_url: `${baseUrl}/${locale}/order-confirmation`,
+            cancel_url: `${baseUrl}/${locale}/order-confirmation`,
+            failure_url: `${baseUrl}/${locale}/order-confirmation`,
+          }),
+        });
+        
+        const tabbyData = await tabbyResponse.json();
+        
+        if (tabbyData.success && tabbyData.payment_url) {
+          window.location.href = tabbyData.payment_url;
+          return;
+        } else {
+          throw new Error(tabbyData.error?.message || "Failed to initiate payment");
+        }
+      } else if (isTamaraPayment) {
+        const tamaraResponse = await fetch("/api/tamara/create-checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            order_id: order.id,
+            order_key: order.order_key,
+            total_amount: orderTotal,
+            currency: order.currency || "AED",
+            country_code: order.billing.country || "AE",
+            locale: locale === "ar" ? "ar_SA" : "en_US",
+            consumer: {
+              first_name: order.billing.first_name,
+              last_name: order.billing.last_name,
+              email: order.billing.email,
+              phone_number: order.billing.phone,
+            },
+            billing_address: {
+              first_name: order.billing.first_name,
+              last_name: order.billing.last_name,
+              line1: order.billing.address_1,
+              city: order.billing.city,
+              country_code: order.billing.country || "AE",
+              phone_number: order.billing.phone,
+            },
+            shipping_address: {
+              first_name: order.billing.first_name,
+              last_name: order.billing.last_name,
+              line1: order.billing.address_1,
+              city: order.billing.city,
+              country_code: order.billing.country || "AE",
+              phone_number: order.billing.phone,
+            },
+            items: order.line_items.map((item) => ({
+              name: item.name,
+              quantity: item.quantity,
+              unit_price: parseFloat(item.total) / item.quantity,
+              sku: item.id?.toString() || "",
+            })),
+            success_url: `${baseUrl}/${locale}/order-confirmation`,
+            failure_url: `${baseUrl}/${locale}/order-confirmation`,
+            cancel_url: `${baseUrl}/${locale}/order-confirmation`,
+          }),
+        });
+        
+        const tamaraData = await tamaraResponse.json();
+        
+        if (tamaraData.success && tamaraData.checkout_url) {
+          window.location.href = tamaraData.checkout_url;
+          return;
+        } else {
+          throw new Error(tamaraData.error?.message || "Failed to initiate payment");
+        }
+      } else {
+        setRetryError(isRTL ? "طريقة الدفع غير مدعومة لإعادة المحاولة" : "Payment method not supported for retry");
+      }
+    } catch (err) {
+      setRetryError(err instanceof Error ? err.message : (isRTL ? "فشل في إعادة المحاولة" : "Failed to retry payment"));
+    } finally {
+      setRetryingPayment(false);
+    }
+  }, [order, orderId, locale, isRTL]);
 
   useEffect(() => {
     const verifyPaymentAndFetchOrder = async () => {
@@ -201,7 +349,17 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
 
         setOrder(data.data);
         
-        if (!cartClearedRef.current) {
+        // Only clear cart if payment was successful or if it's a non-external payment (like COD)
+        // For failed payments, keep the cart so user can retry
+        const hasExternalPaymentParams = myFatoorahPaymentId || tabbyPaymentId || tamaraOrderId;
+        const shouldClearCart = !hasExternalPaymentParams || paymentVerifiedRef.current;
+        
+        // Check if this is a successful payment or COD order
+        const orderStatus = data.data?.status;
+        const isSuccessfulPayment = orderStatus === "processing" || orderStatus === "completed" || orderStatus === "on-hold";
+        const isCODOrder = data.data?.payment_method === "cod";
+        
+        if (!cartClearedRef.current && shouldClearCart && (isSuccessfulPayment || isCODOrder)) {
           cartClearedRef.current = true;
           try {
             await clearCart();
@@ -281,11 +439,27 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                 <p className="mt-1 text-sm text-red-700">
                   {paymentMessage || (isRTL ? "لم يتم إتمام الدفع. يرجى المحاولة مرة أخرى." : "Payment was not completed. Please try again.")}
                 </p>
-                <Link href={`/${locale}/checkout`} className="mt-3 inline-block">
-                  <Button size="sm" variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
-                    {isRTL ? "إعادة المحاولة" : "Try Again"}
-                  </Button>
-                </Link>
+                {retryError && (
+                  <p className="mt-2 text-sm text-red-600">
+                    {retryError}
+                  </p>
+                )}
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="mt-3 border-red-300 text-red-700 hover:bg-red-100"
+                  onClick={handleRetryPayment}
+                  disabled={retryingPayment}
+                >
+                  {retryingPayment ? (
+                    <span className="flex items-center gap-2">
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-red-300 border-t-red-600"></span>
+                      {isRTL ? "جاري المعالجة..." : "Processing..."}
+                    </span>
+                  ) : (
+                    isRTL ? "إعادة المحاولة" : "Try Again"
+                  )}
+                </Button>
               </div>
             </div>
           </div>
@@ -351,89 +525,112 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           )}
         </div>
 
-        <div className="mb-8 rounded-lg border bg-gray-50 p-6">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">
-            {isRTL ? "تفاصيل الطلب" : "Order Details"}
-          </h2>
+        {/* Only show order details/invoice when payment is successful (not failed) */}
+        {!isPaymentFailed && (
+          <>
+            <div className="mb-8 rounded-lg border bg-gray-50 p-6">
+              <h2 className="mb-4 text-lg font-semibold text-gray-900">
+                {isRTL ? "تفاصيل الطلب" : "Order Details"}
+              </h2>
 
-          <div className="mb-6 space-y-4 border-b pb-4">
-            {order.line_items.map((item) => {
-              const isFreeGift = isOrderFreeGift(item);
-              const isBundle = isOrderBundleProduct(item);
-              
-              return (
-                <div key={item.id}>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">
-                      {item.name} x {item.quantity}
-                      {isFreeGift && (
-                        <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-                          {isRTL ? "هدية مجانية" : "Free Gift"}
+              <div className="mb-6 space-y-4 border-b pb-4">
+                {order.line_items.map((item) => {
+                  const isFreeGift = isOrderFreeGift(item);
+                  const isBundle = isOrderBundleProduct(item);
+                  
+                  return (
+                    <div key={item.id}>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">
+                          {item.name} x {item.quantity}
+                          {isFreeGift && (
+                            <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                              {isRTL ? "هدية مجانية" : "Free Gift"}
+                            </span>
+                          )}
                         </span>
+                        <OrderPrice 
+                          price={isFreeGift ? 0 : item.total} 
+                          orderCurrency={order.currency} 
+                          className={`font-medium ${isFreeGift ? "text-amber-600" : ""}`} 
+                          iconSize="xs" 
+                        />
+                      </div>
+                      {/* Bundle Items Breakdown */}
+                      {isBundle && (
+                        <OrderBundleItemsList item={item} locale={locale} compact />
                       )}
-                    </span>
-                    <OrderPrice 
-                      price={isFreeGift ? 0 : item.total} 
-                      orderCurrency={order.currency} 
-                      className={`font-medium ${isFreeGift ? "text-amber-600" : ""}`} 
-                      iconSize="xs" 
-                    />
-                  </div>
-                  {/* Bundle Items Breakdown */}
-                  {isBundle && (
-                    <OrderBundleItemsList item={item} locale={locale} compact />
-                  )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between text-lg font-semibold">
+                  <span>{isRTL ? "الإجمالي" : "Total"}</span>
+                  <OrderPrice price={order.total} orderCurrency={order.currency} iconSize="sm" showConversion={true} isRTL={isRTL} />
                 </div>
-              );
-            })}
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex justify-between text-lg font-semibold">
-              <span>{isRTL ? "الإجمالي" : "Total"}</span>
-              <OrderPrice price={order.total} orderCurrency={order.currency} iconSize="sm" showConversion={true} isRTL={isRTL} />
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>{isRTL ? "طريقة الدفع" : "Payment Method"}</span>
+                  <span>{order.payment_method_title}</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>{isRTL ? "الحالة" : "Status"}</span>
+                  <span className="capitalize">{order.status.replace(/-/g, " ")}</span>
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between text-sm text-gray-600">
-              <span>{isRTL ? "طريقة الدفع" : "Payment Method"}</span>
-              <span>{order.payment_method_title}</span>
-            </div>
-            <div className="flex justify-between text-sm text-gray-600">
-              <span>{isRTL ? "الحالة" : "Status"}</span>
-              <span className="capitalize">{order.status.replace(/-/g, " ")}</span>
-            </div>
-          </div>
-        </div>
 
-        <div className="mb-8 rounded-lg border p-6">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">
-            {isRTL ? "عنوان الشحن" : "Shipping Address"}
-          </h2>
-          <div className="text-gray-600">
-            <p>{order.billing.first_name} {order.billing.last_name}</p>
-            <p>{order.billing.address_1}</p>
-            <p>{order.billing.city}, {order.billing.country}</p>
-            <p>{order.billing.email}</p>
-            <p>{order.billing.phone}</p>
-          </div>
-        </div>
+            <div className="mb-8 rounded-lg border p-6">
+              <h2 className="mb-4 text-lg font-semibold text-gray-900">
+                {isRTL ? "عنوان الشحن" : "Shipping Address"}
+              </h2>
+              <div className="text-gray-600">
+                <p>{order.billing.first_name} {order.billing.last_name}</p>
+                <p>{order.billing.address_1}</p>
+                <p>{order.billing.city}, {order.billing.country}</p>
+                <p>{order.billing.email}</p>
+                <p>{order.billing.phone}</p>
+              </div>
+            </div>
 
-        <div className="text-center">
-          <p className="mb-6 text-gray-600">
-            {isRTL
-              ? "سيتم إرسال تأكيد الطلب إلى بريدك الإلكتروني"
-              : "A confirmation email has been sent to your email address"}
-          </p>
-          <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
-            <Link href={`/${locale}/shop`}>
-              <Button variant="outline">
-                {isRTL ? "متابعة التسوق" : "Continue Shopping"}
-              </Button>
-            </Link>
-            <Link href={`/${locale}/account/orders`}>
-              <Button>{isRTL ? "عرض طلباتي" : "View My Orders"}</Button>
-            </Link>
+            <div className="text-center">
+              <p className="mb-6 text-gray-600">
+                {isRTL
+                  ? "سيتم إرسال تأكيد الطلب إلى بريدك الإلكتروني"
+                  : "A confirmation email has been sent to your email address"}
+              </p>
+              <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
+                <Link href={`/${locale}/shop`}>
+                  <Button variant="outline">
+                    {isRTL ? "متابعة التسوق" : "Continue Shopping"}
+                  </Button>
+                </Link>
+                <Link href={`/${locale}/account/orders`}>
+                  <Button>{isRTL ? "عرض طلباتي" : "View My Orders"}</Button>
+                </Link>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Show simplified view for failed payments */}
+        {isPaymentFailed && (
+          <div className="text-center">
+            <p className="mb-6 text-gray-600">
+              {isRTL
+                ? "يمكنك إعادة محاولة الدفع أو العودة للتسوق"
+                : "You can retry the payment or continue shopping"}
+            </p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
+              <Link href={`/${locale}/shop`}>
+                <Button variant="outline">
+                  {isRTL ? "متابعة التسوق" : "Continue Shopping"}
+                </Button>
+              </Link>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
