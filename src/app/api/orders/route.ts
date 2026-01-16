@@ -232,6 +232,8 @@ interface PaymentMetaData {
   card_issuer?: string;
   card_issuer_country?: string;
   card_funding_method?: string;
+  error_code?: string;
+  error_message?: string;
 }
 
 interface UpdateOrderRequest {
@@ -316,6 +318,12 @@ export async function PUT(request: NextRequest) {
       }
       if (body.payment_details.card_funding_method) {
         metaData.push({ key: "_myfatoorah_card_funding_method", value: body.payment_details.card_funding_method });
+      }
+      if (body.payment_details.error_code) {
+        metaData.push({ key: "_payment_error_code", value: body.payment_details.error_code });
+      }
+      if (body.payment_details.error_message) {
+        metaData.push({ key: "_payment_error_message", value: body.payment_details.error_message });
       }
       
       if (metaData.length > 0) {
