@@ -90,11 +90,58 @@ interface MyFatoorahPaymentResponse {
   } | null;
 }
 
+interface WooCommerceOrderAddress {
+  first_name: string;
+  last_name: string;
+  company: string;
+  address_1: string;
+  address_2: string;
+  city: string;
+  state: string;
+  postcode: string;
+  country: string;
+  email?: string;
+  phone?: string;
+}
+
+interface WooCommerceOrderLineItem {
+  id: number;
+  name: string;
+  product_id: number;
+  variation_id: number;
+  quantity: number;
+  subtotal: string;
+  total: string;
+  price: number;
+  sku: string;
+  image: {
+    id: number;
+    src: string;
+  };
+}
+
 interface WooCommerceOrder {
   id: number;
+  number: string;
   status: string;
+  currency: string;
+  currency_symbol: string;
+  date_created: string;
+  date_modified: string;
+  date_paid: string | null;
+  total: string;
+  subtotal: string;
+  shipping_total: string;
+  discount_total: string;
+  total_tax: string;
   payment_method: string;
+  payment_method_title: string;
   transaction_id: string;
+  customer_id: number;
+  customer_note: string;
+  billing: WooCommerceOrderAddress;
+  shipping: WooCommerceOrderAddress;
+  line_items: WooCommerceOrderLineItem[];
   meta_data: Array<{ key: string; value: string }>;
 }
 
@@ -472,13 +519,45 @@ async function updateOrderFromPayment(
   };
 }
 
+function extractPaymentDetails(metaData: Array<{ key: string; value: string }>) {
+  const paymentDetails: Record<string, string> = {};
+  
+  const paymentMetaKeys = [
+    "_myfatoorah_payment_id",
+    "_myfatoorah_payment_method",
+    "_myfatoorah_reference_id",
+    "_myfatoorah_track_id",
+    "_myfatoorah_authorization_id",
+    "_myfatoorah_transaction_date",
+    "_myfatoorah_customer_ip",
+    "_myfatoorah_customer_country",
+    "_myfatoorah_card_brand",
+    "_myfatoorah_card_number",
+    "_myfatoorah_card_issuer",
+    "_myfatoorah_card_issuer_country",
+    "_myfatoorah_card_funding_method",
+    "_payment_error_code",
+    "_payment_error_message",
+  ];
+  
+  for (const meta of metaData) {
+    if (paymentMetaKeys.includes(meta.key)) {
+      const cleanKey = meta.key.replace(/^_myfatoorah_|^_/, "");
+      paymentDetails[cleanKey] = meta.value;
+    }
+  }
+  
+  return Object.keys(paymentDetails).length > 0 ? paymentDetails : null;
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const status = searchParams.get("status") || "pending";
   const limit = parseInt(searchParams.get("limit") || "10", 10);
+  const includeDetails = searchParams.get("include_details") === "true";
 
   try {
-    const ordersUrl = `${WC_API_BASE}/orders?status=${status}&per_page=${limit}&${getBasicAuthParams()}`;
+    const ordersUrl = `${WC_API_BASE}/orders?status=${status}&per_page=${limit}&orderby=date&order=desc&${getBasicAuthParams()}`;
     
     const response = await fetch(ordersUrl, {
       method: "GET",
@@ -492,19 +571,94 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const orders = await response.json();
+    const orders: WooCommerceOrder[] = await response.json();
     
-    const pendingOrders = orders.map((order: WooCommerceOrder) => ({
+    if (includeDetails) {
+      const detailedOrders = orders.map((order) => {
+        const paymentDetails = extractPaymentDetails(order.meta_data);
+        
+        return {
+          order_id: order.id,
+          order_number: order.number,
+          status: order.status,
+          currency: order.currency,
+          currency_symbol: order.currency_symbol,
+          date_created: order.date_created,
+          date_modified: order.date_modified,
+          date_paid: order.date_paid,
+          total: order.total,
+          subtotal: order.subtotal,
+          shipping_total: order.shipping_total,
+          discount_total: order.discount_total,
+          total_tax: order.total_tax,
+          payment_method: order.payment_method,
+          payment_method_title: order.payment_method_title,
+          transaction_id: order.transaction_id,
+          customer_id: order.customer_id,
+          customer_note: order.customer_note,
+          billing: {
+            first_name: order.billing.first_name,
+            last_name: order.billing.last_name,
+            company: order.billing.company,
+            address_1: order.billing.address_1,
+            address_2: order.billing.address_2,
+            city: order.billing.city,
+            state: order.billing.state,
+            postcode: order.billing.postcode,
+            country: order.billing.country,
+            email: order.billing.email,
+            phone: order.billing.phone,
+          },
+          shipping: {
+            first_name: order.shipping.first_name,
+            last_name: order.shipping.last_name,
+            company: order.shipping.company,
+            address_1: order.shipping.address_1,
+            address_2: order.shipping.address_2,
+            city: order.shipping.city,
+            state: order.shipping.state,
+            postcode: order.shipping.postcode,
+            country: order.shipping.country,
+            phone: order.shipping.phone,
+          },
+          line_items: order.line_items.map((item) => ({
+            id: item.id,
+            name: item.name,
+            product_id: item.product_id,
+            variation_id: item.variation_id,
+            quantity: item.quantity,
+            subtotal: item.subtotal,
+            total: item.total,
+            price: item.price,
+            sku: item.sku,
+            image: item.image,
+          })),
+          payment_details: paymentDetails,
+        };
+      });
+
+      return NextResponse.json({
+        success: true,
+        count: detailedOrders.length,
+        orders: detailedOrders,
+      });
+    }
+    
+    const basicOrders = orders.map((order) => ({
       order_id: order.id,
+      order_number: order.number,
       status: order.status,
       payment_method: order.payment_method,
       transaction_id: order.transaction_id,
+      date_created: order.date_created,
+      total: order.total,
+      currency: order.currency,
     }));
 
     return NextResponse.json({
       success: true,
-      count: pendingOrders.length,
-      orders: pendingOrders,
+      count: basicOrders.length,
+      orders: basicOrders,
     });
   } catch (error) {
     return NextResponse.json(
