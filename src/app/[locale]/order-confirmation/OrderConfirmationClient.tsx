@@ -83,7 +83,6 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
   const [paymentStatus, setPaymentStatus] = useState<"success" | "failed" | "pending" | null>(null);
   const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
   const [verifyingPayment, setVerifyingPayment] = useState(false);
-  const [paymentVerificationData, setPaymentVerificationData] = useState<PaymentVerificationResult | null>(null);
 
   useEffect(() => {
     setIsCartOpen(false);
@@ -122,7 +121,6 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
               if (verifyData.success && verifyData.payment_status) {
                 setPaymentStatus(verifyData.payment_status);
                 setPaymentMessage(verifyData.status_message || null);
-                setPaymentVerificationData(verifyData);
                 
                 if (verifyData.payment_status === "success") {
                   try {
@@ -173,7 +171,6 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                 }
               } else {
                 console.error("Payment verification error:", verifyData.error);
-                setPaymentVerificationData(verifyData);
               }
             }
           } catch (verifyError) {
@@ -278,88 +275,6 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                   </Button>
                 </Link>
               </div>
-            </div>
-          </div>
-        )}
-
-        {paymentVerificationData && (
-          <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4">
-            <h3 className="mb-3 font-semibold text-gray-900">
-              {isRTL ? "تفاصيل حالة الدفع" : "Payment Status Details"}
-            </h3>
-            <div className="space-y-2 text-sm">
-              {paymentVerificationData.invoice_id && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">{isRTL ? "رقم الفاتورة" : "Invoice ID"}</span>
-                  <span className="font-medium text-gray-900">{paymentVerificationData.invoice_id}</span>
-                </div>
-              )}
-              {paymentVerificationData.invoice_status && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">{isRTL ? "حالة الفاتورة" : "Invoice Status"}</span>
-                  <span className={`font-medium ${
-                    paymentVerificationData.invoice_status === "PAID" ? "text-green-600" : 
-                    paymentVerificationData.invoice_status === "EXPIRED" ? "text-red-600" : "text-yellow-600"
-                  }`}>{paymentVerificationData.invoice_status}</span>
-                </div>
-              )}
-              {paymentVerificationData.transaction_id && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">{isRTL ? "رقم المعاملة" : "Transaction ID"}</span>
-                  <span className="font-medium text-gray-900">{paymentVerificationData.transaction_id}</span>
-                </div>
-              )}
-              {paymentVerificationData.transaction_status && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">{isRTL ? "حالة المعاملة" : "Transaction Status"}</span>
-                  <span className={`font-medium ${
-                    paymentVerificationData.transaction_status === "SUCCESS" ? "text-green-600" : 
-                    paymentVerificationData.transaction_status === "FAILED" || paymentVerificationData.transaction_status === "CANCELED" ? "text-red-600" : "text-yellow-600"
-                  }`}>{paymentVerificationData.transaction_status}</span>
-                </div>
-              )}
-              {paymentVerificationData.payment_method && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">{isRTL ? "طريقة الدفع" : "Payment Method"}</span>
-                  <span className="font-medium text-gray-900">{paymentVerificationData.payment_method}</span>
-                </div>
-              )}
-              {paymentVerificationData.error_code && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">{isRTL ? "رمز الخطأ" : "Error Code"}</span>
-                  <span className="font-medium text-red-600">{paymentVerificationData.error_code}</span>
-                </div>
-              )}
-              {paymentVerificationData.payment_details?.card_brand && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">{isRTL ? "نوع البطاقة" : "Card Type"}</span>
-                  <span className="font-medium text-gray-900">{paymentVerificationData.payment_details.card_brand}</span>
-                </div>
-              )}
-              {paymentVerificationData.payment_details?.card_number && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">{isRTL ? "رقم البطاقة" : "Card Number"}</span>
-                  <span className="font-medium text-gray-900">{paymentVerificationData.payment_details.card_number}</span>
-                </div>
-              )}
-              {paymentVerificationData.payment_details?.transaction_date && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">{isRTL ? "تاريخ المعاملة" : "Transaction Date"}</span>
-                  <span className="font-medium text-gray-900">{paymentVerificationData.payment_details.transaction_date}</span>
-                </div>
-              )}
-              {paymentVerificationData.payment_details?.track_id && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">{isRTL ? "رقم التتبع" : "Track ID"}</span>
-                  <span className="font-medium text-gray-900">{paymentVerificationData.payment_details.track_id}</span>
-                </div>
-              )}
-              {paymentVerificationData.payment_details?.payment_id && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">{isRTL ? "رقم الدفع" : "Payment ID"}</span>
-                  <span className="font-medium text-gray-900">{paymentVerificationData.payment_details.payment_id}</span>
-                </div>
-              )}
             </div>
           </div>
         )}
