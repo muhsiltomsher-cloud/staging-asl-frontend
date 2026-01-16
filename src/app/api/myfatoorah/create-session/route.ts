@@ -21,6 +21,8 @@ function getMyFatoorahApiBaseUrl(): string {
     case "EG":
     case "EGY":
       return "https://api-eg.myfatoorah.com";
+    case "PORTAL":
+    case "MAIN":
     case "KW":
     case "KWT":
     case "BH":
@@ -54,6 +56,8 @@ function getMyFatoorahSessionScriptUrl(): string {
     case "EG":
     case "EGY":
       return "https://eg.myfatoorah.com/sessions/v1/session.js";
+    case "PORTAL":
+    case "MAIN":
     case "KW":
     case "KWT":
     case "BH":

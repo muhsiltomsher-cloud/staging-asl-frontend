@@ -21,6 +21,8 @@ function getMyFatoorahApiBaseUrl(): string {
     case "EG":
     case "EGY":
       return "https://api-eg.myfatoorah.com";
+    case "PORTAL":
+    case "MAIN":
     case "KW":
     case "KWT":
     case "BH":
