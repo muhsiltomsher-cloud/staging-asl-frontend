@@ -69,6 +69,15 @@ export interface OrderLineItem {
   };
 }
 
+export interface OrderNote {
+  id: number;
+  author: string;
+  date_created: string;
+  date_created_gmt: string;
+  note: string;
+  customer_note: boolean;
+}
+
 export interface Order {
   id: number;
   parent_id: number;
@@ -307,6 +316,45 @@ export async function getOrder(
         error: result.error || {
           code: "order_error",
           message: "Failed to get order.",
+        },
+      };
+    }
+
+    return {
+      success: true,
+      data: result.data,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: {
+        code: "network_error",
+        message:
+          error instanceof Error ? error.message : "Network error occurred",
+      },
+    };
+  }
+}
+
+export async function getOrderNotes(
+  orderId: number
+): Promise<CustomerOperationResponse<OrderNote[]>> {
+  try {
+    const response = await fetch(`/api/orders/notes?orderId=${orderId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      return {
+        success: false,
+        error: result.error || {
+          code: "notes_error",
+          message: "Failed to get order notes.",
         },
       };
     }

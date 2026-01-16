@@ -9,6 +9,7 @@ import { Button } from "@/components/common/Button";
 import { OrderPrice, OrderCurrencyBadge } from "@/components/common/OrderPrice";
 import { getOrder, formatOrderStatus, getOrderStatusColor, formatDate, type Order } from "@/lib/api/customer";
 import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/components/cart/OrderBundleItemsList";
+import { OrderNotes } from "@/components/account/OrderNotes";
 
 interface OrderDetailPageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -424,6 +425,8 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             <p className="text-gray-600">{order.payment_method_title}</p>
           </div>
         )}
+
+        <OrderNotes orderId={order.id} locale={locale} />
       </div>
     </div>
   );
