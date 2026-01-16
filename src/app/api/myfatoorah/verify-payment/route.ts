@@ -229,6 +229,21 @@ export async function GET(request: NextRequest) {
       customer_reference: data.Data?.Invoice?.UserDefinedField,
       error_code: errorCode || null,
       error_message: errorMessage || null,
+      // Additional payment details for tracking
+      payment_details: {
+        payment_id: data.Data?.Transaction?.PaymentId,
+        reference_id: data.Data?.Transaction?.ReferenceId,
+        track_id: data.Data?.Transaction?.TrackId,
+        authorization_id: data.Data?.Transaction?.AuthorizationId,
+        transaction_date: data.Data?.Transaction?.TransactionDate,
+        customer_ip: data.Data?.Transaction?.IP?.Address,
+        customer_country: data.Data?.Transaction?.IP?.Country,
+        card_brand: data.Data?.Transaction?.Card?.Brand,
+        card_number: data.Data?.Transaction?.Card?.Number,
+        card_issuer: data.Data?.Transaction?.Card?.Issuer,
+        card_issuer_country: data.Data?.Transaction?.Card?.IssuerCountry,
+        card_funding_method: data.Data?.Transaction?.Card?.FundingMethod,
+      },
     });
   } catch (error) {
     console.error("MyFatoorah verify-payment error:", error);

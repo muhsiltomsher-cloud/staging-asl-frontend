@@ -219,6 +219,21 @@ export async function POST(request: NextRequest) {
   }
 }
 
+interface PaymentMetaData {
+  payment_id?: string;
+  reference_id?: string;
+  track_id?: string;
+  authorization_id?: string;
+  transaction_date?: string;
+  customer_ip?: string;
+  customer_country?: string;
+  card_brand?: string;
+  card_number?: string;
+  card_issuer?: string;
+  card_issuer_country?: string;
+  card_funding_method?: string;
+}
+
 interface UpdateOrderRequest {
   order_id: number;
   status?: string;
@@ -226,6 +241,7 @@ interface UpdateOrderRequest {
   transaction_id?: string;
   payment_method?: string;
   payment_method_title?: string;
+  payment_details?: PaymentMetaData;
 }
 
 export async function PUT(request: NextRequest) {
@@ -259,6 +275,52 @@ export async function PUT(request: NextRequest) {
     
     if (body.payment_method_title) {
       updateData.payment_method_title = body.payment_method_title;
+    }
+
+    // Add payment details as meta_data for WooCommerce
+    if (body.payment_details) {
+      const metaData: Array<{ key: string; value: string }> = [];
+      
+      if (body.payment_details.payment_id) {
+        metaData.push({ key: "_myfatoorah_payment_id", value: body.payment_details.payment_id });
+      }
+      if (body.payment_details.reference_id) {
+        metaData.push({ key: "_myfatoorah_reference_id", value: body.payment_details.reference_id });
+      }
+      if (body.payment_details.track_id) {
+        metaData.push({ key: "_myfatoorah_track_id", value: body.payment_details.track_id });
+      }
+      if (body.payment_details.authorization_id) {
+        metaData.push({ key: "_myfatoorah_authorization_id", value: body.payment_details.authorization_id });
+      }
+      if (body.payment_details.transaction_date) {
+        metaData.push({ key: "_myfatoorah_transaction_date", value: body.payment_details.transaction_date });
+      }
+      if (body.payment_details.customer_ip) {
+        metaData.push({ key: "_myfatoorah_customer_ip", value: body.payment_details.customer_ip });
+      }
+      if (body.payment_details.customer_country) {
+        metaData.push({ key: "_myfatoorah_customer_country", value: body.payment_details.customer_country });
+      }
+      if (body.payment_details.card_brand) {
+        metaData.push({ key: "_myfatoorah_card_brand", value: body.payment_details.card_brand });
+      }
+      if (body.payment_details.card_number) {
+        metaData.push({ key: "_myfatoorah_card_number", value: body.payment_details.card_number });
+      }
+      if (body.payment_details.card_issuer) {
+        metaData.push({ key: "_myfatoorah_card_issuer", value: body.payment_details.card_issuer });
+      }
+      if (body.payment_details.card_issuer_country) {
+        metaData.push({ key: "_myfatoorah_card_issuer_country", value: body.payment_details.card_issuer_country });
+      }
+      if (body.payment_details.card_funding_method) {
+        metaData.push({ key: "_myfatoorah_card_funding_method", value: body.payment_details.card_funding_method });
+      }
+      
+      if (metaData.length > 0) {
+        updateData.meta_data = metaData;
+      }
     }
 
     if (Object.keys(updateData).length === 0) {

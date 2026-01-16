@@ -29,6 +29,21 @@ interface OrderData {
   payment_method_title: string;
 }
 
+interface PaymentDetails {
+  payment_id?: string;
+  reference_id?: string;
+  track_id?: string;
+  authorization_id?: string;
+  transaction_date?: string;
+  customer_ip?: string;
+  customer_country?: string;
+  card_brand?: string;
+  card_number?: string;
+  card_issuer?: string;
+  card_issuer_country?: string;
+  card_funding_method?: string;
+}
+
 interface PaymentVerificationResult {
   success: boolean;
   payment_status?: "success" | "failed" | "pending";
@@ -38,6 +53,7 @@ interface PaymentVerificationResult {
   payment_method?: string;
   error_code?: string;
   error_message?: string;
+  payment_details?: PaymentDetails;
   error?: {
     code: string;
     message: string;
@@ -116,6 +132,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                         status: "processing",
                         set_paid: true,
                         transaction_id: verifyData.transaction_id || verifyData.invoice_id,
+                        payment_details: verifyData.payment_details,
                       }),
                     });
                     const updateData = await updateResponse.json();
