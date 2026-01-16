@@ -197,7 +197,10 @@ export async function GET(request: NextRequest) {
     let paymentStatus: "success" | "failed" | "pending";
     let statusMessage: string;
 
-    if (invoiceStatus === "PAID" && transactionStatus === "SUCCESS") {
+    if (invoiceStatus === "PAID") {
+      paymentStatus = "success";
+      statusMessage = "Payment completed successfully";
+    } else if (transactionStatus === "SUCCESS") {
       paymentStatus = "success";
       statusMessage = "Payment completed successfully";
     } else if (transactionStatus === "FAILED" || transactionStatus === "CANCELED") {
@@ -208,6 +211,9 @@ export async function GET(request: NextRequest) {
     } else if (transactionStatus === "INPROGRESS" || transactionStatus === "AUTHORIZE") {
       paymentStatus = "pending";
       statusMessage = "Payment is being processed";
+    } else if (invoiceStatus === "EXPIRED") {
+      paymentStatus = "failed";
+      statusMessage = "Payment session expired. Please try again.";
     } else {
       paymentStatus = "pending";
       statusMessage = "Payment status is pending";
