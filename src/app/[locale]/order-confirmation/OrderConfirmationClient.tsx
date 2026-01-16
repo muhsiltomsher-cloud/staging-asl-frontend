@@ -134,7 +134,14 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                         status: "processing",
                         set_paid: true,
                         transaction_id: verifyData.transaction_id || verifyData.invoice_id,
-                        payment_details: verifyData.payment_details,
+                        payment_details: {
+                          ...verifyData.payment_details,
+                          invoice_id: verifyData.invoice_id,
+                          invoice_status: verifyData.invoice_status,
+                          transaction_id: verifyData.transaction_id,
+                          transaction_status: verifyData.transaction_status,
+                          payment_method: verifyData.payment_method,
+                        },
                       }),
                     });
                     const updateData = await updateResponse.json();
@@ -156,6 +163,11 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                         status: "failed",
                         payment_details: {
                           ...verifyData.payment_details,
+                          invoice_id: verifyData.invoice_id,
+                          invoice_status: verifyData.invoice_status,
+                          transaction_id: verifyData.transaction_id,
+                          transaction_status: verifyData.transaction_status,
+                          payment_method: verifyData.payment_method,
                           error_code: verifyData.error_code,
                           error_message: verifyData.error_message,
                         },
