@@ -1,6 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnvVar } from "@/lib/utils/loadEnv";
 
+function normalizePhoneForMyFatoorah(phone: string | undefined): string {
+  if (!phone) return "";
+  
+  let normalized = phone.replace(/[\s\-\(\)]/g, "");
+  
+  if (normalized.startsWith("+")) {
+    normalized = normalized.substring(1);
+  }
+  
+  const countryCodePrefixes = [
+    "971", "966", "965", "973", "968", "974", "962", "20",
+    "00971", "00966", "00965", "00973", "00968", "00974", "00962", "0020"
+  ];
+  
+  for (const prefix of countryCodePrefixes) {
+    if (normalized.startsWith(prefix)) {
+      normalized = normalized.substring(prefix.length);
+      break;
+    }
+  }
+  
+  if (normalized.startsWith("0")) {
+    normalized = normalized.substring(1);
+  }
+  
+  return normalized.substring(0, 11);
+}
+
 function getMyFatoorahApiBaseUrl(): string {
   if (getEnvVar("MYFATOORAH_TEST_MODE") === "true") {
     return "https://apitest.myfatoorah.com";
@@ -179,7 +207,7 @@ export async function POST(request: NextRequest) {
       sessionData.Customer = {
         ...(customer_name && { Name: customer_name }),
         ...(customer_email && { Email: customer_email }),
-        ...(customer_phone && { Mobile: customer_phone }),
+        ...(customer_phone && { Mobile: normalizePhoneForMyFatoorah(customer_phone) }),
         Reference: customer_reference || `WC-${order_id}`,
       };
     }
