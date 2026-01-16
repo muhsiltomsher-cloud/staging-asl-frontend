@@ -352,6 +352,17 @@ async function syncByOrderId(orderId: number, apiKey: string): Promise<SyncResul
 
     const metaData = [];
     
+    // Invoice details
+    if (searchData.Data?.InvoiceId) {
+      metaData.push({ key: "_myfatoorah_invoice_id", value: String(searchData.Data.InvoiceId) });
+    }
+    metaData.push({ key: "_myfatoorah_invoice_status", value: invoiceStatus });
+    // Transaction details
+    if (successfulTransaction.TransactionId) {
+      metaData.push({ key: "_myfatoorah_transaction_id", value: successfulTransaction.TransactionId });
+    }
+    metaData.push({ key: "_myfatoorah_transaction_status", value: successfulTransaction.TransactionStatus || "Success" });
+    // Payment details
     if (successfulTransaction.PaymentGateway) {
       metaData.push({ key: "_myfatoorah_payment_method", value: successfulTransaction.PaymentGateway });
     }
@@ -361,6 +372,13 @@ async function syncByOrderId(orderId: number, apiKey: string): Promise<SyncResul
     if (successfulTransaction.ReferenceId) {
       metaData.push({ key: "_myfatoorah_reference_id", value: successfulTransaction.ReferenceId });
     }
+    if (successfulTransaction.TrackId) {
+      metaData.push({ key: "_myfatoorah_track_id", value: successfulTransaction.TrackId });
+    }
+    if (successfulTransaction.TransactionDate) {
+      metaData.push({ key: "_myfatoorah_transaction_date", value: successfulTransaction.TransactionDate });
+    }
+    // Card details
     if (successfulTransaction.CardNumber) {
       metaData.push({ key: "_myfatoorah_card_number", value: successfulTransaction.CardNumber });
     }
@@ -463,6 +481,17 @@ async function updateOrderFromPayment(
 
   const metaData = [];
   
+  // Invoice details
+  if (paymentData.Invoice.Id) {
+    metaData.push({ key: "_myfatoorah_invoice_id", value: paymentData.Invoice.Id });
+  }
+  metaData.push({ key: "_myfatoorah_invoice_status", value: paymentData.Invoice.Status });
+  // Transaction details
+  if (paymentData.Transaction.Id) {
+    metaData.push({ key: "_myfatoorah_transaction_id", value: paymentData.Transaction.Id });
+  }
+  metaData.push({ key: "_myfatoorah_transaction_status", value: paymentData.Transaction.Status });
+  // Payment details
   if (paymentData.Transaction.PaymentMethod) {
     metaData.push({ key: "_myfatoorah_payment_method", value: paymentData.Transaction.PaymentMethod });
   }
@@ -472,12 +501,17 @@ async function updateOrderFromPayment(
   if (paymentData.Transaction.ReferenceId) {
     metaData.push({ key: "_myfatoorah_reference_id", value: paymentData.Transaction.ReferenceId });
   }
+  if (paymentData.Transaction.TransactionDate) {
+    metaData.push({ key: "_myfatoorah_transaction_date", value: paymentData.Transaction.TransactionDate });
+  }
+  // Customer details
   if (paymentData.Transaction.IP?.Address) {
     metaData.push({ key: "_myfatoorah_customer_ip", value: paymentData.Transaction.IP.Address });
   }
   if (paymentData.Transaction.IP?.Country) {
     metaData.push({ key: "_myfatoorah_customer_country", value: paymentData.Transaction.IP.Country });
   }
+  // Card details
   if (paymentData.Transaction.Card) {
     metaData.push({ key: "_myfatoorah_card_brand", value: paymentData.Transaction.Card.Brand });
     metaData.push({ key: "_myfatoorah_card_number", value: paymentData.Transaction.Card.Number });
@@ -523,6 +557,10 @@ function extractPaymentDetails(metaData: Array<{ key: string; value: string }>) 
   const paymentDetails: Record<string, string> = {};
   
   const paymentMetaKeys = [
+    "_myfatoorah_invoice_id",
+    "_myfatoorah_invoice_status",
+    "_myfatoorah_transaction_id",
+    "_myfatoorah_transaction_status",
     "_myfatoorah_payment_id",
     "_myfatoorah_payment_method",
     "_myfatoorah_reference_id",
@@ -536,8 +574,8 @@ function extractPaymentDetails(metaData: Array<{ key: string; value: string }>) 
     "_myfatoorah_card_issuer",
     "_myfatoorah_card_issuer_country",
     "_myfatoorah_card_funding_method",
-    "_payment_error_code",
-    "_payment_error_message",
+    "_myfatoorah_error_code",
+    "_myfatoorah_error_message",
   ];
   
   for (const meta of metaData) {
