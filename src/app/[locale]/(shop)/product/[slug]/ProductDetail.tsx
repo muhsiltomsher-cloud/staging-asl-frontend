@@ -795,6 +795,14 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
             />
           )}
 
+          {/* Full description - displayed prominently */}
+          {product.description && sanitizeProductDescription(product.description) && (
+            <div
+              className="prose prose-sm max-w-none text-gray-600"
+              dangerouslySetInnerHTML={{ __html: sanitizeProductDescription(product.description) }}
+            />
+          )}
+
           {/* Stock status - inline with low stock warning */}
           {isOutOfStock && (
             <div className="flex items-center gap-2">
