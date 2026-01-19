@@ -17,8 +17,6 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
-import { PaymentWidgets } from "@/components/payment";
 import type { WCProduct } from "@/types/woocommerce";
 import type { WCPAForm, WCPAFormValues } from "@/types/wcpa";
 import type { Locale } from "@/config/site";
@@ -315,12 +313,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
     const { addToCart } = useCart();
     const { addToWishlist, removeFromWishlist, isInWishlist, getWishlistItemId } = useWishlist();
     const { isAuthenticated } = useAuth();
-    const { currency } = useCurrency();
     const router = useRouter();
     const isRTL = locale === "ar";
-  
-    // Calculate product price for payment widgets
-    const productPrice = parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit);
 
   const toggleAccordion = (section: string) => {
     setOpenAccordion(openAccordion === section ? null : section);
@@ -780,12 +774,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
                         )}
           </div>
 
-          {/* Payment Widgets - Tabby & Tamara installment info */}
-          <PaymentWidgets 
-            price={productPrice} 
-            currency={currency || "AED"} 
-            locale={locale} 
-          />
 
           {/* Short description */}
           {product.short_description && (
