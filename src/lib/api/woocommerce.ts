@@ -615,16 +615,16 @@ export async function getFreeGiftProductInfo(currency?: string): Promise<FreeGif
     const data = await response.json();
     
     if (data.rules && Array.isArray(data.rules)) {
-      // Only return products where hide_from_shop is true
-      const hiddenRules = data.rules.filter(
-        (rule: { hide_from_shop?: boolean }) => rule.hide_from_shop === true
-      );
+      // Return ALL free gift product IDs to hide them from shop listings
+      // Free gift products (including password-protected ones) should only be
+      // accessible through the free gift system, not through normal browsing
+      const allRules = data.rules;
       
-      const ids = hiddenRules.map((rule: { product_id: number }) => rule.product_id);
+      const ids = allRules.map((rule: { product_id: number }) => rule.product_id);
       
       // Try to get slugs from the rules first (if API provides them)
       // The API returns slugs in rule.product.slug (nested object)
-      let slugs = hiddenRules
+      let slugs = allRules
         .map((rule: { product?: { slug?: string }; product_slug?: string }) => 
           rule.product?.slug || rule.product_slug
         )
