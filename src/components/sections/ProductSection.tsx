@@ -24,6 +24,7 @@ interface ProductSectionProps {
   className?: string;
   isLoading?: boolean;
   bundleProductSlugs?: string[];
+  englishProductSlugs?: Record<number, string>;
 }
 
 function ProductCardSkeleton() {
@@ -65,6 +66,7 @@ export function ProductSection({
   className = "",
   isLoading = false,
   bundleProductSlugs = [],
+  englishProductSlugs = {},
 }: ProductSectionProps) {
   if (isLoading) {
     return <ProductSectionSkeleton count={settings.products_count || 4} />;
@@ -153,7 +155,7 @@ export function ProductSection({
           >
             {products.slice(0, settings.products_count).map((product) => (
               <SwiperSlide key={product.id}>
-                <WCProductCard product={product} locale={locale} bundleProductSlugs={bundleProductSlugs} />
+                <WCProductCard product={product} locale={locale} bundleProductSlugs={bundleProductSlugs} englishSlug={englishProductSlugs[product.id]} />
               </SwiperSlide>
             ))}
           </Swiper>

@@ -43,15 +43,23 @@ export default async function HomePage({ params }: HomePageProps) {
   const isRTL = locale === "ar";
 
   // Fetch all data in parallel
-  // Fetch both localized categories (for names) and English categories (for URL slugs)
-  const [{ products: allProducts }, categories, englishCategories, homeSettings, giftProductInfo, bundleProductSlugs] = await Promise.all([
+  // Fetch both localized products/categories (for names) and English versions (for URL slugs)
+  const [{ products: allProducts }, { products: englishProducts }, categories, englishCategories, homeSettings, giftProductInfo, bundleProductSlugs] = await Promise.all([
     getProducts({ per_page: 20, locale: locale as Locale }),
+    getProducts({ per_page: 20, locale: "en" }), // Always fetch English products for URL slugs
     getCategories(locale as Locale),
     getCategories("en"), // Always fetch English categories for URL slugs
     getHomePageSettings(locale as Locale),
     getFreeGiftProductInfo(),
     getBundleEnabledProductSlugs(),
   ]);
+
+  // Create a mapping of product ID to English slug for URL generation
+  // This ensures product URLs always use English slugs regardless of current locale
+  const englishProductSlugs: Record<number, string> = {};
+  englishProducts.forEach((product) => {
+    englishProductSlugs[product.id] = product.slug;
+  });
 
   // Create a mapping of localized category ID to English slug for URL generation
   // WPML assigns different IDs for different locales, so we match by index position
@@ -171,6 +179,7 @@ export default async function HomePage({ params }: HomePageProps) {
               viewAllText={sectionTexts.viewAll}
               className="bg-[#f7f6f2]"
               bundleProductSlugs={bundleProductSlugs}
+              englishProductSlugs={englishProductSlugs}
             />
 
       {/* Shop by Category */}
@@ -194,6 +203,7 @@ export default async function HomePage({ params }: HomePageProps) {
         isRTL={isRTL}
         viewAllText={sectionTexts.viewAll}
         bundleProductSlugs={bundleProductSlugs}
+        englishProductSlugs={englishProductSlugs}
       />
 
       {/* Bestseller Products Section */}
@@ -205,6 +215,7 @@ export default async function HomePage({ params }: HomePageProps) {
         viewAllText={sectionTexts.viewAll}
         className="bg-[#f7f6f2]"
         bundleProductSlugs={bundleProductSlugs}
+        englishProductSlugs={englishProductSlugs}
       />
 
       {/* Our Collections */}

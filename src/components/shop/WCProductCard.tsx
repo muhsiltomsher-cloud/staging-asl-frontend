@@ -19,6 +19,7 @@ interface WCProductCardProps {
   locale: Locale;
   className?: string;
   bundleProductSlugs?: string[];
+  englishSlug?: string;
 }
 
 export function WCProductCard({
@@ -26,6 +27,7 @@ export function WCProductCard({
   locale,
   className,
   bundleProductSlugs = [],
+  englishSlug,
 }: WCProductCardProps) {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
@@ -77,8 +79,9 @@ export function WCProductCard({
   const isOutOfStock = !product.is_in_stock;
   const mainImage = product.images[0];
   
-  // Use English slug from permalink to ensure consistent URLs across locales
-  const productSlug = getProductSlugFromPermalink(product.permalink, product.slug);
+  // Use English slug for URL generation to ensure consistent URLs across locales
+  // Priority: 1) explicitly passed englishSlug, 2) extract from permalink, 3) fallback to product.slug
+  const productSlug = englishSlug || getProductSlugFromPermalink(product.permalink, product.slug);
   
   // Check if this product is a bundle product
   const isBundleProduct = bundleProductSlugs.includes(productSlug) || bundleProductSlugs.includes(product.slug);
