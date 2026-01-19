@@ -472,18 +472,18 @@ export function BuildYourOwnSetClient({
       select: "Select",
       selected: "Selected",
       close: "Close",
-          itemsSelected: "items selected",
-          requiredItems: "required",
-          characteristics: "Characteristics",
-          description: "Description",
-          paymentDelivery: "Payment & Delivery",
-          category: "Category",
-          sku: "SKU",
-          noDescription: "No description available",
-          paymentInfo: "We accept all major credit cards and cash on delivery.",
-          deliveryInfo: "Free shipping on orders over 300 AED. Delivery within 2-5 business days.",
-        },
-        ar: {
+                  itemsSelected: "items selected",
+              requiredItems: "required",
+              characteristics: "Characteristics",
+              descriptionTab: "Description",
+              paymentDelivery: "Payment & Delivery",
+              category: "Category",
+              sku: "SKU",
+              noDescription: "No description available",
+              paymentInfo: "We accept all major credit cards and cash on delivery.",
+              deliveryInfo: "Free shipping on orders over 300 AED. Delivery within 2-5 business days.",
+            },
+            ar:{
       title: "اصنع مجموعتك الخاصة",
       description:
         "سواء كنت تدلل نفسك أو تفاجئ شخصًا مميزًا، فإن صناديق ASL تجمع أفضل العطور ومنتجات العناية بالجسم.",
@@ -513,20 +513,20 @@ export function BuildYourOwnSetClient({
       select: "اختر",
       selected: "مختار",
       close: "إغلاق",
-        itemsSelected: "منتجات مختارة",
-        requiredItems: "مطلوب",
-        characteristics: "الخصائص",
-        description: "الوصف",
-        paymentDelivery: "الدفع والتوصيل",
-        category: "الفئة",
-        sku: "رمز المنتج",
-        noDescription: "لا يوجد وصف متاح",
-        paymentInfo: "نقبل جميع بطاقات الائتمان الرئيسية والدفع عند الاستلام.",
-        deliveryInfo: "شحن مجاني للطلبات التي تزيد عن 300 درهم. التوصيل خلال 2-5 أيام عمل.",
-      },
-    };
+            itemsSelected: "منتجات مختارة",
+          requiredItems: "مطلوب",
+          characteristics: "الخصائص",
+          descriptionTab: "الوصف",
+          paymentDelivery: "الدفع والتوصيل",
+          category: "الفئة",
+          sku: "رمز المنتج",
+          noDescription: "لا يوجد وصف متاح",
+          paymentInfo: "نقبل جميع بطاقات الائتمان الرئيسية والدفع عند الاستلام.",
+          deliveryInfo: "شحن مجاني للطلبات التي تزيد عن 300 درهم. التوصيل خلال 2-5 أيام عمل.",
+        },
+      };
 
-    const t = translations[isRTL ? "ar" : "en"];
+      const t = translations[isRTL ? "ar" : "en"];
 
   const allCategories: { key: CategoryFilter; label: string }[] = [
     { key: "all", label: t.all },
@@ -842,12 +842,12 @@ export function BuildYourOwnSetClient({
                     </div>
                   </AccordionSection>
 
-                  {/* Description */}
-                  <AccordionSection
-                    title={t.description}
-                    isOpen={openAccordion === "description"}
-                    onToggle={() => toggleAccordion("description")}
-                  >
+                                    {/* Description */}
+                                    <AccordionSection
+                                      title={t.descriptionTab}
+                                      isOpen={openAccordion === "description"}
+                                      onToggle={() => toggleAccordion("description")}
+                                    >
                     {bundleProduct?.description && sanitizeProductDescription(bundleProduct.description) ? (
                       <div
                         className="prose prose-sm max-w-none text-gray-600"
