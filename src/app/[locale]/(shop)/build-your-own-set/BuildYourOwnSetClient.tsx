@@ -484,11 +484,18 @@ export function BuildYourOwnSetClient({
             <FormattedPrice price={bundleProductPrice > 0 ? bundleProductPrice : total} iconSize="md" />
           </div>
 
-          {/* Description */}
-          <div className="space-y-2 text-sm text-gray-600">
-            <p>{t.description}</p>
-            <p>{t.instructions}</p>
-          </div>
+          {/* Description - Use product short_description from WordPress if available */}
+          {bundleProduct?.short_description ? (
+            <div 
+              className="space-y-2 text-sm text-gray-600 prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: bundleProduct.short_description }}
+            />
+          ) : (
+            <div className="space-y-2 text-sm text-gray-600">
+              <p>{t.description}</p>
+              <p>{t.instructions}</p>
+            </div>
+          )}
 
           {/* Your Box Section */}
           <div className="space-y-4">
