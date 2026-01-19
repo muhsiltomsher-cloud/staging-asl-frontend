@@ -370,6 +370,119 @@ function getEnglishSlugFromLocalizedSlug(localizedSlug: string): string | null {
   return null;
 }
 
+// Mapping of English tag slugs to Arabic tag slugs
+// This is needed because WPML assigns different slugs for each language
+// and the API returns tags in different orders, making position-based matching unreliable
+// Add new tag mappings here as needed (format: "english-slug": "url-encoded-arabic-slug")
+const ENGLISH_TO_ARABIC_TAG_SLUGS: Record<string, string> = {
+  // Common e-commerce tags - add actual tag slugs from WooCommerce here
+  "new": "%d8%ac%d8%af%d9%8a%d8%af",
+  "sale": "%d8%aa%d8%ae%d9%81%d9%8a%d8%b6",
+  "bestseller": "%d8%a7%d9%84%d8%a3%d9%83%d8%ab%d8%b1-%d9%85%d8%a8%d9%8a%d8%b9%d8%a7",
+  "featured": "%d9%85%d9%85%d9%8a%d8%b2",
+  "exclusive": "%d8%ad%d8%b5%d8%b1%d9%8a",
+  "limited-edition": "%d8%a5%d8%b5%d8%af%d8%a7%d8%b1-%d9%85%d8%ad%d8%af%d9%88%d8%af",
+  "gift": "%d9%87%d8%af%d9%8a%d8%a9",
+  "popular": "%d8%b4%d8%a7%d8%a6%d8%b9",
+  "trending": "%d8%b1%d8%a7%d8%a6%d8%ac",
+  "premium": "%d9%85%d9%85%d9%8a%d8%b2",
+};
+
+// Create a reverse mapping from Arabic tag slugs to English tag slugs
+// This is used to convert Arabic tag slugs back to English slugs for URL generation
+const ARABIC_TO_ENGLISH_TAG_SLUGS: Record<string, string> = Object.fromEntries(
+  Object.entries(ENGLISH_TO_ARABIC_TAG_SLUGS).map(([en, ar]) => [ar, en])
+);
+
+// Helper function to get English slug from an Arabic/localized tag slug
+// Uses the reverse mapping for reliable slug conversion
+export function getEnglishSlugFromLocalizedTagSlug(localizedSlug: string): string | null {
+  // If the slug is already in English (exists in the English-to-Arabic mapping), return it
+  if (ENGLISH_TO_ARABIC_TAG_SLUGS[localizedSlug]) {
+    return localizedSlug;
+  }
+  
+  // Try to find the English slug from the reverse mapping
+  // The localized slug might be URL-encoded or decoded, so try both
+  const englishSlug = ARABIC_TO_ENGLISH_TAG_SLUGS[localizedSlug];
+  if (englishSlug) {
+    return englishSlug;
+  }
+  
+  // Try with URL-decoded version (in case the slug is already encoded)
+  try {
+    const decodedSlug = decodeURIComponent(localizedSlug);
+    // Check if decoded slug matches any Arabic slug pattern
+    for (const [arabicSlug, enSlug] of Object.entries(ARABIC_TO_ENGLISH_TAG_SLUGS)) {
+      const decodedArabicSlug = decodeURIComponent(arabicSlug);
+      if (decodedSlug === decodedArabicSlug) {
+        return enSlug;
+      }
+    }
+  } catch {
+    // Ignore decoding errors
+  }
+  
+  return null;
+}
+
+// Helper function to get Arabic slug from an English tag slug
+// Uses the mapping for reliable slug conversion
+export function getArabicSlugFromEnglishTagSlug(englishSlug: string): string | null {
+  return ENGLISH_TO_ARABIC_TAG_SLUGS[englishSlug] || null;
+}
+
+// Get the English slug for a tag by its localized slug
+// This ensures tag URLs always use English slugs regardless of current locale
+export function getEnglishSlugForTag(
+  localizedTagSlug: string,
+  locale?: Locale
+): string | null {
+  // If locale is English or not specified, the slug is already English
+  if (!locale || locale === "en") {
+    return localizedTagSlug;
+  }
+  
+  // Try to get English slug from the mapping
+  const englishSlug = getEnglishSlugFromLocalizedTagSlug(localizedTagSlug);
+  if (englishSlug) {
+    return englishSlug;
+  }
+  
+  // If no mapping found, return the original slug
+  // This handles cases where the tag might not be in the mapping yet
+  return localizedTagSlug;
+}
+
+// Get the localized tag slug for a given English slug and locale
+// This is useful when you need to find a tag in the localized product data
+export function getLocalizedTagSlug(
+  englishSlug: string,
+  locale?: Locale
+): string {
+  // If locale is English or not specified, return the English slug
+  if (!locale || locale === "en") {
+    return englishSlug;
+  }
+  
+  // Try to get the Arabic slug from the mapping
+  if (locale === "ar") {
+    const arabicSlug = getArabicSlugFromEnglishTagSlug(englishSlug);
+    if (arabicSlug) {
+      return arabicSlug;
+    }
+  }
+  
+  // If no mapping found, return the original slug
+  return englishSlug;
+}
+
+// Export the tag slug mappings for external use (e.g., in components that need to check mappings)
+export const TAG_SLUG_MAPPINGS = {
+  englishToArabic: ENGLISH_TO_ARABIC_TAG_SLUGS,
+  arabicToEnglish: ARABIC_TO_ENGLISH_TAG_SLUGS,
+};
+
 // Memoized version for request deduplication
 // Handles the case where URLs use English slugs but the locale is non-English (e.g., Arabic)
 // WPML assigns different slugs for each language, so we need to map English slugs to localized categories
