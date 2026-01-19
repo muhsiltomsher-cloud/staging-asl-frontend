@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import Image from "next/image";
 import { X, Plus, Minus, Search, Check } from "lucide-react";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
-import { TabbyPromoWidget } from "@/components/payment/TabbyPromoWidget";
 import { TamaraPromoWidget } from "@/components/payment/TamaraPromoWidget";
 import { useCart } from "@/contexts/CartContext";
 import { useNotification } from "@/contexts/NotificationContext";
@@ -686,7 +685,6 @@ export function BuildYourOwnSetClient({
           {/* Payment Widgets */}
           {total > 0 && (
             <div className="space-y-2 rounded-lg bg-[#e7e2d6] p-3">
-              <TabbyPromoWidget price={total} currency={currency} locale={locale} />
               <TamaraPromoWidget price={total} currency={currency} locale={locale} />
             </div>
           )}

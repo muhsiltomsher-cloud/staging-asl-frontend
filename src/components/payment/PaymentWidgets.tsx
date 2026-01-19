@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { TabbyPromoWidget } from "./TabbyPromoWidget";
 import { TamaraPromoWidget } from "./TamaraPromoWidget";
 
 interface PaymentWidgetsProps {
@@ -44,22 +43,16 @@ export function PaymentWidgets({ price, currency, locale }: PaymentWidgetsProps)
   // Don't render anything while loading to avoid flash
   if (isLoading) return null;
 
-  // Check if Tabby is enabled (any tabby variant)
-  const isTabbyEnabled = enabledGateways.some(
-    (gateway) => gateway.id === "tabby" || gateway.id === "tabby_installments" || gateway.id === "tabby_checkout"
-  );
-
   // Check if Tamara is enabled (any tamara variant)
   const isTamaraEnabled = enabledGateways.some(
     (gateway) => gateway.id === "tamara" || gateway.id === "tamara-gateway"
   );
 
-  // Don't render the container if neither widget is enabled
-  if (!isTabbyEnabled && !isTamaraEnabled) return null;
+  // Don't render the container if Tamara is not enabled
+  if (!isTamaraEnabled) return null;
 
   return (
     <div className="space-y-2 border-t border-gray-200 pt-3 mt-3">
-      {isTabbyEnabled && <TabbyPromoWidget price={price} currency={currency} locale={locale} />}
       {isTamaraEnabled && <TamaraPromoWidget price={price} currency={currency} locale={locale} />}
     </div>
   );
