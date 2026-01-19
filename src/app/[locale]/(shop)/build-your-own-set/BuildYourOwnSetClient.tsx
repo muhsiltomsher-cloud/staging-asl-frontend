@@ -507,6 +507,14 @@ export function BuildYourOwnSetClient({
             </div>
           )}
 
+          {/* Full description - displayed prominently if available */}
+          {bundleProduct?.description && (
+            <div 
+              className="prose prose-sm max-w-none text-gray-600"
+              dangerouslySetInnerHTML={{ __html: bundleProduct.description }}
+            />
+          )}
+
           {/* Your Box Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
