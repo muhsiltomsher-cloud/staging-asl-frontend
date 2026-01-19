@@ -3,7 +3,7 @@ import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
-import { getProducts, getFreeGiftProductIds, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
+import { getProducts, getFreeGiftProductInfo, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { ShopClient } from "./ShopClient";
@@ -40,17 +40,20 @@ export default async function ShopPage({ params }: ShopPageProps) {
     { name: dictionary.common.shop, href: `/${locale}/shop` },
   ];
 
-  // Fetch products, gift product IDs, and bundle product slugs in parallel
+  // Fetch products, gift product info (IDs and slugs), and bundle product slugs in parallel
   // Load 12 products initially for faster page load, more will load on scroll
-  const [productsResult, giftProductIds, bundleProductSlugs] = await Promise.all([
+  const [productsResult, giftProductInfo, bundleProductSlugs] = await Promise.all([
     getProducts({ per_page: 12, locale: locale as Locale }),
-    getFreeGiftProductIds(),
+    getFreeGiftProductInfo(),
     getBundleEnabledProductSlugs(),
   ]);
 
   // Filter out gift products from the shop listing
+  // Use both ID and slug matching to handle WPML translations (different IDs per locale)
+  const giftProductSlugsSet = new Set(giftProductInfo.slugs);
+  const giftProductIdsSet = new Set(giftProductInfo.ids);
   const filteredProducts = productsResult.products.filter(
-    (product) => !giftProductIds.includes(product.id)
+    (product) => !giftProductIdsSet.has(product.id) && !giftProductSlugsSet.has(product.slug)
   );
   
   // Adjust total count to exclude gift products
@@ -77,7 +80,8 @@ export default async function ShopPage({ params }: ShopPageProps) {
           locale={locale as Locale}
           initialTotal={filteredTotal}
           initialTotalPages={productsResult.totalPages}
-          giftProductIds={giftProductIds}
+          giftProductIds={giftProductInfo.ids}
+          giftProductSlugs={giftProductInfo.slugs}
           bundleProductSlugs={bundleProductSlugs}
         />
       </Suspense>

@@ -45,6 +45,7 @@ interface ShopClientProps {
   initialTotal?: number;
   initialTotalPages?: number;
   giftProductIds?: number[];
+  giftProductSlugs?: string[];
   bundleProductSlugs?: string[];
 }
 
@@ -55,6 +56,7 @@ export function ShopClient({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   initialTotalPages = 1,
   giftProductIds = [],
+  giftProductSlugs = [],
   bundleProductSlugs = [],
 }: ShopClientProps) {
   const [products, setProducts] = useState<WCProduct[]>(initialProducts);
@@ -95,8 +97,11 @@ export function ShopClient({
         setHasMore(false);
       } else {
         // Filter out gift products from the fetched data
+        // Use both ID and slug matching to handle WPML translations (different IDs per locale)
+        const giftIdsSet = new Set(giftProductIds);
+        const giftSlugsSet = new Set(giftProductSlugs);
         const filteredNewProducts = data.products.filter(
-          (product: WCProduct) => !giftProductIds.includes(product.id)
+          (product: WCProduct) => !giftIdsSet.has(product.id) && !giftSlugsSet.has(product.slug)
         );
         
         const newProducts = [...products, ...filteredNewProducts];
@@ -119,7 +124,7 @@ export function ShopClient({
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, hasMore, currentPage, products, locale, giftProductIds]);
+  }, [isLoading, hasMore, currentPage, products, locale, giftProductIds, giftProductSlugs]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(

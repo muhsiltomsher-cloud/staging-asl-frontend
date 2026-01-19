@@ -4,7 +4,7 @@ import { ProductGridSkeleton } from "@/components/common/Skeleton";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
-import { getCategoryBySlug, getProductsByCategory, getCategories, getFreeGiftProductIds, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
+import { getCategoryBySlug, getProductsByCategory, getCategories, getFreeGiftProductInfo, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import { siteConfig, type Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { CategoryClient } from "./CategoryClient";
@@ -66,16 +66,19 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     notFound();
   }
 
-  // Fetch products, gift product IDs, and bundle product slugs in parallel
-  const [{ products: allProducts }, giftProductIds, bundleProductSlugs] = await Promise.all([
+  // Fetch products, gift product info (IDs and slugs), and bundle product slugs in parallel
+  const [{ products: allProducts }, giftProductInfo, bundleProductSlugs] = await Promise.all([
     getProductsByCategory(slug, { per_page: 24, locale: locale as Locale }),
-    getFreeGiftProductIds(),
+    getFreeGiftProductInfo(),
     getBundleEnabledProductSlugs(),
   ]);
 
   // Filter out gift products from the category listing
+  // Use both ID and slug matching to handle WPML translations (different IDs per locale)
+  const giftProductSlugsSet = new Set(giftProductInfo.slugs);
+  const giftProductIdsSet = new Set(giftProductInfo.ids);
   const products = allProducts.filter(
-    (product) => !giftProductIds.includes(product.id)
+    (product) => !giftProductIdsSet.has(product.id) && !giftProductSlugsSet.has(product.slug)
   );
 
     const breadcrumbItems = [
