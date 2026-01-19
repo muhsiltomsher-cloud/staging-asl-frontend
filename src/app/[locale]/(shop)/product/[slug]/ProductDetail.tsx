@@ -304,8 +304,9 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
   const [openAccordion, setOpenAccordion] = useState<string | null>("characteristics");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
-  const [viewMode, setViewMode] = useState<"grid" | "slider">("slider");
-  const [addonValues, setAddonValues] = useState<WCPAFormValues>({});
+    const [viewMode, setViewMode] = useState<"grid" | "slider">("slider");
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+    const [addonValues, setAddonValues] = useState<WCPAFormValues>({});
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [addonPrice, setAddonPrice] = useState(0);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -783,13 +784,24 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
             />
           )}
 
-          {/* Full description - displayed prominently */}
-          {product.description && sanitizeProductDescription(product.description) && (
-            <div
-              className="prose prose-sm max-w-none text-gray-600"
-              dangerouslySetInnerHTML={{ __html: sanitizeProductDescription(product.description) }}
-            />
-          )}
+                    {/* Full description - displayed prominently with Read More */}
+                    {product.description && sanitizeProductDescription(product.description) && (
+                      <div className="relative">
+                        <div
+                          className={`prose prose-sm max-w-none text-gray-600 ${!isDescriptionExpanded ? 'line-clamp-4' : ''}`}
+                          dangerouslySetInnerHTML={{ __html: sanitizeProductDescription(product.description) }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                          className="mt-2 text-sm font-medium text-amber-800 hover:text-amber-900 transition-colors"
+                        >
+                          {isDescriptionExpanded 
+                            ? (isRTL ? "عرض أقل" : "Show Less") 
+                            : (isRTL ? "اقرأ المزيد" : "Read More")}
+                        </button>
+                      </div>
+                    )}
 
           {/* Stock status - inline with low stock warning */}
           {isOutOfStock && (
