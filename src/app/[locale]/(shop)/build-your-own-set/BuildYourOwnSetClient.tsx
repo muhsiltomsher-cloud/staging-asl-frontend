@@ -304,6 +304,17 @@ export function BuildYourOwnSetClient({
   const requiredCount = selections.slice(0, requiredSlots).filter((s) => s !== null).length;
   const isValid = requiredCount === requiredSlots;
 
+  // Helper function to get slot label from config or fallback to default
+  const getSlotLabel = (index: number, isOptional: boolean = false) => {
+    // Check if slot has a custom title from backend config
+    const slotConfig = bundleConfig?.slots?.[index];
+    if (slotConfig?.title) {
+      return slotConfig.title;
+    }
+    // Fallback to default translation
+    return isOptional ? t.addExtraWithPrice : `${t.chooseItem} ${index + 1}`;
+  };
+
   const handleSlotClick = (index: number) => {
     setActiveSlot(index);
     setSearchQuery("");
@@ -559,7 +570,7 @@ export function BuildYourOwnSetClient({
                       </div>
                       <div>
                         <p className="font-medium text-gray-600">
-                          {t.chooseItem} {index + 1}
+                          {getSlotLabel(index)}
                         </p>
                         <p className="text-xs text-red-500">{t.required}</p>
                       </div>
@@ -627,7 +638,7 @@ export function BuildYourOwnSetClient({
                         <Plus className="h-6 w-6 text-gray-300" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-400">{t.addExtraWithPrice}</p>
+                        <p className="font-medium text-gray-400">{getSlotLabel(index, true)}</p>
                         <p className="text-xs text-gray-400">{t.optional}</p>
                       </div>
                     </button>
