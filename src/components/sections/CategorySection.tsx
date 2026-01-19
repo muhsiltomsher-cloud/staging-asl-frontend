@@ -50,7 +50,7 @@ export function CategorySectionSkeleton({ count = 6 }: { count?: number }) {
           <Skeleton className="mx-auto h-8 w-48 md:h-9" />
           <Skeleton className="mx-auto mt-2 h-5 w-64" />
         </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6 md:gap-6">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
           {Array.from({ length: count }).map((_, i) => (
             <CategoryCardSkeleton key={i} />
           ))}
@@ -127,7 +127,7 @@ export function CategorySection({
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6 md:gap-6">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
             {displayCategories.map((category) => {
               const categorySlugForUrl = englishCategorySlugs[category.id] || category.slug;
               // Use category image if available, otherwise use fallback image from English locale
