@@ -109,12 +109,14 @@ export async function GET() {
               description: details?.description || gateway.description || "",
               method_title: gateway.method_title,
               order: gateway.order,
+              enabled: true, // Confirmed enabled from WooCommerce REST API
             };
           });
 
         return NextResponse.json({ 
           success: true, 
           gateways: enabledGateways,
+          source: "woocommerce_rest_api", // Indicates reliable enabled status
         });
       }
     }
@@ -148,23 +150,32 @@ export async function GET() {
 
     const paymentMethodIds = storeData.payment_methods || [];
     
-    const gateways = paymentMethodIds.map((id: string, index: number) => {
-      const details = PAYMENT_METHOD_DETAILS[id] || {
-        title: id.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-        description: "",
-      };
-      return {
-        id,
-        title: details.title,
-        description: details.description,
-        method_title: details.title,
-        order: index,
-      };
-    });
+    // When using Store API fallback, we cannot verify if payment methods are actually enabled
+    // in the WooCommerce settings. Only include basic payment methods (COD, bank transfer)
+    // and exclude BNPL providers (Tamara, Tabby) since we can't confirm their enabled status.
+    const excludedFromFallback = ["tamara", "tamara-gateway", "tabby", "tabby_installments", "tabby_checkout"];
+    
+    const gateways = paymentMethodIds
+      .filter((id: string) => !excludedFromFallback.includes(id))
+      .map((id: string, index: number) => {
+        const details = PAYMENT_METHOD_DETAILS[id] || {
+          title: id.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+          description: "",
+        };
+        return {
+          id,
+          title: details.title,
+          description: details.description,
+          method_title: details.title,
+          order: index,
+          enabled: true, // Assumed enabled since it's in the cart response
+        };
+      });
 
     return NextResponse.json({ 
       success: true, 
       gateways,
+      source: "store_api_fallback", // Indicates we couldn't verify enabled status from REST API
     });
   } catch (error) {
     return NextResponse.json(
