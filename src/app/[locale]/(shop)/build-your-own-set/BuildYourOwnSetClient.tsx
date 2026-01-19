@@ -91,6 +91,36 @@ export function BuildYourOwnSetClient({
     return new Set(bundleConfig.unique_products);
   }, [bundleConfig]);
 
+  // Get slot-specific configuration for the active slot
+  const activeSlotConfig = useMemo(() => {
+    if (activeSlot === null || !bundleConfig?.slots?.length) return null;
+    return bundleConfig.slots[activeSlot] || null;
+  }, [activeSlot, bundleConfig]);
+
+  // Get slot-specific eligible product IDs (if configured for active slot)
+  const slotEligibleProductIds = useMemo(() => {
+    if (!activeSlotConfig?.eligible_products?.length) return null;
+    return new Set(activeSlotConfig.eligible_products);
+  }, [activeSlotConfig]);
+
+  // Get slot-specific eligible category IDs (if configured for active slot)
+  const slotEligibleCategoryIds = useMemo(() => {
+    if (!activeSlotConfig?.eligible_categories?.length) return null;
+    return new Set(activeSlotConfig.eligible_categories);
+  }, [activeSlotConfig]);
+
+  // Get slot-specific exclude product IDs (if configured for active slot)
+  const slotExcludeProductIds = useMemo(() => {
+    if (!activeSlotConfig?.exclude_products?.length) return new Set<number>();
+    return new Set(activeSlotConfig.exclude_products);
+  }, [activeSlotConfig]);
+
+  // Get slot-specific exclude category IDs (if configured for active slot)
+  const slotExcludeCategoryIds = useMemo(() => {
+    if (!activeSlotConfig?.exclude_categories?.length) return new Set<number>();
+    return new Set(activeSlotConfig.exclude_categories);
+  }, [activeSlotConfig]);
+
   const productOptions: ProductOption[] = useMemo(() => {
     // Get free gift product IDs to exclude from bundle selection
     const freeGiftProductIds = new Set(getFreeGiftProductIds());
@@ -186,9 +216,48 @@ export function BuildYourOwnSetClient({
     return productOptions.filter((product) => {
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
-      return matchesSearch && matchesCategory;
+      
+      // If no active slot or no slot-specific config, use global filtering only
+      if (!matchesSearch || !matchesCategory) return false;
+      
+      // Apply slot-specific filtering if configured
+      if (activeSlotConfig) {
+        // Check slot-specific excludes first
+        if (slotExcludeProductIds.has(product.id)) return false;
+        
+        // Check slot-specific category excludes
+        // Note: We need to find the original product to check categories
+        const originalProduct = products.find(p => p.id === product.id);
+        if (originalProduct && slotExcludeCategoryIds.size > 0) {
+          const productCategoryIds = originalProduct.categories?.map(c => c.id) || [];
+          if (productCategoryIds.some(catId => slotExcludeCategoryIds.has(catId))) return false;
+        }
+        
+        // Check slot-specific eligibility
+        const hasSlotEligibleProducts = slotEligibleProductIds && slotEligibleProductIds.size > 0;
+        const hasSlotEligibleCategories = slotEligibleCategoryIds && slotEligibleCategoryIds.size > 0;
+        
+        if (hasSlotEligibleProducts || hasSlotEligibleCategories) {
+          // If slot has specific eligibility rules, product must match at least one
+          if (hasSlotEligibleProducts && slotEligibleProductIds.has(product.id)) {
+            return true;
+          }
+          
+          if (hasSlotEligibleCategories && originalProduct) {
+            const productCategoryIds = originalProduct.categories?.map(c => c.id) || [];
+            if (productCategoryIds.some(catId => slotEligibleCategoryIds.has(catId))) {
+              return true;
+            }
+          }
+          
+          // Slot has eligibility rules but product doesn't match any
+          return false;
+        }
+      }
+      
+      return true;
     });
-  }, [productOptions, searchQuery, categoryFilter]);
+  }, [productOptions, searchQuery, categoryFilter, activeSlotConfig, slotEligibleProductIds, slotEligibleCategoryIds, slotExcludeProductIds, slotExcludeCategoryIds, products]);
 
   // Get the bundle product's base price from WooCommerce
   const bundleProductPrice = useMemo(() => {
@@ -714,14 +783,14 @@ export function BuildYourOwnSetClient({
             {/* Product Grid */}
             <div className="max-h-[60vh] overflow-y-auto p-4">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {filteredProducts.map((product) => {
-                  // Check if product is already selected
-                  const isSelected = selectedIds.has(product.id);
-                  // Check if product is unique (can only be selected once) and already selected
-                  const isUniqueAndSelected = uniqueProductIds.has(product.id) && isSelected;
-                  // Product is disabled if it's a unique product that's already selected
-                  // Non-unique products can be selected multiple times
-                  const isDisabled = isUniqueAndSelected;
+                  {filteredProducts.map((product) => {
+                    // Check if product is already selected in another slot
+                    const isSelected = selectedIds.has(product.id);
+                    // Check if this product is currently in the active slot (allow re-selecting same product)
+                    const isCurrentSlotProduct = activeSlot !== null && selections[activeSlot]?.id === product.id;
+                    // Product is disabled if it's already selected in another slot
+                    // Allow selecting the same product that's already in the current slot (for "change" action)
+                    const isDisabled = isSelected && !isCurrentSlotProduct;
                   return (
                     <button
                       key={product.id}
