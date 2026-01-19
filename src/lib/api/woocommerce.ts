@@ -511,6 +511,17 @@ export const getRelatedProductsByCategoryId = cache(async function getRelatedPro
   }
 });
 
+// Slot-specific configuration for bundle builder
+export interface SlotConfig {
+  id: string | number;
+  title?: string;
+  is_optional?: boolean;
+  eligible_categories?: number[];
+  eligible_products?: number[];
+  exclude_categories?: number[];
+  exclude_products?: number[];
+}
+
 // Bundle Configuration API (from ASL Bundles Creator plugin)
 export interface BundleConfig {
   product_id: number;
@@ -535,6 +546,7 @@ export interface BundleConfig {
   discount_value?: number;
   show_individual_prices?: boolean;
   pricing?: BundlePricing;
+  slots?: SlotConfig[];
 }
 
 export async function getBundleConfig(
