@@ -146,22 +146,13 @@ export default async function HomePage({ params }: HomePageProps) {
     section_subtitle: homeSettings.collections.section_subtitle || sectionTexts.collections.subtitle,
   };
 
-    const categoryExtraItems = [
-      {
-        id: "new-products",
-        name: { en: "New Products", ar: "منتجات جديدة" },
-        slug: "new-products",
-        href: `/${locale}/new-products`,
-        image: "https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/Personal_Care.jpg",
-      },
-      {
-        id: "featured-products",
-        name: { en: "Featured Products", ar: "منتجات مميزة" },
-        slug: "featured-products",
-        href: `/${locale}/featured-products`,
-        image: "https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/Personal_Care.jpg",
-      },
-    ];
+    const categoryExtraItems: Array<{
+      id: string;
+      name: { en: string; ar: string };
+      slug: string;
+      href: string;
+      image: string;
+    }> = [];
 
   return (
     <div className="flex flex-col">
