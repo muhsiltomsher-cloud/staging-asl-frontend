@@ -245,9 +245,9 @@ export function FreeGiftProvider({ children, locale }: FreeGiftProviderProps) {
     }
     const subtotalWithoutGifts = subtotalValue - giftsTotalValue;
 
-    // Find enabled rules for current currency, sorted by min_cart_value
+    // Find enabled rules for current currency (or ALL currencies), sorted by min_cart_value
     const eligibleRules = rules
-      .filter((rule) => rule.enabled && rule.currency === currency)
+      .filter((rule) => rule.enabled && (rule.currency === currency || rule.currency === "ALL"))
       .sort((a, b) => a.min_cart_value - b.min_cart_value);
 
     // Find the next gift rule that hasn't been unlocked yet
@@ -321,7 +321,8 @@ export function FreeGiftProvider({ children, locale }: FreeGiftProviderProps) {
 
       const matchingRules = rules.filter((rule) => {
         if (!rule.enabled) return false;
-        if (rule.currency !== currency) return false;
+        // Match rules with specific currency OR rules set to "ALL" currencies
+        if (rule.currency !== currency && rule.currency !== "ALL") return false;
         if (subtotalWithoutGifts < rule.min_cart_value) return false;
         if (rule.max_cart_value && subtotalWithoutGifts > rule.max_cart_value) return false;
         return true;

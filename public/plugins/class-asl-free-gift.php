@@ -148,7 +148,7 @@ function asl_free_gifts_render_admin_page() {
     $products_by_lang = asl_free_gifts_get_products_by_language();
     $products_en = $products_by_lang['en'];
     $products_ar = $products_by_lang['ar'];
-    $currencies = array('AED', 'SAR', 'KWD', 'BHD', 'OMR', 'QAR', 'USD');
+    $currencies = array('ALL' => 'All Currencies', 'AED' => 'AED', 'SAR' => 'SAR', 'KWD' => 'KWD', 'BHD' => 'BHD', 'OMR' => 'OMR', 'QAR' => 'QAR', 'USD' => 'USD');
     
     ?>
     <div class="wrap">
@@ -214,10 +214,11 @@ function asl_free_gifts_render_admin_page() {
                             <th>Currency</th>
                             <td>
                                 <select name="asl_free_gifts_rules[${ruleIndex}][currency]">
-                                    <?php foreach ($currencies as $curr): ?>
-                                    <option value="<?php echo esc_attr($curr); ?>"><?php echo esc_html($curr); ?></option>
+                                    <?php foreach ($currencies as $value => $label): ?>
+                                    <option value="<?php echo esc_attr($value); ?>"><?php echo esc_html($label); ?></option>
                                     <?php endforeach; ?>
                                 </select>
+                                <p class="description">Select "All Currencies" to apply this rule regardless of the customer's selected currency.</p>
                             </td>
                         </tr>
                         <tr>
@@ -318,10 +319,11 @@ function asl_free_gifts_render_rule_row($index, $rule, $products_en, $products_a
                 <th>Currency</th>
                 <td>
                     <select name="asl_free_gifts_rules[<?php echo $index; ?>][currency]">
-                        <?php foreach ($currencies as $curr): ?>
-                        <option value="<?php echo esc_attr($curr); ?>" <?php selected($currency, $curr); ?>><?php echo esc_html($curr); ?></option>
+                        <?php foreach ($currencies as $value => $label): ?>
+                        <option value="<?php echo esc_attr($value); ?>" <?php selected($currency, $value); ?>><?php echo esc_html($label); ?></option>
                         <?php endforeach; ?>
                     </select>
+                    <p class="description">Select "All Currencies" to apply this rule regardless of the customer's selected currency.</p>
                 </td>
             </tr>
             <tr>
@@ -454,7 +456,8 @@ function asl_free_gifts_api_get_rules($request) {
     
     if ($currency) {
         $active_rules = array_filter($active_rules, function($rule) use ($currency) {
-            return $rule['currency'] === $currency;
+            // Include rules that match the specific currency OR rules set to "ALL" currencies
+            return $rule['currency'] === $currency || $rule['currency'] === 'ALL';
         });
     }
     
