@@ -74,7 +74,7 @@ export const headerCategoryLinks: NavigationItem[] = [
   },
   {
     name: { en: "Perfumes", ar: "العطور" },
-    href: "/category/perfumes-oils",
+    href: "/category/perfumes",
   },
   {
     name: { en: "Personal Care", ar: "العناية الشخصية" },
@@ -264,7 +264,7 @@ export const megaMenuCategories: MenuCategory[] = [
   {
     id: 3,
     name: { en: "Perfumes", ar: "العطور" },
-    slug: "perfumes-oils",
+    slug: "perfumes",
     image: "",
     children: [
       { id: 301, name: { en: "Men's Perfumes", ar: "عطور رجالية" }, slug: "mens-perfumes" },
