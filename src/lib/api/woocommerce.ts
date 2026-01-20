@@ -796,9 +796,13 @@ export async function getFreeGiftProductInfo(currency?: string): Promise<FreeGif
 // Fetch product IDs with catalog_visibility set to "hidden"
 // These products should not appear in shop listings, search results, or related products
 // Uses WC REST API v3 which returns catalog_visibility field
+// Note: WooCommerce REST API doesn't support catalog_visibility as a query filter,
+// so we fetch all products and filter client-side by the catalog_visibility property
 export async function getHiddenProductIds(): Promise<number[]> {
   try {
-    const url = `${siteConfig.apiUrl}/wp-json/wc/v3/products?catalog_visibility=hidden&per_page=100&status=publish`;
+    // Fetch all products and filter by catalog_visibility property
+    // The catalog_visibility query param is not supported by WC REST API
+    const url = `${siteConfig.apiUrl}/wp-json/wc/v3/products?per_page=100&status=publish`;
     
     const response = await fetch(url, {
       headers: {
@@ -811,14 +815,18 @@ export async function getHiddenProductIds(): Promise<number[]> {
     });
 
     if (!response.ok) {
-      console.error("Failed to fetch hidden products:", response.status);
+      console.error("Failed to fetch products for hidden check:", response.status);
       return [];
     }
 
     const products = await response.json();
     
     if (Array.isArray(products)) {
-      return products.map((product: { id: number }) => product.id);
+      // Filter products where catalog_visibility is "hidden"
+      const hiddenProducts = products.filter(
+        (product: { catalog_visibility?: string }) => product.catalog_visibility === "hidden"
+      );
+      return hiddenProducts.map((product: { id: number }) => product.id);
     }
     
     return [];
