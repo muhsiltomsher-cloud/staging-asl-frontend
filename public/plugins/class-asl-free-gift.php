@@ -47,11 +47,14 @@ function asl_free_gift_enqueue_scripts($hook) {
 }
 
 /**
- * Get products list separated by language
+ * Get products list separated by language using WPML API
  */
 function asl_free_gifts_get_products_by_language() {
     $products_en = array();
     $products_ar = array();
+    
+    // Check if WPML is active
+    $wpml_active = function_exists('icl_object_id') || defined('ICL_SITEPRESS_VERSION');
     
     $args = array(
         'post_type' => 'product',
@@ -59,36 +62,46 @@ function asl_free_gifts_get_products_by_language() {
         'post_status' => 'publish',
         'orderby' => 'title',
         'order' => 'ASC',
-        'suppress_filters' => false,
+        'suppress_filters' => true, // Disable WPML filtering to get all products
     );
     
-    // Get English products
-    $query_en = new WP_Query(array_merge($args, array('lang' => 'en')));
-    if ($query_en->have_posts()) {
-        while ($query_en->have_posts()) {
-            $query_en->the_post();
-            $products_en[] = array(
-                'id' => get_the_ID(),
-                'name' => get_the_title(),
-            );
+    if ($wpml_active) {
+        // Store current language
+        $current_lang = apply_filters('wpml_current_language', null);
+        
+        // Switch to English and get products
+        do_action('wpml_switch_language', 'en');
+        $query_en = new WP_Query($args);
+        if ($query_en->have_posts()) {
+            while ($query_en->have_posts()) {
+                $query_en->the_post();
+                $products_en[] = array(
+                    'id' => get_the_ID(),
+                    'name' => get_the_title(),
+                );
+            }
+            wp_reset_postdata();
         }
-        wp_reset_postdata();
+        
+        // Switch to Arabic and get products
+        do_action('wpml_switch_language', 'ar');
+        $query_ar = new WP_Query($args);
+        if ($query_ar->have_posts()) {
+            while ($query_ar->have_posts()) {
+                $query_ar->the_post();
+                $products_ar[] = array(
+                    'id' => get_the_ID(),
+                    'name' => get_the_title(),
+                );
+            }
+            wp_reset_postdata();
+        }
+        
+        // Restore original language
+        do_action('wpml_switch_language', $current_lang);
     }
     
-    // Get Arabic products
-    $query_ar = new WP_Query(array_merge($args, array('lang' => 'ar')));
-    if ($query_ar->have_posts()) {
-        while ($query_ar->have_posts()) {
-            $query_ar->the_post();
-            $products_ar[] = array(
-                'id' => get_the_ID(),
-                'name' => get_the_title(),
-            );
-        }
-        wp_reset_postdata();
-    }
-    
-    // If WPML is not active, use all products for both
+    // If WPML is not active or no products found, get all products for both dropdowns
     if (empty($products_en) && empty($products_ar)) {
         $query = new WP_Query($args);
         if ($query->have_posts()) {
