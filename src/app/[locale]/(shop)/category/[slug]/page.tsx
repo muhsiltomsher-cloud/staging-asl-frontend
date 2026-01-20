@@ -91,12 +91,14 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 
       <div className="mb-8">
-        <h1 className="text-xl font-bold text-gray-900 md:text-2xl">{decodeHtmlEntities(category.name)}</h1>
+        <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">{decodeHtmlEntities(category.name)}</h1>
         {category.description && (
-          <div 
-            className="mt-2 text-gray-600 category-description [&_a]:text-primary [&_a]:font-medium [&_a]:hover:underline"
-            dangerouslySetInnerHTML={{ __html: category.description }}
-          />
+          <div className="mt-4 bg-gradient-to-r from-[#f8f5f0] to-[#faf8f5] rounded-xl p-6 border border-[#e8e4df] shadow-sm">
+            <div 
+              className="text-gray-700 leading-relaxed category-description [&_strong]:block [&_strong]:text-lg [&_strong]:text-gray-900 [&_strong]:font-semibold [&_strong]:mb-2 [&_a]:text-primary [&_a]:font-semibold [&_a]:underline [&_a]:underline-offset-2 [&_a]:decoration-primary/50 [&_a]:hover:decoration-primary [&_a]:transition-colors"
+              dangerouslySetInnerHTML={{ __html: category.description }}
+            />
+          </div>
         )}
       </div>
 
