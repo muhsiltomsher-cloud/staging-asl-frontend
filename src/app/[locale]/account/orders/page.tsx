@@ -185,19 +185,21 @@ export default function OrdersPage({ params }: OrdersPageProps) {
                     />
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button asChild variant="outline" size="sm">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <Button asChild variant="outline" size="sm" className="whitespace-nowrap">
                     <Link href={`/${locale}/account/orders/${order.id}`}>
                       <Eye className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
                       {t.viewOrder}
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={`/${locale}/account/orders/${order.id}/invoice`}>
-                      <FileText className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
-                      {t.showInvoice}
-                    </Link>
-                  </Button>
+                  {order.status === "completed" && (
+                    <Button asChild variant="outline" size="sm" className="whitespace-nowrap">
+                      <Link href={`/${locale}/account/orders/${order.id}/invoice`}>
+                        <FileText className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
+                        {t.showInvoice}
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
