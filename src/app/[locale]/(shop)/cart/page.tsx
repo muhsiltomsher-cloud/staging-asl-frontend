@@ -11,7 +11,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { BundleItemsList } from "@/components/cart/BundleItemsList";
 import { useCart } from "@/contexts/CartContext";
-import { useFreeGift, getLocalizedProduct } from "@/contexts/FreeGiftContext";
+import { useFreeGift, getLocalizedProduct, containsArabic } from "@/contexts/FreeGiftContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { featureFlags, type Locale } from "@/config/site";
 
@@ -269,7 +269,7 @@ export default function CartPage() {
                   <p className="text-xs text-amber-700">
                     {isRTL 
                       ? `الهدية التالية: ${(giftProgress.nextGiftRule && getLocalizedProduct(giftProgress.nextGiftRule, locale as string)?.name) || giftProgress.nextGiftRule?.name || "هدية مجانية"}`
-                      : `Next gift: ${(giftProgress.nextGiftRule && getLocalizedProduct(giftProgress.nextGiftRule, locale as string)?.name) || giftProgress.nextGiftRule?.name || "Free Gift"}`
+                      : `Next gift: ${(giftProgress.nextGiftRule && getLocalizedProduct(giftProgress.nextGiftRule, locale as string)?.name) || ((giftProgress.nextGiftRule?.name && !containsArabic(giftProgress.nextGiftRule.name)) ? giftProgress.nextGiftRule.name : "Free Gift")}`
                     }
                   </p>
                 </div>
