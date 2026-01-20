@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct, getBundleConfig, getFreeGiftProductIds, getCategoryBySlug, getEnglishSlugForCategory } from "@/lib/api/woocommerce";
+import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct, getBundleConfig, getFreeGiftProductIds, getHiddenProductIds, getCategoryBySlug, getEnglishSlugForCategory } from "@/lib/api/woocommerce";
 import { getProductAddons } from "@/lib/api/wcpa";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { ProductDetail } from "./ProductDetail";
@@ -96,10 +96,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  // Check if this product is a hidden gift product
+  // Fetch hidden product IDs (free gifts and products with catalog_visibility=hidden) in parallel
+  const [hiddenGiftProductIds, hiddenCatalogProductIds] = await Promise.all([
+    getFreeGiftProductIds(),
+    getHiddenProductIds(),
+  ]);
+  
+  // Check if this product is a hidden gift product or has hidden catalog visibility
   // If so, return 404 to prevent direct URL access
-  const hiddenGiftProductIds = await getFreeGiftProductIds();
-  if (hiddenGiftProductIds.includes(product.id)) {
+  if (hiddenGiftProductIds.includes(product.id) || hiddenCatalogProductIds.includes(product.id)) {
     notFound();
   }
 
@@ -152,10 +157,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
     getProductBySlug(slug, "en"),
   ]);
 
-  // Filter out hidden gift products from related products
-  const hiddenGiftIdsSet = new Set(hiddenGiftProductIds);
+  // Filter out hidden products from related products (free gifts and products with catalog_visibility=hidden)
+  const hiddenProductIdsSet = new Set([...hiddenGiftProductIds, ...hiddenCatalogProductIds]);
   const relatedProducts = relatedProductsRaw.filter(
-    (p) => !hiddenGiftIdsSet.has(p.id)
+    (p) => !hiddenProductIdsSet.has(p.id)
   );
 
   // Get the English category slug from the English product

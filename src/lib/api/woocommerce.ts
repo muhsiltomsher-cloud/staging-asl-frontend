@@ -793,6 +793,41 @@ export async function getFreeGiftProductInfo(currency?: string): Promise<FreeGif
   }
 }
 
+// Fetch product IDs with catalog_visibility set to "hidden"
+// These products should not appear in shop listings, search results, or related products
+// Uses WC REST API v3 which returns catalog_visibility field
+export async function getHiddenProductIds(): Promise<number[]> {
+  try {
+    const url = `${siteConfig.apiUrl}/wp-json/wc/v3/products?catalog_visibility=hidden&per_page=100&status=publish`;
+    
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${process.env.WC_CONSUMER_KEY}:${process.env.WC_CONSUMER_SECRET}`).toString("base64")}`,
+      },
+      next: {
+        revalidate: 300,
+        tags: ["products", "hidden-products"],
+      },
+    });
+
+    if (!response.ok) {
+      console.error("Failed to fetch hidden products:", response.status);
+      return [];
+    }
+
+    const products = await response.json();
+    
+    if (Array.isArray(products)) {
+      return products.map((product: { id: number }) => product.id);
+    }
+    
+    return [];
+  } catch (error) {
+    console.error("Failed to fetch hidden products:", error);
+    return [];
+  }
+}
+
 // Fetch all bundle-enabled product slugs from the backend
 // Used to identify bundle products in shop listings
 export async function getBundleEnabledProductSlugs(): Promise<string[]> {
