@@ -7,9 +7,10 @@ import { ArrowLeft, Package, Truck, CheckCircle, Clock, MapPin, Gift } from "luc
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/common/Button";
 import { OrderPrice, OrderCurrencyBadge } from "@/components/common/OrderPrice";
-import { getOrder, formatOrderStatus, getOrderStatusColor, formatDate, type Order } from "@/lib/api/customer";
+import { getOrder, formatOrderStatus, getOrderStatusColor, formatDate, type Order, type OrderLineItem } from "@/lib/api/customer";
 import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/components/cart/OrderBundleItemsList";
 import { OrderNotes } from "@/components/account/OrderNotes";
+import { getProductsByIds } from "@/lib/api/woocommerce";
 
 interface OrderDetailPageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -177,6 +178,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [productImages, setProductImages] = useState<Record<number, string>>({});
 
   const resolvedParams = use(params);
   const locale = resolvedParams.locale as "en" | "ar";
@@ -192,6 +194,27 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
         const response = await getOrder(parseInt(orderId, 10));
         if (response.success && response.data) {
           setOrder(response.data);
+          
+          // Fetch product images for items that don't have images
+          const itemsWithoutImages = response.data.line_items.filter(
+            (item: OrderLineItem) => !item.image?.src
+          );
+          
+          if (itemsWithoutImages.length > 0) {
+            const productIds = itemsWithoutImages.map((item: OrderLineItem) => item.product_id);
+            try {
+              const products = await getProductsByIds(productIds, locale);
+              const imageMap: Record<number, string> = {};
+              products.forEach((product) => {
+                if (product.images && product.images.length > 0) {
+                  imageMap[product.id] = product.images[0].src;
+                }
+              });
+              setProductImages(imageMap);
+            } catch (imgErr) {
+              console.error("Failed to fetch product images:", imgErr);
+            }
+          }
         } else {
           setError(response.error?.message || "Failed to load order");
         }
@@ -208,7 +231,20 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
     } else {
       setIsLoading(false);
     }
-  }, [isAuthenticated, orderId]);
+  }, [isAuthenticated, orderId, locale]);
+  
+  // Helper function to get image URL for an order item
+  const getItemImageUrl = (item: OrderLineItem): string | null => {
+    // First try to use the image from the order line item
+    if (item.image?.src) {
+      return item.image.src;
+    }
+    // Fall back to fetched product image
+    if (productImages[item.product_id]) {
+      return productImages[item.product_id];
+    }
+    return null;
+  };
 
   if (authLoading) {
     return (
@@ -324,13 +360,15 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
               const isFreeGift = isOrderFreeGift(item);
               const isBundle = isOrderBundleProduct(item);
               
+              const imageUrl = getItemImageUrl(item);
+              
               return (
                 <li key={item.id} className="p-4">
                   <div className="flex gap-4">
                     <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                      {item.image?.src ? (
+                      {imageUrl ? (
                         <Image
-                          src={item.image.src}
+                          src={imageUrl}
                           alt={item.name}
                           fill
                           className="object-cover"
