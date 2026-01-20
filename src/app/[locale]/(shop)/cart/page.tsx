@@ -11,7 +11,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { BundleItemsList } from "@/components/cart/BundleItemsList";
 import { useCart } from "@/contexts/CartContext";
-import { useFreeGift } from "@/contexts/FreeGiftContext";
+import { useFreeGift, getLocalizedProduct } from "@/contexts/FreeGiftContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { featureFlags, type Locale } from "@/config/site";
 
@@ -268,8 +268,8 @@ export default function CartPage() {
                   </p>
                   <p className="text-xs text-amber-700">
                     {isRTL 
-                      ? `الهدية التالية: ${giftProgress.nextGiftRule?.product?.name || giftProgress.nextGiftRule?.name || "هدية مجانية"}`
-                      : `Next gift: ${giftProgress.nextGiftRule?.product?.name || giftProgress.nextGiftRule?.name || "Free Gift"}`
+                      ? `الهدية التالية: ${(giftProgress.nextGiftRule && getLocalizedProduct(giftProgress.nextGiftRule, locale as string)?.name) || giftProgress.nextGiftRule?.name || "هدية مجانية"}`
+                      : `Next gift: ${(giftProgress.nextGiftRule && getLocalizedProduct(giftProgress.nextGiftRule, locale as string)?.name) || giftProgress.nextGiftRule?.name || "Free Gift"}`
                     }
                   </p>
                 </div>
@@ -305,7 +305,7 @@ export default function CartPage() {
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-medium text-amber-900">
-                            {gift.product?.name || (isRTL ? "هدية مجانية" : "Free Gift")}
+                            {getLocalizedProduct(gift, locale as string)?.name || (isRTL ? "هدية مجانية" : "Free Gift")}
                           </p>
                           {(isRTL ? gift.message_ar : gift.message_en) && (
                             <p className="text-xs text-amber-700">
