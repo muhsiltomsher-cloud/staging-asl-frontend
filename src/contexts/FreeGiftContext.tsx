@@ -98,6 +98,7 @@ const FreeGiftContext = createContext<FreeGiftContextType | undefined>(undefined
 
 const FREE_GIFT_ITEM_DATA_KEY = "_asl_free_gift";
 const FREE_GIFT_RULE_ID_KEY = "_asl_free_gift_rule_id";
+const FREE_GIFT_UNIQUE_KEY = "_asl_free_gift_unique_key";
 
 // Helper to generate a stable hash of cart state for comparison
 // Only include non-gift items in the hash to prevent re-processing when gifts are added
@@ -395,15 +396,18 @@ export function FreeGiftProvider({ children, locale }: FreeGiftProviderProps) {
           }
         }
 
-                for (const rule of rulesToAdd) {
-                  try {
-                    // Use locale-aware product ID when adding to cart
-                    // Include rule ID in cart_item_data to support multiple rules with the same product
-                    const localizedProductId = getLocalizedProductId(rule, locale);
-                    await addToCartRef.current(localizedProductId, 1, undefined, undefined, {
-                      [FREE_GIFT_ITEM_DATA_KEY]: true,
-                      [FREE_GIFT_RULE_ID_KEY]: rule.id,
-                    });
+        for (const rule of rulesToAdd) {
+          try {
+            // Use locale-aware product ID when adding to cart
+            // Include rule ID and a unique key in cart_item_data to support multiple rules with the same product
+            // The unique key ensures CoCart creates separate line items even for the same product
+            const localizedProductId = getLocalizedProductId(rule, locale);
+            const uniqueKey = `${rule.id}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+            await addToCartRef.current(localizedProductId, 1, undefined, undefined, {
+              [FREE_GIFT_ITEM_DATA_KEY]: true,
+              [FREE_GIFT_RULE_ID_KEY]: rule.id,
+              [FREE_GIFT_UNIQUE_KEY]: uniqueKey,
+            });
             
             // Open mini cart and dispatch event for gift highlight effect
             // Don't open cart on order confirmation page
