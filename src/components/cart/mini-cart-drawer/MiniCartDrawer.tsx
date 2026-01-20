@@ -5,6 +5,7 @@ import { ShoppingBag, X } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
 import { useFreeGift, NEW_GIFT_ADDED_EVENT } from "@/contexts/FreeGiftContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { CartItemSkeleton } from "@/components/common/Skeleton";
 import MuiDrawer from "@mui/material/Drawer";
@@ -29,8 +30,9 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
     removeCartItem,
   } = useCart();
 
-  const { isFreeGiftItem, activeGifts, getGiftProgress } = useFreeGift();
-  const giftProgress = getGiftProgress();
+    const { isFreeGiftItem, activeGifts, getGiftProgress } = useFreeGift();
+    const { currency } = useCurrency();
+    const giftProgress = getGiftProgress();
 
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
   const [newlyAddedGiftId, setNewlyAddedGiftId] = useState<number | null>(null);
@@ -196,13 +198,14 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
             />
           ) : (
             <>
-              {(giftProgress.hasNextGift || activeGifts.length > 0) && (
-                <GiftSection 
-                  locale={locale} 
-                  giftProgress={giftProgress} 
-                  activeGifts={activeGifts} 
-                />
-              )}
+                            {(giftProgress.hasNextGift || activeGifts.length > 0) && (
+                              <GiftSection 
+                                locale={locale}
+                                currency={currency}
+                                giftProgress={giftProgress} 
+                                activeGifts={activeGifts} 
+                              />
+                            )}
               {renderCartItems()}
             </>
           )}

@@ -12,6 +12,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { getCustomer, getSavedAddressesFromCustomer, type Customer, type SavedAddress } from "@/lib/api/customer";
 import { featureFlags, type Locale } from "@/config/site";
 import { MapPin, Check, ChevronDown, ChevronUp, Tag, X, Truck } from "lucide-react";
@@ -129,8 +130,9 @@ export default function CheckoutClient() {
   const { locale } = useParams<{ locale: string }>();
   const router = useRouter();
   const searchParams = useSearchParams();
-    const { cart, cartItems, cartSubtotal, cartTotal, clearCart, applyCoupon, removeCoupon, selectedCoupons, couponDiscount, clearSelectedCoupons, isLoading: isCartLoading } = useCart();
-    const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
+        const { cart, cartItems, cartSubtotal, cartTotal, clearCart, applyCoupon, removeCoupon, selectedCoupons, couponDiscount, clearSelectedCoupons, isLoading: isCartLoading } = useCart();
+        const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
+        const { currency } = useCurrency();
     const isRTL = locale === "ar";
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -485,12 +487,12 @@ export default function CheckoutClient() {
       setCouponCode(code);
     };
 
-    const formatCouponDiscount = (coupon: PublicCoupon) => {
-      if (coupon.discount_type === "percent") {
-        return `${coupon.amount}%`;
-      }
-      return `${coupon.amount} AED`;
-    };
+        const formatCouponDiscount = (coupon: PublicCoupon) => {
+          if (coupon.discount_type === "percent") {
+            return `${coupon.amount}%`;
+          }
+          return `${coupon.amount} ${currency}`;
+        };
 
     const breadcrumbItems = [
     { name: isRTL ? "السلة" : "Cart", href: `/${locale}/cart` },
@@ -725,10 +727,10 @@ export default function CheckoutClient() {
               ? parseFloat(bundleItem.price) 
               : (bundleItem.price || 0);
             
-            // Format: "Product Name x1 - 145.00 AED"
-            const displayValue = itemPrice > 0 
-              ? `${itemName} x${itemQty} - ${itemPrice.toFixed(2)} AED`
-              : `${itemName} x${itemQty}`;
+                        // Format: "Product Name x1 - 145.00 USD"
+                        const displayValue = itemPrice > 0 
+                          ? `${itemName} x${itemQty} - ${itemPrice.toFixed(2)} ${currency}`
+                          : `${itemName} x${itemQty}`;
             
             metaData.push({
               key: bundleItem.is_addon ? `Add-on ${index + 1}` : `Bundled Product ${index + 1}`,
@@ -736,20 +738,20 @@ export default function CheckoutClient() {
             });
           });
           
-          // Add human-readable totals for WooCommerce admin
-          if (bundleItemsTotal > 0) {
-            metaData.push({
-              key: "Items Total",
-              value: `${bundleItemsTotal.toFixed(2)} AED`,
-            });
-          }
+                    // Add human-readable totals for WooCommerce admin
+                    if (bundleItemsTotal > 0) {
+                      metaData.push({
+                        key: "Items Total",
+                        value: `${bundleItemsTotal.toFixed(2)} ${currency}`,
+                      });
+                    }
           
-          if (boxPrice && boxPrice > 0) {
-            metaData.push({
-              key: "Box Price",
-              value: `${boxPrice.toFixed(2)} AED`,
-            });
-          }
+                    if (boxPrice && boxPrice > 0) {
+                      metaData.push({
+                        key: "Box Price",
+                        value: `${boxPrice.toFixed(2)} ${currency}`,
+                      });
+                    }
           
           lineItem.meta_data = metaData;
         }
@@ -1759,9 +1761,9 @@ export default function CheckoutClient() {
                                         <span className="text-sm font-medium text-green-700 truncate">
                                           {coupon.code}
                                         </span>
-                                        <span className="text-xs text-green-600 flex-shrink-0">
-                                          ({coupon.discount_type === "percent" ? `${coupon.amount}%` : `${coupon.amount} AED`})
-                                        </span>
+                                                                                <span className="text-xs text-green-600 flex-shrink-0">
+                                                                                  ({coupon.discount_type === "percent" ? `${coupon.amount}%` : `${coupon.amount} ${currency}`})
+                                                                                </span>
                                       </div>
                                       <button
                                         type="button"
