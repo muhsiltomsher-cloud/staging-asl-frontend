@@ -41,6 +41,7 @@ export interface EmptyCartProps {
 
 export interface GiftSectionProps {
   locale: string;
+  currency: string;
   giftProgress: {
     hasNextGift: boolean;
     amountNeeded: number;

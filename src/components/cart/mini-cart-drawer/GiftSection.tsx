@@ -4,7 +4,7 @@ import { Gift } from "lucide-react";
 import { getLocalizedProduct } from "@/contexts/FreeGiftContext";
 import type { GiftSectionProps } from "./types";
 
-export function GiftSection({ locale, giftProgress, activeGifts }: GiftSectionProps) {
+export function GiftSection({ locale, currency, giftProgress, activeGifts }: GiftSectionProps) {
   const isRTL = locale === "ar";
 
   return (
@@ -18,8 +18,8 @@ export function GiftSection({ locale, giftProgress, activeGifts }: GiftSectionPr
             <div className="flex-1">
               <p className="text-xs font-semibold text-amber-900">
                 {isRTL 
-                  ? `أضف ${giftProgress.amountNeeded} درهم للحصول على هدية مجانية!`
-                  : `Add ${giftProgress.amountNeeded} AED more to get a free gift!`
+                  ? `أضف ${giftProgress.amountNeeded} ${currency} للحصول على هدية مجانية!`
+                  : `Add ${giftProgress.amountNeeded} ${currency} more to get a free gift!`
                 }
               </p>
             </div>

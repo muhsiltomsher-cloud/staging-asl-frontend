@@ -13,6 +13,7 @@ import { BundleItemsList } from "@/components/cart/BundleItemsList";
 import { useCart } from "@/contexts/CartContext";
 import { useFreeGift, getLocalizedProduct, containsArabic } from "@/contexts/FreeGiftContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { featureFlags, type Locale } from "@/config/site";
 
 interface PublicCoupon {
@@ -40,9 +41,10 @@ export default function CartPage() {
     selectedCoupons,
     couponDiscount,
   } = useCart();
-      const { isAuthenticated, user } = useAuth();
-      const { isFreeGiftItem, activeGifts, getGiftProgress, isLoading: isLoadingGiftRules, rules } = useFreeGift();
-      const giftProgress = getGiftProgress();
+            const { isAuthenticated, user } = useAuth();
+            const { isFreeGiftItem, activeGifts, getGiftProgress, isLoading: isLoadingGiftRules, rules } = useFreeGift();
+            const { currency } = useCurrency();
+            const giftProgress = getGiftProgress();
     
       const hasGiftItemsInCart = cartItems.some(item => isFreeGiftItem(item.item_key));
 
@@ -108,12 +110,12 @@ export default function CartPage() {
     setCouponCode(code);
   };
 
-  const formatCouponDiscount = (coupon: PublicCoupon) => {
-    if (coupon.discount_type === "percent") {
-      return `${coupon.amount}%`;
-    }
-    return `${coupon.amount} AED`;
-  };
+    const formatCouponDiscount = (coupon: PublicCoupon) => {
+      if (coupon.discount_type === "percent") {
+        return `${coupon.amount}%`;
+      }
+      return `${coupon.amount} ${currency}`;
+    };
 
   const breadcrumbItems = [
     { name: isRTL ? "السلة" : "Cart", href: `/${locale}/cart` },
@@ -262,12 +264,12 @@ export default function CartPage() {
                   <Gift className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-amber-900">
-                    {isRTL 
-                      ? `أضف ${giftProgress.amountNeeded} درهم للحصول على هدية مجانية!`
-                      : `Add ${giftProgress.amountNeeded} AED more to get a free gift!`
-                    }
-                  </p>
+                                    <p className="text-sm font-semibold text-amber-900">
+                                      {isRTL 
+                                        ? `أضف ${giftProgress.amountNeeded} ${currency} للحصول على هدية مجانية!`
+                                        : `Add ${giftProgress.amountNeeded} ${currency} more to get a free gift!`
+                                      }
+                                    </p>
                   <p className="text-xs text-amber-700">
                     {isRTL 
                       ? `الهدية التالية: ${(giftProgress.nextGiftRule && getLocalizedProduct(giftProgress.nextGiftRule, locale as string)?.name) || giftProgress.nextGiftRule?.name || "هدية مجانية"}`
@@ -570,9 +572,9 @@ export default function CartPage() {
                           <span className="text-sm font-medium text-green-700">
                             {coupon.code}
                           </span>
-                          <span className="text-xs text-green-600">
-                            ({coupon.discount_type === "percent" ? `${coupon.amount}%` : `${coupon.amount} AED`})
-                          </span>
+                                                    <span className="text-xs text-green-600">
+                                                      ({coupon.discount_type === "percent" ? `${coupon.amount}%` : `${coupon.amount} ${currency}`})
+                                                    </span>
                         </div>
                         <button
                           type="button"
