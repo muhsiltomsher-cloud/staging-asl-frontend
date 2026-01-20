@@ -93,7 +93,10 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       <div className="mb-8">
         <h1 className="text-xl font-bold text-gray-900 md:text-2xl">{decodeHtmlEntities(category.name)}</h1>
         {category.description && (
-          <p className="mt-2 text-gray-600">{category.description}</p>
+          <div 
+            className="mt-2 text-gray-600 category-description [&_a]:text-primary [&_a]:font-medium [&_a]:hover:underline"
+            dangerouslySetInnerHTML={{ __html: category.description }}
+          />
         )}
       </div>
 
