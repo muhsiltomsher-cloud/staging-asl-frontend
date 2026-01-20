@@ -37,6 +37,14 @@ export interface FreeGiftRule {
   };
 }
 
+// Helper function to detect if a string contains Arabic characters
+export function containsArabic(text: string | undefined): boolean {
+  if (!text) return false;
+  // Arabic Unicode range: \u0600-\u06FF (Arabic), \u0750-\u077F (Arabic Supplement), \u08A0-\u08FF (Arabic Extended-A)
+  const arabicPattern = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
+  return arabicPattern.test(text);
+}
+
 // Helper function to get the correct product_id based on locale
 export function getLocalizedProductId(rule: FreeGiftRule, locale: string): number {
   if (locale === "ar" && rule.product_id_ar) {
@@ -46,9 +54,15 @@ export function getLocalizedProductId(rule: FreeGiftRule, locale: string): numbe
 }
 
 // Helper function to get the correct product data based on locale
+// For English locale, ensures we don't return Arabic product data
 export function getLocalizedProduct(rule: FreeGiftRule, locale: string): FreeGiftRule["product"] | undefined {
   if (locale === "ar" && rule.product_ar) {
     return rule.product_ar;
+  }
+  // For non-Arabic locales, check if the product name contains Arabic characters
+  // If so, return undefined to trigger the fallback text
+  if (locale !== "ar" && rule.product && containsArabic(rule.product.name)) {
+    return undefined;
   }
   return rule.product;
 }
@@ -372,8 +386,15 @@ export function FreeGiftProvider({ children, locale }: FreeGiftProviderProps) {
               setIsCartOpen(true);
             }
             // Use locale-aware product data for gift name
+            // For non-Arabic locales, ensure we don't show Arabic text
             const localizedProduct = getLocalizedProduct(rule, locale);
-            const giftName = localizedProduct?.name || rule.product?.name || rule.name;
+            let giftName = localizedProduct?.name;
+            if (!giftName && locale !== "ar") {
+              // For English locale, use "Free Gift" as fallback if product name contains Arabic
+              giftName = (rule.product?.name && !containsArabic(rule.product.name)) ? rule.product.name : "Free Gift";
+            } else if (!giftName) {
+              giftName = rule.product?.name || rule.name;
+            }
             if (typeof window !== "undefined") {
               window.dispatchEvent(new CustomEvent(NEW_GIFT_ADDED_EVENT, { 
                 detail: { giftName, productId: localizedProductId } 
