@@ -182,12 +182,13 @@ export function FreeGiftProvider({ children, locale }: FreeGiftProviderProps) {
     });
     if (matchesRule) return true;
 
-    // Tertiary check: item has price 0 and slug contains "free-gift" or "هدية"
+    // Tertiary check: item has price 0 and slug is exactly "free-gift" or name is exactly "Free Gift"/"هدية مجانية"
     // This handles edge cases where the product ID might not match due to WPML translation issues
+    // Note: Using exact matches to avoid false positives with products like "gift-set" or "gift-box"
     const itemPrice = parseFloat(item.price);
     const itemSlug = item.slug?.toLowerCase() || '';
     const itemName = item.name?.toLowerCase() || '';
-    if (itemPrice === 0 && (itemSlug.includes('free-gift') || itemSlug.includes('gift') || itemName.includes('free gift') || itemName.includes('هدية'))) {
+    if (itemPrice === 0 && (itemSlug === 'free-gift' || itemName === 'free gift' || itemName === 'هدية مجانية')) {
       return true;
     }
 
