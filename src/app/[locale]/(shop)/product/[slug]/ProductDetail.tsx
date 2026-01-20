@@ -776,20 +776,20 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
           </div>
 
 
-          {/* Short description */}
-          {product.short_description && (
+          {/* Short description - now showing full description data */}
+          {product.description && sanitizeProductDescription(product.description) && (
             <div
               className="text-sm leading-relaxed text-gray-600"
-              dangerouslySetInnerHTML={{ __html: product.short_description }}
+              dangerouslySetInnerHTML={{ __html: sanitizeProductDescription(product.description) }}
             />
           )}
 
-                    {/* Full description - displayed prominently with Read More */}
-                    {product.description && sanitizeProductDescription(product.description) && (
+                    {/* Full description - now showing short description data with Read More */}
+                    {product.short_description && (
                       <div className="relative">
                         <div
                           className={`prose prose-sm max-w-none text-gray-600 ${!isDescriptionExpanded ? 'line-clamp-4' : ''}`}
-                          dangerouslySetInnerHTML={{ __html: sanitizeProductDescription(product.description) }}
+                          dangerouslySetInnerHTML={{ __html: product.short_description }}
                         />
                         <button
                           type="button"
@@ -943,16 +943,16 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
               </div>
             </AccordionSection>
 
-            {/* Description */}
+            {/* Description - now showing short description data */}
             <AccordionSection
               title={isRTL ? "الوصف" : "Description"}
               isOpen={openAccordion === "description"}
               onToggle={() => toggleAccordion("description")}
             >
-              {product.description && sanitizeProductDescription(product.description) ? (
+              {product.short_description ? (
                 <div
                   className="prose prose-sm max-w-none text-gray-600"
-                  dangerouslySetInnerHTML={{ __html: sanitizeProductDescription(product.description) }}
+                  dangerouslySetInnerHTML={{ __html: product.short_description }}
                 />
               ) : (
                 <p className="text-sm text-gray-500">
