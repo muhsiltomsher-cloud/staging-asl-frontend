@@ -1,6 +1,7 @@
 "use client";
 
 import { Gift } from "lucide-react";
+import { getLocalizedProduct } from "@/contexts/FreeGiftContext";
 import type { GiftSectionProps } from "./types";
 
 export function GiftSection({ locale, giftProgress, activeGifts }: GiftSectionProps) {
@@ -44,7 +45,7 @@ export function GiftSection({ locale, giftProgress, activeGifts }: GiftSectionPr
               <div key={index} className="flex items-center gap-2 bg-white/60 rounded px-2 py-1">
                 <Gift className="h-3 w-3 text-amber-600" />
                 <span className="text-xs text-amber-900 flex-1">
-                  {gift.product?.name || (isRTL ? "هدية مجانية" : "Free Gift")}
+                  {getLocalizedProduct(gift, locale)?.name || (isRTL ? "هدية مجانية" : "Free Gift")}
                 </span>
                 <span className="text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
                   {isRTL ? "مجاني" : "FREE"}
