@@ -21,7 +21,7 @@ async function createWooCommerceRefund(
   amount: number,
   reason: string,
   restockItems: boolean = true
-): Promise<{ success: boolean; refund_id?: number; error?: string }> {
+): Promise<{ success: boolean; wc_refund_id?: number; error?: string }> {
   try {
     const url = `${WC_API_BASE}/orders/${orderId}/refunds?${getBasicAuthParams()}`;
     
@@ -49,7 +49,7 @@ async function createWooCommerceRefund(
 
     return {
       success: true,
-      refund_id: data.id,
+      wc_refund_id: data.id,
     };
   } catch (error) {
     console.error("WooCommerce refund network error:", error);
@@ -288,7 +288,7 @@ export async function POST(request: NextRequest) {
       );
 
       if (wooCommerceRefundResult.success) {
-        console.log("WooCommerce refund created:", { wc_refund_id: wooCommerceRefundResult.refund_id });
+        console.log("WooCommerce refund created:", { wc_refund_id: wooCommerceRefundResult.wc_refund_id });
       } else {
         console.error("WooCommerce refund failed:", wooCommerceRefundResult.error);
       }
@@ -318,7 +318,7 @@ export async function POST(request: NextRequest) {
       // Include WooCommerce sync status
       woocommerce_sync: body.order_id ? {
         refund_created: wooCommerceRefundResult.success,
-        wc_refund_id: wooCommerceRefundResult.refund_id,
+        wc_refund_id: wooCommerceRefundResult.wc_refund_id,
         order_updated: orderUpdateResult.success,
         stock_restored: body.restock_items !== false && wooCommerceRefundResult.success,
         errors: [
