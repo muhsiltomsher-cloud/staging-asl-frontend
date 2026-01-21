@@ -25,6 +25,10 @@ interface TabbySessionRequest {
     unit_price: number;
     category?: string;
   }>;
+  // Optional order totals for accurate payment gateway reporting
+  tax_amount?: number;
+  shipping_amount?: number;
+  discount_amount?: number;
   language?: string;
   success_url: string;
   cancel_url: string;
@@ -68,6 +72,9 @@ export async function POST(request: NextRequest) {
       buyer,
       shipping_address,
       order_items,
+      tax_amount = 0,
+      shipping_amount = 0,
+      discount_amount = 0,
       language = "en",
       success_url,
       cancel_url,
@@ -103,9 +110,9 @@ export async function POST(request: NextRequest) {
           zip: shipping_address?.zip || "",
         },
         order: {
-          tax_amount: "0.00",
-          shipping_amount: "0.00",
-          discount_amount: "0.00",
+          tax_amount: tax_amount.toFixed(2),
+          shipping_amount: shipping_amount.toFixed(2),
+          discount_amount: discount_amount.toFixed(2),
           reference_id: `WC-${order_id}`,
           items: order_items.map((item) => ({
             title: item.title,

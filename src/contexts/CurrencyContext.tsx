@@ -145,7 +145,9 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
         const priceInAED = price / fromCurrencyInfo.rateFromAED;
         const convertedPrice = priceInAED * toCurrencyInfo.rateFromAED;
       
-        return convertedPrice;
+        // Round to currency's decimal precision to avoid floating-point errors
+        const multiplier = Math.pow(10, toCurrencyInfo.decimals);
+        return Math.round(convertedPrice * multiplier) / multiplier;
       },
       [currency, currencies, getCurrencyInfo]
     );

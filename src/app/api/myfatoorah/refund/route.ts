@@ -1,5 +1,109 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnvVar } from "@/lib/utils/loadEnv";
+import { siteConfig } from "@/config/site";
+
+const WC_API_BASE = `${siteConfig.apiUrl}/wp-json/wc/v3`;
+
+function getWooCommerceCredentials() {
+  const consumerKey = getEnvVar("WC_CONSUMER_KEY") || getEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY") || "";
+  const consumerSecret = getEnvVar("WC_CONSUMER_SECRET") || getEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET") || "";
+  return { consumerKey, consumerSecret };
+}
+
+function getBasicAuthParams(): string {
+  const { consumerKey, consumerSecret } = getWooCommerceCredentials();
+  return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
+}
+
+// Create a refund in WooCommerce and optionally restock items
+async function createWooCommerceRefund(
+  orderId: number,
+  amount: number,
+  reason: string,
+  restockItems: boolean = true
+): Promise<{ success: boolean; refund_id?: number; error?: string }> {
+  try {
+    const url = `${WC_API_BASE}/orders/${orderId}/refunds?${getBasicAuthParams()}`;
+    
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        amount: amount.toString(),
+        reason: reason,
+        restock_items: restockItems,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("WooCommerce refund error:", data);
+      return {
+        success: false,
+        error: data.message || "Failed to create WooCommerce refund",
+      };
+    }
+
+    return {
+      success: true,
+      refund_id: data.id,
+    };
+  } catch (error) {
+    console.error("WooCommerce refund network error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Network error creating WooCommerce refund",
+    };
+  }
+}
+
+// Update WooCommerce order status and add refund metadata
+async function updateOrderWithRefundDetails(
+  orderId: number,
+  refundId: number,
+  refundReference: string,
+  amount: number
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const url = `${WC_API_BASE}/orders/${orderId}?${getBasicAuthParams()}`;
+    
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        meta_data: [
+          { key: "_myfatoorah_refund_id", value: refundId.toString() },
+          { key: "_myfatoorah_refund_reference", value: refundReference },
+          { key: "_myfatoorah_refund_amount", value: amount.toString() },
+          { key: "_myfatoorah_refund_date", value: new Date().toISOString() },
+        ],
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("WooCommerce order update error:", data);
+      return {
+        success: false,
+        error: data.message || "Failed to update order with refund details",
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("WooCommerce order update network error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Network error updating order",
+    };
+  }
+}
 
 function getMyFatoorahApiBaseUrl(): string {
   if (getEnvVar("MYFATOORAH_TEST_MODE") === "true") {
@@ -42,6 +146,9 @@ interface MakeRefundRequest {
   amount: number;
   comment?: string;
   service_charge_on_customer?: boolean;
+  // WooCommerce order details for syncing refund with order
+  order_id?: number;
+  restock_items?: boolean;
 }
 
 interface MakeRefundResponse {
@@ -163,13 +270,62 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const refundId = data.Data?.RefundId;
+    const refundReference = data.Data?.RefundReference || "";
+    const refundAmount = data.Data?.Amount || body.amount;
+
+    // If order_id is provided, sync the refund with WooCommerce
+    let wooCommerceRefundResult: { success: boolean; wc_refund_id?: number; error?: string } = { success: true };
+    let orderUpdateResult: { success: boolean; error?: string } = { success: true };
+
+    if (body.order_id && refundId) {
+      // Create a refund record in WooCommerce (this also restores stock if restock_items is true)
+      wooCommerceRefundResult = await createWooCommerceRefund(
+        body.order_id,
+        refundAmount,
+        body.comment || `MyFatoorah Refund #${refundReference}`,
+        body.restock_items !== false // Default to true for restocking
+      );
+
+      if (wooCommerceRefundResult.success) {
+        console.log("WooCommerce refund created:", { wc_refund_id: wooCommerceRefundResult.refund_id });
+      } else {
+        console.error("WooCommerce refund failed:", wooCommerceRefundResult.error);
+      }
+
+      // Update the order with MyFatoorah refund metadata
+      orderUpdateResult = await updateOrderWithRefundDetails(
+        body.order_id,
+        refundId,
+        refundReference,
+        refundAmount
+      );
+
+      if (orderUpdateResult.success) {
+        console.log("Order updated with refund details");
+      } else {
+        console.error("Order update failed:", orderUpdateResult.error);
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      refund_id: data.Data?.RefundId,
-      refund_reference: data.Data?.RefundReference,
-      amount: data.Data?.Amount,
+      refund_id: refundId,
+      refund_reference: refundReference,
+      amount: refundAmount,
       comment: data.Data?.Comment,
       message: "Refund request submitted successfully. It will be processed by MyFatoorah finance team.",
+      // Include WooCommerce sync status
+      woocommerce_sync: body.order_id ? {
+        refund_created: wooCommerceRefundResult.success,
+        wc_refund_id: wooCommerceRefundResult.refund_id,
+        order_updated: orderUpdateResult.success,
+        stock_restored: body.restock_items !== false && wooCommerceRefundResult.success,
+        errors: [
+          wooCommerceRefundResult.error,
+          orderUpdateResult.error,
+        ].filter(Boolean),
+      } : undefined,
     });
   } catch (error) {
     console.error("MyFatoorah refund error:", error);
