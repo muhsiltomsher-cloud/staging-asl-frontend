@@ -69,22 +69,17 @@ interface CreateOrderRequest {
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const orderId = searchParams.get("orderId");
+  const orderKey = searchParams.get("order_key");
   const customerId = searchParams.get("customerId");
   const page = searchParams.get("page");
   const perPage = searchParams.get("per_page");
   const status = searchParams.get("status");
 
-  // Verify authentication
-  const authResult = await verifyAuth(request);
-  if (!authResult.authenticated || !authResult.user) {
-    return unauthorizedResponse(authResult.error);
-  }
-
   try {
     let url: string;
     
     if (orderId) {
-      // First fetch the order to verify ownership
+      // First fetch the order
       const orderUrl = `${API_BASE}/orders/${orderId}?${getBasicAuthParams()}`;
       const orderResponse = await fetch(orderUrl, {
         method: "GET",
@@ -109,13 +104,33 @@ export async function GET(request: NextRequest) {
       
       const orderData = await orderResponse.json();
       
-      // Verify the authenticated user owns this order
-      if (orderData.customer_id !== authResult.user.user_id) {
-        return forbiddenResponse("You do not have permission to view this order");
+      // Security check: Either order_key must match OR user must be authenticated and own the order
+      if (orderKey) {
+        // Guest checkout flow: Verify order_key matches (WooCommerce standard pattern)
+        // The order_key is a secret token that proves legitimate access to the order
+        if (orderData.order_key !== orderKey) {
+          return forbiddenResponse("Invalid order key");
+        }
+      } else {
+        // Authenticated user flow: Verify user owns this order
+        const authResult = await verifyAuth(request);
+        if (!authResult.authenticated || !authResult.user) {
+          return unauthorizedResponse(authResult.error);
+        }
+        
+        if (orderData.customer_id !== authResult.user.user_id) {
+          return forbiddenResponse("You do not have permission to view this order");
+        }
       }
       
       return NextResponse.json({ success: true, data: orderData });
     } else if (customerId) {
+      // For listing orders by customer, always require authentication
+      const authResult = await verifyAuth(request);
+      if (!authResult.authenticated || !authResult.user) {
+        return unauthorizedResponse(authResult.error);
+      }
+      
       // Verify the authenticated user is requesting their own orders
       if (parseInt(customerId) !== authResult.user.user_id) {
         return forbiddenResponse("You can only view your own orders");
