@@ -70,6 +70,7 @@ interface OrderConfirmationClientProps {
 export default function OrderConfirmationClient({ locale }: OrderConfirmationClientProps) {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("order_id");
+  const orderKey = searchParams.get("order_key");
   const myFatoorahPaymentId = searchParams.get("paymentId");
   const tabbyPaymentId = searchParams.get("payment_id");
   const tamaraOrderId = searchParams.get("orderId");
@@ -340,7 +341,11 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
           }
         }
 
-        const response = await fetch(`/api/orders?orderId=${orderId}`);
+        // Include order_key for guest checkout authentication (WooCommerce standard pattern)
+        const orderApiUrl = orderKey 
+          ? `/api/orders?orderId=${orderId}&order_key=${orderKey}`
+          : `/api/orders?orderId=${orderId}`;
+        const response = await fetch(orderApiUrl);
         const data = await response.json();
 
         if (!data.success) {
@@ -375,7 +380,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
     };
 
     verifyPaymentAndFetchOrder();
-  }, [orderId, myFatoorahPaymentId, tabbyPaymentId, tamaraOrderId, clearCart]);
+  }, [orderId, orderKey, myFatoorahPaymentId, tabbyPaymentId, tamaraOrderId, clearCart]);
 
   if (loading) {
     return (
