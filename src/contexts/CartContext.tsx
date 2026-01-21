@@ -537,29 +537,40 @@ export function CartProvider({ children, locale }: CartProviderProps) {
   }, [cartItems, cart?.currency?.currency_minor_unit]);
 
   // Adjusted cart subtotal that includes bundle items price
+  // Round to avoid floating-point precision errors
   const cartSubtotal = useMemo(() => {
     const rawSubtotal = parseFloat(rawCartSubtotal) || 0;
-    return (rawSubtotal + bundleItemsAdjustment).toString();
+    const total = rawSubtotal + bundleItemsAdjustment;
+    // Round to nearest integer (minor units are already integers)
+    return Math.round(total).toString();
   }, [rawCartSubtotal, bundleItemsAdjustment]);
 
   // Adjusted cart total that includes bundle items price
   // The total from CoCart doesn't include bundle items, so we need to add the adjustment
+  // Round to avoid floating-point precision errors
   const cartTotal = useMemo(() => {
     const rawTotal = parseFloat(rawCartTotal) || 0;
-    return (rawTotal + bundleItemsAdjustment).toString();
+    const total = rawTotal + bundleItemsAdjustment;
+    // Round to nearest integer (minor units are already integers)
+    return Math.round(total).toString();
   }, [rawCartTotal, bundleItemsAdjustment]);
 
-  const couponDiscount = selectedCoupons.reduce((total, coupon) => {
-    const subtotal = parseFloat(cartSubtotal);
-    const amount = parseFloat(coupon.amount);
-    
-    if (coupon.discount_type === "percent") {
-      return total + (subtotal * amount / 100);
-    } else if (coupon.discount_type === "fixed_cart") {
-      return total + amount;
-    }
-    return total;
-  }, 0);
+  // Calculate coupon discount with proper rounding to avoid floating-point errors
+  const couponDiscount = useMemo(() => {
+    return selectedCoupons.reduce((total, coupon) => {
+      const subtotal = parseFloat(cartSubtotal);
+      const amount = parseFloat(coupon.amount);
+      
+      if (coupon.discount_type === "percent") {
+        // Round percent discount to avoid floating-point precision errors
+        const discount = Math.round(subtotal * amount / 100);
+        return total + discount;
+      } else if (coupon.discount_type === "fixed_cart") {
+        return total + amount;
+      }
+      return total;
+    }, 0);
+  }, [selectedCoupons, cartSubtotal]);
 
   // Normalize cart to null if undefined (SWR returns undefined before first fetch)
   const normalizedCart = cart ?? null;

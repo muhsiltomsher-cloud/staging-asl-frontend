@@ -40,6 +40,11 @@ interface TamaraCheckoutRequest {
     type?: string;
     sku?: string;
   }>;
+  // Optional order totals for accurate payment gateway reporting
+  tax_amount?: number;
+  shipping_amount?: number;
+  discount_amount?: number;
+  discount_name?: string;
   success_url: string;
   failure_url: string;
   cancel_url: string;
@@ -84,6 +89,10 @@ export async function POST(request: NextRequest) {
       billing_address,
       shipping_address,
       items,
+      tax_amount = 0,
+      shipping_amount = 0,
+      discount_amount = 0,
+      discount_name = "",
       success_url,
       failure_url,
       cancel_url,
@@ -157,17 +166,17 @@ export async function POST(request: NextRequest) {
         notification: `${success_url}`,
       },
       shipping_amount: {
-        amount: "0.00",
+        amount: shipping_amount.toFixed(2),
         currency: currency || "AED",
       },
       tax_amount: {
-        amount: "0.00",
+        amount: tax_amount.toFixed(2),
         currency: currency || "AED",
       },
       discount: {
-        name: "",
+        name: discount_name,
         amount: {
-          amount: "0.00",
+          amount: discount_amount.toFixed(2),
           currency: currency || "AED",
         },
       },

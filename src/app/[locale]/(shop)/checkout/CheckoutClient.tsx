@@ -827,10 +827,29 @@ export default function CheckoutClient() {
             const billingInfo = formData.sameAsShipping ? formData.shipping : formData.billing;
             const baseUrl = window.location.origin;
             
-            // Calculate the actual payment amount from the cart total (in minor units)
-            // This ensures the payment gateway receives the same amount shown to the user
+            // Use the order total from WooCommerce as the source of truth for payment amount
+            // This ensures the payment gateway receives the exact amount calculated by the backend
+            // and avoids any potential mismatch between frontend and backend calculations
+            const orderTotal = parseFloat(data.order?.total) || 0;
+            
+            // Calculate frontend amount for comparison/logging purposes
             const cartTotalInMinorUnits = parseFloat(cartTotal) || 0;
-            const paymentAmount = (cartTotalInMinorUnits / divisor) - couponDiscount;
+            const frontendPaymentAmount = (cartTotalInMinorUnits / divisor) - couponDiscount;
+            
+            // Use the WooCommerce order total as the payment amount (rounded to 2 decimal places)
+            const paymentAmount = Math.round(orderTotal * 100) / 100;
+            
+            // Log if there's a significant difference between frontend and backend calculations
+            // This helps identify potential pricing discrepancies for debugging
+            const amountDifference = Math.abs(paymentAmount - frontendPaymentAmount);
+            if (amountDifference > 0.01) {
+              console.warn("Payment amount mismatch detected:", {
+                frontendAmount: frontendPaymentAmount,
+                backendAmount: paymentAmount,
+                difference: amountDifference,
+                orderId: data.order_id,
+              });
+            }
       
             if (isMyFatoorahPayment) {
               // Initiate MyFatoorah payment (redirect flow)
