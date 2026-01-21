@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
+import { checkRateLimit, rateLimitResponse, FORGOT_PASSWORD_RATE_LIMIT } from "@/lib/security";
 
 const API_BASE = siteConfig.apiUrl;
 
@@ -70,6 +71,12 @@ async function tryWooCommerceLostPassword(email: string): Promise<boolean> {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse<ForgotPasswordResponse>> {
+  // Check rate limit
+  const rateLimitResult = checkRateLimit(request, FORGOT_PASSWORD_RATE_LIMIT);
+  if (!rateLimitResult.allowed) {
+    return rateLimitResponse(rateLimitResult.resetTime) as NextResponse<ForgotPasswordResponse>;
+  }
+
   try {
     const body: ForgotPasswordRequest = await request.json();
     const { email } = body;

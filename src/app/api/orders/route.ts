@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
 import { getEnvVar } from "@/lib/utils/loadEnv";
+import { verifyAuth, unauthorizedResponse, forbiddenResponse } from "@/lib/security";
 
 const API_BASE = `${siteConfig.apiUrl}/wp-json/wc/v3`;
 
@@ -73,12 +74,53 @@ export async function GET(request: NextRequest) {
   const perPage = searchParams.get("per_page");
   const status = searchParams.get("status");
 
+  // Verify authentication
+  const authResult = await verifyAuth(request);
+  if (!authResult.authenticated || !authResult.user) {
+    return unauthorizedResponse(authResult.error);
+  }
+
   try {
     let url: string;
     
     if (orderId) {
-      url = `${API_BASE}/orders/${orderId}?${getBasicAuthParams()}`;
+      // First fetch the order to verify ownership
+      const orderUrl = `${API_BASE}/orders/${orderId}?${getBasicAuthParams()}`;
+      const orderResponse = await fetch(orderUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!orderResponse.ok) {
+        const errorData = await orderResponse.json();
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: errorData.code || "orders_error",
+              message: errorData.message || "Failed to get order.",
+            },
+          },
+          { status: orderResponse.status }
+        );
+      }
+      
+      const orderData = await orderResponse.json();
+      
+      // Verify the authenticated user owns this order
+      if (orderData.customer_id !== authResult.user.user_id) {
+        return forbiddenResponse("You do not have permission to view this order");
+      }
+      
+      return NextResponse.json({ success: true, data: orderData });
     } else if (customerId) {
+      // Verify the authenticated user is requesting their own orders
+      if (parseInt(customerId) !== authResult.user.user_id) {
+        return forbiddenResponse("You can only view your own orders");
+      }
+      
       const params = new URLSearchParams();
       params.set("customer", customerId);
       if (page) params.set("page", page);
