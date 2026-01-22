@@ -4,10 +4,10 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShoppingBag, Heart, Eye } from "lucide-react";
+import { ShoppingBag, Heart, Eye, ImageOff } from "lucide-react";
 import { Badge } from "@/components/common/Badge";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
-import { cn, decodeHtmlEntities, getProductSlugFromPermalink } from "@/lib/utils";
+import { cn, decodeHtmlEntities, getProductSlugFromPermalink, BLUR_DATA_URL } from "@/lib/utils";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,6 +31,7 @@ export function WCProductCard({
 }: WCProductCardProps) {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist, getWishlistItemId } = useWishlist();
   const { isAuthenticated } = useAuth();
@@ -90,7 +91,7 @@ export function WCProductCard({
     <article className={cn("group relative", className)}>
       <Link href={`/${locale}/product/${productSlug}`} className="block">
         <div className="relative aspect-square overflow-hidden rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 shadow-sm transition-all duration-500 ease-out group-hover:shadow-[0_20px_50px_rgba(180,83,9,0.15)] group-hover:-translate-y-1">
-          {mainImage ? (
+          {mainImage && !imageError ? (
             <Image
               src={mainImage.src}
               alt={mainImage.alt || product.name}
@@ -99,11 +100,13 @@ export function WCProductCard({
               className="object-contain transition-transform duration-500 group-hover:scale-110"
               loading="lazy"
               placeholder="blur"
-              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAUH/8QAIhAAAgEDAwUBAAAAAAAAAAAAAQIDAAQRBRIhBhMiMUFR/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAZEQACAwEAAAAAAAAAAAAAAAABAgADESH/2gAMAwEAAhEDEEA/AKOm9R6hY2sNtDLGI4kCKDGpOAMDk/aKKKlZJJyTNQoUdZ//2Q=="
+              blurDataURL={BLUR_DATA_URL}
+              onError={() => setImageError(true)}
             />
           ) : (
-            <div className="flex h-full items-center justify-center">
-              <span className="text-gray-400">{isRTL ? "لا توجد صورة" : "No image"}</span>
+            <div className="flex h-full flex-col items-center justify-center gap-2 text-gray-400">
+              <ImageOff className="h-8 w-8" />
+              <span className="text-xs">{isRTL ? "لا توجد صورة" : "No image"}</span>
             </div>
           )}
 
