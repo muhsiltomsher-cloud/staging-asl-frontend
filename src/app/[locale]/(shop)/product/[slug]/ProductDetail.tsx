@@ -22,7 +22,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import type { WCProduct } from "@/types/woocommerce";
 import type { WCPAForm, WCPAFormValues } from "@/types/wcpa";
 import type { Locale } from "@/config/site";
-import { decodeHtmlEntities } from "@/lib/utils";
+import { decodeHtmlEntities, BLUR_DATA_URL } from "@/lib/utils";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -440,6 +440,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                 priority
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
               />
               <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/10 group-hover:opacity-100">
                 <ZoomIn className="h-8 w-8 text-white drop-shadow-lg" />
@@ -470,6 +472,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                     priority={index === 0}
+                    placeholder="blur"
+                    blurDataURL={BLUR_DATA_URL}
                   />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/10 group-hover:opacity-100">
                     <ZoomIn className="h-8 w-8 text-white drop-shadow-lg" />
@@ -503,6 +507,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                     priority={index === 0}
+                    placeholder="blur"
+                    blurDataURL={BLUR_DATA_URL}
                   />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/10 group-hover:opacity-100">
                     <ZoomIn className="h-8 w-8 text-white drop-shadow-lg" />
@@ -534,6 +540,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                 priority
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
               />
               <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/10 group-hover:opacity-100">
                 <ZoomIn className="h-8 w-8 text-white drop-shadow-lg" />
@@ -557,6 +565,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
                     fill
                     sizes="(max-width: 1024px) 50vw, 25vw"
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    placeholder="blur"
+                    blurDataURL={BLUR_DATA_URL}
                   />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/10 group-hover:opacity-100">
                     <ZoomIn className="h-6 w-6 text-white drop-shadow-lg" />
@@ -584,6 +594,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
                       fill
                       sizes="64px"
                       className="object-cover"
+                      placeholder="blur"
+                      blurDataURL={BLUR_DATA_URL}
                     />
                   </button>
                 ))}
@@ -627,6 +639,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
                       sizes="(max-width: 1024px) 100vw, 50vw"
                       className="object-cover transition-transform duration-500 group-hover/slide:scale-105"
                       priority={index === 0}
+                      placeholder="blur"
+                      blurDataURL={BLUR_DATA_URL}
                     />
                     {/* Hover Overlay with Zoom Icon */}
                     <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-300 group-hover/slide:bg-black/10 group-hover/slide:opacity-100">
@@ -715,6 +729,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
                       fill
                       sizes="80px"
                       className="object-cover"
+                      placeholder="blur"
+                      blurDataURL={BLUR_DATA_URL}
                     />
                   </button>
                 </SwiperSlide>

@@ -25,7 +25,9 @@ export function generateMetadata({
   noIndex = false,
   alternatePathnames,
 }: GenerateMetadataParams): Metadata {
-  const fullTitle = title ? `${title} | ${siteConfig.name}` : siteConfig.name;
+  // Don't append site name here - the layout template already does this
+  // Layout uses: template: `%s | ${siteConfig.name}`
+  const fullTitle = title || siteConfig.name;
   const fullDescription = description || siteConfig.description;
   const ogImage = image || siteConfig.ogImage;
   const url = `${siteConfig.url}/${locale}${pathname}`;

@@ -36,14 +36,16 @@ const currencyCountryCodes: Record<string, string> = {
 
 function CountryFlag({ currencyCode, size = 20 }: { currencyCode: string; size?: number }) {
   const countryCode = currencyCountryCodes[currencyCode] || "un";
+  const height = Math.round(size * 0.75);
   return (
     <Image
       src={`https://flagcdn.com/w40/${countryCode}.png`}
       alt={currencyCode}
       width={size}
-      height={Math.round(size * 0.75)}
+      height={height}
       className="rounded-sm object-cover"
       unoptimized
+      style={{ width: size, height: height }}
     />
   );
 }
