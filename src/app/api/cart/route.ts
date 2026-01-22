@@ -82,14 +82,27 @@ function getGuestHeaders(): HeadersInit {
 
 function isAuthError(status: number, data: Record<string, unknown>): boolean {
   if (status !== 401 && status !== 403) return false;
+  
+  // For 403 errors, always treat as potential auth error and retry as guest
+  // This handles cases where:
+  // 1. Auth token is stale/invalid
+  // 2. Cart key is stale/invalid
+  // 3. WAF or security plugin blocks authenticated requests
+  // 4. CoCart returns non-standard error codes
+  if (status === 403) return true;
+  
+  // For 401 errors, check for specific auth-related error codes/messages
   const code = data.code as string | undefined;
   const message = data.message as string | undefined;
   return Boolean(
     code?.includes("jwt_auth") ||
     code?.includes("rest_forbidden") ||
+    code?.includes("cocart_rest") ||
+    code?.includes("cocart_customer") ||
     message?.toLowerCase().includes("authentication") ||
     message?.toLowerCase().includes("token") ||
-    message?.toLowerCase().includes("unauthorized")
+    message?.toLowerCase().includes("unauthorized") ||
+    message?.toLowerCase().includes("permission")
   );
 }
 
@@ -156,6 +169,17 @@ export async function GET(request: NextRequest) {
     // If auth failed and we had a token, retry as guest (token might be stale/invalid)
     if (!response.ok && authToken && isAuthError(response.status, data)) {
       response = await fetch(guestUrl, {
+        method: "GET",
+        headers: getGuestHeaders(),
+      });
+      data = await response.json();
+    }
+
+    // If guest request failed with 403 and we have a stale cart key, retry without cart key
+    // This handles cases where the cart key is invalid or expired
+    if (!response.ok && !authToken && response.status === 403 && cartKey) {
+      const freshGuestUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, locale);
+      response = await fetch(freshGuestUrl, {
         method: "GET",
         headers: getGuestHeaders(),
       });
@@ -336,6 +360,21 @@ export async function POST(request: NextRequest) {
         guestFetchOptions.body = JSON.stringify(body);
       }
       response = await fetch(guestUrl, guestFetchOptions);
+      data = await response.json();
+    }
+
+    // If guest request failed with 403 and we have a stale cart key, retry without cart key
+    // This handles cases where the cart key is invalid or expired
+    if (!response.ok && !authToken && response.status === 403 && cartKey) {
+      const freshGuestUrl = baseUrl; // Use base URL without cart_key
+      const freshGuestFetchOptions: RequestInit = {
+        method,
+        headers: getGuestHeaders(),
+      };
+      if (method !== "DELETE" && Object.keys(body).length > 0) {
+        freshGuestFetchOptions.body = JSON.stringify(body);
+      }
+      response = await fetch(freshGuestUrl, freshGuestFetchOptions);
       data = await response.json();
     }
 
