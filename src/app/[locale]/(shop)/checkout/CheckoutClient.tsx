@@ -566,6 +566,14 @@ export default function CheckoutClient() {
       
       if (data.success && data.data.isRegistered) {
         setIsEmailRegistered(true);
+        // Auto-uncheck create account if email is already registered
+        // This allows seamless guest checkout without extra clicks
+        if (createAccount) {
+          setCreateAccount(false);
+          setAccountPassword("");
+          setConfirmPassword("");
+          setPasswordError(null);
+        }
         setShowLoginPrompt(true);
       } else {
         setIsEmailRegistered(false);
@@ -578,7 +586,7 @@ export default function CheckoutClient() {
     } finally {
       setIsCheckingEmail(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, createAccount]);
 
   // Debounced email check when email changes
   useEffect(() => {
@@ -1252,8 +1260,8 @@ export default function CheckoutClient() {
                 </div>
               )}
               
-              {/* Create Account Option - Only for guest users */}
-              {!isAuthenticated && (
+              {/* Create Account Option - Only for guest users with unregistered email */}
+              {!isAuthenticated && !isEmailRegistered && (
                 <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
                   <div className="flex items-start gap-3">
                     <Checkbox
