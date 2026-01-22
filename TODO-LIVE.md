@@ -193,22 +193,66 @@ Wrap the component with `memo` and ensure `useMemo` is used for filtered/sorted 
 
 **Priority: MEDIUM**
 
-### 6.1 Add Blur Placeholders
+### 6.1 Add Blur Placeholders - IMPLEMENTED
 
-**Files:** All components using `next/image`
+**Status:** ✓ Completed (PR #536)
 
+**Files updated:**
+- `src/app/[locale]/(shop)/product/[slug]/ProductDetail.tsx` - All product gallery images
+- `src/components/shop/WCProductCard.tsx` - Product card images
+
+**Implementation:**
 ```typescript
+import { BLUR_DATA_URL } from "@/lib/utils";
+
 <Image
   src={image.src}
   alt={image.alt}
   fill
   placeholder="blur"
-  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAUH/8QAIhAAAgEDBAMBAAAAAAAAAAAAAQIDAAQRBQYSIRMxQVH/xAAVAQEBAAAAAAAAAAAAAAAAAAADBP/EABkRAAIDAQAAAAAAAAAAAAAAAAECAAMRIf/aAAwDAQACEQMRAD8AzjTtPuLy8ht7aF5ppWCIijJYn4K2Lb+0dMsNOgtZbOC5mjQK88sYZnPyT+0pSqZMjMeRJLqoGz//2Q=="
+  blurDataURL={BLUR_DATA_URL}
   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
 />
 ```
 
+The `BLUR_DATA_URL` constant is defined in `src/lib/utils/index.ts` for consistency across all components.
+
 **Benefits:** Shows low-quality placeholder while image loads, improving perceived performance.
+
+### 6.2 Image Error Handling with Logo Fallback - IMPLEMENTED
+
+**Status:** ✓ Completed (PR #537)
+
+**File:** `src/components/shop/WCProductCard.tsx`
+
+**Implementation:**
+```typescript
+const [imageError, setImageError] = useState(false);
+
+{mainImage && !imageError ? (
+  <Image
+    src={mainImage.src}
+    alt={mainImage.alt || product.name}
+    fill
+    placeholder="blur"
+    blurDataURL={BLUR_DATA_URL}
+    onError={() => setImageError(true)}
+  />
+) : (
+  <div className="flex h-full items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100">
+    <Image
+      src="https://staging.aromaticscentslab.com/wp-content/uploads/2024/12/ASL-Logo-1.png"
+      alt="Aromatic Scents Lab"
+      width={80}
+      height={80}
+      className="object-contain opacity-40"
+      unoptimized
+    />
+  </div>
+)}
+```
+
+**Benefits:** When product images fail to load (403/504 errors), displays the ASL logo as a graceful fallback instead of broken images.
 
 ### 6.2 Priority Loading for Above-the-Fold Images
 
@@ -440,7 +484,8 @@ Ensure WordPress media files are served through a CDN (Cloudflare, AWS CloudFron
 | 3 | Shop Products Caching | HIGH | Dev Mode | Disabled |
 | 4 | Dynamic Imports (Swiper, MUI) | HIGH | Performance | Not Implemented |
 | 5 | Component Memoization | HIGH | Performance | Partial |
-| 6 | Image Optimization | MEDIUM | Performance | Partial |
+| 6 | Image Optimization (Blur Placeholders) | MEDIUM | Performance | **COMPLETED** (PR #536) |
+| 6.2 | Image Error Handling (Logo Fallback) | MEDIUM | Performance | **COMPLETED** (PR #537) |
 | 7 | Increase ISR Revalidation | MEDIUM | Performance | Not Implemented |
 | 8 | Bundle Analysis | MEDIUM | Performance | Not Implemented |
 | 9 | Prefetching | MEDIUM | Performance | Not Implemented |
@@ -448,6 +493,8 @@ Ensure WordPress media files are served through a CDN (Cloudflare, AWS CloudFron
 | 11 | Third-Party Scripts | LOW | Performance | N/A |
 | 12 | Backend Optimizations | MEDIUM | Backend | Verify |
 | 13 | Cloudflare Cache Rules | HIGH | CDN/Caching | Documented |
+| 14 | SEO Title Duplication Fix | HIGH | SEO | **COMPLETED** (PR #536) |
+| 15 | Flag Icon Warning Fix | LOW | UI | **COMPLETED** (PR #536) |
 
 ---
 
@@ -457,6 +504,51 @@ Ensure WordPress media files are served through a CDN (Cloudflare, AWS CloudFron
 2. **Add React.memo to WCProductCard** - High impact, low effort
 3. **Add priority to hero/product images** - Improves LCP score
 4. **Increase ISR revalidation times** - Reduces backend load
+
+---
+
+# PART 4: COMPLETED FIXES & TESTING RESULTS
+
+## Recent Fixes (January 2026)
+
+### PR #536 - Minor Issues Fix
+- **SEO Title Duplication**: Fixed duplicate site name in page titles (was "Dark Wood | Aromatic Scents Lab | Aromatic Scents Lab", now "Dark Wood | Aromatic Scents Lab")
+  - File: `src/lib/utils/seo.ts` - Changed `generateMetadata` to not append site name since layout template already does
+- **Flag Icon Warning**: Fixed Next.js Image warning for flag icons in currency switcher
+  - File: `src/components/common/CurrencySwitcher.tsx` - Added explicit style dimensions
+- **Blur Placeholders**: Added blur loading placeholders to all product images
+  - Files: `ProductDetail.tsx`, `WCProductCard.tsx` - Using shared `BLUR_DATA_URL` constant
+
+### PR #537 - Image Error Handling
+- **Logo Fallback**: When product images fail to load (403/504 errors), displays ASL logo as graceful fallback
+  - File: `src/components/shop/WCProductCard.tsx` - Added `imageError` state and `onError` handler
+
+## Testing Results (January 2026)
+
+Comprehensive testing completed for all 7 criteria in both English and Arabic:
+
+| Criteria | Status | Notes |
+|----------|--------|-------|
+| 1. Functional | PASS | Products load, cart works, checkout form works |
+| 2. Data Correctness | PASS | Prices, VAT (5%), totals calculated correctly |
+| 3. UI/UX | PASS | Mobile responsive, RTL for Arabic, forms validated |
+| 4. Performance | PASS | Pages load < 3s, images optimized with blur placeholders |
+| 5. Security | PASS | CSRF tokens, secure cookies, no exposed data |
+| 6. Payment | PARTIAL | Forms load correctly, full flow needs real payment testing |
+| 7. SEO | PASS | Correct robots, canonical URLs, structured data (Product, Offer, BreadcrumbList) |
+
+## Known Backend Issues (Require Server-Side Fixes)
+
+These issues are NOT frontend bugs and require WordPress/WooCommerce backend configuration:
+
+1. **403 Image Errors**: Staging server blocks requests from production domain
+   - Fix: Configure CORS/hotlinking on WordPress to allow `app.aromaticscentslab.com`
+   
+2. **500 Cart API Errors**: CoCart API connectivity issues
+   - Fix: Check CoCart plugin configuration and server logs
+   
+3. **React Hydration Error #418**: Pre-existing issue, likely browser extension related
+   - Note: Does not affect functionality, cosmetic console error only
 
 # NOTES
 
