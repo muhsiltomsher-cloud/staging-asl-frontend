@@ -3,11 +3,11 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Package, Truck, CheckCircle, Clock, MapPin, Gift } from "lucide-react";
+import { ArrowLeft, Package, Truck, CheckCircle, Clock, MapPin, Gift, XCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/common/Button";
 import { OrderPrice, OrderCurrencyBadge } from "@/components/common/OrderPrice";
-import { getOrder, formatOrderStatus, getOrderStatusColor, formatDate, type Order, type OrderLineItem } from "@/lib/api/customer";
+import { getOrder, formatOrderStatus, getOrderStatusColor, formatDate, canCancelOrder, cancelOrder, type Order, type OrderLineItem } from "@/lib/api/customer";
 import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/components/cart/OrderBundleItemsList";
 import { OrderNotes } from "@/components/account/OrderNotes";
 import { getProductsByIds } from "@/lib/api/woocommerce";
@@ -48,6 +48,15 @@ const translations = {
     freeGift: "Free Gift",
     paidIn: "Paid in",
     conversionNote: "Prices shown in order currency",
+    cancelOrder: "Cancel Order",
+    cancelOrderConfirm: "Are you sure you want to cancel this order?",
+    cancelReason: "Reason for cancellation (optional)",
+    cancelReasonPlaceholder: "Please tell us why you want to cancel...",
+    cancelling: "Cancelling...",
+    cancelSuccess: "Order cancelled successfully",
+    cancelError: "Failed to cancel order",
+    cancel: "Cancel",
+    confirm: "Confirm",
   },
   ar: {
     orderDetails: "تفاصيل الطلب",
@@ -80,6 +89,15 @@ const translations = {
     freeGift: "هدية مجانية",
     paidIn: "تم الدفع بـ",
     conversionNote: "الأسعار معروضة بعملة الطلب",
+    cancelOrder: "إلغاء الطلب",
+    cancelOrderConfirm: "هل أنت متأكد من رغبتك في إلغاء هذا الطلب؟",
+    cancelReason: "سبب الإلغاء (اختياري)",
+    cancelReasonPlaceholder: "يرجى إخبارنا لماذا تريد الإلغاء...",
+    cancelling: "جاري الإلغاء...",
+    cancelSuccess: "تم إلغاء الطلب بنجاح",
+    cancelError: "فشل في إلغاء الطلب",
+    cancel: "إلغاء",
+    confirm: "تأكيد",
   },
 };
 
@@ -179,6 +197,10 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [productImages, setProductImages] = useState<Record<number, string>>({});
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   const resolvedParams = use(params);
   const locale = resolvedParams.locale as "en" | "ar";
@@ -244,6 +266,29 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
       return productImages[item.product_id];
     }
     return null;
+  };
+
+  const handleCancelOrder = async () => {
+    if (!order) return;
+    
+    setIsCancelling(true);
+    setCancelError(null);
+    
+    try {
+      const response = await cancelOrder(order.id, cancelReason || undefined);
+      
+      if (response.success) {
+        setOrder({ ...order, status: "cancelled" });
+        setShowCancelModal(false);
+        setCancelReason("");
+      } else {
+        setCancelError(response.error?.message || t.cancelError);
+      }
+    } catch {
+      setCancelError(t.cancelError);
+    } finally {
+      setIsCancelling(false);
+    }
   };
 
   if (authLoading) {
@@ -348,6 +393,29 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
       <div className="space-y-6">
         <OrderTimeline status={order.status} t={t} />
 
+        {canCancelOrder(order.status) && (
+          <div className="rounded-xl border border-gray-200 bg-white p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="font-semibold text-gray-900">{t.cancelOrder}</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  {locale === "ar" 
+                    ? "يمكنك إلغاء هذا الطلب إذا لم يتم شحنه بعد"
+                    : "You can cancel this order if it hasn't been shipped yet"}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCancelModal(true)}
+                className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+              >
+                <XCircle className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
+                {t.cancelOrder}
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
           <div className="border-b p-4">
@@ -466,6 +534,64 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
 
         <OrderNotes orderId={order.id} locale={locale} />
       </div>
+
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl" dir={isRTL ? "rtl" : "ltr"}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
+                <XCircle className="h-5 w-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">{t.cancelOrder}</h3>
+            </div>
+            
+            <p className="text-gray-600 mb-4">{t.cancelOrderConfirm}</p>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t.cancelReason}
+              </label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder={t.cancelReasonPlaceholder}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                rows={3}
+              />
+            </div>
+
+            {cancelError && (
+              <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                {cancelError}
+              </div>
+            )}
+
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setCancelReason("");
+                  setCancelError(null);
+                }}
+                disabled={isCancelling}
+              >
+                {t.cancel}
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleCancelOrder}
+                disabled={isCancelling}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {isCancelling ? t.cancelling : t.confirm}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

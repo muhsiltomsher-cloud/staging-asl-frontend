@@ -640,3 +640,63 @@ export async function setDefaultAddress(
 export function generateAddressId(): string {
   return `addr_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
+
+export const CANCELLABLE_ORDER_STATUSES = ["pending", "processing", "on-hold"];
+
+export function canCancelOrder(status: string): boolean {
+  return CANCELLABLE_ORDER_STATUSES.includes(status);
+}
+
+export interface CancelOrderResponse {
+  success: boolean;
+  message?: string;
+  order?: {
+    id: number;
+    status: string;
+  };
+  error?: CustomerError;
+}
+
+export async function cancelOrder(
+  orderId: number,
+  reason?: string
+): Promise<CancelOrderResponse> {
+  try {
+    const response = await fetch("/api/orders/cancel", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        order_id: orderId,
+        reason: reason,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      return {
+        success: false,
+        error: result.error || {
+          code: "cancel_error",
+          message: "Failed to cancel order.",
+        },
+      };
+    }
+
+    return {
+      success: true,
+      message: result.message,
+      order: result.order,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: {
+        code: "network_error",
+        message: error instanceof Error ? error.message : "Network error occurred",
+      },
+    };
+  }
+}
