@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShoppingBag, Heart, Eye, ImageOff } from "lucide-react";
+import { ShoppingBag, Heart, Eye } from "lucide-react";
 import { Badge } from "@/components/common/Badge";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { cn, decodeHtmlEntities, getProductSlugFromPermalink, BLUR_DATA_URL } from "@/lib/utils";
@@ -104,9 +104,15 @@ export function WCProductCard({
               onError={() => setImageError(true)}
             />
           ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-2 text-gray-400">
-              <ImageOff className="h-8 w-8" />
-              <span className="text-xs">{isRTL ? "لا توجد صورة" : "No image"}</span>
+            <div className="flex h-full items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100">
+              <Image
+                src="https://staging.aromaticscentslab.com/wp-content/uploads/2024/12/ASL-Logo-1.png"
+                alt="Aromatic Scents Lab"
+                width={80}
+                height={80}
+                className="object-contain opacity-40"
+                unoptimized
+              />
             </div>
           )}
 
