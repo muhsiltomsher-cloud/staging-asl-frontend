@@ -306,8 +306,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
   const [openAccordion, setOpenAccordion] = useState<string | null>("characteristics");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
-    const [viewMode, setViewMode] = useState<"grid" | "slider">("slider");
-    const [addonValues, setAddonValues] = useState<WCPAFormValues>({});
+  const [viewMode, setViewMode] = useState<"grid" | "slider">("slider");
+  const [addonValues, setAddonValues] = useState<WCPAFormValues>({});
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [addonPrice, setAddonPrice] = useState(0);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
