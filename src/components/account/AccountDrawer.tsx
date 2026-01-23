@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { User, Package, MapPin, Heart, Settings, LogOut, X, ChevronRight, Globe, ChevronDown, Check, Coins } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -89,7 +89,12 @@ export function AccountDrawer({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const onClose = () => setIsAccountDrawerOpen(false);
+  const onClose = useCallback(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    setIsAccountDrawerOpen(false);
+  }, [setIsAccountDrawerOpen]);
 
   const handleLogout = () => {
     logout();

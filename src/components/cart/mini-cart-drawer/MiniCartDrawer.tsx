@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ShoppingBag, X } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
@@ -34,9 +34,16 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
     const { currency } = useCurrency();
     const giftProgress = getGiftProgress();
 
-  const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
-  const [newlyAddedGiftId, setNewlyAddedGiftId] = useState<number | null>(null);
-  const isRTL = locale === "ar";
+    const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
+    const [newlyAddedGiftId, setNewlyAddedGiftId] = useState<number | null>(null);
+    const isRTL = locale === "ar";
+
+    const handleClose = useCallback(() => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      setIsCartOpen(false);
+    }, [setIsCartOpen]);
 
   useEffect(() => {
     const handleNewGift = (event: CustomEvent<{ giftName: string; productId: number }>) => {
@@ -90,18 +97,18 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
         />
       </div>
 
-      <div className="flex flex-col gap-3">
-        <Button asChild variant="outline" size="lg" className="w-full">
-          <Link href={`/${locale}/cart`} onClick={() => setIsCartOpen(false)}>
-            {dictionary.viewCart}
-          </Link>
-        </Button>
-        <Button asChild variant="primary" size="lg" className="w-full">
-          <Link href={`/${locale}/checkout`} onClick={() => setIsCartOpen(false)}>
-            {dictionary.checkout}
-          </Link>
-        </Button>
-      </div>
+            <div className="flex flex-col gap-3">
+              <Button asChild variant="outline" size="lg" className="w-full">
+                <Link href={`/${locale}/cart`} onClick={handleClose}>
+                  {dictionary.viewCart}
+                </Link>
+              </Button>
+              <Button asChild variant="primary" size="lg" className="w-full">
+                <Link href={`/${locale}/checkout`} onClick={handleClose}>
+                  {dictionary.checkout}
+                </Link>
+              </Button>
+            </div>
     </div>
   ) : undefined;
 
@@ -143,7 +150,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
     <MuiDrawer
       anchor={isRTL ? "left" : "right"}
       open={isCartOpen}
-      onClose={() => setIsCartOpen(false)}
+      onClose={handleClose}
       PaperProps={{
         sx: {
           width: { xs: "100%", sm: 400 },
@@ -176,13 +183,13 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
               {dictionary.cart}
             </Typography>
           </Box>
-          <IconButton
-            onClick={() => setIsCartOpen(false)}
-            aria-label="Close drawer"
-            sx={{ color: "text.secondary" }}
-          >
-            <X className="h-5 w-5" />
-          </IconButton>
+                    <IconButton
+                      onClick={handleClose}
+                      aria-label="Close drawer"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      <X className="h-5 w-5" />
+                    </IconButton>
         </Box>
 
         <Box sx={{ flex: 1, overflow: "auto" }}>
@@ -194,7 +201,7 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
                 emptyCart: dictionary.emptyCart,
                 continueShopping: dictionary.continueShopping,
               }}
-              onClose={() => setIsCartOpen(false)} 
+              onClose={handleClose} 
             />
           ) : (
             <>

@@ -37,9 +37,16 @@ export function CategoriesDrawer({
   const [loading, setLoading] = useState(false);
   const hasFetchedRef = useRef(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
-  const isRTL = locale === "ar";
+    const isRTL = locale === "ar";
 
-  const toggleCategory = (categoryId: number, e: React.MouseEvent) => {
+    const handleClose = useCallback(() => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      onClose();
+    }, [onClose]);
+
+    const toggleCategory = (categoryId: number, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setExpandedCategories(prev => {
@@ -110,7 +117,7 @@ export function CategoriesDrawer({
     <MuiDrawer
       anchor={isRTL ? "right" : "left"}
       open={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       keepMounted
       PaperProps={{
         sx: {
@@ -144,13 +151,13 @@ export function CategoriesDrawer({
               {dictionary.common.categories || "Categories"}
             </Typography>
           </Box>
-          <IconButton
-            onClick={onClose}
-            aria-label="Close drawer"
-            sx={{ color: "text.secondary" }}
-          >
-            <X className="h-5 w-5" />
-          </IconButton>
+                    <IconButton
+                      onClick={handleClose}
+                      aria-label="Close drawer"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      <X className="h-5 w-5" />
+                    </IconButton>
         </Box>
 
         <Box sx={{ flex: 1, overflow: "auto" }}>
@@ -174,11 +181,11 @@ header                {parentCategories.map((category) => {
                   return (
                     <li key={category.id}>
                       <div className="flex items-center">
-                        <Link
-                          href={`/${locale}/category/${category.slug}`}
-                          onClick={onClose}
-                          className="flex flex-1 items-center gap-3 rounded-lg px-4 py-3 text-gray-900 font-semibold transition-all hover:bg-gray-100 active:scale-[0.98]"
-                        >
+                                                <Link
+                                                  href={`/${locale}/category/${category.slug}`}
+                                                  onClick={handleClose}
+                                                  className="flex flex-1 items-center gap-3 rounded-lg px-4 py-3 text-gray-900 font-semibold transition-all hover:bg-gray-100 active:scale-[0.98]"
+                                                >
                           {category.image ? (
                             <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
                               <Image
@@ -225,11 +232,11 @@ header                {parentCategories.map((category) => {
                         <ul className={`mt-1 space-y-1 ${isRTL ? "mr-14" : "ml-14"}`}>
                           {childCategories.map((child) => (
                             <li key={child.id}>
-                              <Link
-                                href={`/${locale}/category/${child.slug}`}
-                                onClick={onClose}
-                                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-gray-600 transition-all hover:bg-amber-50 hover:text-amber-700"
-                              >
+                                                            <Link
+                                                              href={`/${locale}/category/${child.slug}`}
+                                                              onClick={handleClose}
+                                                              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-gray-600 transition-all hover:bg-amber-50 hover:text-amber-700"
+                                                            >
                                 <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
                                 <span className="flex-1">{decodeHtmlEntities(child.name)}</span>
                               </Link>
@@ -246,11 +253,11 @@ header                {parentCategories.map((category) => {
         </Box>
 
         <div className="border-t p-4">
-          <Link
-            href={`/${locale}/shop`}
-            onClick={onClose}
-            className="flex w-full items-center justify-center rounded-lg bg-black px-4 py-3 font-medium text-white transition-all hover:bg-gray-800 active:scale-[0.98]"
-          >
+                    <Link
+                      href={`/${locale}/shop`}
+                      onClick={handleClose}
+                      className="flex w-full items-center justify-center rounded-lg bg-black px-4 py-3 font-medium text-white transition-all hover:bg-gray-800 active:scale-[0.98]"
+                    >
             {dictionary.common.viewAll || "View All Products"}
           </Link>
         </div>

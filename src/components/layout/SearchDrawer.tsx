@@ -86,12 +86,15 @@ export function SearchDrawer({
     return () => clearTimeout(timeoutId);
   };
 
-  const handleClose = () => {
-    setQuery("");
-    setResults([]);
-    setHasSearched(false);
-    onClose();
-  };
+    const handleClose = useCallback(() => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      setQuery("");
+      setResults([]);
+      setHasSearched(false);
+      onClose();
+    }, [onClose]);
 
   return (
     <MuiDrawer
