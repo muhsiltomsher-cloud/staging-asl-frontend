@@ -8,6 +8,9 @@ const AUTH_TOKEN_COOKIE = "asl_auth_token";
 const CURRENCY_COOKIE = "wcml_currency";
 const LOCALE_COOKIE = "NEXT_LOCALE";
 
+// User-Agent header to prevent WAF/security plugin blocks
+const USER_AGENT = "Mozilla/5.0 (compatible; ASL-Frontend/1.0)";
+
 async function getCartKey(): Promise<string | null> {
   const cookieStore = await cookies();
   return cookieStore.get(CART_KEY_COOKIE)?.value || null;
@@ -62,6 +65,7 @@ function appendParamsToUrl(url: string, currency: string | null, lang: string | 
 function getAuthHeaders(request: NextRequest, authToken: string | null): HeadersInit {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
+    "User-Agent": USER_AGENT,
   };
 
   const authHeader = request.headers.get("Authorization");
@@ -77,6 +81,7 @@ function getAuthHeaders(request: NextRequest, authToken: string | null): Headers
 function getGuestHeaders(): HeadersInit {
   return {
     "Content-Type": "application/json",
+    "User-Agent": USER_AGENT,
   };
 }
 
@@ -111,7 +116,10 @@ async function getStoreApiAuth(): Promise<{ cartToken: string | null; nonce: str
   try {
     const response = await fetch(`${API_BASE}/wp-json/wc/store/v1/cart`, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "User-Agent": USER_AGENT,
+      },
     });
     
     const cartToken = response.headers.get("cart-token");
@@ -280,6 +288,7 @@ export async function POST(request: NextRequest) {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "User-Agent": USER_AGENT,
             "Cart-Token": cartToken,
             "X-WP-Nonce": nonce,
           },
