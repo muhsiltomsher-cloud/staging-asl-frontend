@@ -170,6 +170,8 @@ export default function CheckoutClient() {
         const [isCheckingEmail, setIsCheckingEmail] = useState(false);
         const [showLoginPrompt, setShowLoginPrompt] = useState(false);
         const emailCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+        const [addressErrors, setAddressErrors] = useState<{ shippingAddress?: string; shippingCity?: string; billingAddress?: string; billingCity?: string }>({});
   
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
@@ -509,6 +511,10 @@ export default function CheckoutClient() {
     { name: isRTL ? "الدفع" : "Checkout", href: `/${locale}/checkout` },
   ];
 
+  const isNumericOnly = (value: string): boolean => {
+    return /^[\d\s.,/-]+$/.test(value.trim());
+  };
+
   const handleShippingChange = (field: keyof AddressFormData, value: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -516,6 +522,12 @@ export default function CheckoutClient() {
       billing: prev.sameAsShipping ? { ...prev.shipping, [field]: value } : prev.billing,
     }));
     setError(null);
+    if (field === "address" && addressErrors.shippingAddress) {
+      setAddressErrors((prev) => ({ ...prev, shippingAddress: undefined }));
+    }
+    if (field === "city" && addressErrors.shippingCity) {
+      setAddressErrors((prev) => ({ ...prev, shippingCity: undefined }));
+    }
   };
 
   const handleBillingChange = (field: keyof AddressFormData, value: string) => {
@@ -524,6 +536,12 @@ export default function CheckoutClient() {
       billing: { ...prev.billing, [field]: value },
     }));
     setError(null);
+    if (field === "address" && addressErrors.billingAddress) {
+      setAddressErrors((prev) => ({ ...prev, billingAddress: undefined }));
+    }
+    if (field === "city" && addressErrors.billingCity) {
+      setAddressErrors((prev) => ({ ...prev, billingCity: undefined }));
+    }
   };
 
   const handleSameAsShippingChange = (checked: boolean) => {
@@ -640,8 +658,30 @@ export default function CheckoutClient() {
     setIsSubmitting(true);
     setError(null);
     setPasswordError(null);
+    setAddressErrors({});
 
     try {
+      const newAddressErrors: typeof addressErrors = {};
+      if (formData.shipping.address && isNumericOnly(formData.shipping.address)) {
+        newAddressErrors.shippingAddress = isRTL ? "يجب أن يحتوي العنوان على أحرف، ولا يمكن أن يكون أرقامًا فقط" : "Address must contain letters, not only numbers";
+      }
+      if (formData.shipping.city && isNumericOnly(formData.shipping.city)) {
+        newAddressErrors.shippingCity = isRTL ? "يجب أن تحتوي المدينة على أحرف، ولا يمكن أن تكون أرقامًا فقط" : "City must contain letters, not only numbers";
+      }
+      if (!formData.sameAsShipping) {
+        if (formData.billing.address && isNumericOnly(formData.billing.address)) {
+          newAddressErrors.billingAddress = isRTL ? "يجب أن يحتوي العنوان على أحرف، ولا يمكن أن يكون أرقامًا فقط" : "Address must contain letters, not only numbers";
+        }
+        if (formData.billing.city && isNumericOnly(formData.billing.city)) {
+          newAddressErrors.billingCity = isRTL ? "يجب أن تحتوي المدينة على أحرف، ولا يمكن أن تكون أرقامًا فقط" : "City must contain letters, not only numbers";
+        }
+      }
+      if (Object.keys(newAddressErrors).length > 0) {
+        setAddressErrors(newAddressErrors);
+        setIsSubmitting(false);
+        return;
+      }
+
       // Validate password if creating account
       let newCustomerId: number | undefined;
       
@@ -1435,6 +1475,7 @@ export default function CheckoutClient() {
                     required
                     value={formData.shipping.address}
                     onChange={(e) => handleShippingChange("address", e.target.value)}
+                    error={addressErrors.shippingAddress}
                   />
                 </div>
                 <div className="sm:col-span-2">
@@ -1450,6 +1491,7 @@ export default function CheckoutClient() {
                   required
                   value={formData.shipping.city}
                   onChange={(e) => handleShippingChange("city", e.target.value)}
+                  error={addressErrors.shippingCity}
                 />
                 <Input
                   label={isRTL ? "المنطقة" : "State/Province"}
@@ -1592,6 +1634,7 @@ export default function CheckoutClient() {
                       required
                       value={formData.billing.address}
                       onChange={(e) => handleBillingChange("address", e.target.value)}
+                      error={addressErrors.billingAddress}
                     />
                   </div>
                   <div className="sm:col-span-2">
@@ -1607,6 +1650,7 @@ export default function CheckoutClient() {
                     required
                     value={formData.billing.city}
                     onChange={(e) => handleBillingChange("city", e.target.value)}
+                    error={addressErrors.billingCity}
                   />
                   <Input
                     label={isRTL ? "المنطقة" : "State/Province"}
