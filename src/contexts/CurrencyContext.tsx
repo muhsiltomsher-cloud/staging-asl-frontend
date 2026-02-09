@@ -64,16 +64,21 @@ const setStoredCurrency = (currency: Currency): void => {
 };
 
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
-  // Initialize with localStorage value if available (for faster client-side hydration)
-  // Falls back to default currency for SSR and initial render
-  const [currency, setCurrencyState] = useState<Currency>(() => {
-    const stored = getStoredCurrency();
-    return stored || siteConfig.defaultCurrency;
-  });
+  // Always initialize with default currency to match server-rendered HTML
+  // and avoid hydration mismatch (React error #418)
+  const [currency, setCurrencyState] = useState<Currency>(siteConfig.defaultCurrency);
   const [currencies, setCurrencies] = useState<CurrencyData[]>(DEFAULT_CURRENCIES);
   const [isLoading, setIsLoading] = useState(true);
   const hasHydrated = useRef(false);
   const hasFetchedCurrencies = useRef(false);
+
+  // Restore currency from localStorage after hydration to avoid server/client mismatch
+  useEffect(() => {
+    const stored = getStoredCurrency();
+    if (stored && stored !== siteConfig.defaultCurrency) {
+      setCurrencyState(stored);
+    }
+  }, []);
 
   // Fetch currencies from API on mount
   useEffect(() => {
@@ -108,10 +113,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     
     const savedCurrency = getCookie(CURRENCY_COOKIE_NAME) as Currency | undefined;
     if (savedCurrency && currencies.some((c) => c.code === savedCurrency)) {
-      // Use requestAnimationFrame to avoid synchronous setState in effect
-      requestAnimationFrame(() => {
-        setCurrencyState(savedCurrency);
-      });
+      setCurrencyState(savedCurrency);
     }
   }, [currencies, isLoading]);
 
