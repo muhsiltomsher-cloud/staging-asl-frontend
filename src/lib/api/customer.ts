@@ -471,24 +471,67 @@ export function formatDate(dateString: string, locale: string = "en", country?: 
 
 const SAVED_ADDRESSES_KEY = "asl_saved_addresses";
 
+function isAddressPopulated(address: CustomerAddress | undefined): boolean {
+  if (!address) return false;
+  return !!(address.address_1 || address.city || address.first_name);
+}
+
+function customerAddressToSavedAddress(
+  address: CustomerAddress,
+  type: "billing" | "shipping"
+): SavedAddress {
+  return {
+    id: `wc_${type}`,
+    label: type === "billing" ? "Billing Address" : "Shipping Address",
+    first_name: address.first_name || "",
+    last_name: address.last_name || "",
+    company: address.company || "",
+    address_1: address.address_1 || "",
+    address_2: address.address_2 || "",
+    city: address.city || "",
+    state: address.state || "",
+    postcode: address.postcode || "",
+    country: address.country || "AE",
+    phone: address.phone || "",
+    email: address.email || "",
+    is_default: type === "billing",
+  };
+}
+
 export function getSavedAddressesFromCustomer(customer: Customer): SavedAddress[] {
-  if (!customer.meta_data) return [];
-  
-  const addressesMeta = customer.meta_data.find(
-    (meta) => meta.key === SAVED_ADDRESSES_KEY
-  );
-  
-  if (!addressesMeta) return [];
-  
-  if (typeof addressesMeta.value === "string") {
-    try {
-      return JSON.parse(addressesMeta.value) as SavedAddress[];
-    } catch {
-      return [];
+  let addresses: SavedAddress[] = [];
+
+  if (customer.meta_data) {
+    const addressesMeta = customer.meta_data.find(
+      (meta) => meta.key === SAVED_ADDRESSES_KEY
+    );
+
+    if (addressesMeta) {
+      if (typeof addressesMeta.value === "string") {
+        try {
+          addresses = JSON.parse(addressesMeta.value) as SavedAddress[];
+        } catch {
+          addresses = [];
+        }
+      } else {
+        addresses = addressesMeta.value as SavedAddress[];
+      }
     }
   }
-  
-  return addressesMeta.value as SavedAddress[];
+
+  if (addresses.length === 0) {
+    if (isAddressPopulated(customer.billing)) {
+      addresses.push(customerAddressToSavedAddress(customer.billing, "billing"));
+    }
+    if (
+      isAddressPopulated(customer.shipping) &&
+      customer.shipping.address_1 !== customer.billing?.address_1
+    ) {
+      addresses.push(customerAddressToSavedAddress(customer.shipping, "shipping"));
+    }
+  }
+
+  return addresses;
 }
 
 export function getDefaultAddress(addresses: SavedAddress[]): SavedAddress | null {

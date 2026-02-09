@@ -504,34 +504,48 @@ export default function AddressesPage({ params }: AddressesPageProps) {
       let updatedAddresses: SavedAddress[];
       
       if ("id" in address && address.id) {
-        updatedAddresses = savedAddresses.map((addr) => {
-          if (addr.id === address.id) {
-            return address as SavedAddress;
-          }
-          if (address.is_default && addr.is_default) {
-            return { ...addr, is_default: false };
-          }
-          return addr;
-        });
+        const migratedAddress = address.id.startsWith("wc_")
+          ? { ...address, id: generateAddressId() } as SavedAddress
+          : address as SavedAddress;
+
+        updatedAddresses = savedAddresses
+          .filter((addr) => !(addr.id.startsWith("wc_") && addr.id !== (address as SavedAddress).id))
+          .map((addr) => {
+            if (addr.id === (address as SavedAddress).id) {
+              return migratedAddress;
+            }
+            if (migratedAddress.is_default && addr.is_default) {
+              return { ...addr, is_default: false };
+            }
+            return addr;
+          });
+
+        if (migratedAddress.id !== (address as SavedAddress).id) {
+          updatedAddresses = updatedAddresses.filter((a) => a.id !== (address as SavedAddress).id);
+          updatedAddresses.push(migratedAddress);
+        }
       } else {
         const newAddress: SavedAddress = {
           ...address,
           id: generateAddressId(),
         };
         
-        if (newAddress.is_default || savedAddresses.length === 0) {
+        const nonWcAddresses = savedAddresses.filter((addr) => !addr.id.startsWith("wc_"));
+        
+        if (newAddress.is_default || nonWcAddresses.length === 0) {
           newAddress.is_default = true;
-          updatedAddresses = savedAddresses.map((addr) => ({
+          updatedAddresses = nonWcAddresses.map((addr) => ({
             ...addr,
             is_default: false,
           }));
           updatedAddresses.push(newAddress);
         } else {
-          updatedAddresses = [...savedAddresses, newAddress];
+          updatedAddresses = [...nonWcAddresses, newAddress];
         }
       }
 
-      const response = await saveSavedAddresses(user.user_id, updatedAddresses);
+      const addressesToSave = updatedAddresses.filter((addr) => !addr.id.startsWith("wc_"));
+      const response = await saveSavedAddresses(user.user_id, addressesToSave);
       if (response.success && response.data) {
         const addresses = getSavedAddressesFromCustomer(response.data);
         setSavedAddresses(addresses);
@@ -557,7 +571,9 @@ export default function AddressesPage({ params }: AddressesPageProps) {
     setMessage(null);
 
     try {
-      const updatedAddresses = savedAddresses.filter((addr) => addr.id !== deletingAddressId);
+      const updatedAddresses = savedAddresses.filter(
+        (addr) => addr.id !== deletingAddressId && !addr.id.startsWith("wc_")
+      );
       
       if (updatedAddresses.length > 0 && !updatedAddresses.some((addr) => addr.is_default)) {
         updatedAddresses[0].is_default = true;
@@ -588,12 +604,16 @@ export default function AddressesPage({ params }: AddressesPageProps) {
     setMessage(null);
 
     try {
-      const updatedAddresses = savedAddresses.map((addr) => ({
-        ...addr,
-        is_default: addr.id === addressId,
-      }));
+      const updatedAddresses = savedAddresses
+        .map((addr) => {
+          if (addr.id.startsWith("wc_")) {
+            return { ...addr, id: generateAddressId(), is_default: addr.id === addressId };
+          }
+          return { ...addr, is_default: addr.id === addressId };
+        });
 
-      const response = await saveSavedAddresses(user.user_id, updatedAddresses);
+      const addressesToSave = updatedAddresses.filter((addr) => !addr.id.startsWith("wc_"));
+      const response = await saveSavedAddresses(user.user_id, addressesToSave);
       if (response.success && response.data) {
         const addresses = getSavedAddressesFromCustomer(response.data);
         setSavedAddresses(addresses);
