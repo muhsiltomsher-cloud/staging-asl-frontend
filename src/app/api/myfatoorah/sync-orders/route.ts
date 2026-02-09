@@ -50,43 +50,49 @@ function getBasicAuthParams(): string {
   return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
 }
 
-interface MyFatoorahPaymentResponse {
+interface MyFatoorahTransaction {
+  TransactionDate: string;
+  PaymentGateway: string;
+  ReferenceId: string;
+  TrackId: string;
+  TransactionId: string;
+  PaymentId: string;
+  AuthorizationId: string;
+  TransactionStatus: string;
+  TransactionValue: string;
+  CustomerServiceCharge: string;
+  DueValue: string;
+  PaidCurrency: string;
+  PaidCurrencyValue: string;
+  IpAddress: string;
+  Country: string;
+  Currency: string;
+  Error: string | null;
+  ErrorCode: string;
+  CardNumber: string;
+  CardBrand: string;
+  CardIssuer: string;
+  CardIssuingCountry: string;
+  CardFundingMethod: string;
+}
+
+interface MyFatoorahPaymentStatusResponse {
   IsSuccess: boolean;
   Message: string;
   ValidationErrors: Array<{ Name: string; Error: string }> | null;
   Data: {
-    Invoice: {
-      Id: string;
-      Status: "PAID" | "PENDING" | "EXPIRED";
-      Reference: string;
-      UserDefinedField: string;
-    };
-    Transaction: {
-      Id: string;
-      Status: "SUCCESS" | "FAILED" | "INPROGRESS" | "AUTHORIZE" | "CANCELED";
-      PaymentMethod: string;
-      PaymentId: string;
-      ReferenceId: string;
-      TransactionDate: string;
-      IP: {
-        Address: string;
-        Country: string;
-      };
-      Card: {
-        NameOnCard: string;
-        Number: string;
-        Brand: string;
-        Issuer: string;
-        IssuerCountry: string;
-        FundingMethod: string;
-      } | null;
-    };
-    Amount: {
-      BaseCurrency: string;
-      ValueInBaseCurrency: string;
-      DisplayCurrency: string;
-      ValueInDisplayCurrency: string;
-    };
+    InvoiceId: number;
+    InvoiceStatus: "Paid" | "Unpaid" | "Expired" | "Pending";
+    InvoiceReference: string;
+    CreatedDate: string;
+    ExpiryDate: string;
+    InvoiceValue: number;
+    CustomerName: string;
+    CustomerMobile: string;
+    CustomerEmail: string;
+    UserDefinedField: string;
+    InvoiceDisplayValue: string;
+    InvoiceTransactions: MyFatoorahTransaction[];
   } | null;
 }
 
@@ -234,17 +240,21 @@ export async function POST(request: NextRequest) {
 }
 
 async function syncByPaymentId(paymentId: string, apiKey: string): Promise<SyncResult> {
-  const url = `${getMyFatoorahApiBaseUrl()}/v3/payments/${paymentId}`;
+  const url = `${getMyFatoorahApiBaseUrl()}/v2/GetPaymentStatus`;
   
   const response = await fetch(url, {
-    method: "GET",
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${apiKey}`,
     },
+    body: JSON.stringify({
+      Key: paymentId,
+      KeyType: "PaymentId",
+    }),
   });
 
-  const data: MyFatoorahPaymentResponse = await response.json();
+  const data: MyFatoorahPaymentStatusResponse = await response.json();
 
   if (!response.ok || !data.IsSuccess || !data.Data) {
     return {
@@ -257,7 +267,7 @@ async function syncByPaymentId(paymentId: string, apiKey: string): Promise<SyncR
     };
   }
 
-  const customerReference = data.Data.Invoice.UserDefinedField;
+  const customerReference = data.Data.UserDefinedField;
   const orderIdMatch = customerReference?.match(/WC-(\d+)/);
   
   if (!orderIdMatch) {
@@ -265,7 +275,7 @@ async function syncByPaymentId(paymentId: string, apiKey: string): Promise<SyncR
       order_id: 0,
       previous_status: "unknown",
       new_status: "unknown",
-      payment_status: data.Data.Invoice.Status,
+      payment_status: data.Data.InvoiceStatus,
       synced: false,
       message: `Could not extract order ID from reference: ${customerReference}`,
     };
@@ -429,7 +439,7 @@ async function syncByOrderId(orderId: number, apiKey: string): Promise<SyncResul
 
 async function updateOrderFromPayment(
   orderId: number, 
-  paymentData: NonNullable<MyFatoorahPaymentResponse["Data"]>
+  paymentData: NonNullable<MyFatoorahPaymentStatusResponse["Data"]>
 ): Promise<SyncResult> {
   const orderUrl = `${WC_API_BASE}/orders/${orderId}?${getBasicAuthParams()}`;
   
@@ -443,7 +453,7 @@ async function updateOrderFromPayment(
       order_id: orderId,
       previous_status: "unknown",
       new_status: "unknown",
-      payment_status: paymentData.Invoice.Status,
+      payment_status: paymentData.InvoiceStatus,
       synced: false,
       message: "Order not found in WooCommerce",
     };
@@ -451,14 +461,19 @@ async function updateOrderFromPayment(
 
   const order: WooCommerceOrder = await orderResponse.json();
 
-  if (paymentData.Invoice.Status !== "PAID") {
+  const transactions = paymentData.InvoiceTransactions || [];
+  const successfulTransaction = transactions.find(
+    (t) => t.TransactionStatus === "Succss" || t.TransactionStatus === "Success" || t.TransactionStatus === "SUCCESS"
+  );
+
+  if (paymentData.InvoiceStatus !== "Paid" || !successfulTransaction) {
     return {
       order_id: orderId,
       previous_status: order.status,
       new_status: order.status,
-      payment_status: paymentData.Invoice.Status,
+      payment_status: paymentData.InvoiceStatus,
       synced: false,
-      message: `Payment status is '${paymentData.Invoice.Status}', not updating order`,
+      message: `Payment status is '${paymentData.InvoiceStatus}', not updating order`,
     };
   }
 
@@ -467,7 +482,7 @@ async function updateOrderFromPayment(
       order_id: orderId,
       previous_status: order.status,
       new_status: order.status,
-      payment_status: "PAID",
+      payment_status: "Paid",
       synced: false,
       message: `Order status is already '${order.status}', skipping`,
     };
@@ -476,46 +491,48 @@ async function updateOrderFromPayment(
   const updateData: Record<string, unknown> = {
     status: "processing",
     set_paid: true,
-    transaction_id: paymentData.Transaction.Id || paymentData.Transaction.PaymentId,
+    transaction_id: successfulTransaction.TransactionId || successfulTransaction.PaymentId,
   };
 
   const metaData = [];
   
-  // Invoice details
-  if (paymentData.Invoice.Id) {
-    metaData.push({ key: "_myfatoorah_invoice_id", value: paymentData.Invoice.Id });
+  if (paymentData.InvoiceId) {
+    metaData.push({ key: "_myfatoorah_invoice_id", value: String(paymentData.InvoiceId) });
   }
-  metaData.push({ key: "_myfatoorah_invoice_status", value: paymentData.Invoice.Status });
-  // Transaction details
-  if (paymentData.Transaction.Id) {
-    metaData.push({ key: "_myfatoorah_transaction_id", value: paymentData.Transaction.Id });
+  metaData.push({ key: "_myfatoorah_invoice_status", value: paymentData.InvoiceStatus });
+  if (successfulTransaction.TransactionId) {
+    metaData.push({ key: "_myfatoorah_transaction_id", value: successfulTransaction.TransactionId });
   }
-  metaData.push({ key: "_myfatoorah_transaction_status", value: paymentData.Transaction.Status });
-  // Payment details
-  if (paymentData.Transaction.PaymentMethod) {
-    metaData.push({ key: "_myfatoorah_payment_method", value: paymentData.Transaction.PaymentMethod });
+  metaData.push({ key: "_myfatoorah_transaction_status", value: successfulTransaction.TransactionStatus || "Success" });
+  if (successfulTransaction.PaymentGateway) {
+    metaData.push({ key: "_myfatoorah_payment_method", value: successfulTransaction.PaymentGateway });
   }
-  if (paymentData.Transaction.PaymentId) {
-    metaData.push({ key: "_myfatoorah_payment_id", value: paymentData.Transaction.PaymentId });
+  if (successfulTransaction.PaymentId) {
+    metaData.push({ key: "_myfatoorah_payment_id", value: successfulTransaction.PaymentId });
   }
-  if (paymentData.Transaction.ReferenceId) {
-    metaData.push({ key: "_myfatoorah_reference_id", value: paymentData.Transaction.ReferenceId });
+  if (successfulTransaction.ReferenceId) {
+    metaData.push({ key: "_myfatoorah_reference_id", value: successfulTransaction.ReferenceId });
   }
-  if (paymentData.Transaction.TransactionDate) {
-    metaData.push({ key: "_myfatoorah_transaction_date", value: paymentData.Transaction.TransactionDate });
+  if (successfulTransaction.TrackId) {
+    metaData.push({ key: "_myfatoorah_track_id", value: successfulTransaction.TrackId });
   }
-  // Customer details
-  if (paymentData.Transaction.IP?.Address) {
-    metaData.push({ key: "_myfatoorah_customer_ip", value: paymentData.Transaction.IP.Address });
+  if (successfulTransaction.TransactionDate) {
+    metaData.push({ key: "_myfatoorah_transaction_date", value: successfulTransaction.TransactionDate });
   }
-  if (paymentData.Transaction.IP?.Country) {
-    metaData.push({ key: "_myfatoorah_customer_country", value: paymentData.Transaction.IP.Country });
+  if (successfulTransaction.IpAddress) {
+    metaData.push({ key: "_myfatoorah_customer_ip", value: successfulTransaction.IpAddress });
   }
-  // Card details
-  if (paymentData.Transaction.Card) {
-    metaData.push({ key: "_myfatoorah_card_brand", value: paymentData.Transaction.Card.Brand });
-    metaData.push({ key: "_myfatoorah_card_number", value: paymentData.Transaction.Card.Number });
-    metaData.push({ key: "_myfatoorah_card_issuer", value: paymentData.Transaction.Card.Issuer });
+  if (successfulTransaction.Country) {
+    metaData.push({ key: "_myfatoorah_customer_country", value: successfulTransaction.Country });
+  }
+  if (successfulTransaction.CardBrand) {
+    metaData.push({ key: "_myfatoorah_card_brand", value: successfulTransaction.CardBrand });
+  }
+  if (successfulTransaction.CardNumber) {
+    metaData.push({ key: "_myfatoorah_card_number", value: successfulTransaction.CardNumber });
+  }
+  if (successfulTransaction.CardIssuer) {
+    metaData.push({ key: "_myfatoorah_card_issuer", value: successfulTransaction.CardIssuer });
   }
 
   if (metaData.length > 0) {
@@ -533,11 +550,11 @@ async function updateOrderFromPayment(
       order_id: orderId,
       previous_status: order.status,
       new_status: "processing",
-      payment_status: "PAID",
-      payment_method: paymentData.Transaction.PaymentMethod,
-      transaction_id: paymentData.Transaction.Id || paymentData.Transaction.PaymentId,
-      card_brand: paymentData.Transaction.Card?.Brand,
-      customer_ip: paymentData.Transaction.IP?.Address,
+      payment_status: "Paid",
+      payment_method: successfulTransaction.PaymentGateway,
+      transaction_id: successfulTransaction.TransactionId || successfulTransaction.PaymentId,
+      card_brand: successfulTransaction.CardBrand,
+      customer_ip: successfulTransaction.IpAddress,
       synced: true,
       message: "Order updated to processing with payment details",
     };
@@ -547,7 +564,7 @@ async function updateOrderFromPayment(
     order_id: orderId,
     previous_status: order.status,
     new_status: order.status,
-    payment_status: "PAID",
+    payment_status: "Paid",
     synced: false,
     message: "Payment was successful but failed to update WooCommerce order",
   };

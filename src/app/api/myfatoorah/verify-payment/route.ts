@@ -36,70 +36,49 @@ function getMyFatoorahApiBaseUrl(): string {
   }
 }
 
-interface MyFatoorahPaymentResponse {
+interface MyFatoorahTransaction {
+  TransactionDate: string;
+  PaymentGateway: string;
+  ReferenceId: string;
+  TrackId: string;
+  TransactionId: string;
+  PaymentId: string;
+  AuthorizationId: string;
+  TransactionStatus: string;
+  TransactionValue: string;
+  CustomerServiceCharge: string;
+  DueValue: string;
+  PaidCurrency: string;
+  PaidCurrencyValue: string;
+  IpAddress: string;
+  Country: string;
+  Currency: string;
+  Error: string | null;
+  ErrorCode: string;
+  CardNumber: string;
+  CardBrand: string;
+  CardIssuer: string;
+  CardIssuingCountry: string;
+  CardFundingMethod: string;
+}
+
+interface MyFatoorahPaymentStatusResponse {
   IsSuccess: boolean;
   Message: string;
   ValidationErrors: Array<{ Name: string; Error: string }> | null;
   Data: {
-    Invoice: {
-      Id: string;
-      Status: "PAID" | "PENDING" | "EXPIRED";
-      Reference: string;
-      CreationDate: string;
-      ExpirationDate: string;
-      ExternalIdentifier: string | null;
-      UserDefinedField: string;
-      MetaData: unknown;
-    };
-    Transaction: {
-      Id: string;
-      Status: "SUCCESS" | "FAILED" | "INPROGRESS" | "AUTHORIZE" | "CANCELED";
-      PaymentMethod: string;
-      PaymentId: string;
-      ReferenceId: string;
-      TrackId: string;
-      AuthorizationId: string;
-      TransactionDate: string;
-      ECI: string;
-      IP: {
-        Address: string;
-        Country: string;
-      };
-      Error: {
-        Code: string;
-        Message: string;
-      };
-      Card: {
-        NameOnCard: string;
-        Number: string;
-        Token: string;
-        PanHash: string;
-        ExpiryMonth: string;
-        ExpiryYear: string;
-        Brand: string;
-        Issuer: string;
-        IssuerCountry: string;
-        FundingMethod: string;
-      } | null;
-    };
-    Customer: {
-      Reference: string;
-      Name: string;
-      Mobile: string;
-      Email: string;
-    };
-    Amount: {
-      BaseCurrency: string;
-      ValueInBaseCurrency: string;
-      ServiceCharge: string;
-      ServiceChargeVAT: string;
-      ReceivableAmount: string;
-      DisplayCurrency: string;
-      ValueInDisplayCurrency: string;
-      PayCurrency: string;
-      ValueInPayCurrency: string;
-    };
-    Suppliers: unknown[];
+    InvoiceId: number;
+    InvoiceStatus: "Paid" | "Unpaid" | "Expired" | "Pending";
+    InvoiceReference: string;
+    CreatedDate: string;
+    ExpiryDate: string;
+    InvoiceValue: number;
+    CustomerName: string;
+    CustomerMobile: string;
+    CustomerEmail: string;
+    UserDefinedField: string;
+    InvoiceDisplayValue: string;
+    InvoiceTransactions: MyFatoorahTransaction[];
   } | null;
 }
 
@@ -153,23 +132,30 @@ export async function GET(request: NextRequest) {
 
     console.log("MyFatoorah verify-payment request:", { paymentId });
 
-    const url = `${getMyFatoorahApiBaseUrl()}/v3/payments/${paymentId}`;
+    const url = `${getMyFatoorahApiBaseUrl()}/v2/GetPaymentStatus`;
     
     const response = await fetch(url, {
-      method: "GET",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,
       },
+      body: JSON.stringify({
+        Key: paymentId,
+        KeyType: "PaymentId",
+      }),
     });
 
-    const data: MyFatoorahPaymentResponse = await response.json();
+    const data: MyFatoorahPaymentStatusResponse = await response.json();
+
+    const transactions = data.Data?.InvoiceTransactions || [];
+    const latestTransaction = transactions.length > 0 ? transactions[transactions.length - 1] : null;
 
     console.log("MyFatoorah verify-payment response:", {
       isSuccess: data.IsSuccess,
-      invoiceStatus: data.Data?.Invoice?.Status,
-      transactionStatus: data.Data?.Transaction?.Status,
-      errorCode: data.Data?.Transaction?.Error?.Code,
+      invoiceStatus: data.Data?.InvoiceStatus,
+      transactionStatus: latestTransaction?.TransactionStatus,
+      errorCode: latestTransaction?.ErrorCode,
     });
 
     if (!response.ok || !data.IsSuccess) {
@@ -185,31 +171,35 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const invoiceStatus = data.Data?.Invoice?.Status;
-    const transactionStatus = data.Data?.Transaction?.Status;
-    const errorCode = data.Data?.Transaction?.Error?.Code;
-    const errorMessage = data.Data?.Transaction?.Error?.Message;
+    const invoiceStatus = data.Data?.InvoiceStatus;
+    const successfulTransaction = transactions.find(
+      (t) => t.TransactionStatus === "Succss" || t.TransactionStatus === "Success" || t.TransactionStatus === "SUCCESS"
+    );
+    const failedTransaction = !successfulTransaction
+      ? transactions.find((t) => t.TransactionStatus === "Failed" || t.TransactionStatus === "FAILED")
+      : null;
+    const activeTransaction = successfulTransaction || failedTransaction || latestTransaction;
+
+    const errorCode = failedTransaction?.ErrorCode || latestTransaction?.ErrorCode || "";
+    const errorMessage = failedTransaction?.Error || latestTransaction?.Error || "";
 
     let paymentStatus: "success" | "failed" | "pending";
     let statusMessage: string;
 
-    if (invoiceStatus === "PAID") {
+    if (invoiceStatus === "Paid" || successfulTransaction) {
       paymentStatus = "success";
       statusMessage = "Payment completed successfully";
-    } else if (transactionStatus === "SUCCESS") {
-      paymentStatus = "success";
-      statusMessage = "Payment completed successfully";
-    } else if (transactionStatus === "FAILED" || transactionStatus === "CANCELED") {
-      paymentStatus = "failed";
-      statusMessage = errorCode 
-        ? (ERROR_MESSAGES[errorCode] || errorMessage || "Payment failed")
-        : (errorMessage || "Payment failed. Please try again.");
-    } else if (transactionStatus === "INPROGRESS" || transactionStatus === "AUTHORIZE") {
-      paymentStatus = "pending";
-      statusMessage = "Payment is being processed";
-    } else if (invoiceStatus === "EXPIRED") {
+    } else if (invoiceStatus === "Expired") {
       paymentStatus = "failed";
       statusMessage = "Payment session expired. Please try again.";
+    } else if (failedTransaction) {
+      paymentStatus = "failed";
+      statusMessage = errorCode
+        ? (ERROR_MESSAGES[errorCode] || errorMessage || "Payment failed")
+        : (errorMessage || "Payment failed. Please try again.");
+    } else if (invoiceStatus === "Pending" || invoiceStatus === "Unpaid") {
+      paymentStatus = "pending";
+      statusMessage = "Payment is being processed";
     } else {
       paymentStatus = "pending";
       statusMessage = "Payment status is pending";
@@ -219,30 +209,29 @@ export async function GET(request: NextRequest) {
       success: true,
       payment_status: paymentStatus,
       status_message: statusMessage,
-      invoice_id: data.Data?.Invoice?.Id,
+      invoice_id: data.Data?.InvoiceId ? String(data.Data.InvoiceId) : null,
       invoice_status: invoiceStatus,
-      transaction_id: data.Data?.Transaction?.Id,
-      transaction_status: transactionStatus,
-      payment_method: data.Data?.Transaction?.PaymentMethod,
-      amount: data.Data?.Amount?.ValueInDisplayCurrency,
-      currency: data.Data?.Amount?.DisplayCurrency,
-      customer_reference: data.Data?.Invoice?.UserDefinedField,
+      transaction_id: activeTransaction?.TransactionId || null,
+      transaction_status: activeTransaction?.TransactionStatus || null,
+      payment_method: activeTransaction?.PaymentGateway || null,
+      amount: data.Data?.InvoiceDisplayValue || null,
+      currency: activeTransaction?.Currency || null,
+      customer_reference: data.Data?.UserDefinedField || null,
       error_code: errorCode || null,
       error_message: errorMessage || null,
-      // Additional payment details for tracking
       payment_details: {
-        payment_id: data.Data?.Transaction?.PaymentId,
-        reference_id: data.Data?.Transaction?.ReferenceId,
-        track_id: data.Data?.Transaction?.TrackId,
-        authorization_id: data.Data?.Transaction?.AuthorizationId,
-        transaction_date: data.Data?.Transaction?.TransactionDate,
-        customer_ip: data.Data?.Transaction?.IP?.Address,
-        customer_country: data.Data?.Transaction?.IP?.Country,
-        card_brand: data.Data?.Transaction?.Card?.Brand,
-        card_number: data.Data?.Transaction?.Card?.Number,
-        card_issuer: data.Data?.Transaction?.Card?.Issuer,
-        card_issuer_country: data.Data?.Transaction?.Card?.IssuerCountry,
-        card_funding_method: data.Data?.Transaction?.Card?.FundingMethod,
+        payment_id: activeTransaction?.PaymentId || null,
+        reference_id: activeTransaction?.ReferenceId || null,
+        track_id: activeTransaction?.TrackId || null,
+        authorization_id: activeTransaction?.AuthorizationId || null,
+        transaction_date: activeTransaction?.TransactionDate || null,
+        customer_ip: activeTransaction?.IpAddress || null,
+        customer_country: activeTransaction?.Country || null,
+        card_brand: activeTransaction?.CardBrand || null,
+        card_number: activeTransaction?.CardNumber || null,
+        card_issuer: activeTransaction?.CardIssuer || null,
+        card_issuer_country: activeTransaction?.CardIssuingCountry || null,
+        card_funding_method: activeTransaction?.CardFundingMethod || null,
       },
     });
   } catch (error) {
