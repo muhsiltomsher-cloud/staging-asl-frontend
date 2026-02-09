@@ -157,6 +157,7 @@ interface WPPluginTopbarSettings {
   textColor: string;
   dismissible: boolean;
   freeShippingThreshold?: number;
+  freeShippingThresholds?: Record<string, number>;
 }
 
 // Frontend types for topbar
@@ -169,6 +170,7 @@ export interface TopbarSettings {
   textColor: string;
   dismissible: boolean;
   freeShippingThreshold: number | null;
+  freeShippingThresholds: Record<string, number> | null;
 }
 
 export interface MobileBarItem {
@@ -735,6 +737,7 @@ const defaultTopbarSettings: TopbarSettings = {
   textColor: "#4b5563",
   dismissible: false,
   freeShippingThreshold: 500,
+  freeShippingThresholds: null,
 };
 
 // Fetch topbar settings from WordPress Plugin API
@@ -761,6 +764,7 @@ export async function getTopbarSettings(locale?: Locale): Promise<TopbarSettings
     textColor: data.textColor || defaultTopbarSettings.textColor,
     dismissible: data.dismissible,
     freeShippingThreshold: data.freeShippingThreshold ?? defaultTopbarSettings.freeShippingThreshold,
+    freeShippingThresholds: data.freeShippingThresholds ?? null,
   };
 }
 

@@ -51,11 +51,14 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
 
   const resolveTopbarText = (text: string): string => {
     if (!topbarSettings?.freeShippingThreshold) return text;
-    const convertedAmount = convertPrice(topbarSettings.freeShippingThreshold);
-    const roundedAmount = Math.ceil(convertedAmount);
+
+    const perCurrencyAmount = topbarSettings.freeShippingThresholds?.[currencyInfo.code];
+    const amount = perCurrencyAmount != null
+      ? perCurrencyAmount
+      : Math.ceil(convertPrice(topbarSettings.freeShippingThreshold));
 
     if (text.includes("{{amount}}") || text.includes("{{currency}}")) {
-      let resolved = text.replace(/\{\{amount\}\}/g, String(roundedAmount));
+      let resolved = text.replace(/\{\{amount\}\}/g, String(amount));
       resolved = resolved.replace(/\{\{currency\}\}/g, currencyInfo.code);
       return resolved;
     }
@@ -63,7 +66,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
     if (currencies.length > 0) {
       const currencyCodes = currencies.map(c => c.code).join("|");
       const pattern = new RegExp(`(\\d[\\d,.]*)\\s*(${currencyCodes})`, "g");
-      return text.replace(pattern, `${roundedAmount} ${currencyInfo.code}`);
+      return text.replace(pattern, `${amount} ${currencyInfo.code}`);
     }
 
     return text;
