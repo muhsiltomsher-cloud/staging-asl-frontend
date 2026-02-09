@@ -13,7 +13,7 @@ const isProduction = typeof window !== "undefined" && window.location.protocol =
 
 const secureCookieOptions = {
   path: "/",
-  sameSite: "strict" as const,
+  sameSite: "lax" as const,
   secure: isProduction,
 };
 

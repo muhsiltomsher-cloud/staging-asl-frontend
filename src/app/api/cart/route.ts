@@ -184,7 +184,7 @@ function createResponseWithCartKey(
     response.cookies.set(AUTH_TOKEN_COOKIE, newAuthToken, {
       httpOnly: false, // Needs to be accessible by client-side JS
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: "/",
     });
