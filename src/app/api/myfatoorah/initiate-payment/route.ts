@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnvVar } from "@/lib/utils/loadEnv";
-import { siteConfig } from "@/config/site";
 
 function normalizePhoneForMyFatoorah(phone: string | undefined): string {
   if (!phone) return "";
@@ -63,65 +62,6 @@ function getMyFatoorahApiBaseUrl(): string {
     default:
       return "https://api.myfatoorah.com";
   }
-}
-
-function getMyFatoorahBaseCurrency(): string {
-  const country = (getEnvVar("MYFATOORAH_COUNTRY") || "KWT").toUpperCase();
-  switch (country) {
-    case "AE": case "UAE": return "AED";
-    case "SA": case "SAU": return "SAR";
-    case "QA": case "QAT": return "QAR";
-    case "EG": case "EGY": return "EGP";
-    case "BH": case "BHR": return "BHD";
-    case "JO": case "JOR": return "JOD";
-    case "OM": case "OMN": return "OMR";
-    case "KW": case "KWT":
-    case "PORTAL": case "MAIN":
-    default: return "KWD";
-  }
-}
-
-const DEFAULT_CURRENCY_RATES: Record<string, number> = {
-  AED: 1, BHD: 0.103, KWD: 0.083, OMR: 0.105,
-  QAR: 0.99, SAR: 1.02, USD: 0.27, EGP: 8.41, JOD: 0.193,
-};
-
-async function getCurrencyRates(): Promise<Record<string, number>> {
-  try {
-    const response = await fetch(
-      `${siteConfig.apiUrl}/wp-json/asl/v1/currencies`,
-      { next: { revalidate: 60 } }
-    );
-    if (response.ok) {
-      const currencies = await response.json();
-      if (Array.isArray(currencies) && currencies.length > 0) {
-        const rates: Record<string, number> = {};
-        for (const c of currencies) {
-          rates[c.code] = c.rateFromAED;
-        }
-        return rates;
-      }
-    }
-  } catch (error) {
-    console.error("Failed to fetch currency rates for MyFatoorah conversion:", error);
-  }
-  return DEFAULT_CURRENCY_RATES;
-}
-
-function convertToBaseCurrency(
-  amount: number,
-  fromCurrency: string,
-  baseCurrency: string,
-  rates: Record<string, number>
-): number {
-  if (fromCurrency === baseCurrency) return amount;
-  const fromRate = rates[fromCurrency];
-  const toRate = rates[baseCurrency];
-  if (!fromRate || !toRate) return amount;
-  const amountInAED = amount / fromRate;
-  const converted = amountInAED * toRate;
-  const decimals = ["KWD", "BHD", "OMR", "JOD"].includes(baseCurrency) ? 3 : 2;
-  return Math.round(converted * Math.pow(10, decimals)) / Math.pow(10, decimals);
 }
 
 interface InitiatePaymentRequest {
@@ -189,18 +129,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const baseCurrency = getMyFatoorahBaseCurrency();
-    let finalInvoiceValue = invoice_value;
-
-    if (currency_iso !== baseCurrency) {
-      const rates = await getCurrencyRates();
-      finalInvoiceValue = convertToBaseCurrency(invoice_value, currency_iso, baseCurrency, rates);
-      console.log(`MyFatoorah currency conversion: ${invoice_value} ${currency_iso} → ${finalInvoiceValue} ${baseCurrency}`);
-    }
-
-    const paymentData = {
+    const paymentData: Record<string, unknown> = {
       NotificationOption: "LNK",
-      InvoiceValue: finalInvoiceValue,
+      InvoiceValue: invoice_value,
+      DisplayCurrencyIso: currency_iso,
       CustomerName: customer_name,
       CustomerEmail: customer_email || "",
       CustomerMobile: normalizePhoneForMyFatoorah(customer_phone),
