@@ -941,6 +941,20 @@ export async function getNewProducts(params?: {
   });
 }
 
+// Get bestseller products (ordered by popularity/total sales)
+export async function getBestsellerProducts(params?: {
+  page?: number;
+  per_page?: number;
+  locale?: Locale;
+  currency?: Currency;
+}): Promise<WCProductsResponse> {
+  return getProducts({
+    ...params,
+    orderby: "popularity",
+    order: "desc",
+  });
+}
+
 // Get featured products
 // Note: WooCommerce Store API doesn't have a direct featured filter,
 // so we fetch from the custom endpoint or use a workaround

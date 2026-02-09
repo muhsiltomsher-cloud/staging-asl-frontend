@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Button } from "@/components/common/Button";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
-import { getProducts, getCategories, getFreeGiftProductInfo, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
+import { getNewProducts, getFeaturedProducts, getBestsellerProducts, getCategories, getFreeGiftProductInfo, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
 import { getHomePageSettings } from "@/lib/api/wordpress";
 import {
   HeroSlider,
@@ -43,22 +43,47 @@ export default async function HomePage({ params }: HomePageProps) {
   const isRTL = locale === "ar";
 
   // Fetch all data in parallel
-  // Fetch both localized products/categories (for names) and English versions (for URL slugs)
-  const [{ products: allProducts }, { products: englishProducts }, categories, englishCategories, homeSettings, giftProductInfo, bundleProductSlugs] = await Promise.all([
-    getProducts({ per_page: 20, locale: locale as Locale }),
-    getProducts({ per_page: 20, locale: "en" }), // Always fetch English products for URL slugs
+  // Fetch separate product lists for each section + English versions for URL slugs
+  const [
+    { products: newProductsRaw },
+    { products: newProductsEn },
+    { products: featuredProductsRaw },
+    { products: featuredProductsEn },
+    { products: bestsellerProductsRaw },
+    { products: bestsellerProductsEn },
+    categories,
+    englishCategories,
+    homeSettings,
+    giftProductInfo,
+    bundleProductSlugs,
+  ] = await Promise.all([
+    getNewProducts({ per_page: 20, locale: locale as Locale }),
+    getNewProducts({ per_page: 20, locale: "en" }),
+    getFeaturedProducts({ per_page: 20, locale: locale as Locale }),
+    getFeaturedProducts({ per_page: 20, locale: "en" }),
+    getBestsellerProducts({ per_page: 20, locale: locale as Locale }),
+    getBestsellerProducts({ per_page: 20, locale: "en" }),
     getCategories(locale as Locale),
-    getCategories("en"), // Always fetch English categories for URL slugs
+    getCategories("en"),
     getHomePageSettings(locale as Locale),
     getFreeGiftProductInfo(),
     getBundleEnabledProductSlugs(),
   ]);
 
-  // Create a mapping of product ID to English slug for URL generation
-  // This ensures product URLs always use English slugs regardless of current locale
-  const englishProductSlugs: Record<number, string> = {};
-  englishProducts.forEach((product) => {
-    englishProductSlugs[product.id] = product.slug;
+  // Create English slug mappings for each section's products
+  const newProductEnglishSlugs: Record<number, string> = {};
+  newProductsEn.forEach((product) => {
+    newProductEnglishSlugs[product.id] = product.slug;
+  });
+
+  const featuredProductEnglishSlugs: Record<number, string> = {};
+  featuredProductsEn.forEach((product) => {
+    featuredProductEnglishSlugs[product.id] = product.slug;
+  });
+
+  const bestsellerProductEnglishSlugs: Record<number, string> = {};
+  bestsellerProductsEn.forEach((product) => {
+    bestsellerProductEnglishSlugs[product.id] = product.slug;
   });
 
   // Create a mapping of localized category ID to English slug for URL generation
@@ -88,14 +113,17 @@ export default async function HomePage({ params }: HomePageProps) {
     }
   });
 
-  // Filter out gift products from the home page
-  // Use both ID and slug for filtering since WPML assigns different IDs per locale
-  // but slugs remain consistent across translations
-  const products = allProducts.filter(
-    (product) => 
-      !giftProductInfo.ids.includes(product.id) && 
-      !giftProductInfo.slugs.includes(product.slug)
-  );
+  // Filter out gift products from each section
+  const filterGiftProducts = (productList: typeof newProductsRaw) =>
+    productList.filter(
+      (product) =>
+        !giftProductInfo.ids.includes(product.id) &&
+        !giftProductInfo.slugs.includes(product.slug)
+    );
+
+  const newProducts = filterGiftProducts(newProductsRaw);
+  const featuredProducts = filterGiftProducts(featuredProductsRaw);
+  const bestsellerProducts = filterGiftProducts(bestsellerProductsRaw);
 
   // Translations for sections - using dictionary for dynamic content
   const sectionTexts = {
@@ -173,13 +201,13 @@ export default async function HomePage({ params }: HomePageProps) {
             {/* New Products Section */}
             <ProductSection
               settings={newProductsSettings}
-              products={products}
+              products={newProducts}
               locale={locale as Locale}
               isRTL={isRTL}
               viewAllText={sectionTexts.viewAll}
               className="bg-[#f7f6f2]"
               bundleProductSlugs={bundleProductSlugs}
-              englishProductSlugs={englishProductSlugs}
+              englishProductSlugs={newProductEnglishSlugs}
             />
 
       {/* Shop by Category */}
@@ -198,24 +226,24 @@ export default async function HomePage({ params }: HomePageProps) {
       {/* Featured Products Slider */}
       <FeaturedProductsSlider
         settings={featuredSettings}
-        products={products}
+        products={featuredProducts}
         locale={locale as Locale}
         isRTL={isRTL}
         viewAllText={sectionTexts.viewAll}
         bundleProductSlugs={bundleProductSlugs}
-        englishProductSlugs={englishProductSlugs}
+        englishProductSlugs={featuredProductEnglishSlugs}
       />
 
       {/* Bestseller Products Section */}
       <ProductSection
         settings={bestsellerSettings}
-        products={products}
+        products={bestsellerProducts}
         locale={locale as Locale}
         isRTL={isRTL}
         viewAllText={sectionTexts.viewAll}
         className="bg-[#f7f6f2]"
         bundleProductSlugs={bundleProductSlugs}
-        englishProductSlugs={englishProductSlugs}
+        englishProductSlugs={bestsellerProductEnglishSlugs}
       />
 
       {/* Our Collections */}
