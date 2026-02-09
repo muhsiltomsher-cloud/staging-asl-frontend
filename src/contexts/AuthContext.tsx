@@ -48,8 +48,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           try {
             const isValid = await validateToken(token as string);
-            if (!isValid) {
-              if (refreshTokenValue) {
+            if (!isValid && refreshTokenValue) {
+              try {
                 const refreshResponse = await apiRefreshToken(refreshTokenValue as string);
                 if (refreshResponse.success && refreshResponse.token) {
                   setCookie(AUTH_TOKEN_KEY, refreshResponse.token, {
@@ -62,20 +62,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     maxAge: 60 * 60 * 24 * 7,
                   });
                   setUser({ ...userData });
-                } else {
-                  deleteCookie(AUTH_TOKEN_KEY);
-                  deleteCookie(AUTH_USER_KEY);
-                  deleteCookie(AUTH_REFRESH_TOKEN_KEY);
-                  setUser(null);
                 }
-              } else {
-                deleteCookie(AUTH_TOKEN_KEY);
-                deleteCookie(AUTH_USER_KEY);
-                setUser(null);
+              } catch {
+                // Refresh failed - keep user logged in from cookies
               }
             }
           } catch {
-            // Network error during validation - keep user logged in
+            // Validation failed - keep user logged in from cookies
           }
           return;
         }
