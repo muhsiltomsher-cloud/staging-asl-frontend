@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnvVar } from "@/lib/utils/loadEnv";
 
-function normalizePhoneForMyFatoorah(phone: string | undefined): string {
-  if (!phone) return "";
+function parsePhoneForMyFatoorah(phone: string | undefined): { localNumber: string; countryCode: string } {
+  if (!phone) return { localNumber: "", countryCode: "" };
   
   let normalized = phone.replace(/[\s\-\(\)]/g, "");
   
@@ -11,12 +11,14 @@ function normalizePhoneForMyFatoorah(phone: string | undefined): string {
   }
   
   const countryCodePrefixes = [
-    "971", "966", "965", "973", "968", "974", "962", "20",
-    "00971", "00966", "00965", "00973", "00968", "00974", "00962", "0020"
+    "00971", "00966", "00965", "00973", "00968", "00974", "00962", "0020",
+    "971", "966", "965", "973", "968", "974", "962", "20"
   ];
   
+  let detectedCode = "";
   for (const prefix of countryCodePrefixes) {
     if (normalized.startsWith(prefix)) {
+      detectedCode = prefix.startsWith("00") ? prefix.substring(2) : prefix;
       normalized = normalized.substring(prefix.length);
       break;
     }
@@ -26,7 +28,10 @@ function normalizePhoneForMyFatoorah(phone: string | undefined): string {
     normalized = normalized.substring(1);
   }
   
-  return normalized.substring(0, 11);
+  return {
+    localNumber: normalized.substring(0, 11),
+    countryCode: detectedCode ? `+${detectedCode}` : "",
+  };
 }
 
 function getMyFatoorahApiBaseUrl(): string {
@@ -129,13 +134,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const parsedPhone = parsePhoneForMyFatoorah(customer_phone);
+
     const paymentData: Record<string, unknown> = {
       NotificationOption: "LNK",
       InvoiceValue: invoice_value,
       DisplayCurrencyIso: currency_iso,
       CustomerName: customer_name,
       CustomerEmail: customer_email || "",
-      CustomerMobile: normalizePhoneForMyFatoorah(customer_phone),
+      CustomerMobile: parsedPhone.localNumber,
+      ...(parsedPhone.countryCode && { MobileCountryCode: parsedPhone.countryCode }),
       CallBackUrl: `${callback_url}?order_id=${order_id}&order_key=${order_key}`,
       ErrorUrl: `${error_url}?order_id=${order_id}&order_key=${order_key}`,
       Language: language,
