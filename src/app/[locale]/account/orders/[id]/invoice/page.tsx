@@ -198,7 +198,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">{t.invoice}</h1>
                 <div className="space-y-1 text-sm text-gray-600">
                   <p><span className="font-medium">{t.invoiceNumber}:</span> INV-{order.number}</p>
-                  <p><span className="font-medium">{t.invoiceDate}:</span> {formatDate(order.date_created, locale)}</p>
+                  <p><span className="font-medium">{t.invoiceDate}:</span> {formatDate(order.date_created, locale, order.billing?.country)}</p>
                   <p><span className="font-medium">{t.status}:</span> {formatOrderStatus(order.status)}</p>
                 </div>
               </div>

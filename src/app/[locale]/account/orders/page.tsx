@@ -133,7 +133,7 @@ export default function OrdersPage({ params }: OrdersPageProps) {
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                    <span>{formatDate(order.date_created, locale)}</span>
+                    <span>{formatDate(order.date_created, locale, order.billing?.country)}</span>
                     <span>
                       {order.line_items.length} {t.items}
                     </span>

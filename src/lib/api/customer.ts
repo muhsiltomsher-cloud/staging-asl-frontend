@@ -1,3 +1,5 @@
+import { getCountryTimezone } from "@/lib/utils";
+
 export interface CustomerAddress {
   first_name: string;
   last_name: string;
@@ -453,13 +455,18 @@ export function formatPrice(
   return `${currencySymbol} ${numPrice.toFixed(2)}`;
 }
 
-export function formatDate(dateString: string, locale: string = "en"): string {
+export function formatDate(dateString: string, locale: string = "en", country?: string): string {
   const date = new Date(dateString);
-  return date.toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US", {
+  const options: Intl.DateTimeFormatOptions = {
     year: "numeric",
     month: "long",
     day: "numeric",
-  });
+  };
+  if (country) {
+    const tz = getCountryTimezone(country);
+    if (tz) options.timeZone = tz;
+  }
+  return date.toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US", options);
 }
 
 const SAVED_ADDRESSES_KEY = "asl_saved_addresses";

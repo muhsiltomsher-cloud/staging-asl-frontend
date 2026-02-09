@@ -10,12 +10,46 @@ export function cn(...inputs: ClassValue[]) {
  */
 export const BLUR_DATA_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAUH/8QAIhAAAgEDAwUBAAAAAAAAAAAAAQIDAAQRBRIhBhMiMUFR/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAZEQACAwEAAAAAAAAAAAAAAAABAgADESH/2gAMAwEAAhEDEEA/AKOm9R6hY2sNtDLGI4kCKDGpOAMDk/aKKKlZJJyTNQoUdZ//2Q==";
 
-export function formatDate(date: string, locale: string = "en") {
-  return new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-US", {
+const COUNTRY_TIMEZONE_MAP: Record<string, string> = {
+  AE: "Asia/Dubai",
+  SA: "Asia/Riyadh",
+  KW: "Asia/Kuwait",
+  BH: "Asia/Bahrain",
+  QA: "Asia/Qatar",
+  OM: "Asia/Muscat",
+  JO: "Asia/Amman",
+  EG: "Africa/Cairo",
+  LB: "Asia/Beirut",
+  IQ: "Asia/Baghdad",
+  YE: "Asia/Aden",
+  SY: "Asia/Damascus",
+  PS: "Asia/Hebron",
+  LY: "Africa/Tripoli",
+  SD: "Africa/Khartoum",
+  TN: "Africa/Tunis",
+  DZ: "Africa/Algiers",
+  MA: "Africa/Casablanca",
+  IN: "Asia/Kolkata",
+  PK: "Asia/Karachi",
+  US: "America/New_York",
+  GB: "Europe/London",
+};
+
+export function getCountryTimezone(countryCode: string): string | undefined {
+  return COUNTRY_TIMEZONE_MAP[countryCode?.toUpperCase()];
+}
+
+export function formatDate(date: string, locale: string = "en", country?: string) {
+  const options: Intl.DateTimeFormatOptions = {
     year: "numeric",
     month: "long",
     day: "numeric",
-  }).format(new Date(date));
+  };
+  if (country) {
+    const tz = getCountryTimezone(country);
+    if (tz) options.timeZone = tz;
+  }
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-US", options).format(new Date(date));
 }
 
 export function stripHtml(html: string): string {

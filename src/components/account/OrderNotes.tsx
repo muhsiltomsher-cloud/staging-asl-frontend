@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import { FileText, CreditCard, AlertCircle, CheckCircle, Clock, ChevronDown, ChevronUp } from "lucide-react";
 import { getOrderNotes, type OrderNote } from "@/lib/api/customer";
+import { getCountryTimezone } from "@/lib/utils";
 
 interface OrderNotesProps {
   orderId: number;
   locale: "en" | "ar";
+  country?: string;
 }
 
 interface ParsedPaymentDetails {
@@ -129,15 +131,20 @@ function getNoteStyles(type: "payment" | "status" | "general", note: string) {
   return "bg-gray-50 border-gray-200 text-gray-800";
 }
 
-function formatNoteDate(dateString: string, locale: string): string {
+function formatNoteDate(dateString: string, locale: string, country?: string): string {
   const date = new Date(dateString);
-  return date.toLocaleString(locale === "ar" ? "ar-SA" : "en-US", {
+  const options: Intl.DateTimeFormatOptions = {
     year: "numeric",
     month: "short",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  });
+  };
+  if (country) {
+    const tz = getCountryTimezone(country);
+    if (tz) options.timeZone = tz;
+  }
+  return date.toLocaleString(locale === "ar" ? "ar-SA" : "en-US", options);
 }
 
 function formatAuthorName(author: string, t: typeof translations.en): string {
@@ -209,12 +216,14 @@ function NoteIcon({ noteType, noteContent }: { noteType: "payment" | "status" | 
 function NoteItem({ 
   note, 
   locale, 
-  t 
+  t,
+  country 
 }: { 
   note: OrderNote; 
   locale: "en" | "ar"; 
   t: typeof translations.en;
-}) {
+  country?: string;
+}){
   const noteType = getNoteType(note.note);
   const styles = getNoteStyles(noteType, note.note);
   const paymentDetails = parsePaymentDetails(note.note);
@@ -236,7 +245,7 @@ function NoteItem({
               {formatAuthorName(note.author || "", t)}
             </span>
             <span className="text-xs opacity-75">
-              {formatNoteDate(note.date_created, locale)}
+              {formatNoteDate(note.date_created, locale, country)}
             </span>
           </div>
           <p className="text-sm whitespace-pre-wrap break-words">{displayNote}</p>
@@ -249,7 +258,7 @@ function NoteItem({
   );
 }
 
-export function OrderNotes({ orderId, locale }: OrderNotesProps) {
+export function OrderNotes({ orderId, locale, country }: OrderNotesProps) {
   const [notes, setNotes] = useState<OrderNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -304,7 +313,7 @@ export function OrderNotes({ orderId, locale }: OrderNotesProps) {
       </div>
       <div className="space-y-3">
         {displayedNotes.map((note) => (
-          <NoteItem key={note.id} note={note} locale={locale} t={t} />
+          <NoteItem key={note.id} note={note} locale={locale} t={t} country={country} />
         ))}
       </div>
       {hasMoreNotes && (

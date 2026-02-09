@@ -339,7 +339,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           </span>
         </div>
         <p className="mt-2 text-gray-500">
-          {t.orderDate}: {formatDate(order.date_created, locale)}
+          {t.orderDate}: {formatDate(order.date_created, locale, order.billing?.country)}
         </p>
         {order.currency && (
           <div className="mt-3">
@@ -494,7 +494,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           </div>
         )}
 
-        <OrderNotes orderId={order.id} locale={locale} />
+        <OrderNotes orderId={order.id} locale={locale} country={order.billing?.country} />
       </div>
 
         {showCancelModal && (
