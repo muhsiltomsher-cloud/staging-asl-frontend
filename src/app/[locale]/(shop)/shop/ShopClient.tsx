@@ -112,19 +112,19 @@ export function ShopClient({
         
         setProducts(uniqueProducts);
         setCurrentPage(nextPage);
-        // Adjust total to account for filtered gift products
-        const adjustedTotal = data.total - (data.products.length - filteredNewProducts.length);
-        setTotal(adjustedTotal);
-        setHasMore(uniqueProducts.length < adjustedTotal);
+        const giftCountInThisPage = data.products.length - filteredNewProducts.length;
+        const newTotal = total - giftCountInThisPage;
+        setTotal(newTotal);
+        setHasMore(uniqueProducts.length < newTotal);
         
-        setCachedProducts(uniqueProducts, adjustedTotal, data.totalPages, locale);
+        setCachedProducts(uniqueProducts, newTotal, data.totalPages, locale);
       }
     } catch (error) {
       console.error("Error loading more products:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, hasMore, currentPage, products, locale, giftProductIds, giftProductSlugs]);
+  }, [isLoading, hasMore, currentPage, products, total, locale, giftProductIds, giftProductSlugs]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -192,8 +192,8 @@ export function ShopClient({
         {!hasMore && products.length > 0 && (
           <p className="text-gray-500 text-sm">
             {locale === "ar" 
-              ? `عرض جميع المنتجات (${total})` 
-              : `Showing all ${total} products`}
+              ? `عرض جميع المنتجات (${products.length})` 
+              : `Showing all ${products.length} products`}
           </p>
         )}
       </div>
