@@ -28,6 +28,11 @@ function asl_free_gift_init() {
     add_action('woocommerce_product_query', 'asl_free_gift_hide_from_shop');
     add_filter('woocommerce_rest_product_object_query', 'asl_free_gift_hide_from_rest_api', 10, 2);
     add_filter('woocommerce_product_search_results', 'asl_free_gift_hide_from_search');
+    
+    // Ensure draft products are excluded from Store API and apply hidden product filters
+    // The woocommerce_rest_product_object_query filter only covers WC REST API v3,
+    // so we need pre_get_posts to also cover the Store API (/wc/store/v1/products)
+    add_action('pre_get_posts', 'asl_enforce_published_products_in_rest_api', 99);
 }
 
 /**
@@ -507,6 +512,36 @@ function asl_free_gift_hide_from_search($product_ids) {
     if (empty($hidden_ids)) return $product_ids;
     
     return array_diff($product_ids, $hidden_ids);
+}
+
+/**
+ * Ensure only published products are returned in public REST API product queries.
+ * 
+ * The WooCommerce Store API (/wc/store/v1/products) should only return published
+ * products, but WPML or other plugins can inadvertently modify the WP_Query to
+ * include draft products. This filter acts as a defensive layer:
+ * 
+ * 1. Forces post_status='publish' for non-admin REST API product queries
+ * 2. Applies hidden product exclusions (free gifts + password-protected) to
+ *    Store API queries (the existing woocommerce_rest_product_object_query
+ *    filter only covers WC REST API v3)
+ */
+function asl_enforce_published_products_in_rest_api($query) {
+    if (is_admin()) return;
+    if (!defined('REST_REQUEST') || !REST_REQUEST) return;
+    
+    $post_type = $query->get('post_type');
+    if ($post_type !== 'product' && (!is_array($post_type) || !in_array('product', $post_type))) return;
+    
+    if (!current_user_can('edit_products')) {
+        $query->set('post_status', 'publish');
+    }
+    
+    $hidden_ids = asl_get_hidden_product_ids();
+    if (!empty($hidden_ids)) {
+        $existing_exclude = $query->get('post__not_in') ?: array();
+        $query->set('post__not_in', array_merge($existing_exclude, $hidden_ids));
+    }
 }
 
 // Initialize ASL Free Gift

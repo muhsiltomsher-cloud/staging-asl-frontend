@@ -958,7 +958,7 @@ export async function getFeaturedProducts(params?: {
     if (params?.locale) searchParams.set("lang", params.locale);
     
     const queryString = searchParams.toString();
-    const url = `${siteConfig.apiUrl}/wp-json/wc/v3/products?featured=true${queryString ? `&${queryString}` : ""}`;
+    const url = `${siteConfig.apiUrl}/wp-json/wc/v3/products?featured=true&status=publish${queryString ? `&${queryString}` : ""}`;
     
     const response = await fetch(url, {
       headers: {
