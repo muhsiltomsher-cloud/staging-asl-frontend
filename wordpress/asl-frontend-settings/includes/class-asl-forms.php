@@ -198,7 +198,8 @@ class ASL_Forms {
         $sent = wp_mail($to, $email_subject, $email_body, $headers);
         
         if ($sent) {
-            // Log subscription (optional - can be used with newsletter plugins)
+            $this->send_newsletter_confirmation_email($email);
+
             do_action('asl_newsletter_subscribed', array(
                 'email' => $email,
             ));
@@ -214,6 +215,34 @@ class ASL_Forms {
             'code' => 'subscription_failed',
             'message' => 'Failed to subscribe. Please try again later.',
         ), 500);
+    }
+    /**
+     * Send confirmation email to newsletter subscriber
+     *
+     * @param string $email Subscriber email address
+     * @return bool Whether the email was sent successfully
+     */
+    private function send_newsletter_confirmation_email($email) {
+        $site_name = get_bloginfo('name');
+        $subject = sprintf('Welcome to %s Newsletter!', $site_name);
+
+        $body = sprintf(
+            "Hi there,\n\n" .
+            "Thank you for subscribing to the %s newsletter!\n\n" .
+            "You'll now receive updates on our latest products, exclusive offers, and fragrance tips straight to your inbox.\n\n" .
+            "If you did not subscribe, please ignore this email.\n\n" .
+            "Best regards,\n" .
+            "The %s Team\n",
+            $site_name,
+            $site_name
+        );
+
+        $headers = array(
+            'Content-Type: text/plain; charset=UTF-8',
+            sprintf('From: %s <%s>', $site_name, get_option('admin_email')),
+        );
+
+        return wp_mail($email, $subject, $body, $headers);
     }
 }
 
