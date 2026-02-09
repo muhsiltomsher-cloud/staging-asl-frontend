@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { ContactForm } from "@/components/common/ContactForm";
+import { QuickContactButtons } from "@/components/common/QuickContactButtons";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import type { Locale } from "@/config/site";
@@ -175,31 +176,11 @@ export default async function ContactPage({ params }: ContactPageProps) {
           <div className="mb-6 text-center">
             <h2 className="text-xl font-semibold text-amber-900">{content.quickContact}</h2>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <a
-              href="https://wa.me/971506071405"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center gap-3 rounded-full bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-green-500/20 transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-xl hover:shadow-green-500/30"
-            >
-              <MessageCircle className="h-5 w-5" />
-              {content.whatsapp}
-            </a>
-            <a
-              href="tel:+971506071405"
-              className="group flex items-center gap-3 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-amber-500/20 transition-all duration-300 hover:from-amber-600 hover:to-amber-700 hover:shadow-xl hover:shadow-amber-500/30"
-            >
-              <Phone className="h-5 w-5" />
-              {content.callUs}
-            </a>
-            <a
-              href="mailto:info@aromaticscentslab.com"
-              className="group flex items-center gap-3 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition-all duration-300 hover:from-blue-600 hover:to-blue-700 hover:shadow-xl hover:shadow-blue-500/30"
-            >
-              <Mail className="h-5 w-5" />
-              {content.emailUs}
-            </a>
-          </div>
+          <QuickContactButtons
+            whatsappLabel={content.whatsapp}
+            callLabel={content.callUs}
+            emailLabel={content.emailUs}
+          />
         </div>
       </section>
 
