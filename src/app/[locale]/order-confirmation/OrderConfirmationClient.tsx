@@ -520,7 +520,7 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
               ? `رقم الطلب: #${order.id}`
               : `Order number: #${order.id}`}
           </p>
-          {order.currency && (
+          {order.currency && !isPaymentFailed && (
             <div className="mt-3">
               <OrderCurrencyBadge 
                 orderCurrency={order.currency} 
