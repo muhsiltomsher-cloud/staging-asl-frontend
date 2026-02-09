@@ -27,31 +27,8 @@ export interface PhoneInputProps {
   placeholder?: string;
 }
 
-function getCountryFlag(code: string): string {
-  const flags: Record<string, string> = {
-    AE: "\u{1F1E6}\u{1F1EA}", SA: "\u{1F1F8}\u{1F1E6}", KW: "\u{1F1F0}\u{1F1FC}",
-    BH: "\u{1F1E7}\u{1F1ED}", OM: "\u{1F1F4}\u{1F1F2}", QA: "\u{1F1F6}\u{1F1E6}",
-    EG: "\u{1F1EA}\u{1F1EC}", JO: "\u{1F1EF}\u{1F1F4}", LB: "\u{1F1F1}\u{1F1E7}",
-    IQ: "\u{1F1EE}\u{1F1F6}", SY: "\u{1F1F8}\u{1F1FE}", PS: "\u{1F1F5}\u{1F1F8}",
-    YE: "\u{1F1FE}\u{1F1EA}", LY: "\u{1F1F1}\u{1F1FE}", TN: "\u{1F1F9}\u{1F1F3}",
-    DZ: "\u{1F1E9}\u{1F1FF}", MA: "\u{1F1F2}\u{1F1E6}", SD: "\u{1F1F8}\u{1F1E9}",
-    US: "\u{1F1FA}\u{1F1F8}", GB: "\u{1F1EC}\u{1F1E7}", CA: "\u{1F1E8}\u{1F1E6}",
-    AU: "\u{1F1E6}\u{1F1FA}", DE: "\u{1F1E9}\u{1F1EA}", FR: "\u{1F1EB}\u{1F1F7}",
-    IT: "\u{1F1EE}\u{1F1F9}", ES: "\u{1F1EA}\u{1F1F8}", NL: "\u{1F1F3}\u{1F1F1}",
-    BE: "\u{1F1E7}\u{1F1EA}", CH: "\u{1F1E8}\u{1F1ED}", AT: "\u{1F1E6}\u{1F1F9}",
-    SE: "\u{1F1F8}\u{1F1EA}", NO: "\u{1F1F3}\u{1F1F4}", DK: "\u{1F1E9}\u{1F1F0}",
-    FI: "\u{1F1EB}\u{1F1EE}", PL: "\u{1F1F5}\u{1F1F1}", PT: "\u{1F1F5}\u{1F1F9}",
-    GR: "\u{1F1EC}\u{1F1F7}", TR: "\u{1F1F9}\u{1F1F7}", IN: "\u{1F1EE}\u{1F1F3}",
-    PK: "\u{1F1F5}\u{1F1F0}", BD: "\u{1F1E7}\u{1F1E9}", PH: "\u{1F1F5}\u{1F1ED}",
-    ID: "\u{1F1EE}\u{1F1E9}", MY: "\u{1F1F2}\u{1F1FE}", SG: "\u{1F1F8}\u{1F1EC}",
-    TH: "\u{1F1F9}\u{1F1ED}", VN: "\u{1F1FB}\u{1F1F3}", JP: "\u{1F1EF}\u{1F1F5}",
-    KR: "\u{1F1F0}\u{1F1F7}", CN: "\u{1F1E8}\u{1F1F3}", HK: "\u{1F1ED}\u{1F1F0}",
-    TW: "\u{1F1F9}\u{1F1FC}", NZ: "\u{1F1F3}\u{1F1FF}", ZA: "\u{1F1FF}\u{1F1E6}",
-    NG: "\u{1F1F3}\u{1F1EC}", KE: "\u{1F1F0}\u{1F1EA}", BR: "\u{1F1E7}\u{1F1F7}",
-    MX: "\u{1F1F2}\u{1F1FD}", AR: "\u{1F1E6}\u{1F1F7}", CL: "\u{1F1E8}\u{1F1F1}",
-    CO: "\u{1F1E8}\u{1F1F4}", RU: "\u{1F1F7}\u{1F1FA}", UA: "\u{1F1FA}\u{1F1E6}",
-  };
-  return flags[code] || "";
+function getCountryFlagUrl(code: string): string {
+  return `https://flagcdn.com/w40/${code.toLowerCase()}.png`;
 }
 
 export function PhoneInput({
@@ -219,7 +196,7 @@ export function PhoneInput({
             isRTL ? "rounded-r-md border-l-0" : "rounded-l-md border-r-0"
           )}
         >
-          <span className="text-base leading-none">{getCountryFlag(selectedCountry)}</span>
+          <img src={getCountryFlagUrl(selectedCountry)} alt={selectedCountry} width={20} height={15} className="inline-block flex-shrink-0" />
           <span className="text-gray-700 font-medium whitespace-nowrap">
             {currentConfig.dialCode}
           </span>
@@ -289,7 +266,7 @@ export function PhoneInput({
                       selectedCountry === config.code && "bg-gray-50"
                     )}
                   >
-                    <span className="text-base leading-none">{getCountryFlag(config.code)}</span>
+                    <img src={getCountryFlagUrl(config.code)} alt={config.code} width={20} height={15} className="inline-block flex-shrink-0" />
                     <span className="flex-1 text-left truncate">
                       {isRTL && config.labelAr ? config.labelAr : config.label}
                     </span>
