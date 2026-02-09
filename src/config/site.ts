@@ -27,6 +27,7 @@ export const siteConfig = {
   links: {
     instagram: "https://instagram.com/aromaticscentslab",
     facebook: "https://facebook.com/aromaticscentslab",
+    twitter: "https://x.com/araboriginaloud",
   },
   
   // Default locale for the site (en = English, ar = Arabic)
