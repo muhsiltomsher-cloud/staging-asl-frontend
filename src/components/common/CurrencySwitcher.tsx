@@ -120,7 +120,9 @@ export function CurrencySwitcher({ className, locale = "en" }: CurrencySwitcherP
         aria-haspopup="dialog"
       >
         <CountryFlag currencyCode={currentCurrency?.code || "AED"} size={20} />
-        <span className="font-semibold text-[#7a3205]">{currentCurrency?.symbol}</span>
+        {currentCurrency?.symbol && currentCurrency.symbol !== currentCurrency.code && (
+          <span className="font-semibold text-[#7a3205]">{currentCurrency.symbol}</span>
+        )}
         <span className="text-gray-600">{currentCurrency?.code}</span>
         <ChevronDown className="h-3 w-3 text-gray-400" />
       </button>

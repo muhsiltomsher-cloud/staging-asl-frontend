@@ -6,9 +6,9 @@ const DEFAULT_CURRENCIES = [
   { code: "AED", label: "UAE (AED)", symbol: "د.إ", decimals: 2, rateFromAED: 1 },
   { code: "BHD", label: "Bahrain (BHD)", symbol: "BD", decimals: 3, rateFromAED: 0.103 },
   { code: "KWD", label: "Kuwait (KWD)", symbol: "KD", decimals: 3, rateFromAED: 0.083 },
-  { code: "OMR", label: "Oman (OMR)", symbol: "OMR", decimals: 3, rateFromAED: 0.105 },
+  { code: "OMR", label: "Oman (OMR)", symbol: "ر.ع.", decimals: 3, rateFromAED: 0.105 },
   { code: "QAR", label: "Qatar (QAR)", symbol: "QR", decimals: 2, rateFromAED: 0.99 },
-  { code: "SAR", label: "Saudi Arabia (SAR)", symbol: "SAR", decimals: 2, rateFromAED: 1.02 },
+  { code: "SAR", label: "Saudi Arabia (SAR)", symbol: "ر.س", decimals: 2, rateFromAED: 1.02 },
   { code: "USD", label: "United States (USD)", symbol: "$", decimals: 2, rateFromAED: 0.27 },
 ];
 

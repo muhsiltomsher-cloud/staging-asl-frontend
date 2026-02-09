@@ -4,14 +4,16 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import { getCookie, setCookie } from "cookies-next";
 import { siteConfig, API_BASE_CURRENCY, type Currency } from "@/config/site";
 
-// Minimal default currency (will be replaced by API data)
-const DEFAULT_CURRENCY: CurrencyData = {
-  code: "AED",
-  label: "UAE (AED)",
-  symbol: "د.إ",
-  decimals: 2,
-  rateFromAED: 1,
-};
+// Default currencies (will be replaced by API data)
+const DEFAULT_CURRENCIES: CurrencyData[] = [
+  { code: "AED", label: "UAE (AED)", symbol: "د.إ", decimals: 2, rateFromAED: 1 },
+  { code: "BHD", label: "Bahrain (BHD)", symbol: "BD", decimals: 3, rateFromAED: 0.103 },
+  { code: "KWD", label: "Kuwait (KWD)", symbol: "KD", decimals: 3, rateFromAED: 0.083 },
+  { code: "OMR", label: "Oman (OMR)", symbol: "ر.ع.", decimals: 3, rateFromAED: 0.105 },
+  { code: "QAR", label: "Qatar (QAR)", symbol: "QR", decimals: 2, rateFromAED: 0.99 },
+  { code: "SAR", label: "Saudi Arabia (SAR)", symbol: "ر.س", decimals: 2, rateFromAED: 1.02 },
+  { code: "USD", label: "United States (USD)", symbol: "$", decimals: 2, rateFromAED: 0.27 },
+];
 
 // Dynamic currency data type (matches API response)
 export interface CurrencyData {
@@ -68,7 +70,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     const stored = getStoredCurrency();
     return stored || siteConfig.defaultCurrency;
   });
-  const [currencies, setCurrencies] = useState<CurrencyData[]>([DEFAULT_CURRENCY]);
+  const [currencies, setCurrencies] = useState<CurrencyData[]>(DEFAULT_CURRENCIES);
   const [isLoading, setIsLoading] = useState(true);
   const hasHydrated = useRef(false);
   const hasFetchedCurrencies = useRef(false);
@@ -100,8 +102,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
 
   // Load currency from cookie after hydration and after currencies are loaded
   useEffect(() => {
-    // Wait until currencies are loaded from API (more than just the default)
-    if (isLoading || currencies.length <= 1) return;
+    if (isLoading) return;
     if (hasHydrated.current) return;
     hasHydrated.current = true;
     
@@ -125,7 +126,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const getCurrencyInfo = useCallback(() => {
-    return currencies.find((c) => c.code === currency) || currencies.find((c) => c.code === "QAR") || currencies[0];
+    return currencies.find((c) => c.code === currency) || currencies[0];
   }, [currency, currencies]);
 
     const getCurrencySymbol = useCallback(() => {
