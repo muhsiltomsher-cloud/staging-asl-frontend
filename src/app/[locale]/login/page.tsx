@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Home } from "lucide-react";
@@ -25,6 +25,8 @@ export default function LoginPage({ params }: LoginPageProps) {
     password?: string;
     general?: string;
   }>({});
+  const [rateLimitSeconds, setRateLimitSeconds] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     params.then((p) => setLocale(p.locale));
@@ -48,6 +50,9 @@ export default function LoginPage({ params }: LoginPageProps) {
       passwordRequired: "Password is required",
       loginError: "Invalid username or password",
       forgotPassword: "Forgot your password?",
+      rateLimitMessage: "Too many login attempts. Please try again in",
+      minutes: "min",
+      seconds: "sec",
     },
     ar: {
       login: "تسجيل الدخول",
@@ -64,10 +69,45 @@ export default function LoginPage({ params }: LoginPageProps) {
       passwordRequired: "كلمة المرور مطلوبة",
       loginError: "اسم المستخدم أو كلمة المرور غير صحيحة",
       forgotPassword: "نسيت كلمة المرور؟",
+      rateLimitMessage: "محاولات تسجيل دخول كثيرة. يرجى المحاولة مرة أخرى بعد",
+      minutes: "د",
+      seconds: "ث",
     },
   };
 
   const texts = t[locale as keyof typeof t] || t.en;
+
+  const startCountdown = useCallback((seconds: number) => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    setRateLimitSeconds(seconds);
+    timerRef.current = setInterval(() => {
+      setRateLimitSeconds((prev) => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          setErrors({});
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  const formatCountdown = (totalSeconds: number) => {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    if (mins > 0) {
+      return `${mins} ${texts.minutes} ${secs} ${texts.seconds}`;
+    }
+    return `${secs} ${texts.seconds}`;
+  };
 
   const validateForm = (): boolean => {
     const newErrors: typeof errors = {};
@@ -97,6 +137,9 @@ export default function LoginPage({ params }: LoginPageProps) {
     if (response.success) {
       router.push(`/${locale}/account`);
     } else {
+      if (response.error?.code === "rate_limit_exceeded" && response.error.retry_after) {
+        startCountdown(response.error.retry_after);
+      }
       setErrors({
         general: response.error?.message || texts.loginError,
       });
@@ -148,7 +191,16 @@ export default function LoginPage({ params }: LoginPageProps) {
 
             {errors.general && (
               <div className="mb-6 rounded-md bg-red-50 p-4 text-sm text-red-600">
-                {errors.general}
+                {rateLimitSeconds > 0 ? (
+                  <div>
+                    <p>{texts.rateLimitMessage}</p>
+                    <p className="mt-2 text-lg font-semibold text-red-700">
+                      {formatCountdown(rateLimitSeconds)}
+                    </p>
+                  </div>
+                ) : (
+                  errors.general
+                )}
               </div>
             )}
 
@@ -190,7 +242,7 @@ export default function LoginPage({ params }: LoginPageProps) {
                 type="submit"
                 className="w-full bg-gradient-to-r from-[#92400e] to-[#b45309] text-white border-0 rounded-full hover:from-[#78350f] hover:to-[#92400e] focus-visible:ring-[#92400e] mt-6 py-3 font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                 isLoading={isLoading}
-                disabled={isLoading}
+                disabled={isLoading || rateLimitSeconds > 0}
               >
                 {isLoading ? texts.loggingIn : texts.loginButton}
               </Button>

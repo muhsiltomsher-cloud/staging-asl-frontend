@@ -89,6 +89,7 @@ export function rateLimitResponse(resetTime: number): NextResponse {
       error: {
         code: "rate_limit_exceeded",
         message: "Too many requests. Please try again later.",
+        retry_after: retryAfter,
       },
     },
     {

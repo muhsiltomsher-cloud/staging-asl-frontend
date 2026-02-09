@@ -30,6 +30,7 @@ export interface AuthUser {
 export interface AuthError {
   code: string;
   message: string;
+  retry_after?: number;
   data?: {
     status: number;
   };
