@@ -367,8 +367,8 @@ export async function POST(request: NextRequest) {
             {
               success: false,
               error: {
-                code: (storeApiData.code as string) || "coupon_error",
-                message: (storeApiData.message as string) || "Coupon operation failed.",
+                code: String(storeApiData.code || "coupon_error"),
+                message: String(storeApiData.message || "Coupon operation failed."),
               },
             },
             { status: storeApiResponse.status }
@@ -474,8 +474,8 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: {
-            code: (data.code as string) || "cart_error",
-            message: (data.message as string) || "Cart operation failed.",
+            code: String(data.code || "cart_error"),
+            message: String(data.message || "Cart operation failed."),
           },
         },
         { status: response.status }

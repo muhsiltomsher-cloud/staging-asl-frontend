@@ -89,8 +89,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
         {
           success: false,
           error: {
-            code: data.code || "login_failed",
-            message: data.message || "Login failed. Please check your credentials.",
+            code: String(data.code || "login_failed"),
+            message: String(data.message || "Login failed. Please check your credentials."),
           },
         },
         { status: response.status }
@@ -117,13 +117,13 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
     return NextResponse.json({
       success: true,
       user: {
-        token: ((data.extras as Record<string, unknown>)?.jwt_token as string) || (data.jwt_token as string) || (data.token as string),
+        token: String((data.extras as Record<string, unknown>)?.jwt_token || data.jwt_token || data.token || ""),
         wp_token: wpToken,
-        refresh_token: ((data.extras as Record<string, unknown>)?.jwt_refresh as string) || (data.jwt_refresh_token as string) || (data.refresh_token as string),
-        user_id: parseInt(data.user_id as string) || (data.id as number) || 0,
-        user_email: (data.email as string) || (data.user_email as string) || "",
-        user_nicename: (data.user_nicename as string) || (data.nicename as string) || (data.username as string) || "",
-        user_display_name: (data.display_name as string) || (data.user_display_name as string) || (data.username as string) || "",
+        refresh_token: String((data.extras as Record<string, unknown>)?.jwt_refresh || data.jwt_refresh_token || data.refresh_token || ""),
+        user_id: parseInt(String(data.user_id || "0")) || (data.id as number) || 0,
+        user_email: String(data.email || data.user_email || ""),
+        user_nicename: String(data.user_nicename || data.nicename || data.username || ""),
+        user_display_name: String(data.display_name || data.user_display_name || data.username || ""),
       },
     });
   } catch (error) {
