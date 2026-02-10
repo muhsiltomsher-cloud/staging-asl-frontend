@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
 
 const API_BASE = siteConfig.apiUrl;
+const USER_AGENT = "Mozilla/5.0 (compatible; ASL-Frontend/1.0)";
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,6 +26,7 @@ export async function GET(request: NextRequest) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "User-Agent": USER_AGENT,
       },
       next: {
         revalidate: 60,
@@ -45,11 +47,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const data = await response.json();
+    const text = await response.text();
+    let data: Record<string, unknown>;
+    try {
+      data = JSON.parse(text) as Record<string, unknown>;
+    } catch {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "invalid_response",
+            message: "Backend returned non-JSON response",
+          },
+        },
+        { status: 502 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      rules: data.rules || [],
+      rules: (data.rules as unknown[]) || [],
     });
   } catch (error) {
     return NextResponse.json(
