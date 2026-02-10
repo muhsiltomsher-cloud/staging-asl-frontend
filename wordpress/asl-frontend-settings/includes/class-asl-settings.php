@@ -29,6 +29,22 @@ function asl_settings_init() {
     
     // Admin styles
     add_action('admin_head', 'asl_settings_admin_styles');
+    
+    // Sync: when blogname/blogdescription change (Settings > General), update ASL SEO
+    add_action('update_option_blogname', 'asl_sync_blogname_to_seo', 10, 2);
+    add_action('update_option_blogdescription', 'asl_sync_blogdescription_to_seo', 10, 2);
+}
+
+function asl_sync_blogname_to_seo($old_value, $new_value) {
+    if (!empty($new_value) && $new_value !== get_theme_mod('asl_seo_title','')) {
+        set_theme_mod('asl_seo_title', $new_value);
+    }
+}
+
+function asl_sync_blogdescription_to_seo($old_value, $new_value) {
+    if ($new_value !== get_theme_mod('asl_seo_description','')) {
+        set_theme_mod('asl_seo_description', $new_value);
+    }
 }
 
 /**
@@ -332,24 +348,111 @@ function asl_render_seo_page() {
         asl_save_seo_settings();
         echo '<div class="notice notice-success is-dismissible"><p>Settings saved!</p></div>';
     }
+    $seo_tab = isset($_GET['seo_tab']) ? sanitize_text_field($_GET['seo_tab']) : 'general';
     ?>
     <div class="wrap">
         <h1>SEO Settings</h1>
+        <nav class="nav-tab-wrapper">
+            <?php foreach (['general'=>'General','opengraph'=>'Open Graph (Facebook)','twitter'=>'Twitter Card','google'=>'Google & Analytics','advanced'=>'Advanced'] as $k=>$l): ?>
+                <a href="?page=asl-settings-seo&seo_tab=<?php echo $k; ?>" class="nav-tab <?php echo $seo_tab===$k?'nav-tab-active':''; ?>"><?php echo $l; ?></a>
+            <?php endforeach; ?>
+        </nav>
         <form method="post">
             <?php wp_nonce_field('asl_seo_settings_nonce'); ?>
-            <div style="background:#fff;padding:20px;border:1px solid #ccd0d4;">
-                <table class="form-table">
-                    <tr><th>Meta Title (EN)</th><td><input type="text" name="asl_seo_title" value="<?php echo esc_attr(get_theme_mod('asl_seo_title','')); ?>" class="large-text"></td></tr>
-                    <tr><th>Meta Title (AR)</th><td><input type="text" name="asl_seo_title_ar" value="<?php echo esc_attr(get_theme_mod('asl_seo_title_ar','')); ?>" class="large-text" dir="rtl"></td></tr>
-                    <tr><th>Meta Description (EN)</th><td><textarea name="asl_seo_description" class="large-text" rows="3"><?php echo esc_textarea(get_theme_mod('asl_seo_description','')); ?></textarea></td></tr>
-                    <tr><th>Meta Description (AR)</th><td><textarea name="asl_seo_description_ar" class="large-text" rows="3" dir="rtl"><?php echo esc_textarea(get_theme_mod('asl_seo_description_ar','')); ?></textarea></td></tr>
-                    <tr><th>OG Image</th><td><?php asl_image_field('asl_seo_og_image',get_theme_mod('asl_seo_og_image','')); ?></td></tr>
-                    <tr><th>Robots</th><td><select name="asl_seo_robots"><option value="index,follow" <?php selected(get_theme_mod('asl_seo_robots','index,follow'),'index,follow'); ?>>Index, Follow</option><option value="noindex,follow" <?php selected(get_theme_mod('asl_seo_robots','index,follow'),'noindex,follow'); ?>>No Index, Follow</option><option value="index,nofollow" <?php selected(get_theme_mod('asl_seo_robots','index,follow'),'index,nofollow'); ?>>Index, No Follow</option><option value="noindex,nofollow" <?php selected(get_theme_mod('asl_seo_robots','index,follow'),'noindex,nofollow'); ?>>No Index, No Follow</option></select></td></tr>
-                </table>
+            <input type="hidden" name="asl_seo_current_tab" value="<?php echo esc_attr($seo_tab); ?>">
+            <div style="background:#fff;padding:20px;border:1px solid #ccd0d4;border-top:none;">
+                <?php
+                switch($seo_tab) {
+                    case 'general': asl_render_seo_general_tab(); break;
+                    case 'opengraph': asl_render_seo_opengraph_tab(); break;
+                    case 'twitter': asl_render_seo_twitter_tab(); break;
+                    case 'google': asl_render_seo_google_tab(); break;
+                    case 'advanced': asl_render_seo_advanced_tab(); break;
+                }
+                ?>
             </div>
             <?php submit_button('Save Settings','primary','asl_save_seo_settings'); ?>
         </form>
     </div>
+    <?php
+}
+
+function asl_render_seo_general_tab() {
+    $site_title = get_bloginfo('name');
+    $site_tagline = get_bloginfo('description');
+    ?>
+    <h2>General Meta Tags</h2>
+    <p class="description" style="margin-bottom:15px;">These are the default meta tags for your site. The Meta Title (EN) syncs with WordPress Site Title, and Meta Description (EN) syncs with Tagline in <strong>Settings &gt; General</strong> and <strong>Appearance &gt; Customize &gt; Site Identity</strong>.</p>
+    <table class="form-table">
+        <tr><th>Meta Title (EN)</th><td><input type="text" name="asl_seo_title" value="<?php echo esc_attr(get_theme_mod('asl_seo_title',$site_title)); ?>" class="large-text"><p class="description">Synced with WordPress Site Title. Updates here will update Site Title everywhere.</p></td></tr>
+        <tr><th>Meta Title (AR)</th><td><input type="text" name="asl_seo_title_ar" value="<?php echo esc_attr(get_theme_mod('asl_seo_title_ar','')); ?>" class="large-text" dir="rtl"><p class="description">Arabic version of the meta title for RTL pages.</p></td></tr>
+        <tr><th>Meta Description (EN)</th><td><textarea name="asl_seo_description" class="large-text" rows="3"><?php echo esc_textarea(get_theme_mod('asl_seo_description',$site_tagline)); ?></textarea><p class="description">Synced with WordPress Tagline. Updates here will update the Tagline everywhere.</p></td></tr>
+        <tr><th>Meta Description (AR)</th><td><textarea name="asl_seo_description_ar" class="large-text" rows="3" dir="rtl"><?php echo esc_textarea(get_theme_mod('asl_seo_description_ar','')); ?></textarea><p class="description">Arabic version of the meta description for RTL pages.</p></td></tr>
+        <tr><th>Meta Keywords (EN)</th><td><input type="text" name="asl_seo_keywords" value="<?php echo esc_attr(get_theme_mod('asl_seo_keywords','')); ?>" class="large-text"><p class="description">Comma-separated keywords for search engines.</p></td></tr>
+        <tr><th>Meta Keywords (AR)</th><td><input type="text" name="asl_seo_keywords_ar" value="<?php echo esc_attr(get_theme_mod('asl_seo_keywords_ar','')); ?>" class="large-text" dir="rtl"></td></tr>
+    </table>
+    <?php
+}
+
+function asl_render_seo_opengraph_tab() {
+    ?>
+    <h2>Open Graph Tags (Facebook / Social Media)</h2>
+    <p class="description" style="margin-bottom:15px;">These tags control how your site appears when shared on Facebook, LinkedIn, WhatsApp, and other platforms that support Open Graph.</p>
+    <table class="form-table">
+        <tr><th>OG Title (EN)</th><td><input type="text" name="asl_seo_og_title" value="<?php echo esc_attr(get_theme_mod('asl_seo_og_title','')); ?>" class="large-text"><p class="description">Leave empty to use Meta Title.</p></td></tr>
+        <tr><th>OG Title (AR)</th><td><input type="text" name="asl_seo_og_title_ar" value="<?php echo esc_attr(get_theme_mod('asl_seo_og_title_ar','')); ?>" class="large-text" dir="rtl"></td></tr>
+        <tr><th>OG Description (EN)</th><td><textarea name="asl_seo_og_description" class="large-text" rows="3"><?php echo esc_textarea(get_theme_mod('asl_seo_og_description','')); ?></textarea><p class="description">Leave empty to use Meta Description.</p></td></tr>
+        <tr><th>OG Description (AR)</th><td><textarea name="asl_seo_og_description_ar" class="large-text" rows="3" dir="rtl"><?php echo esc_textarea(get_theme_mod('asl_seo_og_description_ar','')); ?></textarea></td></tr>
+        <tr><th>OG Image</th><td><?php asl_image_field('asl_seo_og_image',get_theme_mod('asl_seo_og_image','')); ?><p class="description">Recommended: 1200x630 pixels. Used when sharing on Facebook, WhatsApp, LinkedIn, etc.</p></td></tr>
+        <tr><th>OG Type</th><td><select name="asl_seo_og_type"><option value="website" <?php selected(get_theme_mod('asl_seo_og_type','website'),'website'); ?>>Website</option><option value="article" <?php selected(get_theme_mod('asl_seo_og_type','website'),'article'); ?>>Article</option><option value="product" <?php selected(get_theme_mod('asl_seo_og_type','website'),'product'); ?>>Product</option><option value="business.business" <?php selected(get_theme_mod('asl_seo_og_type','website'),'business.business'); ?>>Business</option></select></td></tr>
+        <tr><th>OG Site Name</th><td><input type="text" name="asl_seo_og_site_name" value="<?php echo esc_attr(get_theme_mod('asl_seo_og_site_name','')); ?>" class="regular-text"><p class="description">Leave empty to use Site Title.</p></td></tr>
+        <tr><th>Facebook App ID</th><td><input type="text" name="asl_seo_fb_app_id" value="<?php echo esc_attr(get_theme_mod('asl_seo_fb_app_id','')); ?>" class="regular-text"><p class="description">Optional. For Facebook Insights integration.</p></td></tr>
+    </table>
+    <?php
+}
+
+function asl_render_seo_twitter_tab() {
+    ?>
+    <h2>Twitter Card Tags</h2>
+    <p class="description" style="margin-bottom:15px;">These tags control how your site appears when shared on Twitter/X.</p>
+    <table class="form-table">
+        <tr><th>Card Type</th><td><select name="asl_seo_twitter_card"><option value="summary_large_image" <?php selected(get_theme_mod('asl_seo_twitter_card','summary_large_image'),'summary_large_image'); ?>>Summary Large Image</option><option value="summary" <?php selected(get_theme_mod('asl_seo_twitter_card','summary_large_image'),'summary'); ?>>Summary</option><option value="app" <?php selected(get_theme_mod('asl_seo_twitter_card','summary_large_image'),'app'); ?>>App</option></select></td></tr>
+        <tr><th>Twitter Site (@handle)</th><td><input type="text" name="asl_seo_twitter_site" value="<?php echo esc_attr(get_theme_mod('asl_seo_twitter_site','')); ?>" class="regular-text" placeholder="@yourbrand"><p class="description">Your brand's Twitter/X handle.</p></td></tr>
+        <tr><th>Twitter Creator</th><td><input type="text" name="asl_seo_twitter_creator" value="<?php echo esc_attr(get_theme_mod('asl_seo_twitter_creator','')); ?>" class="regular-text" placeholder="@creatorhandle"><p class="description">Content creator's Twitter/X handle (optional).</p></td></tr>
+        <tr><th>Twitter Title (EN)</th><td><input type="text" name="asl_seo_twitter_title" value="<?php echo esc_attr(get_theme_mod('asl_seo_twitter_title','')); ?>" class="large-text"><p class="description">Leave empty to use Meta Title.</p></td></tr>
+        <tr><th>Twitter Title (AR)</th><td><input type="text" name="asl_seo_twitter_title_ar" value="<?php echo esc_attr(get_theme_mod('asl_seo_twitter_title_ar','')); ?>" class="large-text" dir="rtl"></td></tr>
+        <tr><th>Twitter Description (EN)</th><td><textarea name="asl_seo_twitter_description" class="large-text" rows="3"><?php echo esc_textarea(get_theme_mod('asl_seo_twitter_description','')); ?></textarea><p class="description">Leave empty to use Meta Description.</p></td></tr>
+        <tr><th>Twitter Description (AR)</th><td><textarea name="asl_seo_twitter_description_ar" class="large-text" rows="3" dir="rtl"><?php echo esc_textarea(get_theme_mod('asl_seo_twitter_description_ar','')); ?></textarea></td></tr>
+        <tr><th>Twitter Image</th><td><?php asl_image_field('asl_seo_twitter_image',get_theme_mod('asl_seo_twitter_image','')); ?><p class="description">Leave empty to use OG Image. Recommended: 1200x600 pixels.</p></td></tr>
+    </table>
+    <?php
+}
+
+function asl_render_seo_google_tab() {
+    ?>
+    <h2>Google & Analytics</h2>
+    <p class="description" style="margin-bottom:15px;">Verification codes and analytics tracking IDs for search engines and analytics platforms.</p>
+    <table class="form-table">
+        <tr><th>Google Site Verification</th><td><input type="text" name="asl_seo_google_verification" value="<?php echo esc_attr(get_theme_mod('asl_seo_google_verification','')); ?>" class="large-text"><p class="description">The content value from Google Search Console verification meta tag.</p></td></tr>
+        <tr><th>Bing Site Verification</th><td><input type="text" name="asl_seo_bing_verification" value="<?php echo esc_attr(get_theme_mod('asl_seo_bing_verification','')); ?>" class="large-text"><p class="description">The content value from Bing Webmaster Tools verification meta tag.</p></td></tr>
+        <tr><th>Google Analytics ID</th><td><input type="text" name="asl_seo_ga_id" value="<?php echo esc_attr(get_theme_mod('asl_seo_ga_id','')); ?>" class="regular-text" placeholder="G-XXXXXXXXXX"><p class="description">Google Analytics 4 Measurement ID.</p></td></tr>
+        <tr><th>Google Tag Manager ID</th><td><input type="text" name="asl_seo_gtm_id" value="<?php echo esc_attr(get_theme_mod('asl_seo_gtm_id','')); ?>" class="regular-text" placeholder="GTM-XXXXXXX"><p class="description">Google Tag Manager Container ID.</p></td></tr>
+        <tr><th>Facebook Pixel ID</th><td><input type="text" name="asl_seo_fb_pixel_id" value="<?php echo esc_attr(get_theme_mod('asl_seo_fb_pixel_id','')); ?>" class="regular-text"><p class="description">Facebook/Meta Pixel tracking ID.</p></td></tr>
+        <tr><th>Snapchat Pixel ID</th><td><input type="text" name="asl_seo_snap_pixel_id" value="<?php echo esc_attr(get_theme_mod('asl_seo_snap_pixel_id','')); ?>" class="regular-text"><p class="description">Snapchat Pixel tracking ID.</p></td></tr>
+        <tr><th>TikTok Pixel ID</th><td><input type="text" name="asl_seo_tiktok_pixel_id" value="<?php echo esc_attr(get_theme_mod('asl_seo_tiktok_pixel_id','')); ?>" class="regular-text"><p class="description">TikTok Pixel tracking ID.</p></td></tr>
+    </table>
+    <?php
+}
+
+function asl_render_seo_advanced_tab() {
+    ?>
+    <h2>Advanced SEO</h2>
+    <table class="form-table">
+        <tr><th>Canonical URL</th><td><input type="url" name="asl_seo_canonical_url" value="<?php echo esc_attr(get_theme_mod('asl_seo_canonical_url','')); ?>" class="large-text" placeholder="https://yourdomain.com"><p class="description">Override the default canonical URL for the homepage. Leave empty to use the site URL.</p></td></tr>
+        <tr><th>Robots</th><td><select name="asl_seo_robots"><option value="index,follow" <?php selected(get_theme_mod('asl_seo_robots','index,follow'),'index,follow'); ?>>Index, Follow</option><option value="noindex,follow" <?php selected(get_theme_mod('asl_seo_robots','index,follow'),'noindex,follow'); ?>>No Index, Follow</option><option value="index,nofollow" <?php selected(get_theme_mod('asl_seo_robots','index,follow'),'index,nofollow'); ?>>Index, No Follow</option><option value="noindex,nofollow" <?php selected(get_theme_mod('asl_seo_robots','index,follow'),'noindex,nofollow'); ?>>No Index, No Follow</option></select></td></tr>
+        <tr><th>Schema.org Type</th><td><select name="asl_seo_schema_type"><option value="Organization" <?php selected(get_theme_mod('asl_seo_schema_type','Organization'),'Organization'); ?>>Organization</option><option value="LocalBusiness" <?php selected(get_theme_mod('asl_seo_schema_type','Organization'),'LocalBusiness'); ?>>Local Business</option><option value="Store" <?php selected(get_theme_mod('asl_seo_schema_type','Organization'),'Store'); ?>>Store</option><option value="OnlineStore" <?php selected(get_theme_mod('asl_seo_schema_type','Organization'),'OnlineStore'); ?>>Online Store</option></select><p class="description">Schema.org structured data type for your business.</p></td></tr>
+        <tr><th>Custom Head Code</th><td><textarea name="asl_seo_custom_head" class="large-text code" rows="6"><?php echo esc_textarea(get_theme_mod('asl_seo_custom_head','')); ?></textarea><p class="description">Custom HTML/scripts to inject in the &lt;head&gt; section. Use for additional tracking codes or meta tags.</p></td></tr>
+    </table>
     <?php
 }
 
@@ -517,12 +620,61 @@ function asl_save_header_settings() {
  * Save SEO Settings
  */
 function asl_save_seo_settings() {
-    set_theme_mod('asl_seo_title', sanitize_text_field($_POST['asl_seo_title']??''));
-    set_theme_mod('asl_seo_title_ar', sanitize_text_field($_POST['asl_seo_title_ar']??''));
-    set_theme_mod('asl_seo_description', sanitize_textarea_field($_POST['asl_seo_description']??''));
-    set_theme_mod('asl_seo_description_ar', sanitize_textarea_field($_POST['asl_seo_description_ar']??''));
-    set_theme_mod('asl_seo_og_image', esc_url_raw($_POST['asl_seo_og_image']??''));
-    set_theme_mod('asl_seo_robots', sanitize_text_field($_POST['asl_seo_robots']??'index,follow'));
+    $tab = sanitize_text_field($_POST['asl_seo_current_tab']??'general');
+
+    switch($tab) {
+        case 'general':
+            $title = sanitize_text_field($_POST['asl_seo_title']??'');
+            $description = sanitize_textarea_field($_POST['asl_seo_description']??'');
+            set_theme_mod('asl_seo_title', $title);
+            set_theme_mod('asl_seo_title_ar', sanitize_text_field($_POST['asl_seo_title_ar']??''));
+            set_theme_mod('asl_seo_description', $description);
+            set_theme_mod('asl_seo_description_ar', sanitize_textarea_field($_POST['asl_seo_description_ar']??''));
+            set_theme_mod('asl_seo_keywords', sanitize_text_field($_POST['asl_seo_keywords']??''));
+            set_theme_mod('asl_seo_keywords_ar', sanitize_text_field($_POST['asl_seo_keywords_ar']??''));
+            if (!empty($title)) update_option('blogname', $title);
+            if (!empty($description)) update_option('blogdescription', $description);
+            break;
+
+        case 'opengraph':
+            set_theme_mod('asl_seo_og_title', sanitize_text_field($_POST['asl_seo_og_title']??''));
+            set_theme_mod('asl_seo_og_title_ar', sanitize_text_field($_POST['asl_seo_og_title_ar']??''));
+            set_theme_mod('asl_seo_og_description', sanitize_textarea_field($_POST['asl_seo_og_description']??''));
+            set_theme_mod('asl_seo_og_description_ar', sanitize_textarea_field($_POST['asl_seo_og_description_ar']??''));
+            set_theme_mod('asl_seo_og_image', esc_url_raw($_POST['asl_seo_og_image']??''));
+            set_theme_mod('asl_seo_og_type', sanitize_text_field($_POST['asl_seo_og_type']??'website'));
+            set_theme_mod('asl_seo_og_site_name', sanitize_text_field($_POST['asl_seo_og_site_name']??''));
+            set_theme_mod('asl_seo_fb_app_id', sanitize_text_field($_POST['asl_seo_fb_app_id']??''));
+            break;
+
+        case 'twitter':
+            set_theme_mod('asl_seo_twitter_card', sanitize_text_field($_POST['asl_seo_twitter_card']??'summary_large_image'));
+            set_theme_mod('asl_seo_twitter_site', sanitize_text_field($_POST['asl_seo_twitter_site']??''));
+            set_theme_mod('asl_seo_twitter_creator', sanitize_text_field($_POST['asl_seo_twitter_creator']??''));
+            set_theme_mod('asl_seo_twitter_title', sanitize_text_field($_POST['asl_seo_twitter_title']??''));
+            set_theme_mod('asl_seo_twitter_title_ar', sanitize_text_field($_POST['asl_seo_twitter_title_ar']??''));
+            set_theme_mod('asl_seo_twitter_description', sanitize_textarea_field($_POST['asl_seo_twitter_description']??''));
+            set_theme_mod('asl_seo_twitter_description_ar', sanitize_textarea_field($_POST['asl_seo_twitter_description_ar']??''));
+            set_theme_mod('asl_seo_twitter_image', esc_url_raw($_POST['asl_seo_twitter_image']??''));
+            break;
+
+        case 'google':
+            set_theme_mod('asl_seo_google_verification', sanitize_text_field($_POST['asl_seo_google_verification']??''));
+            set_theme_mod('asl_seo_bing_verification', sanitize_text_field($_POST['asl_seo_bing_verification']??''));
+            set_theme_mod('asl_seo_ga_id', sanitize_text_field($_POST['asl_seo_ga_id']??''));
+            set_theme_mod('asl_seo_gtm_id', sanitize_text_field($_POST['asl_seo_gtm_id']??''));
+            set_theme_mod('asl_seo_fb_pixel_id', sanitize_text_field($_POST['asl_seo_fb_pixel_id']??''));
+            set_theme_mod('asl_seo_snap_pixel_id', sanitize_text_field($_POST['asl_seo_snap_pixel_id']??''));
+            set_theme_mod('asl_seo_tiktok_pixel_id', sanitize_text_field($_POST['asl_seo_tiktok_pixel_id']??''));
+            break;
+
+        case 'advanced':
+            set_theme_mod('asl_seo_canonical_url', esc_url_raw($_POST['asl_seo_canonical_url']??''));
+            set_theme_mod('asl_seo_robots', sanitize_text_field($_POST['asl_seo_robots']??'index,follow'));
+            set_theme_mod('asl_seo_schema_type', sanitize_text_field($_POST['asl_seo_schema_type']??'Organization'));
+            set_theme_mod('asl_seo_custom_head', wp_kses($_POST['asl_seo_custom_head']??'', array('meta'=>array('name'=>true,'content'=>true,'property'=>true,'charset'=>true,'http-equiv'=>true),'link'=>array('rel'=>true,'href'=>true,'type'=>true,'hreflang'=>true),'script'=>array('type'=>true,'src'=>true,'async'=>true,'defer'=>true))));
+            break;
+    }
 }
 
 /**
@@ -596,7 +748,41 @@ function asl_get_topbar_settings() {
  * Get SEO settings
  */
 function asl_get_seo_settings() {
-    return array('title'=>get_theme_mod('asl_seo_title',''),'titleAr'=>get_theme_mod('asl_seo_title_ar',''),'description'=>get_theme_mod('asl_seo_description',''),'descriptionAr'=>get_theme_mod('asl_seo_description_ar',''),'ogImage'=>get_theme_mod('asl_seo_og_image',''),'robots'=>get_theme_mod('asl_seo_robots','index,follow'));
+    return array(
+        'title'=>get_theme_mod('asl_seo_title',get_bloginfo('name')),
+        'titleAr'=>get_theme_mod('asl_seo_title_ar',''),
+        'description'=>get_theme_mod('asl_seo_description',get_bloginfo('description')),
+        'descriptionAr'=>get_theme_mod('asl_seo_description_ar',''),
+        'keywords'=>get_theme_mod('asl_seo_keywords',''),
+        'keywordsAr'=>get_theme_mod('asl_seo_keywords_ar',''),
+        'ogTitle'=>get_theme_mod('asl_seo_og_title',''),
+        'ogTitleAr'=>get_theme_mod('asl_seo_og_title_ar',''),
+        'ogDescription'=>get_theme_mod('asl_seo_og_description',''),
+        'ogDescriptionAr'=>get_theme_mod('asl_seo_og_description_ar',''),
+        'ogImage'=>get_theme_mod('asl_seo_og_image',''),
+        'ogType'=>get_theme_mod('asl_seo_og_type','website'),
+        'ogSiteName'=>get_theme_mod('asl_seo_og_site_name',''),
+        'fbAppId'=>get_theme_mod('asl_seo_fb_app_id',''),
+        'twitterCard'=>get_theme_mod('asl_seo_twitter_card','summary_large_image'),
+        'twitterSite'=>get_theme_mod('asl_seo_twitter_site',''),
+        'twitterCreator'=>get_theme_mod('asl_seo_twitter_creator',''),
+        'twitterTitle'=>get_theme_mod('asl_seo_twitter_title',''),
+        'twitterTitleAr'=>get_theme_mod('asl_seo_twitter_title_ar',''),
+        'twitterDescription'=>get_theme_mod('asl_seo_twitter_description',''),
+        'twitterDescriptionAr'=>get_theme_mod('asl_seo_twitter_description_ar',''),
+        'twitterImage'=>get_theme_mod('asl_seo_twitter_image',''),
+        'googleVerification'=>get_theme_mod('asl_seo_google_verification',''),
+        'bingVerification'=>get_theme_mod('asl_seo_bing_verification',''),
+        'gaId'=>get_theme_mod('asl_seo_ga_id',''),
+        'gtmId'=>get_theme_mod('asl_seo_gtm_id',''),
+        'fbPixelId'=>get_theme_mod('asl_seo_fb_pixel_id',''),
+        'snapPixelId'=>get_theme_mod('asl_seo_snap_pixel_id',''),
+        'tiktokPixelId'=>get_theme_mod('asl_seo_tiktok_pixel_id',''),
+        'robots'=>get_theme_mod('asl_seo_robots','index,follow'),
+        'canonicalUrl'=>get_theme_mod('asl_seo_canonical_url',''),
+        'schemaType'=>get_theme_mod('asl_seo_schema_type','Organization'),
+        'customHead'=>get_theme_mod('asl_seo_custom_head',''),
+    );
 }
 
 /**

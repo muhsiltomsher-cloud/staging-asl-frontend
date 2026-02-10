@@ -147,6 +147,87 @@ export interface HeaderSettings {
   logoDark: string | null;
 }
 
+// Type for WordPress Plugin SEO settings from /asl/v1/seo-settings
+interface WPPluginSeoSettings {
+  title: string;
+  titleAr: string;
+  description: string;
+  descriptionAr: string;
+  keywords: string;
+  keywordsAr: string;
+  ogTitle: string;
+  ogTitleAr: string;
+  ogDescription: string;
+  ogDescriptionAr: string;
+  ogImage: string;
+  ogType: string;
+  ogSiteName: string;
+  fbAppId: string;
+  twitterCard: string;
+  twitterSite: string;
+  twitterCreator: string;
+  twitterTitle: string;
+  twitterTitleAr: string;
+  twitterDescription: string;
+  twitterDescriptionAr: string;
+  twitterImage: string;
+  googleVerification: string;
+  bingVerification: string;
+  gaId: string;
+  gtmId: string;
+  fbPixelId: string;
+  snapPixelId: string;
+  tiktokPixelId: string;
+  robots: string;
+  canonicalUrl: string;
+  schemaType: string;
+  customHead: string;
+}
+
+export interface SeoSettings {
+  title: string;
+  titleAr: string;
+  description: string;
+  descriptionAr: string;
+  keywords: string;
+  keywordsAr: string;
+  openGraph: {
+    title: string;
+    titleAr: string;
+    description: string;
+    descriptionAr: string;
+    image: string;
+    type: string;
+    siteName: string;
+    fbAppId: string;
+  };
+  twitter: {
+    card: string;
+    site: string;
+    creator: string;
+    title: string;
+    titleAr: string;
+    description: string;
+    descriptionAr: string;
+    image: string;
+  };
+  verification: {
+    google: string;
+    bing: string;
+  };
+  analytics: {
+    gaId: string;
+    gtmId: string;
+    fbPixelId: string;
+    snapPixelId: string;
+    tiktokPixelId: string;
+  };
+  robots: string;
+  canonicalUrl: string;
+  schemaType: string;
+  customHead: string;
+}
+
 // Type for WordPress Plugin topbar settings from /asl/v1/topbar
 interface WPPluginTopbarSettings {
   enabled: boolean;
@@ -668,6 +749,62 @@ const defaultMobileBarItems: MobileBarItem[] = [
   { icon: "heart", label: "Wishlist", labelAr: "المفضلة", url: "/wishlist" },
   { icon: "user", label: "Account", labelAr: "حسابي", url: "/account" },
 ];
+
+// Fetch SEO settings from WordPress Plugin API
+export async function getSeoSettings(locale?: Locale): Promise<SeoSettings> {
+  const data = await fetchWPAPI<WPPluginSeoSettings>(
+    "/asl/v1/seo-settings",
+    {
+      tags: ["seo-settings"],
+      locale,
+      revalidate: 60,
+    }
+  );
+
+  return {
+    title: data?.title || "",
+    titleAr: data?.titleAr || "",
+    description: data?.description || "",
+    descriptionAr: data?.descriptionAr || "",
+    keywords: data?.keywords || "",
+    keywordsAr: data?.keywordsAr || "",
+    openGraph: {
+      title: data?.ogTitle || "",
+      titleAr: data?.ogTitleAr || "",
+      description: data?.ogDescription || "",
+      descriptionAr: data?.ogDescriptionAr || "",
+      image: data?.ogImage || "",
+      type: data?.ogType || "website",
+      siteName: data?.ogSiteName || "",
+      fbAppId: data?.fbAppId || "",
+    },
+    twitter: {
+      card: data?.twitterCard || "summary_large_image",
+      site: data?.twitterSite || "",
+      creator: data?.twitterCreator || "",
+      title: data?.twitterTitle || "",
+      titleAr: data?.twitterTitleAr || "",
+      description: data?.twitterDescription || "",
+      descriptionAr: data?.twitterDescriptionAr || "",
+      image: data?.twitterImage || "",
+    },
+    verification: {
+      google: data?.googleVerification || "",
+      bing: data?.bingVerification || "",
+    },
+    analytics: {
+      gaId: data?.gaId || "",
+      gtmId: data?.gtmId || "",
+      fbPixelId: data?.fbPixelId || "",
+      snapPixelId: data?.snapPixelId || "",
+      tiktokPixelId: data?.tiktokPixelId || "",
+    },
+    robots: data?.robots || "index,follow",
+    canonicalUrl: data?.canonicalUrl || "",
+    schemaType: data?.schemaType || "Organization",
+    customHead: data?.customHead || "",
+  };
+}
 
 // Fetch header settings from WordPress Plugin API
 export async function getHeaderSettings(): Promise<HeaderSettings> {
