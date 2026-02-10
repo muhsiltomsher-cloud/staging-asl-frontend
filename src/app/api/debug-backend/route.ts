@@ -1,46 +1,76 @@
 import { NextResponse } from "next/server";
-import { API_BASE, backendHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
+import { siteConfig } from "@/config/site";
 
-async function testEndpoint(url: string, method: string, headers: HeadersInit, body?: string) {
-  const opts: RequestInit = { method, headers };
+const BASE = siteConfig.apiUrl;
+
+async function testEndpoint(label: string, url: string, method: string, headers?: HeadersInit, body?: string) {
+  const opts: RequestInit = { method };
+  if (headers) opts.headers = headers;
   if (body) opts.body = body;
 
-  const response = await fetch(url, opts);
-  const text = await response.text();
-
-  return {
-    request_url: url,
-    request_method: method,
-    response_status: response.status,
-    body_snippet: text.slice(0, 500),
-    is_json: (() => { try { JSON.parse(text); return true; } catch { return false; } })(),
-  };
+  try {
+    const response = await fetch(url, opts);
+    const text = await response.text();
+    return {
+      label,
+      url,
+      method,
+      headers_sent: headers ? Object.keys(headers) : "none",
+      status: response.status,
+      is_json: (() => { try { JSON.parse(text); return true; } catch { return false; } })(),
+      snippet: text.slice(0, 300),
+    };
+  } catch (error) {
+    return { label, url, method, error: error instanceof Error ? error.message : "Unknown" };
+  }
 }
 
 export async function GET() {
-  const results: Record<string, unknown> = {};
-  const minimalHeaders = backendHeaders();
+  const cocartUrl = `${BASE}/wp-json/cocart/v2/cart`;
+  const cocartAddUrl = `${BASE}/wp-json/cocart/v2/cart/add-item`;
+  const storeApiProducts = `${BASE}/wp-json/wc/store/v1/products`;
+  const storeApiCart = `${BASE}/wp-json/wc/store/v1/cart`;
+  const wpPosts = `${BASE}/wp-json/wp/v2/posts`;
+  const timestamp = `_t=${Date.now()}`;
 
-  try {
-    results.get_cart_minimal = await testEndpoint(
-      noCacheUrl(`${API_BASE}/wp-json/cocart/v2/cart`),
-      "GET",
-      minimalHeaders
-    );
-  } catch (error) {
-    results.get_cart_minimal = { error: error instanceof Error ? error.message : "Unknown error" };
-  }
-
-  try {
-    results.post_add_item = await testEndpoint(
-      noCacheUrl(`${API_BASE}/wp-json/cocart/v2/cart/add-item`),
-      "POST",
-      minimalHeaders,
+  const results = await Promise.all([
+    testEndpoint("1_cocart_bare", cocartUrl, "GET"),
+    testEndpoint("2_cocart_with_timestamp", `${cocartUrl}?${timestamp}`, "GET"),
+    testEndpoint("3_cocart_with_headers", cocartUrl, "GET", {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    }),
+    testEndpoint("4_cocart_headers_and_timestamp", `${cocartUrl}?${timestamp}`, "GET", {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    }),
+    testEndpoint("5_store_api_products_bare", storeApiProducts, "GET"),
+    testEndpoint("6_store_api_cart_bare", storeApiCart, "GET"),
+    testEndpoint("7_store_api_cart_with_headers", storeApiCart, "GET", {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    }),
+    testEndpoint("8_wp_posts_bare", wpPosts, "GET"),
+    testEndpoint("9_cocart_accept_only", cocartUrl, "GET", {
+      "Accept": "application/json",
+    }),
+    testEndpoint("10_cocart_post_bare", cocartAddUrl, "POST", undefined,
       JSON.stringify({ id: "99999", quantity: "1" })
-    );
-  } catch (error) {
-    results.post_add_item = { error: error instanceof Error ? error.message : "Unknown error" };
+    ),
+    testEndpoint("11_cocart_post_with_headers", cocartAddUrl, "POST", {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    }, JSON.stringify({ id: "99999", quantity: "1" })),
+    testEndpoint("12_cocart_with_useragent", cocartUrl, "GET", {
+      "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+    }),
+  ]);
+
+  const summary: Record<string, unknown> = {};
+  for (const r of results) {
+    const key = (r as Record<string, unknown>).label as string;
+    summary[key] = r;
   }
 
-  return NextResponse.json(results);
+  return NextResponse.json(summary);
 }
