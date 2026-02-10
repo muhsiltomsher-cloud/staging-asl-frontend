@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, Minus, Plus, ChevronDown, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Grid, Layers, Move } from "lucide-react";
+import { Heart, Minus, Plus, ChevronDown, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Grid, Layers, Move, Share2 } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Thumbs, FreeMode } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
@@ -742,9 +742,35 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
     );
   };
 
+  const handleShare = async () => {
+    const url = window.location.href;
+    const title = decodeHtmlEntities(product.name);
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, url });
+      } catch (err) {
+        if ((err as DOMException).name !== "AbortError") {
+          await navigator.clipboard.writeText(url);
+        }
+      }
+    } else {
+      await navigator.clipboard.writeText(url);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <Breadcrumbs items={breadcrumbItems} locale={locale} />
+      <div className="flex items-center justify-between">
+        <Breadcrumbs items={breadcrumbItems} locale={locale} />
+        <button
+          type="button"
+          onClick={handleShare}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200"
+          aria-label={isRTL ? "مشاركة" : "Share"}
+        >
+          <Share2 className="h-4 w-4" />
+        </button>
+      </div>
 
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 lg:items-start">
         {/* Product Gallery */}
