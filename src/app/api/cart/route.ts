@@ -12,6 +12,15 @@ const LOCALE_COOKIE = "NEXT_LOCALE";
 // User-Agent header to prevent WAF/security plugin blocks
 const USER_AGENT = "Mozilla/5.0 (compatible; ASL-Frontend/1.0)";
 
+async function safeJson(response: Response): Promise<Record<string, unknown>> {
+  const text = await response.text();
+  try {
+    return JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    return { code: "invalid_response", message: "Backend returned non-JSON response" };
+  }
+}
+
 async function getCartKey(): Promise<string | null> {
   const cookieStore = await cookies();
   return cookieStore.get(CART_KEY_COOKIE)?.value || null;
@@ -44,8 +53,8 @@ async function tryRefreshToken(): Promise<string | null> {
 
     if (!response.ok) return null;
 
-    const data = await response.json();
-    return data.jwt_token || data.token || null;
+    const data = await safeJson(response);
+    return (data.jwt_token as string) || (data.token as string) || null;
   } catch {
     return null;
   }
@@ -214,15 +223,13 @@ export async function GET(request: NextRequest) {
       headers: authToken ? getAuthHeaders(request, authToken) : getGuestHeaders(),
     });
 
-    let data = await response.json();
+    let data = await safeJson(response);
     let refreshedToken: string | null = null;
 
-    // If auth failed and we had a token, try to refresh the token first
     if (!response.ok && authToken && isAuthError(response.status, data)) {
       refreshedToken = await tryRefreshToken();
       
       if (refreshedToken) {
-        // Retry with the refreshed token
         response = await fetch(authUrl, {
           method: "GET",
           headers: {
@@ -231,29 +238,26 @@ export async function GET(request: NextRequest) {
             "Authorization": `Bearer ${refreshedToken}`,
           },
         });
-        data = await response.json();
+        data = await safeJson(response);
       }
       
-      // If token refresh failed or request still fails, fall back to guest
       if (!refreshedToken || !response.ok) {
-        refreshedToken = null; // Don't update cookie if we're falling back to guest
+        refreshedToken = null;
         response = await fetch(guestUrl, {
           method: "GET",
           headers: getGuestHeaders(),
         });
-        data = await response.json();
+        data = await safeJson(response);
       }
     }
 
-    // If guest request failed with 403 and we have a stale cart key, retry without cart key
-    // This handles cases where the cart key is invalid or expired
     if (!response.ok && !authToken && response.status === 403 && cartKey) {
       const freshGuestUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, locale);
       response = await fetch(freshGuestUrl, {
         method: "GET",
         headers: getGuestHeaders(),
       });
-      data = await response.json();
+      data = await safeJson(response);
     }
 
     if (!response.ok) {
@@ -261,16 +265,15 @@ export async function GET(request: NextRequest) {
         {
           success: false,
           error: {
-            code: data.code || "cart_error",
-            message: data.message || "Failed to get cart.",
+            code: (data.code as string) || "cart_error",
+            message: (data.message as string) || "Failed to get cart.",
           },
         },
         { status: response.status }
       );
     }
 
-    // Store cart_key for future requests (for guest users or when falling back to guest)
-    const newCartKey = data.cart_key ? data.cart_key : null;
+    const newCartKey = data.cart_key ? (data.cart_key as string) : null;
     return createResponseWithCartKey({ success: true, cart: data }, newCartKey, refreshedToken);
   } catch (error) {
     return NextResponse.json(
@@ -357,22 +360,21 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify(body),
         });
         
-        const storeApiData = await storeApiResponse.json();
+        const storeApiData = await safeJson(storeApiResponse);
         
         if (!storeApiResponse.ok) {
           return NextResponse.json(
             {
               success: false,
               error: {
-                code: storeApiData.code || "coupon_error",
-                message: storeApiData.message || "Coupon operation failed.",
+                code: (storeApiData.code as string) || "coupon_error",
+                message: (storeApiData.message as string) || "Coupon operation failed.",
               },
             },
             { status: storeApiResponse.status }
           );
         }
         
-        // After successful coupon operation, fetch the cart via CoCart to return consistent data format
         const coCartUrl = cartKey
           ? appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart?cart_key=${cartKey}`, currency, locale)
           : appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, locale);
@@ -382,10 +384,9 @@ export async function POST(request: NextRequest) {
           headers: authToken ? getAuthHeaders(request, authToken) : getGuestHeaders(),
         });
         
-        const coCartData = await coCartResponse.json();
+        const coCartData = await safeJson(coCartResponse);
         
         if (!coCartResponse.ok) {
-          // If CoCart fetch fails, return the Store API response with a warning
           return NextResponse.json({ 
             success: true, 
             cart: storeApiData,
@@ -393,7 +394,7 @@ export async function POST(request: NextRequest) {
           });
         }
         
-        const newCartKey = coCartData.cart_key ? coCartData.cart_key : null;
+        const newCartKey = coCartData.cart_key ? (coCartData.cart_key as string) : null;
         return createResponseWithCartKey({ success: true, cart: coCartData }, newCartKey);
       }
       default:
@@ -419,15 +420,13 @@ export async function POST(request: NextRequest) {
     }
 
     let response = await fetch(url, fetchOptions);
-    let data = await response.json();
+    let data = await safeJson(response);
     let refreshedToken: string | null = null;
 
-    // If auth failed and we had a token, try to refresh the token first
     if (!response.ok && authToken && isAuthError(response.status, data)) {
       refreshedToken = await tryRefreshToken();
       
       if (refreshedToken) {
-        // Retry with the refreshed token
         const refreshedFetchOptions: RequestInit = {
           method,
           headers: {
@@ -440,12 +439,11 @@ export async function POST(request: NextRequest) {
           refreshedFetchOptions.body = JSON.stringify(body);
         }
         response = await fetch(baseUrl, refreshedFetchOptions);
-        data = await response.json();
+        data = await safeJson(response);
       }
       
-      // If token refresh failed or request still fails, fall back to guest
       if (!refreshedToken || !response.ok) {
-        refreshedToken = null; // Don't update cookie if we're falling back to guest
+        refreshedToken = null;
         const guestFetchOptions: RequestInit = {
           method,
           headers: getGuestHeaders(),
@@ -454,14 +452,12 @@ export async function POST(request: NextRequest) {
           guestFetchOptions.body = JSON.stringify(body);
         }
         response = await fetch(guestUrl, guestFetchOptions);
-        data = await response.json();
+        data = await safeJson(response);
       }
     }
 
-    // If guest request failed with 403 and we have a stale cart key, retry without cart key
-    // This handles cases where the cart key is invalid or expired
     if (!response.ok && !authToken && response.status === 403 && cartKey) {
-      const freshGuestUrl = baseUrl; // Use base URL without cart_key
+      const freshGuestUrl = baseUrl;
       const freshGuestFetchOptions: RequestInit = {
         method,
         headers: getGuestHeaders(),
@@ -470,7 +466,7 @@ export async function POST(request: NextRequest) {
         freshGuestFetchOptions.body = JSON.stringify(body);
       }
       response = await fetch(freshGuestUrl, freshGuestFetchOptions);
-      data = await response.json();
+      data = await safeJson(response);
     }
 
     if (!response.ok) {
@@ -478,16 +474,15 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: {
-            code: data.code || "cart_error",
-            message: data.message || "Cart operation failed.",
+            code: (data.code as string) || "cart_error",
+            message: (data.message as string) || "Cart operation failed.",
           },
         },
         { status: response.status }
       );
     }
 
-    // Store cart_key for future requests (for guest users or when falling back to guest)
-    const newCartKey = data.cart_key ? data.cart_key : null;
+    const newCartKey = data.cart_key ? (data.cart_key as string) : null;
     return createResponseWithCartKey({ success: true, cart: data }, newCartKey, refreshedToken);
   } catch (error) {
     return NextResponse.json(

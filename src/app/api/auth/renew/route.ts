@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
 
 const API_BASE = siteConfig.apiUrl;
+const USER_AGENT = "Mozilla/5.0 (compatible; ASL-Frontend/1.0)";
+
+async function safeJson(response: Response): Promise<Record<string, unknown>> {
+  const text = await response.text();
+  try {
+    return JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    return { code: "invalid_response", message: "Backend returned non-JSON response" };
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,19 +32,20 @@ export async function POST(request: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "User-Agent": USER_AGENT,
       },
       body: JSON.stringify({ refresh_token }),
     });
 
-    const data = await response.json();
+    const data = await safeJson(response);
 
     if (!response.ok) {
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: data.code || "refresh_failed",
-            message: data.message || "Token refresh failed.",
+            code: (data.code as string) || "refresh_failed",
+            message: (data.message as string) || "Token refresh failed.",
           },
         },
         { status: response.status }
@@ -43,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      token: data.jwt_token || data.token,
+      token: (data.jwt_token as string) || (data.token as string),
     });
   } catch {
     return NextResponse.json(
