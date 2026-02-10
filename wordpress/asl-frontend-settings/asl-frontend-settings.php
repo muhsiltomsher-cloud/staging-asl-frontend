@@ -62,3 +62,6 @@ require_once ASL_SETTINGS_PATH . 'includes/class-asl-free-gift.php';
 
 // Include Forms module (contact form and newsletter REST API)
 require_once ASL_SETTINGS_PATH . 'includes/class-asl-forms.php';
+
+// Include Frontend URLs module (rewrite admin URLs to headless frontend)
+require_once ASL_SETTINGS_PATH . 'includes/class-asl-frontend-urls.php';
