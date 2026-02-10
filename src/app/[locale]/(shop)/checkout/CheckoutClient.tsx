@@ -427,10 +427,13 @@ export default function CheckoutClient() {
         const fetchShippingMethods = async (country: string, city: string, postcode: string) => {
           setIsLoadingShipping(true);
           try {
+            const subtotal = cartSubtotal ? parseFloat(String(cartSubtotal)) : 0;
             const params = new URLSearchParams({
               country: country || "AE",
               city: city || "",
               postcode: postcode || "",
+              cart_subtotal: String(subtotal),
+              currency_code: currency || "AED",
             });
             const response = await fetch(`/api/shipping?${params.toString()}`);
             const data = await response.json();
@@ -475,7 +478,7 @@ export default function CheckoutClient() {
             const response = await fetch("/api/shipping", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ rate_id: rateId, package_id: packageId }),
+              body: JSON.stringify({ rate_id: rateId, package_id: packageId, shipping_rates: shippingPackages }),
             });
             const data = await response.json();
             if (data.success) {

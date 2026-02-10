@@ -1,29 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
-import { cookies } from "next/headers";
+import { getEnvVar } from "@/lib/utils/loadEnv";
 
-const API_BASE = siteConfig.apiUrl;
-const AUTH_TOKEN_COOKIE = "asl_auth_token";
+const WC_API_BASE = `${siteConfig.apiUrl}/wp-json/wc/v3`;
 
-async function getAuthToken(): Promise<string | null> {
-  const cookieStore = await cookies();
-  return cookieStore.get(AUTH_TOKEN_COOKIE)?.value || null;
-}
-
-async function getStoreApiAuth(): Promise<{ cartToken: string | null; nonce: string | null }> {
-  try {
-    const response = await fetch(`${API_BASE}/wp-json/wc/store/v1/cart`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-    
-    const cartToken = response.headers.get("cart-token");
-    const nonce = response.headers.get("nonce");
-    
-    return { cartToken, nonce };
-  } catch {
-    return { cartToken: null, nonce: null };
-  }
+function getBasicAuthParams(): string {
+  const consumerKey = getEnvVar("WC_CONSUMER_KEY") || getEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY") || "";
+  const consumerSecret = getEnvVar("WC_CONSUMER_SECRET") || getEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET") || "";
+  return `consumer_key=${consumerKey}&consumer_secret=${consumerSecret}`;
 }
 
 export interface ShippingRate {
@@ -65,79 +49,203 @@ export interface ShippingPackage {
   shipping_rates: ShippingRate[];
 }
 
+interface ZoneMethod {
+  id: number;
+  instance_id: number;
+  title: string;
+  order: number;
+  enabled: boolean;
+  method_id: string;
+  method_title: string;
+  method_description: string;
+  settings: Record<string, { value: string }>;
+}
+
+interface ZoneLocation {
+  code: string;
+  type: "country" | "state" | "postcode" | "continent";
+}
+
+const CONTINENT_COUNTRIES: Record<string, string[]> = {
+  AF: ["DZ", "AO", "BJ", "BW", "BF", "BI", "CM", "CV", "CF", "TD", "KM", "CG", "CD", "CI", "DJ", "EG", "GQ", "ER", "SZ", "ET", "GA", "GM", "GH", "GN", "GW", "KE", "LS", "LR", "LY", "MG", "MW", "ML", "MR", "MU", "YT", "MA", "MZ", "NA", "NE", "NG", "RE", "RW", "SH", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD", "TZ", "TG", "TN", "UG", "EH", "ZM", "ZW"],
+  AN: ["AQ", "BV", "TF", "HM", "GS"],
+  AS: ["AF", "AM", "AZ", "BH", "BD", "BT", "BN", "KH", "CN", "CX", "CC", "GE", "HK", "IN", "ID", "IR", "IQ", "IL", "JP", "JO", "KZ", "KW", "KG", "LA", "LB", "MO", "MY", "MV", "MN", "MM", "NP", "KP", "OM", "PK", "PS", "PH", "QA", "SA", "SG", "KR", "LK", "SY", "TW", "TJ", "TH", "TL", "TR", "TM", "AE", "UZ", "VN", "YE"],
+  EU: ["AX", "AL", "AD", "AT", "BY", "BE", "BA", "BG", "HR", "CZ", "DK", "EE", "FO", "FI", "FR", "DE", "GI", "GR", "GG", "VA", "HU", "IS", "IE", "IM", "IT", "JE", "LV", "LI", "LT", "LU", "MK", "MT", "MD", "MC", "ME", "NL", "NO", "PL", "PT", "RO", "RU", "SM", "RS", "SK", "SI", "ES", "SJ", "SE", "CH", "UA", "GB"],
+  NA: ["AI", "AG", "AW", "BS", "BB", "BZ", "BM", "BQ", "VG", "CA", "KY", "CR", "CU", "CW", "DM", "DO", "SV", "GL", "GD", "GP", "GT", "HT", "HN", "JM", "MQ", "MX", "MS", "NI", "PA", "PR", "BL", "KN", "LC", "MF", "PM", "VC", "SX", "TT", "TC", "US", "VI"],
+  OC: ["AS", "AU", "CK", "FJ", "PF", "GU", "KI", "MH", "FM", "NR", "NC", "NZ", "NU", "NF", "MP", "PW", "PG", "PN", "WS", "SB", "TK", "TO", "TV", "UM", "VU", "WF"],
+  SA: ["AR", "BO", "BR", "CL", "CO", "EC", "FK", "GF", "GY", "PY", "PE", "SR", "UY", "VE"],
+};
+
+async function findZoneForCountry(country: string): Promise<number | null> {
+  const authParams = getBasicAuthParams();
+  const zonesUrl = `${WC_API_BASE}/shipping/zones?${authParams}`;
+  const zonesResponse = await fetch(zonesUrl, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!zonesResponse.ok) return null;
+
+  const zones: Array<{ id: number; name: string }> = await zonesResponse.json();
+
+  for (const zone of zones) {
+    if (zone.id === 0) continue;
+
+    const locationsUrl = `${WC_API_BASE}/shipping/zones/${zone.id}/locations?${authParams}`;
+    const locationsResponse = await fetch(locationsUrl, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!locationsResponse.ok) continue;
+
+    const locations: ZoneLocation[] = await locationsResponse.json();
+
+    for (const location of locations) {
+      if (location.type === "country" && location.code === country) {
+        return zone.id;
+      }
+      if (location.type === "state" && location.code.startsWith(`${country}:`)) {
+        return zone.id;
+      }
+      if (location.type === "continent") {
+        const countries = CONTINENT_COUNTRIES[location.code];
+        if (countries && countries.includes(country)) {
+          return zone.id;
+        }
+      }
+    }
+  }
+
+  return 0;
+}
+
+async function getZoneMethods(zoneId: number): Promise<ZoneMethod[]> {
+  const authParams = getBasicAuthParams();
+  const methodsUrl = `${WC_API_BASE}/shipping/zones/${zoneId}/methods?${authParams}`;
+  const response = await fetch(methodsUrl, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!response.ok) return [];
+  return response.json();
+}
+
+function buildShippingRates(
+  methods: ZoneMethod[],
+  cartSubtotal: number,
+  currencyCode: string,
+  currencySymbol: string
+): ShippingRate[] {
+  const rates: ShippingRate[] = [];
+
+  for (const method of methods) {
+    if (!method.enabled) continue;
+
+    let price = "0";
+    const name = method.title || method.method_title;
+
+    if (method.method_id === "flat_rate") {
+      const cost = method.settings?.cost?.value || "0";
+      price = String(Math.round(parseFloat(cost) * 100));
+    } else if (method.method_id === "free_shipping") {
+      price = "0";
+      const requires = method.settings?.requires?.value || "";
+      const minAmount = parseFloat(method.settings?.min_amount?.value || "0");
+
+      if (requires === "min_amount" || requires === "both") {
+        if (minAmount > 0 && cartSubtotal < minAmount) {
+          continue;
+        }
+      }
+      if (requires === "either") {
+        if (minAmount > 0 && cartSubtotal < minAmount) {
+          continue;
+        }
+      }
+    } else if (method.method_id === "local_pickup") {
+      const cost = method.settings?.cost?.value || "0";
+      price = String(Math.round(parseFloat(cost) * 100));
+    } else {
+      const cost = method.settings?.cost?.value || "0";
+      price = String(Math.round(parseFloat(cost) * 100));
+    }
+
+    rates.push({
+      rate_id: `${method.method_id}:${method.instance_id}`,
+      name,
+      description: "",
+      delivery_time: "",
+      price,
+      taxes: "0",
+      instance_id: method.instance_id,
+      method_id: method.method_id,
+      meta_data: [],
+      selected: false,
+      currency_code: currencyCode,
+      currency_symbol: currencySymbol,
+      currency_minor_unit: 2,
+      currency_decimal_separator: ".",
+      currency_thousand_separator: ",",
+      currency_prefix: currencySymbol,
+      currency_suffix: "",
+    });
+  }
+
+  if (rates.length > 0) {
+    rates[0].selected = true;
+  }
+
+  return rates;
+}
+
 export async function GET(request: NextRequest) {
   try {
-    const { cartToken, nonce } = await getStoreApiAuth();
-    const authToken = await getAuthToken();
-    
-    if (!cartToken || !nonce) {
+    const country = request.nextUrl.searchParams.get("country") || "AE";
+    const city = request.nextUrl.searchParams.get("city") || "";
+    const postcode = request.nextUrl.searchParams.get("postcode") || "";
+    const cartSubtotal = parseFloat(request.nextUrl.searchParams.get("cart_subtotal") || "0");
+    const currencyCode = request.nextUrl.searchParams.get("currency_code") || "AED";
+    const currencySymbol = request.nextUrl.searchParams.get("currency_symbol") || "د.إ";
+
+    const zoneId = await findZoneForCountry(country);
+
+    if (zoneId === null) {
       return NextResponse.json(
-        { success: false, error: { code: "store_api_auth_error", message: "Failed to get Store API authentication" } },
+        { success: false, error: { code: "no_credentials", message: "WooCommerce API credentials not configured" } },
         { status: 500 }
       );
     }
 
-    const country = request.nextUrl.searchParams.get("country") || "AE";
-    const city = request.nextUrl.searchParams.get("city") || "";
-    const postcode = request.nextUrl.searchParams.get("postcode") || "";
+    const methods = await getZoneMethods(zoneId);
+    const shippingRates = buildShippingRates(methods, cartSubtotal, currencyCode, currencySymbol);
 
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      "Cart-Token": cartToken,
-      "X-WP-Nonce": nonce,
+    const selectedRate = shippingRates.find(r => r.selected);
+    const shippingTotal = selectedRate ? selectedRate.price : "0";
+
+    const pkg: ShippingPackage = {
+      package_id: 0,
+      name: "Shipping",
+      destination: {
+        address_1: "",
+        address_2: "",
+        city,
+        state: "",
+        postcode,
+        country,
+      },
+      items: [],
+      shipping_rates: shippingRates,
     };
-
-    if (authToken) {
-      headers["Authorization"] = `Bearer ${authToken}`;
-    }
-
-    const updateAddressResponse = await fetch(`${API_BASE}/wp-json/wc/store/v1/cart/update-customer`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        shipping_address: {
-          country,
-          city,
-          postcode,
-        },
-      }),
-    });
-
-    if (!updateAddressResponse.ok) {
-      const errorData = await updateAddressResponse.json();
-      console.error("Failed to update shipping address:", errorData);
-    }
-
-    const cartResponse = await fetch(`${API_BASE}/wp-json/wc/store/v1/cart`, {
-      method: "GET",
-      headers,
-    });
-
-    const cartData = await cartResponse.json();
-
-    if (!cartResponse.ok) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: cartData.code || "shipping_error",
-            message: cartData.message || "Failed to get shipping methods.",
-          },
-        },
-        { status: cartResponse.status }
-      );
-    }
-
-    const shippingRates: ShippingPackage[] = cartData.shipping_rates || [];
-    const needsShipping = cartData.needs_shipping || false;
 
     return NextResponse.json({
       success: true,
-      needs_shipping: needsShipping,
-      shipping_rates: shippingRates,
+      needs_shipping: true,
+      shipping_rates: shippingRates.length > 0 ? [pkg] : [],
       totals: {
-        shipping_total: cartData.totals?.total_shipping || "0",
-        shipping_tax: cartData.totals?.total_shipping_tax || "0",
+        shipping_total: shippingTotal,
+        shipping_tax: "0",
       },
     });
   } catch (error) {
@@ -156,18 +264,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { cartToken, nonce } = await getStoreApiAuth();
-    const authToken = await getAuthToken();
-    
-    if (!cartToken || !nonce) {
-      return NextResponse.json(
-        { success: false, error: { code: "store_api_auth_error", message: "Failed to get Store API authentication" } },
-        { status: 500 }
-      );
-    }
-
     const body = await request.json();
-    const { rate_id, package_id } = body;
+    const { rate_id, shipping_rates } = body;
 
     if (!rate_id) {
       return NextResponse.json(
@@ -176,49 +274,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      "Cart-Token": cartToken,
-      "X-WP-Nonce": nonce,
-    };
+    const packages: ShippingPackage[] = shipping_rates || [];
+    const updatedPackages = packages.map((pkg: ShippingPackage) => ({
+      ...pkg,
+      shipping_rates: pkg.shipping_rates.map((rate: ShippingRate) => ({
+        ...rate,
+        selected: rate.rate_id === rate_id,
+      })),
+    }));
 
-    if (authToken) {
-      headers["Authorization"] = `Bearer ${authToken}`;
-    }
-
-    const selectRateResponse = await fetch(`${API_BASE}/wp-json/wc/store/v1/cart/select-shipping-rate`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        rate_id,
-        package_id: package_id ?? 0,
-      }),
-    });
-
-    const selectRateData = await selectRateResponse.json();
-
-    if (!selectRateResponse.ok) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: selectRateData.code || "select_rate_error",
-            message: selectRateData.message || "Failed to select shipping rate.",
-          },
-        },
-        { status: selectRateResponse.status }
-      );
-    }
-
-    const shippingRates: ShippingPackage[] = selectRateData.shipping_rates || [];
+    const selectedRate = updatedPackages
+      .flatMap((pkg: ShippingPackage) => pkg.shipping_rates)
+      .find((rate: ShippingRate) => rate.rate_id === rate_id);
 
     return NextResponse.json({
       success: true,
-      shipping_rates: shippingRates,
+      shipping_rates: updatedPackages,
       totals: {
-        shipping_total: selectRateData.totals?.total_shipping || "0",
-        shipping_tax: selectRateData.totals?.total_shipping_tax || "0",
-        total: selectRateData.totals?.total_price || "0",
+        shipping_total: selectedRate?.price || "0",
+        shipping_tax: "0",
       },
     });
   } catch (error) {
