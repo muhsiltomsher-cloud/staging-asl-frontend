@@ -1,22 +1,11 @@
 import { siteConfig } from "@/config/site";
 
 const API_BASE = siteConfig.apiUrl;
-const USER_AGENT =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-
-const NO_CACHE_HEADERS: HeadersInit = {
-  "Accept": "application/json",
-  "Cache-Control": "no-cache, no-store, must-revalidate",
-  "Pragma": "no-cache",
-  "X-LiteSpeed-Cache-Control": "no-cache",
-  "X-Requested-With": "XMLHttpRequest",
-  "User-Agent": USER_AGENT,
-};
 
 export function backendHeaders(extra?: HeadersInit): HeadersInit {
   return {
     "Content-Type": "application/json",
-    ...NO_CACHE_HEADERS,
+    "Accept": "application/json",
     ...extra,
   };
 }
@@ -54,4 +43,4 @@ export async function safeJsonResponse(response: Response): Promise<Record<strin
   }
 }
 
-export { API_BASE, USER_AGENT };
+export { API_BASE };
