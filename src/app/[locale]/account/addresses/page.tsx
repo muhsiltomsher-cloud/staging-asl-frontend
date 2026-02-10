@@ -19,6 +19,7 @@ import {
   type SavedAddress,
   generateAddressId,
 } from "@/lib/api/customer";
+import { countries } from "@/components/common/CountrySelect";
 
 interface AddressesPageProps {
   params: Promise<{ locale: string }>;
@@ -160,7 +161,7 @@ function SavedAddressCard({
           {address.city}
           {address.state && `, ${address.state}`} {address.postcode}
         </p>
-        <p>{address.country}</p>
+        <p>{countries.find(c => c.value === address.country)?.label || address.country}</p>
         {address.phone && <p>{address.phone}</p>}
         {address.email && <p>{address.email}</p>}
       </div>
@@ -185,6 +186,13 @@ function SavedAddressCard({
   );
 }
 
+const ADDRESS_LABEL_OPTIONS = [
+  { value: "Home", labelEn: "Home", labelAr: "المنزل" },
+  { value: "Office", labelEn: "Office", labelAr: "المكتب" },
+  { value: "Work", labelEn: "Work", labelAr: "العمل" },
+  { value: "Other", labelEn: "Other", labelAr: "أخرى" },
+];
+
 function AddressModal({
   isOpen,
   onClose,
@@ -194,6 +202,7 @@ function AddressModal({
   t,
   isRTL,
   isEditing,
+  userEmail,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -203,6 +212,7 @@ function AddressModal({
   t: typeof translations.en;
   isRTL: boolean;
   isEditing: boolean;
+  userEmail?: string;
 }) {
   const [formData, setFormData] = useState<Omit<SavedAddress, "id">>(emptyAddress);
   const [addressId, setAddressId] = useState<string | null>(null);
@@ -224,10 +234,11 @@ function AddressModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const dataToSave = { ...formData, email: userEmail || formData.email || "" };
     if (addressId) {
-      await onSave({ ...formData, id: addressId });
+      await onSave({ ...dataToSave, id: addressId });
     } else {
-      await onSave(formData);
+      await onSave(dataToSave);
     }
   };
 
@@ -265,13 +276,25 @@ function AddressModal({
           </div>
 
           <form onSubmit={handleSubmit} className="p-4 space-y-4">
-            <Input
-              label={t.addressLabel}
-              value={formData.label}
-              onChange={handleChange("label")}
-              placeholder={t.addressLabelPlaceholder}
-              required
-            />
+            <div className="w-full">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                {t.addressLabel}
+                <span className="text-red-500 ml-1">*</span>
+              </label>
+              <select
+                value={formData.label}
+                onChange={(e) => setFormData((prev) => ({ ...prev, label: e.target.value }))}
+                required
+                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm transition-colors focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+              >
+                <option value="">{isRTL ? "اختر العنوان" : "Select label"}</option>
+                {ADDRESS_LABEL_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {isRTL ? opt.labelAr : opt.labelEn}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <Input
@@ -347,8 +370,11 @@ function AddressModal({
             <Input
               label={t.email}
               type="email"
-              value={formData.email || ""}
+              value={userEmail || formData.email || ""}
               onChange={handleChange("email")}
+              readOnly={!!userEmail}
+              disabled={!!userEmail}
+              className={userEmail ? "bg-gray-100 cursor-not-allowed" : ""}
             />
 
             <div className="rounded-lg border border-gray-200 p-3">
@@ -717,6 +743,7 @@ export default function AddressesPage({ params }: AddressesPageProps) {
         t={t}
         isRTL={isRTL}
         isEditing={!!editingAddress}
+        userEmail={user?.user_email}
       />
 
       <DeleteConfirmModal

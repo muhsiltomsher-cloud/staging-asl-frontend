@@ -1246,8 +1246,11 @@ export default function CheckoutClient() {
                     required
                     value={formData.shipping.email}
                     onChange={(e) => handleShippingChange("email", e.target.value)}
+                    readOnly={isAuthenticated}
+                    disabled={isAuthenticated}
+                    className={isAuthenticated ? "bg-gray-100 cursor-not-allowed" : ""}
                   />
-                  {isCheckingEmail && (
+                  {isCheckingEmail && !isAuthenticated && (
                     <div className="absolute right-3 top-9 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"></div>
                   )}
                 </div>
