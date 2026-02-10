@@ -292,13 +292,14 @@ interface ProductDetailProps {
   product: WCProduct;
   locale: Locale;
   relatedProducts?: WCProduct[];
+  upsellProducts?: WCProduct[];
   addonForms?: WCPAForm[];
   englishCategorySlug?: string | null;
   localizedCategoryName?: string | null;
   hiddenGiftProductIds?: number[];
 }
 
-export function ProductDetail({ product, locale, relatedProducts = [], addonForms = [], englishCategorySlug, localizedCategoryName, hiddenGiftProductIds = [] }: ProductDetailProps) {
+export function ProductDetail({ product, locale, relatedProducts = [], upsellProducts = [], addonForms = [], englishCategorySlug, localizedCategoryName, hiddenGiftProductIds = [] }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -1017,7 +1018,18 @@ export function ProductDetail({ product, locale, relatedProducts = [], addonForm
         </div>
       </div>
 
-      {/* Related Products */}
+      {/* Upsell Products (from WooCommerce Linked Products) */}
+      {upsellProducts.length > 0 && (
+        <RelatedProducts
+          products={upsellProducts}
+          currentProductId={product.id}
+          locale={locale}
+          title={isRTL ? "منتجات موصى بها" : "Recommended Products"}
+          subtitle={isRTL ? "منتجات مختارة لك" : "Hand-picked for you"}
+        />
+      )}
+
+      {/* Related Products (category-based) */}
       <RelatedProducts
         products={relatedProducts}
         currentProductId={product.id}

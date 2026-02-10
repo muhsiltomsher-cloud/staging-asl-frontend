@@ -16,6 +16,8 @@ interface RelatedProductsProps {
   currentProductId: number;
   locale: Locale;
   bundleProductSlugs?: string[];
+  title?: string;
+  subtitle?: string;
 }
 
 export function RelatedProducts({
@@ -23,6 +25,8 @@ export function RelatedProducts({
   currentProductId,
   locale,
   bundleProductSlugs = [],
+  title,
+  subtitle,
 }: RelatedProductsProps) {
   const isRTL = locale === "ar";
 
@@ -37,10 +41,10 @@ export function RelatedProducts({
       <div className="flex items-center justify-between mb-8">
         <div>
           <h2 className="text-2xl font-bold text-amber-900">
-            {isRTL ? "منتجات ذات صلة" : "Related Products"}
+            {title || (isRTL ? "منتجات ذات صلة" : "Related Products")}
           </h2>
           <p className="mt-1 text-sm text-gray-500">
-            {isRTL ? "قد يعجبك أيضاً" : "You may also like"}
+            {subtitle || (isRTL ? "قد يعجبك أيضاً" : "You may also like")}
           </p>
         </div>
         <div className="flex gap-2">

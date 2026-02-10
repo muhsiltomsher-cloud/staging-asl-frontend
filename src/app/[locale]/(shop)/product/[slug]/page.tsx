@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct, getBundleConfig, getFreeGiftProductIds, getHiddenProductIds, getCategoryBySlug, getEnglishSlugForCategory } from "@/lib/api/woocommerce";
+import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct, getBundleConfig, getFreeGiftProductIds, getHiddenProductIds, getCategoryBySlug, getEnglishSlugForCategory, getProductUpsellIds, getProductsByIds } from "@/lib/api/woocommerce";
 import { getProductAddons } from "@/lib/api/wcpa";
 import { generateMetadata as generateSeoMetadata, generateProductJsonLd } from "@/lib/utils/seo";
 import { ProductDetail } from "./ProductDetail";
@@ -169,15 +169,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
     );
   }
 
-  // Fetch related products, addon forms, and English product (for English category slug) in parallel
-  const [relatedProductsRaw, productAddons, englishProduct] = await Promise.all([
+  // Fetch related products, addon forms, English product, and linked product IDs in parallel
+  const [relatedProductsRaw, productAddons, englishProduct, linkedIds] = await Promise.all([
     getRelatedProducts(product, {
       per_page: 12,
       locale: locale as Locale,
     }),
     getProductAddons(product.id, { locale: locale as Locale }),
-    // Fetch the same product with English locale to get English category slug
     getProductBySlug(slug, "en"),
+    getProductUpsellIds(product.id, locale as Locale),
   ]);
 
   // Filter out hidden products from related products (free gifts and products with catalog_visibility=hidden)
@@ -185,6 +185,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const relatedProducts = relatedProductsRaw.filter(
     (p) => !hiddenProductIdsSet.has(p.id)
   );
+
+  // Fetch upsell products if any are configured in WooCommerce Linked Products
+  const upsellProducts = linkedIds.upsell_ids.length > 0
+    ? (await getProductsByIds(linkedIds.upsell_ids, locale as Locale)).filter(
+        (p) => !hiddenProductIdsSet.has(p.id)
+      )
+    : [];
 
   // Get the English category slug from the English product
   // If the English product doesn't exist (WPML assigns different slugs per locale),
@@ -212,6 +219,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         product={product}
         locale={locale as Locale}
         relatedProducts={relatedProducts}
+        upsellProducts={upsellProducts}
         addonForms={productAddons?.forms}
         englishCategorySlug={englishCategorySlug}
         localizedCategoryName={localizedCategoryName}

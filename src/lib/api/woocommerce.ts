@@ -927,6 +927,40 @@ export async function getBundleEnabledProductSlugs(): Promise<string[]> {
   }
 }
 
+// Get upsell and cross-sell product IDs from WooCommerce REST API v3
+// The Store API doesn't include linked product IDs, so we use the REST API
+export async function getProductUpsellIds(
+  productId: number,
+  locale?: Locale
+): Promise<{ upsell_ids: number[]; cross_sell_ids: number[] }> {
+  try {
+    const langParam = locale ? `&lang=${locale}` : "";
+    const url = `${siteConfig.apiUrl}/wp-json/wc/v3/products/${productId}?_fields=upsell_ids,cross_sell_ids${langParam}`;
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${process.env.WC_CONSUMER_KEY}:${process.env.WC_CONSUMER_SECRET}`).toString("base64")}`,
+      },
+      next: {
+        revalidate: 300,
+        tags: ["products", `product-linked-${productId}`],
+      },
+    });
+
+    if (!response.ok) {
+      return { upsell_ids: [], cross_sell_ids: [] };
+    }
+
+    const data = await response.json();
+    return {
+      upsell_ids: Array.isArray(data.upsell_ids) ? data.upsell_ids : [],
+      cross_sell_ids: Array.isArray(data.cross_sell_ids) ? data.cross_sell_ids : [],
+    };
+  } catch {
+    return { upsell_ids: [], cross_sell_ids: [] };
+  }
+}
+
 // Get new products (ordered by date, newest first)
 export async function getNewProducts(params?: {
   page?: number;
