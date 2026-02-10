@@ -30,6 +30,7 @@ export function ContactForm({ locale }: ContactFormProps) {
     subject: "",
     message: "",
   });
+  const [fieldErrors, setFieldErrors] = useState<{ firstName?: string; lastName?: string }>({});
 
   const namePattern = /^[a-zA-Z\u0600-\u06FF\s'-]*$/;
 
@@ -37,8 +38,17 @@ export function ContactForm({ locale }: ContactFormProps) {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    if ((name === "firstName" || name === "lastName") && !namePattern.test(value)) {
-      return;
+    if (name === "firstName" || name === "lastName") {
+      if (!namePattern.test(value)) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          [name]: isRTL
+            ? "يرجى إدخال أحرف أبجدية فقط"
+            : "Only alphabetic characters are allowed",
+        }));
+        return;
+      }
+      setFieldErrors((prev) => ({ ...prev, [name]: undefined }));
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
     setError(null);
@@ -48,6 +58,25 @@ export function ContactForm({ locale }: ContactFormProps) {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
+
+    const firstNameValid = namePattern.test(formData.firstName) && formData.firstName.trim().length > 0;
+    const lastNameValid = namePattern.test(formData.lastName) && formData.lastName.trim().length > 0;
+    const newFieldErrors: { firstName?: string; lastName?: string } = {};
+    if (!firstNameValid) {
+      newFieldErrors.firstName = isRTL
+        ? "يرجى إدخال أحرف أبجدية فقط"
+        : "Only alphabetic characters are allowed";
+    }
+    if (!lastNameValid) {
+      newFieldErrors.lastName = isRTL
+        ? "يرجى إدخال أحرف أبجدية فقط"
+        : "Only alphabetic characters are allowed";
+    }
+    if (!firstNameValid || !lastNameValid) {
+      setFieldErrors(newFieldErrors);
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const response = await fetch("/api/contact", {
@@ -124,6 +153,7 @@ export function ContactForm({ locale }: ContactFormProps) {
           name="firstName"
           value={formData.firstName}
           onChange={handleChange}
+          error={fieldErrors.firstName}
           required
         />
         <Input
@@ -131,6 +161,7 @@ export function ContactForm({ locale }: ContactFormProps) {
           name="lastName"
           value={formData.lastName}
           onChange={handleChange}
+          error={fieldErrors.lastName}
           required
         />
       </div>
