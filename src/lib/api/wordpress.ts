@@ -843,10 +843,10 @@ export async function getMobileBarSettings(locale?: Locale): Promise<MobileBarSe
     };
   }
 
-  // Check if all items are empty (no icon, label, or url configured)
+  // Check if items are meaningfully configured (not just default "home" icons with empty labels/urls)
   const hasConfiguredItems = data.items.some(
-    (item) => item.icon || item.label || item.labelAr || item.url
-  );
+    (item) => item.label || item.labelAr || item.url
+  ) || new Set(data.items.map(i => i.icon)).size > 1;
 
   // Use default items if no items are configured
   const items = hasConfiguredItems
