@@ -34,37 +34,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const refreshTokenValue = getCookie(AUTH_REFRESH_TOKEN_KEY);
 
         if (token && userDataStr) {
-          const isValid = await validateToken(token as string);
+          let userData: AuthUser;
+          try {
+            userData = JSON.parse(userDataStr as string) as AuthUser;
+          } catch {
+            deleteCookie(AUTH_TOKEN_KEY);
+            deleteCookie(AUTH_USER_KEY);
+            deleteCookie(AUTH_REFRESH_TOKEN_KEY);
+            return;
+          }
+
+          let isValid = false;
+          try {
+            isValid = await validateToken(token as string);
+          } catch {
+            isValid = false;
+          }
+
           if (isValid) {
-            const userData = JSON.parse(userDataStr as string) as AuthUser;
             setUser(userData);
           } else if (refreshTokenValue) {
-            // Try to refresh the token before clearing cookies
-            const refreshResponse = await apiRefreshToken(refreshTokenValue as string);
-            if (refreshResponse.success && refreshResponse.token) {
-              // Update the token cookie
-              setCookie(AUTH_TOKEN_KEY, refreshResponse.token, {
-                maxAge: 60 * 60 * 24 * 7,
-                path: "/",
-                sameSite: "lax",
-              });
-              // Update user data with new token
-              const userData = JSON.parse(userDataStr as string) as AuthUser;
-              userData.token = refreshResponse.token;
-              setCookie(AUTH_USER_KEY, JSON.stringify(userData), {
-                maxAge: 60 * 60 * 24 * 7,
-                path: "/",
-                sameSite: "lax",
-              });
-              setUser(userData);
-            } else {
-              // Refresh failed, clear all cookies
+            try {
+              const refreshResponse = await apiRefreshToken(refreshTokenValue as string);
+              if (refreshResponse.success && refreshResponse.token) {
+                setCookie(AUTH_TOKEN_KEY, refreshResponse.token, {
+                  maxAge: 60 * 60 * 24 * 7,
+                  path: "/",
+                  sameSite: "lax",
+                });
+                userData.token = refreshResponse.token;
+                setCookie(AUTH_USER_KEY, JSON.stringify(userData), {
+                  maxAge: 60 * 60 * 24 * 7,
+                  path: "/",
+                  sameSite: "lax",
+                });
+                setUser(userData);
+              } else {
+                deleteCookie(AUTH_TOKEN_KEY);
+                deleteCookie(AUTH_USER_KEY);
+                deleteCookie(AUTH_REFRESH_TOKEN_KEY);
+              }
+            } catch {
               deleteCookie(AUTH_TOKEN_KEY);
               deleteCookie(AUTH_USER_KEY);
               deleteCookie(AUTH_REFRESH_TOKEN_KEY);
             }
           } else {
-            // No refresh token, clear cookies
             deleteCookie(AUTH_TOKEN_KEY);
             deleteCookie(AUTH_USER_KEY);
           }

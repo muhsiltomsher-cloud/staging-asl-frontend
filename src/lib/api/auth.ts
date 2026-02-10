@@ -1,7 +1,3 @@
-import { siteConfig } from "@/config/site";
-
-const API_BASE = siteConfig.apiUrl;
-
 export interface LoginCredentials {
   username: string;
   password: string;
@@ -64,8 +60,7 @@ export interface ResetPasswordResponse {
 
 export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
   try {
-    // Get CoCart JWT token (for cart operations)
-    const response = await fetch(`${API_BASE}/wp-json/cocart/v2/login`, {
+    const response = await fetch("/api/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -75,46 +70,20 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (!data.success) {
       return {
         success: false,
         error: {
-          code: data.code || "login_failed",
-          message: data.message || "Login failed. Please check your credentials.",
+          code: data.error?.code || "login_failed",
+          message: data.error?.message || "Login failed. Please check your credentials.",
           data: { status: response.status },
         },
       };
     }
 
-    // Also get WordPress JWT token (for YITH wishlist and other WP endpoints)
-    let wpToken: string | undefined;
-    try {
-      const wpResponse = await fetch(`${API_BASE}/wp-json/jwt-auth/v1/token`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(credentials),
-      });
-      if (wpResponse.ok) {
-        const wpData = await wpResponse.json();
-        wpToken = wpData.token;
-      }
-    } catch {
-      // WordPress JWT is optional, continue without it
-    }
-
     return {
       success: true,
-      user: {
-        token: data.extras?.jwt_token || data.jwt_token || data.token,
-        wp_token: wpToken,
-        refresh_token: data.extras?.jwt_refresh || data.jwt_refresh_token || data.refresh_token,
-        user_id: parseInt(data.user_id) || data.id || 0,
-        user_email: data.email || data.user_email || "",
-        user_nicename: data.user_nicename || data.nicename || data.username || "",
-        user_display_name: data.display_name || data.user_display_name || data.username || "",
-      },
+      user: data.user,
     };
   } catch (error) {
     return {
@@ -172,7 +141,7 @@ export async function register(data: RegisterData): Promise<RegisterResponse> {
 
 export async function validateToken(token: string): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE}/wp-json/cocart/jwt/validate-token`, {
+    const response = await fetch("/api/auth/validate-token", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -180,7 +149,11 @@ export async function validateToken(token: string): Promise<boolean> {
       },
     });
 
-    return response.ok;
+    if (response.ok) {
+      const data = await response.json();
+      return data.valid === true;
+    }
+    return false;
   } catch {
     return false;
   }
@@ -188,7 +161,7 @@ export async function validateToken(token: string): Promise<boolean> {
 
 export async function refreshToken(refreshTokenValue: string): Promise<RefreshTokenResponse> {
   try {
-    const response = await fetch(`${API_BASE}/wp-json/cocart/jwt/refresh-token`, {
+    const response = await fetch("/api/auth/refresh-token", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -198,20 +171,19 @@ export async function refreshToken(refreshTokenValue: string): Promise<RefreshTo
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (!data.success) {
       return {
         success: false,
         error: {
-          code: data.code || "refresh_failed",
-          message: data.message || "Token refresh failed.",
-          data: { status: response.status },
+          code: data.error?.code || "refresh_failed",
+          message: data.error?.message || "Token refresh failed.",
         },
       };
     }
 
     return {
       success: true,
-      token: data.jwt_token || data.token,
+      token: data.token,
     };
   } catch (error) {
     return {
