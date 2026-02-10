@@ -33,6 +33,45 @@ jQuery(document).ready(function($) {
         preview.html('');
         btn.hide();
     });
+
+    // Logo Upload (stores attachment ID)
+    $(document).on('click', '.asl-logo-upload-btn', function(e) {
+        e.preventDefault();
+        var btn = $(this);
+        var targetId = $(btn.data('target-id'));
+        var targetUrl = $(btn.data('target-url'));
+        var preview = $(btn.data('preview'));
+        var removeBtn = btn.siblings('.asl-logo-remove-btn');
+
+        var frame = wp.media({
+            title: 'Select Logo',
+            button: { text: 'Use as Logo' },
+            multiple: false
+        });
+
+        frame.on('select', function() {
+            var attachment = frame.state().get('selection').first().toJSON();
+            targetId.val(attachment.id);
+            targetUrl.val(attachment.url);
+            preview.html('<img src="' + attachment.url + '" style="max-width:300px;max-height:150px;display:block;margin-top:10px;">');
+            removeBtn.show();
+        });
+
+        frame.open();
+    });
+
+    // Logo Remove
+    $(document).on('click', '.asl-logo-remove-btn', function(e) {
+        e.preventDefault();
+        var btn = $(this);
+        var targetId = $(btn.data('target-id'));
+        var targetUrl = $(btn.data('target-url'));
+        var preview = $(btn.data('preview'));
+        targetId.val('0');
+        targetUrl.val('');
+        preview.html('');
+        btn.hide();
+    });
     
     // Add Hero Slide
     $('#asl-add-slide').on('click', function() {

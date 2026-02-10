@@ -57,6 +57,22 @@ function asl_image_field($name, $value = '') {
 }
 
 /**
+ * Logo image field helper (stores attachment ID alongside URL)
+ */
+function asl_logo_image_field($name, $attachment_id = 0) {
+    $url = $attachment_id ? wp_get_attachment_image_url($attachment_id, 'full') : '';
+    $has = !empty($url);
+    echo '<div class="asl-image-field">';
+    echo '<input type="hidden" name="'.esc_attr($name).'" id="'.esc_attr($name).'" value="'.esc_attr($attachment_id).'" class="asl-logo-id-field">';
+    echo '<input type="hidden" name="'.esc_attr($name).'_url" id="'.esc_attr($name).'_url" value="'.esc_url($url).'">';
+    echo '<button type="button" class="button asl-logo-upload-btn" data-target-id="#'.esc_attr($name).'" data-target-url="#'.esc_attr($name).'_url" data-preview="#'.esc_attr($name).'_preview">Upload Image</button>';
+    echo '<button type="button" class="button asl-logo-remove-btn" data-target-id="#'.esc_attr($name).'" data-target-url="#'.esc_attr($name).'_url" data-preview="#'.esc_attr($name).'_preview" style="'.($has ? '' : 'display:none;').'">Remove</button>';
+    echo '<div id="'.esc_attr($name).'_preview" class="asl-preview">';
+    if ($has) echo '<img src="'.esc_url($url).'" style="max-width:300px;max-height:150px;display:block;margin-top:10px;">';
+    echo '</div></div>';
+}
+
+/**
  * Render main admin page (Home Page settings)
  */
 function asl_render_admin_page() {
@@ -281,11 +297,14 @@ function asl_render_header_page() {
         <form method="post">
             <?php wp_nonce_field('asl_header_settings_nonce'); ?>
             <div style="background:#fff;padding:20px;border:1px solid #ccd0d4;">
+                <h2>Site Logo</h2>
+                <p class="description">Upload your site logo here. This logo will be used across the entire site (header, footer, invoices, etc.).</p>
+                <table class="form-table">
+                    <tr><th>Logo</th><td><?php asl_logo_image_field('asl_site_logo', get_theme_mod('custom_logo', 0)); ?></td></tr>
+                </table>
                 <h2>Header Settings</h2>
                 <table class="form-table">
                     <tr><th>Sticky Header</th><td><label><input type="checkbox" name="asl_header_sticky" value="1" <?php checked(get_theme_mod('asl_header_sticky',true)); ?>> Enable</label></td></tr>
-                    <tr><th>Sticky Logo</th><td><?php asl_image_field('asl_sticky_logo',get_theme_mod('asl_sticky_logo','')); ?></td></tr>
-                    <tr><th>Dark Mode Logo</th><td><?php asl_image_field('asl_logo_dark',get_theme_mod('asl_logo_dark','')); ?></td></tr>
                 </table>
                 <h2>Promotional Top Bar</h2>
                 <table class="form-table">
@@ -482,9 +501,9 @@ function asl_save_products_section($key) {
  * Save Header Settings
  */
 function asl_save_header_settings() {
+    $logo_id = absint($_POST['asl_site_logo'] ?? 0);
+    set_theme_mod('custom_logo', $logo_id ? $logo_id : 0);
     set_theme_mod('asl_header_sticky', isset($_POST['asl_header_sticky']));
-    set_theme_mod('asl_sticky_logo', esc_url_raw($_POST['asl_sticky_logo']??''));
-    set_theme_mod('asl_logo_dark', esc_url_raw($_POST['asl_logo_dark']??''));
     set_theme_mod('asl_topbar_enabled', isset($_POST['asl_topbar_enabled']));
     set_theme_mod('asl_topbar_text', sanitize_text_field($_POST['asl_topbar_text']??''));
     set_theme_mod('asl_topbar_text_ar', sanitize_text_field($_POST['asl_topbar_text_ar']??''));
@@ -562,7 +581,8 @@ function asl_get_site_settings() {
  */
 function asl_get_header_settings() {
     $logo_id = get_theme_mod('custom_logo');
-    return array('sticky'=>get_theme_mod('asl_header_sticky',true),'logo'=>$logo_id?wp_get_attachment_image_url($logo_id,'full'):'','stickyLogo'=>get_theme_mod('asl_sticky_logo',''),'logoDark'=>get_theme_mod('asl_logo_dark',''));
+    $logo_url = $logo_id ? wp_get_attachment_image_url($logo_id, 'full') : '';
+    return array('sticky'=>get_theme_mod('asl_header_sticky',true),'logo'=>$logo_url,'stickyLogo'=>$logo_url,'logoDark'=>$logo_url);
 }
 
 /**
@@ -684,6 +704,26 @@ function asl_settings_theme_support() {
     register_nav_menus(array('primary'=>'Primary Menu','footer'=>'Footer Menu'));
     add_theme_support('custom-logo',array('height'=>100,'width'=>400,'flex-height'=>true,'flex-width'=>true));
 }
+
+/**
+ * Register Customizer sections for site logo
+ */
+function asl_settings_customize_register($wp_customize) {
+    $wp_customize->add_section('asl_logo_section', array(
+        'title' => 'Site Logo',
+        'priority' => 30,
+    ));
+    $wp_customize->add_setting('custom_logo', array(
+        'transport' => 'refresh',
+    ));
+    $wp_customize->add_control(new WP_Customize_Media_Control($wp_customize, 'custom_logo', array(
+        'label' => 'Site Logo',
+        'description' => 'Upload your site logo. This logo is used across the entire site.',
+        'section' => 'asl_logo_section',
+        'mime_type' => 'image',
+    )));
+}
+add_action('customize_register', 'asl_settings_customize_register');
 
 /**
  * CORS handling

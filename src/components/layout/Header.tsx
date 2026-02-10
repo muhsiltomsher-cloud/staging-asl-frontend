@@ -151,10 +151,10 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
 
             {/* Logo - centered on mobile */}
             <Link href={`/${locale}`} className="flex items-center absolute left-1/2 -translate-x-1/2 xl:static xl:translate-x-0">
-              {headerSettings?.logo || siteSettings?.logo?.url ? (
+              {siteSettings?.logo?.url ? (
                 <Image
-                  src={headerSettings?.logo || siteSettings?.logo?.url || ""}
-                  alt={siteSettings?.logo?.alt || siteSettings?.site_name || "Logo"}
+                  src={siteSettings.logo.url}
+                  alt={siteSettings.logo.alt || siteSettings.site_name || "Logo"}
                   width={140}
                   height={90}
                   className="h-16 md:h-20"
