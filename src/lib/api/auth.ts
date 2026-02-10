@@ -151,7 +151,7 @@ export async function register(data: RegisterData): Promise<RegisterResponse> {
 
 export async function validateToken(token: string): Promise<boolean> {
   try {
-    const response = await fetch("/api/auth/validate-token", {
+    const response = await fetch("/api/auth/verify", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -171,7 +171,7 @@ export async function validateToken(token: string): Promise<boolean> {
 
 export async function refreshToken(refreshTokenValue: string): Promise<RefreshTokenResponse> {
   try {
-    const response = await fetch("/api/auth/refresh-token", {
+    const response = await fetch("/api/auth/renew", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
