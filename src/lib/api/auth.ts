@@ -157,6 +157,7 @@ export async function validateToken(token: string): Promise<boolean> {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify({}),
     });
 
     if (response.ok) {
