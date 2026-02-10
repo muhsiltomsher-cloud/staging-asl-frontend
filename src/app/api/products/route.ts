@@ -3,6 +3,13 @@ import { getProducts } from "@/lib/api/woocommerce";
 import type { Locale } from "@/config/site";
 import type { WCProduct, WCProductLightweight } from "@/types/woocommerce";
 
+const PRODUCTS_CACHE_TTL = 5 * 60 * 1000;
+interface CachedProducts {
+  data: { products: WCProduct[]; total: number; totalPages: number };
+  timestamp: number;
+}
+const productsCache = new Map<string, CachedProducts>();
+
 /**
  * Transform a full WCProduct into a lightweight version
  * This significantly reduces payload size for product listings
@@ -47,15 +54,24 @@ export async function GET(request: NextRequest) {
   const lightweight = searchParams.get("lightweight") === "true";
 
   try {
-    const result = await getProducts({
-      page,
-      per_page,
-      category,
-      search,
-      orderby,
-      order,
-      locale,
-    });
+    const cacheKey = JSON.stringify({ page, per_page, category, search, orderby, order, locale });
+    const cached = productsCache.get(cacheKey);
+    let result: { products: WCProduct[]; total: number; totalPages: number };
+
+    if (cached && Date.now() - cached.timestamp < PRODUCTS_CACHE_TTL) {
+      result = cached.data;
+    } else {
+      result = await getProducts({
+        page,
+        per_page,
+        category,
+        search,
+        orderby,
+        order,
+        locale,
+      });
+      productsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    }
 
     const response = lightweight
       ? {

@@ -9,41 +9,44 @@ const WISHLIST_BASE = `${API_BASE}/wp-json/wc/v3/wishlist`;
 const PRODUCTS_BASE = `${API_BASE}/wp-json/wc/v3/products`;
 const USER_COOKIE = "asl_auth_user";
 
-// DEV MODE: Cache disabled for faster development - uncomment when done
-// const PRODUCT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
-// interface CachedProduct {
-//   data: WCProduct;
-//   timestamp: number;
-// }
-// const productCache = new Map<number, CachedProduct>();
+const PRODUCT_CACHE_TTL = 5 * 60 * 1000;
+interface CachedProduct {
+  data: WCProduct;
+  timestamp: number;
+}
+const productCache = new Map<number, CachedProduct>();
 
-// const SHARE_KEY_CACHE_TTL = 60 * 1000; // 1 minute
-// interface CachedShareKey {
-//   shareKey: string;
-//   timestamp: number;
-// }
-// const shareKeyCache = new Map<number, CachedShareKey>();
+const SHARE_KEY_CACHE_TTL = 60 * 1000;
+interface CachedShareKey {
+  shareKey: string;
+  timestamp: number;
+}
+const shareKeyCache = new Map<number, CachedShareKey>();
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getCachedProduct(_productId: number): WCProduct | null {
-  // DEV MODE: Cache disabled for faster development
+function getCachedProduct(productId: number): WCProduct | null {
+  const cached = productCache.get(productId);
+  if (cached && Date.now() - cached.timestamp < PRODUCT_CACHE_TTL) {
+    return cached.data;
+  }
+  if (cached) productCache.delete(productId);
   return null;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function setCachedProduct(_productId: number, _product: WCProduct): void {
-  // DEV MODE: Cache disabled for faster development - do nothing
+function setCachedProduct(productId: number, product: WCProduct): void {
+  productCache.set(productId, { data: product, timestamp: Date.now() });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getCachedShareKey(_userId: number): string | null {
-  // DEV MODE: Cache disabled for faster development
+function getCachedShareKey(userId: number): string | null {
+  const cached = shareKeyCache.get(userId);
+  if (cached && Date.now() - cached.timestamp < SHARE_KEY_CACHE_TTL) {
+    return cached.shareKey;
+  }
+  if (cached) shareKeyCache.delete(userId);
   return null;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function setCachedShareKey(_userId: number, _shareKey: string): void {
-  // DEV MODE: Cache disabled for faster development - do nothing
+function setCachedShareKey(userId: number, shareKey: string): void {
+  shareKeyCache.set(userId, { shareKey, timestamp: Date.now() });
 }
 
 // WooCommerce REST API authentication (required for /wc/v3/ endpoints)

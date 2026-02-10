@@ -89,7 +89,11 @@ export async function GET() {
         free_shipping: coupon.free_shipping,
       }));
 
-    return NextResponse.json({ success: true, coupons: validCoupons });
+    return NextResponse.json({ success: true, coupons: validCoupons }, {
+      headers: {
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+      },
+    });
   } catch (error) {
     return NextResponse.json(
       {

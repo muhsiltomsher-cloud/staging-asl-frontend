@@ -5,6 +5,13 @@ import { getEnvVar } from "@/lib/utils/loadEnv";
 const API_BASE = `${siteConfig.apiUrl}/wp-json/wc/v3`;
 const STORE_API_BASE = `${siteConfig.apiUrl}/wp-json/wc/store/v1`;
 
+const GATEWAYS_CACHE_TTL = 10 * 60 * 1000;
+interface CachedGateways {
+  data: Record<string, unknown>;
+  timestamp: number;
+}
+let gatewaysCache: CachedGateways | null = null;
+
 function getWooCommerceCredentials() {
   const consumerKey = getEnvVar("WC_CONSUMER_KEY") || getEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY") || "";
   const consumerSecret = getEnvVar("WC_CONSUMER_SECRET") || getEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET") || "";
@@ -80,6 +87,14 @@ interface CartResponse {
 
 export async function GET() {
   try {
+    if (gatewaysCache && Date.now() - gatewaysCache.timestamp < GATEWAYS_CACHE_TTL) {
+      return NextResponse.json(gatewaysCache.data, {
+        headers: {
+          "Cache-Control": "public, s-maxage=600, stale-while-revalidate=1200",
+        },
+      });
+    }
+
     const { consumerKey, consumerSecret } = getWooCommerceCredentials();
     
     if (consumerKey && consumerSecret) {
@@ -116,11 +131,17 @@ export async function GET() {
         // Check if MyFatoorah test mode is enabled
         const myFatoorahTestMode = getEnvVar("MYFATOORAH_TEST_MODE") === "true";
 
-        return NextResponse.json({ 
+        const responseData = { 
           success: true, 
           gateways: enabledGateways,
-          source: "woocommerce_rest_api", // Indicates reliable enabled status
+          source: "woocommerce_rest_api",
           myfatoorah_test_mode: myFatoorahTestMode,
+        };
+        gatewaysCache = { data: responseData, timestamp: Date.now() };
+        return NextResponse.json(responseData, {
+          headers: {
+            "Cache-Control": "public, s-maxage=600, stale-while-revalidate=1200",
+          },
         });
       }
     }
@@ -179,11 +200,17 @@ export async function GET() {
     // Check if MyFatoorah test mode is enabled
     const myFatoorahTestMode = getEnvVar("MYFATOORAH_TEST_MODE") === "true";
 
-    return NextResponse.json({ 
+    const fallbackData = { 
       success: true, 
       gateways,
-      source: "store_api_fallback", // Indicates we couldn't verify enabled status from REST API
+      source: "store_api_fallback",
       myfatoorah_test_mode: myFatoorahTestMode,
+    };
+    gatewaysCache = { data: fallbackData, timestamp: Date.now() };
+    return NextResponse.json(fallbackData, {
+      headers: {
+        "Cache-Control": "public, s-maxage=600, stale-while-revalidate=1200",
+      },
     });
   } catch (error) {
     return NextResponse.json(

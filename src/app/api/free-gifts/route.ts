@@ -4,11 +4,28 @@ import { siteConfig } from "@/config/site";
 const API_BASE = siteConfig.apiUrl;
 const USER_AGENT = "Mozilla/5.0 (compatible; ASL-Frontend/1.0)";
 
+const FREE_GIFTS_CACHE_TTL = 5 * 60 * 1000;
+interface CachedRules {
+  data: { success: boolean; rules: unknown[] };
+  timestamp: number;
+}
+const rulesCache = new Map<string, CachedRules>();
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const currency = searchParams.get("currency");
     const locale = searchParams.get("locale");
+
+    const cacheKey = `${currency || ""}_${locale || ""}`;
+    const cached = rulesCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < FREE_GIFTS_CACHE_TTL) {
+      return NextResponse.json(cached.data, {
+        headers: {
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+        },
+      });
+    }
 
     let url = `${API_BASE}/wp-json/asl-free-gifts/v1/rules`;
     const params: string[] = [];
@@ -64,9 +81,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      rules: (data.rules as unknown[]) || [],
+    const responseData = { success: true, rules: (data.rules as unknown[]) || [] };
+    rulesCache.set(cacheKey, { data: responseData, timestamp: Date.now() });
+
+    return NextResponse.json(responseData, {
+      headers: {
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+      },
     });
   } catch (error) {
     return NextResponse.json(

@@ -158,10 +158,10 @@ export function CartProvider({ children, locale }: CartProviderProps) {
     cacheKey,
     cartFetcher,
     {
-      revalidateOnFocus: true,
+      revalidateOnFocus: false,
       revalidateOnReconnect: true,
-      revalidateIfStale: true,
-      dedupingInterval: 5000,
+      revalidateIfStale: false,
+      dedupingInterval: 30000,
       errorRetryCount: 2,
       keepPreviousData: false,
     }
