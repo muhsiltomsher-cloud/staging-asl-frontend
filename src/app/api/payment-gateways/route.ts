@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
 import { getEnvVar } from "@/lib/utils/loadEnv";
+import { API_BASE as BASE_URL, backendHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
 
-const API_BASE = `${siteConfig.apiUrl}/wp-json/wc/v3`;
-const STORE_API_BASE = `${siteConfig.apiUrl}/wp-json/wc/store/v1`;
+const API_BASE = `${BASE_URL}/wp-json/wc/v3`;
+const STORE_API_BASE = `${BASE_URL}/wp-json/wc/store/v1`;
 
 const GATEWAYS_CACHE_TTL = 10 * 60 * 1000;
 interface CachedGateways {
@@ -100,11 +100,9 @@ export async function GET() {
     if (consumerKey && consumerSecret) {
       const url = `${API_BASE}/payment_gateways?${getBasicAuthParams()}`;
       
-      const response = await fetch(url, {
+      const response = await fetch(noCacheUrl(url), {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: backendHeaders(),
         next: {
           revalidate: 60,
         },
@@ -148,11 +146,9 @@ export async function GET() {
     
     const storeUrl = `${STORE_API_BASE}/cart`;
     
-    const storeResponse = await fetch(storeUrl, {
+    const storeResponse = await fetch(noCacheUrl(storeUrl), {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: backendHeaders(),
       next: {
         revalidate: 60,
       },

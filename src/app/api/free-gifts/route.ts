@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
-
-const API_BASE = siteConfig.apiUrl;
-const USER_AGENT = "Mozilla/5.0 (compatible; ASL-Frontend/1.0)";
+import { API_BASE, backendHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
 
 const FREE_GIFTS_CACHE_TTL = 5 * 60 * 1000;
 interface CachedRules {
@@ -39,12 +36,9 @@ export async function GET(request: NextRequest) {
       url += `?${params.join("&")}`;
     }
 
-    const response = await fetch(url, {
+    const response = await fetch(noCacheUrl(url), {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": USER_AGENT,
-      },
+      headers: backendHeaders(),
       next: {
         revalidate: 60,
         tags: ["free-gifts"],
@@ -74,7 +68,7 @@ export async function GET(request: NextRequest) {
           success: false,
           error: {
             code: "invalid_response",
-            message: "Backend returned non-JSON response",
+            message: "Backend returned non-JSON response. If using LiteSpeed Cache, exclude /wp-json/* paths from caching.",
           },
         },
         { status: 502 }

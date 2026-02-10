@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
 import { getEnvVar } from "@/lib/utils/loadEnv";
+import { API_BASE as BASE_URL, backendHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
 
-const API_BASE = `${siteConfig.apiUrl}/wp-json/wc/v3`;
+const API_BASE = `${BASE_URL}/wp-json/wc/v3`;
 
 function getWooCommerceCredentials() {
   const consumerKey = getEnvVar("WC_CONSUMER_KEY") || getEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY") || "";
@@ -43,11 +43,9 @@ export async function GET() {
   try {
     const url = `${API_BASE}/coupons?${getBasicAuthParams()}&per_page=20&status=publish`;
     
-    const response = await fetch(url, {
+    const response = await fetch(noCacheUrl(url), {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: backendHeaders(),
       next: {
         revalidate: 300,
       },

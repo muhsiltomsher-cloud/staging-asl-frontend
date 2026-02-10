@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
 import { getEnvVar } from "@/lib/utils/loadEnv";
 import { verifyAuth, unauthorizedResponse, forbiddenResponse } from "@/lib/security";
+import { API_BASE as BASE_URL, backendHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
 
-const API_BASE = `${siteConfig.apiUrl}/wp-json/wc/v3`;
+const API_BASE = `${BASE_URL}/wp-json/wc/v3`;
 
 function getWooCommerceCredentials() {
   const consumerKey = getEnvVar("WC_CONSUMER_KEY") || getEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY") || "";
@@ -81,11 +81,9 @@ export async function GET(request: NextRequest) {
     if (orderId) {
       // First fetch the order
       const orderUrl = `${API_BASE}/orders/${orderId}?${getBasicAuthParams()}`;
-      const orderResponse = await fetch(orderUrl, {
+      const orderResponse = await fetch(noCacheUrl(orderUrl), {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: backendHeaders(),
       });
       
       if (!orderResponse.ok) {
@@ -149,14 +147,27 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const response = await fetch(url, {
+    const response = await fetch(noCacheUrl(url), {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: backendHeaders(),
     });
 
-    const data = await response.json();
+    let data;
+    const responseText = await response.text();
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "invalid_response",
+            message: "Backend returned non-JSON response. If using LiteSpeed Cache, exclude /wp-json/* paths from caching.",
+          },
+        },
+        { status: 502 }
+      );
+    }
 
     if (!response.ok) {
       return NextResponse.json(
@@ -232,11 +243,9 @@ export async function POST(request: NextRequest) {
 
     const url = `${API_BASE}/orders?${getBasicAuthParams()}`;
     
-    const response = await fetch(url, {
+    const response = await fetch(noCacheUrl(url), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: backendHeaders(),
       body: JSON.stringify(orderData),
     });
 
@@ -429,11 +438,9 @@ export async function PUT(request: NextRequest) {
 
     const url = `${API_BASE}/orders/${body.order_id}?${getBasicAuthParams()}`;
     
-    const response = await fetch(url, {
+    const response = await fetch(noCacheUrl(url), {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: backendHeaders(),
       body: JSON.stringify(updateData),
     });
 

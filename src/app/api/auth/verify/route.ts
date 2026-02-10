@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
-
-const API_BASE = siteConfig.apiUrl;
-const USER_AGENT = "Mozilla/5.0 (compatible; ASL-Frontend/1.0)";
+import { API_BASE, backendHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,13 +12,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = await fetch(`${API_BASE}/wp-json/cocart/jwt/validate-token`, {
+    const response = await fetch(noCacheUrl(`${API_BASE}/wp-json/cocart/jwt/validate-token`), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": USER_AGENT,
-        "Authorization": authHeader,
-      },
+      headers: backendHeaders({ "Authorization": authHeader }),
       body: JSON.stringify({}),
     });
 

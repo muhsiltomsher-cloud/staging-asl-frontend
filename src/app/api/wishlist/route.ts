@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
 import { cookies } from "next/headers";
 import { getEnvVar } from "@/lib/utils/loadEnv";
-
-const API_BASE = siteConfig.apiUrl;
+import { API_BASE, backendHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
 // TI WooCommerce Wishlist REST API - uses WooCommerce REST API namespace
 const WISHLIST_BASE = `${API_BASE}/wp-json/wc/v3/wishlist`;
 const PRODUCTS_BASE = `${API_BASE}/wp-json/wc/v3/products`;
@@ -104,10 +102,10 @@ async function fetchProductDetails(productIds: number[]): Promise<Map<number, WC
     // Batch fetch only uncached products
     const idsParam = uncachedIds.join(",");
     const response = await fetch(
-      `${PRODUCTS_BASE}?include=${idsParam}&per_page=${uncachedIds.length}&${getBasicAuthParams()}`,
+      noCacheUrl(`${PRODUCTS_BASE}?include=${idsParam}&per_page=${uncachedIds.length}&${getBasicAuthParams()}`),
       {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
+        headers: backendHeaders(),
       }
     );
     
@@ -249,11 +247,9 @@ export async function GET() {
 
     // TI WooCommerce Wishlist: Get user's wishlist by user ID
     // Uses WooCommerce REST API authentication (consumer key/secret)
-    const response = await fetch(`${WISHLIST_BASE}/get_by_user/${userId}?${getBasicAuthParams()}`, {
+    const response = await fetch(noCacheUrl(`${WISHLIST_BASE}/get_by_user/${userId}?${getBasicAuthParams()}`), {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: backendHeaders(),
     });
 
     if (!response.ok) {
@@ -307,11 +303,9 @@ export async function GET() {
       wishlistMeta = data;
       
       // Fetch products for this wishlist
-      const productsResponse = await fetch(`${WISHLIST_BASE}/${data.share_key}/get_products?${getBasicAuthParams()}`, {
+      const productsResponse = await fetch(noCacheUrl(`${WISHLIST_BASE}/${data.share_key}/get_products?${getBasicAuthParams()}`), {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: backendHeaders(),
       });
       
       if (productsResponse.ok) {
@@ -322,11 +316,9 @@ export async function GET() {
       // If array of wishlists, use first one
       wishlistMeta = data[0];
       if (wishlistMeta && wishlistMeta.share_key) {
-        const productsResponse = await fetch(`${WISHLIST_BASE}/${wishlistMeta.share_key}/get_products?${getBasicAuthParams()}`, {
+        const productsResponse = await fetch(noCacheUrl(`${WISHLIST_BASE}/${wishlistMeta.share_key}/get_products?${getBasicAuthParams()}`), {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: backendHeaders(),
         });
         
         if (productsResponse.ok) {
@@ -413,11 +405,9 @@ export async function POST(request: NextRequest) {
         return { shareKey: cachedKey };
       }
       
-      const response = await fetch(`${WISHLIST_BASE}/get_by_user/${uid}?${getBasicAuthParams()}`, {
+      const response = await fetch(noCacheUrl(`${WISHLIST_BASE}/get_by_user/${uid}?${getBasicAuthParams()}`), {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: backendHeaders(),
       });
       
       if (response.ok) {
@@ -478,11 +468,9 @@ export async function POST(request: NextRequest) {
         }
         
         // TI Wishlist: POST /{share_key}/add_product
-        const response = await fetch(`${WISHLIST_BASE}/${shareKey}/add_product?${getBasicAuthParams()}`, {
+        const response = await fetch(noCacheUrl(`${WISHLIST_BASE}/${shareKey}/add_product?${getBasicAuthParams()}`), {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: backendHeaders(),
           body: JSON.stringify({
             product_id: body.product_id,
             variation_id: body.variation_id || 0,
@@ -512,11 +500,9 @@ export async function POST(request: NextRequest) {
         }
 
         // Fetch updated products and enrich with product details
-        const productsResponse = await fetch(`${WISHLIST_BASE}/${shareKey}/get_products?${getBasicAuthParams()}`, {
+        const productsResponse = await fetch(noCacheUrl(`${WISHLIST_BASE}/${shareKey}/get_products?${getBasicAuthParams()}`), {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: backendHeaders(),
         });
         let rawItems: RawWishlistItem[] = [];
         if (productsResponse.ok) {
@@ -581,11 +567,9 @@ export async function POST(request: NextRequest) {
         }
         
         // TI Wishlist: DELETE /{share_key}/remove_product/{item_id}
-        const response = await fetch(`${WISHLIST_BASE}/${shareKey}/remove_product/${itemId}?${getBasicAuthParams()}`, {
+        const response = await fetch(noCacheUrl(`${WISHLIST_BASE}/${shareKey}/remove_product/${itemId}?${getBasicAuthParams()}`), {
           method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: backendHeaders(),
         });
         
         const responseText = await response.text();
@@ -610,11 +594,9 @@ export async function POST(request: NextRequest) {
         }
 
         // Fetch updated products and enrich with product details
-        const productsResponse = await fetch(`${WISHLIST_BASE}/${shareKey}/get_products?${getBasicAuthParams()}`, {
+        const productsResponse = await fetch(noCacheUrl(`${WISHLIST_BASE}/${shareKey}/get_products?${getBasicAuthParams()}`), {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: backendHeaders(),
         });
         let rawItems: RawWishlistItem[] = [];
         if (productsResponse.ok) {
@@ -677,11 +659,9 @@ export async function POST(request: NextRequest) {
         // Add each item to the wishlist
         for (const item of guestItems) {
           try {
-            const response = await fetch(`${WISHLIST_BASE}/${shareKey}/add_product?${getBasicAuthParams()}`, {
+            const response = await fetch(noCacheUrl(`${WISHLIST_BASE}/${shareKey}/add_product?${getBasicAuthParams()}`), {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
+              headers: backendHeaders(),
               body: JSON.stringify({
                 product_id: item.product_id,
                 variation_id: item.variation_id || 0,
@@ -705,11 +685,9 @@ export async function POST(request: NextRequest) {
         }
 
         // Fetch the updated wishlist products and enrich with product details
-        const productsResponse = await fetch(`${WISHLIST_BASE}/${shareKey}/get_products?${getBasicAuthParams()}`, {
+        const productsResponse = await fetch(noCacheUrl(`${WISHLIST_BASE}/${shareKey}/get_products?${getBasicAuthParams()}`), {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: backendHeaders(),
         });
         let rawItems: RawWishlistItem[] = [];
         if (productsResponse.ok) {

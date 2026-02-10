@@ -1,25 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
 import { cookies } from "next/headers";
+import { API_BASE, backendHeaders, backendAuthHeaders, noCacheUrl, safeJsonResponse } from "@/lib/utils/backendFetch";
 
-const API_BASE = siteConfig.apiUrl;
 const CART_KEY_COOKIE = "cocart_cart_key";
 const AUTH_TOKEN_COOKIE = "asl_auth_token";
 const AUTH_REFRESH_TOKEN_COOKIE = "asl_refresh_token";
 const CURRENCY_COOKIE = "wcml_currency";
 const LOCALE_COOKIE = "NEXT_LOCALE";
-
-// User-Agent header to prevent WAF/security plugin blocks
-const USER_AGENT = "Mozilla/5.0 (compatible; ASL-Frontend/1.0)";
-
-async function safeJson(response: Response): Promise<Record<string, unknown>> {
-  const text = await response.text();
-  try {
-    return JSON.parse(text) as Record<string, unknown>;
-  } catch {
-    return { code: "invalid_response", message: "Backend returned non-JSON response" };
-  }
-}
 
 async function getCartKey(): Promise<string | null> {
   const cookieStore = await cookies();
@@ -42,18 +29,15 @@ async function tryRefreshToken(): Promise<string | null> {
   if (!refreshTokenValue) return null;
 
   try {
-    const response = await fetch(`${API_BASE}/wp-json/cocart/jwt/refresh-token`, {
+    const response = await fetch(noCacheUrl(`${API_BASE}/wp-json/cocart/jwt/refresh-token`), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": USER_AGENT,
-      },
+      headers: backendHeaders(),
       body: JSON.stringify({ refresh_token: refreshTokenValue }),
     });
 
     if (!response.ok) return null;
 
-    const data = await safeJson(response);
+    const data = await safeJsonResponse(response);
     return (data.jwt_token as string) || (data.token as string) || null;
   } catch {
     return null;
@@ -102,26 +86,17 @@ function appendParamsToUrl(url: string, currency: string | null, lang: string | 
 }
 
 function getAuthHeaders(request: NextRequest, authToken: string | null): HeadersInit {
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-    "User-Agent": USER_AGENT,
-  };
-
   const authHeader = request.headers.get("Authorization");
   if (authHeader) {
-    headers["Authorization"] = authHeader;
+    return backendHeaders({ "Authorization": authHeader });
   } else if (authToken) {
-    headers["Authorization"] = `Bearer ${authToken}`;
+    return backendAuthHeaders(authToken);
   }
-
-  return headers;
+  return backendHeaders();
 }
 
 function getGuestHeaders(): HeadersInit {
-  return {
-    "Content-Type": "application/json",
-    "User-Agent": USER_AGENT,
-  };
+  return backendHeaders();
 }
 
 function isAuthError(status: number, data: Record<string, unknown>): boolean {
@@ -153,12 +128,9 @@ function isAuthError(status: number, data: Record<string, unknown>): boolean {
 // Get Store API authentication tokens (cart-token and nonce) for coupon operations
 async function getStoreApiAuth(): Promise<{ cartToken: string | null; nonce: string | null }> {
   try {
-    const response = await fetch(`${API_BASE}/wp-json/wc/store/v1/cart`, {
+    const response = await fetch(noCacheUrl(`${API_BASE}/wp-json/wc/store/v1/cart`), {
       method: "GET",
-      headers: { 
-        "Content-Type": "application/json",
-        "User-Agent": USER_AGENT,
-      },
+      headers: backendHeaders(),
     });
     
     const cartToken = response.headers.get("cart-token");
@@ -218,46 +190,42 @@ export async function GET(request: NextRequest) {
 
     // First attempt: try with auth if token exists
     const url = authToken ? authUrl : guestUrl;
-    let response = await fetch(url, {
+    let response = await fetch(noCacheUrl(url), {
       method: "GET",
       headers: authToken ? getAuthHeaders(request, authToken) : getGuestHeaders(),
     });
 
-    let data = await safeJson(response);
+    let data = await safeJsonResponse(response);
     let refreshedToken: string | null = null;
 
     if (!response.ok && authToken && isAuthError(response.status, data)) {
       refreshedToken = await tryRefreshToken();
       
       if (refreshedToken) {
-        response = await fetch(authUrl, {
+        response = await fetch(noCacheUrl(authUrl), {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "User-Agent": USER_AGENT,
-            "Authorization": `Bearer ${refreshedToken}`,
-          },
+          headers: backendAuthHeaders(refreshedToken),
         });
-        data = await safeJson(response);
+        data = await safeJsonResponse(response);
       }
       
       if (!refreshedToken || !response.ok) {
         refreshedToken = null;
-        response = await fetch(guestUrl, {
+        response = await fetch(noCacheUrl(guestUrl), {
           method: "GET",
           headers: getGuestHeaders(),
         });
-        data = await safeJson(response);
+        data = await safeJsonResponse(response);
       }
     }
 
     if (!response.ok && !authToken && response.status === 403 && cartKey) {
       const freshGuestUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, locale);
-      response = await fetch(freshGuestUrl, {
+      response = await fetch(noCacheUrl(freshGuestUrl), {
         method: "GET",
         headers: getGuestHeaders(),
       });
-      data = await safeJson(response);
+      data = await safeJsonResponse(response);
     }
 
     if (!response.ok) {
@@ -349,18 +317,16 @@ export async function POST(request: NextRequest) {
           ? `${API_BASE}/wp-json/wc/store/v1/cart/apply-coupon`
           : `${API_BASE}/wp-json/wc/store/v1/cart/remove-coupon`;
         
-        const storeApiResponse = await fetch(storeApiUrl, {
+        const storeApiResponse = await fetch(noCacheUrl(storeApiUrl), {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "User-Agent": USER_AGENT,
+          headers: backendHeaders({
             "Cart-Token": cartToken,
             "X-WP-Nonce": nonce,
-          },
+          }),
           body: JSON.stringify(body),
         });
         
-        const storeApiData = await safeJson(storeApiResponse);
+        const storeApiData = await safeJsonResponse(storeApiResponse);
         
         if (!storeApiResponse.ok) {
           return NextResponse.json(
@@ -379,12 +345,12 @@ export async function POST(request: NextRequest) {
           ? appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart?cart_key=${cartKey}`, currency, locale)
           : appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, locale);
         
-        const coCartResponse = await fetch(coCartUrl, {
+        const coCartResponse = await fetch(noCacheUrl(coCartUrl), {
           method: "GET",
           headers: authToken ? getAuthHeaders(request, authToken) : getGuestHeaders(),
         });
         
-        const coCartData = await safeJson(coCartResponse);
+        const coCartData = await safeJsonResponse(coCartResponse);
         
         if (!coCartResponse.ok) {
           return NextResponse.json({ 
@@ -419,8 +385,8 @@ export async function POST(request: NextRequest) {
       fetchOptions.body = JSON.stringify(body);
     }
 
-    let response = await fetch(url, fetchOptions);
-    let data = await safeJson(response);
+    let response = await fetch(noCacheUrl(url), fetchOptions);
+    let data = await safeJsonResponse(response);
     let refreshedToken: string | null = null;
 
     if (!response.ok && authToken && isAuthError(response.status, data)) {
@@ -429,17 +395,13 @@ export async function POST(request: NextRequest) {
       if (refreshedToken) {
         const refreshedFetchOptions: RequestInit = {
           method,
-          headers: {
-            "Content-Type": "application/json",
-            "User-Agent": USER_AGENT,
-            "Authorization": `Bearer ${refreshedToken}`,
-          },
+          headers: backendAuthHeaders(refreshedToken),
         };
         if (method !== "DELETE" && Object.keys(body).length > 0) {
           refreshedFetchOptions.body = JSON.stringify(body);
         }
-        response = await fetch(baseUrl, refreshedFetchOptions);
-        data = await safeJson(response);
+        response = await fetch(noCacheUrl(baseUrl), refreshedFetchOptions);
+        data = await safeJsonResponse(response);
       }
       
       if (!refreshedToken || !response.ok) {
@@ -451,8 +413,8 @@ export async function POST(request: NextRequest) {
         if (method !== "DELETE" && Object.keys(body).length > 0) {
           guestFetchOptions.body = JSON.stringify(body);
         }
-        response = await fetch(guestUrl, guestFetchOptions);
-        data = await safeJson(response);
+        response = await fetch(noCacheUrl(guestUrl), guestFetchOptions);
+        data = await safeJsonResponse(response);
       }
     }
 
@@ -465,8 +427,8 @@ export async function POST(request: NextRequest) {
       if (method !== "DELETE" && Object.keys(body).length > 0) {
         freshGuestFetchOptions.body = JSON.stringify(body);
       }
-      response = await fetch(freshGuestUrl, freshGuestFetchOptions);
-      data = await safeJson(response);
+      response = await fetch(noCacheUrl(freshGuestUrl), freshGuestFetchOptions);
+      data = await safeJsonResponse(response);
     }
 
     if (!response.ok) {

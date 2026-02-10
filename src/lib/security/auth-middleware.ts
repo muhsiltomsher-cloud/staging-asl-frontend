@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { siteConfig } from "@/config/site";
-
-const API_BASE = siteConfig.apiUrl;
+import { API_BASE, backendHeaders, noCacheUrl, safeJsonResponse } from "@/lib/utils/backendFetch";
 const AUTH_TOKEN_KEY = "asl_auth_token";
 const AUTH_USER_KEY = "asl_auth_user";
 const AUTH_REFRESH_TOKEN_KEY = "asl_refresh_token";
@@ -41,17 +39,15 @@ function isValidJwtFormat(token: string): boolean {
 
 async function tryRefreshToken(refreshToken: string): Promise<string | null> {
   try {
-    const response = await fetch(`${API_BASE}/wp-json/cocart/jwt/refresh-token`, {
+    const response = await fetch(noCacheUrl(`${API_BASE}/wp-json/cocart/jwt/refresh-token`), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: backendHeaders(),
       body: JSON.stringify({ refresh_token: refreshToken }),
     });
 
     if (response.ok) {
-      const data = await response.json();
-      return data.jwt_token || data.token || null;
+      const data = await safeJsonResponse(response);
+      return (data.jwt_token as string) || (data.token as string) || null;
     }
     return null;
   } catch {
