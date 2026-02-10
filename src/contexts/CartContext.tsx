@@ -152,25 +152,18 @@ export function CartProvider({ children, locale }: CartProviderProps) {
   const { isAuthenticated, user } = useAuth();
   const wasAuthenticatedRef = useRef(isAuthenticated);
   
-  // Get cached cart from localStorage for faster initial load
-  const cachedCart = useMemo(() => getCachedCart(locale), [locale]);
-  
-  // Use SWR for cart data with caching strategy optimized for cart/checkout load
-  // - Uses localStorage cache as fallback data for instant initial render
-  // - Increased dedupingInterval to reduce redundant requests during checkout
-  // - keepPreviousData: false to prevent showing wrong locale data when switching locales
+  // Use SWR for cart data - always start with null to match server-rendered HTML
+  // and avoid React hydration error #418. LocalStorage cache is loaded post-mount.
   const { data: cart, isLoading: swrLoading, isValidating, mutate: mutateCart } = useSWR<CoCartResponse | null>(
     cacheKey,
     cartFetcher,
     {
-      fallbackData: cachedCart, // Use localStorage cache for instant initial render
-      revalidateOnFocus: true, // Refresh cart when user returns to tab
+      revalidateOnFocus: true,
       revalidateOnReconnect: true,
-      revalidateIfStale: true, // Revalidate stale data in background
-      revalidateOnMount: !cachedCart, // Skip initial fetch if we have cached data (will revalidate in background)
-      dedupingInterval: 5000, // 5 seconds deduplication to reduce requests during checkout flow
+      revalidateIfStale: true,
+      dedupingInterval: 5000,
       errorRetryCount: 2,
-      keepPreviousData: false, // Don't keep previous data when locale changes
+      keepPreviousData: false,
     }
   );
 
@@ -181,15 +174,15 @@ export function CartProvider({ children, locale }: CartProviderProps) {
     }
   }, [cart, locale]);
 
-  // Ensure cart is fetched on initial mount - this handles cases where
-  // the user returns to the site after closing the browser
+  // Seed SWR cache with localStorage data after hydration to avoid
+  // server/client mismatch (React error #418). This runs only on the client
+  // after the initial render, so both server and client start with null.
   useEffect(() => {
-    // Small delay to ensure cookies are available after page load
-    const timer = setTimeout(() => {
-      mutateCart();
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [mutateCart]);
+    const cached = getCachedCart(locale);
+    if (cached) {
+      mutateCart(cached, false);
+    }
+  }, [locale, mutateCart]);
 
   // Refresh cart when user logs in - this ensures the authenticated user's
   // cart is loaded immediately after login
