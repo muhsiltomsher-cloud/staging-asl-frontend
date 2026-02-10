@@ -367,15 +367,14 @@ function AddressModal({
               isRTL={isRTL}
             />
 
-            <Input
-              label={t.email}
-              type="email"
-              value={userEmail || formData.email || ""}
-              onChange={handleChange("email")}
-              readOnly={!!userEmail}
-              disabled={!!userEmail}
-              className={userEmail ? "bg-gray-100 cursor-not-allowed" : ""}
-            />
+            {!userEmail && (
+              <Input
+                label={t.email}
+                type="email"
+                value={formData.email || ""}
+                onChange={handleChange("email")}
+              />
+            )}
 
             <div className="rounded-lg border border-gray-200 p-3">
               <Checkbox

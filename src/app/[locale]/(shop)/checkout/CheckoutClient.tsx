@@ -1238,7 +1238,8 @@ export default function CheckoutClient() {
                               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-xs text-white shadow-sm">1</span>
                               {isRTL ? "معلومات الاتصال" : "Contact Information"}
                             </h2>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className={`grid gap-4 ${isAuthenticated ? "sm:grid-cols-1" : "sm:grid-cols-2"}`}>
+                {!isAuthenticated && (
                 <div className="relative">
                   <Input
                     label={isRTL ? "البريد الإلكتروني" : "Email"}
@@ -1246,14 +1247,12 @@ export default function CheckoutClient() {
                     required
                     value={formData.shipping.email}
                     onChange={(e) => handleShippingChange("email", e.target.value)}
-                    readOnly={isAuthenticated}
-                    disabled={isAuthenticated}
-                    className={isAuthenticated ? "bg-gray-100 cursor-not-allowed" : ""}
                   />
-                  {isCheckingEmail && !isAuthenticated && (
+                  {isCheckingEmail && (
                     <div className="absolute right-3 top-9 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"></div>
                   )}
                 </div>
+                )}
                 <PhoneInput
                   label={isRTL ? "رقم الهاتف" : "Phone"}
                   required
