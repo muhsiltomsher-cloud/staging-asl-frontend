@@ -77,14 +77,18 @@ export async function verifyAuth(_request: NextRequest): Promise<AuthResult> {
     try {
       userData = JSON.parse(userDataStr);
     } catch {
-      return {
-        authenticated: false,
-        user: null,
-        error: {
-          code: "invalid_user_data",
-          message: "Invalid user data in cookie",
-        },
-      };
+      try {
+        userData = JSON.parse(decodeURIComponent(userDataStr));
+      } catch {
+        return {
+          authenticated: false,
+          user: null,
+          error: {
+            code: "invalid_user_data",
+            message: "Invalid user data in cookie",
+          },
+        };
+      }
     }
 
     if (!userData.user_id) {
