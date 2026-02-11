@@ -341,15 +341,21 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
         <p className="mt-2 text-gray-500">
           {t.orderDate}: {formatDate(order.date_created, locale, order.billing?.country)}
         </p>
-        {order.currency && (
-          <div className="mt-3">
-            <OrderCurrencyBadge 
-              orderCurrency={order.currency} 
-              orderCurrencySymbol={order.currency_symbol}
-              isRTL={isRTL}
-            />
-          </div>
-        )}
+        {order.currency && (() => {
+          const paidCurrencyMeta = order.meta_data?.find((m) => m.key === "_myfatoorah_paid_currency");
+          const paidCurrencyValueMeta = order.meta_data?.find((m) => m.key === "_myfatoorah_paid_currency_value");
+          return (
+            <div className="mt-3">
+              <OrderCurrencyBadge 
+                orderCurrency={order.currency} 
+                orderCurrencySymbol={order.currency_symbol}
+                paidCurrency={paidCurrencyMeta?.value}
+                paidCurrencyValue={paidCurrencyValueMeta?.value}
+                isRTL={isRTL}
+              />
+            </div>
+          );
+        })()}
       </div>
 
       <div className="space-y-6">

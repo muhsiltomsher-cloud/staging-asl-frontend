@@ -91,6 +91,8 @@ export function OrderPrice({
 interface OrderCurrencyBadgeProps {
   orderCurrency: string;
   orderCurrencySymbol?: string;
+  paidCurrency?: string;
+  paidCurrencyValue?: string;
   className?: string;
   isRTL?: boolean;
 }
@@ -98,6 +100,8 @@ interface OrderCurrencyBadgeProps {
 export function OrderCurrencyBadge({
   orderCurrency,
   orderCurrencySymbol,
+  paidCurrency,
+  paidCurrencyValue,
   className,
   isRTL = false,
 }: OrderCurrencyBadgeProps) {
@@ -105,17 +109,42 @@ export function OrderCurrencyBadge({
   const orderCurrencyInfo = currencies.find((c) => c.code === orderCurrency);
   const symbol = orderCurrencySymbol || orderCurrencyInfo?.symbol || orderCurrency;
 
+  const hasDifferentCurrency = paidCurrency && paidCurrency !== orderCurrency;
+  const paidCurrencyInfo = hasDifferentCurrency ? currencies.find((c) => c.code === paidCurrency) : null;
+  const paidSymbol = paidCurrencyInfo?.symbol || paidCurrency;
+
   return (
     <span className={cn(
-      "inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700",
+      "inline-flex flex-wrap items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700",
       className
     )}>
       <span>{isRTL ? "العملة المدفوعة:" : "Paid in:"}</span>
-      <span className="font-semibold">{orderCurrency}</span>
-      {orderCurrency === "AED" ? (
-        <AEDIcon size="xs" className="flex-shrink-0" />
+      {hasDifferentCurrency ? (
+        <>
+          <span className="font-semibold">{paidCurrency}</span>
+          {paidCurrency === "AED" ? (
+            <AEDIcon size="xs" className="flex-shrink-0" />
+          ) : (
+            <span>({paidSymbol})</span>
+          )}
+          {paidCurrencyValue && (
+            <span className="font-semibold">
+              {new Intl.NumberFormat("en-US", {
+                minimumFractionDigits: paidCurrencyInfo?.decimals ?? 2,
+                maximumFractionDigits: paidCurrencyInfo?.decimals ?? 3,
+              }).format(parseFloat(paidCurrencyValue))}
+            </span>
+          )}
+        </>
       ) : (
-        <span>({symbol})</span>
+        <>
+          <span className="font-semibold">{orderCurrency}</span>
+          {orderCurrency === "AED" ? (
+            <AEDIcon size="xs" className="flex-shrink-0" />
+          ) : (
+            <span>({symbol})</span>
+          )}
+        </>
       )}
     </span>
   );

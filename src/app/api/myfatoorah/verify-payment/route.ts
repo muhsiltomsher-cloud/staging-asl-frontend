@@ -216,6 +216,8 @@ export async function GET(request: NextRequest) {
       payment_method: activeTransaction?.PaymentGateway || null,
       amount: data.Data?.InvoiceDisplayValue || null,
       currency: activeTransaction?.Currency || null,
+      paid_currency: activeTransaction?.PaidCurrency || null,
+      paid_currency_value: activeTransaction?.PaidCurrencyValue || null,
       customer_reference: data.Data?.UserDefinedField || null,
       error_code: errorCode || null,
       error_message: errorMessage || null,

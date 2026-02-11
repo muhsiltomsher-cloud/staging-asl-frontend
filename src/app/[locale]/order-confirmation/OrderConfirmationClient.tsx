@@ -9,6 +9,12 @@ import { useCart } from "@/contexts/CartContext";
 import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/components/cart/OrderBundleItemsList";
 import type { OrderLineItem } from "@/lib/api/customer";
 
+interface OrderMetaData {
+  id: number;
+  key: string;
+  value: string;
+}
+
 interface OrderData {
   id: number;
   order_key: string;
@@ -28,6 +34,7 @@ interface OrderData {
   line_items: OrderLineItem[];
   payment_method: string;
   payment_method_title: string;
+  meta_data?: OrderMetaData[];
 }
 
 interface PaymentDetails {
@@ -54,6 +61,8 @@ interface PaymentVerificationResult {
   transaction_id?: string;
   transaction_status?: string;
   payment_method?: string;
+  paid_currency?: string;
+  paid_currency_value?: string;
   error_code?: string;
   error_message?: string;
   payment_details?: PaymentDetails;
@@ -290,6 +299,8 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                           transaction_id: verifyData.transaction_id,
                           transaction_status: verifyData.transaction_status,
                           payment_method: verifyData.payment_method,
+                          paid_currency: verifyData.paid_currency,
+                          paid_currency_value: verifyData.paid_currency_value,
                         },
                       }),
                     });
@@ -520,14 +531,20 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
               ? `رقم الطلب: #${order.id}`
               : `Order number: #${order.id}`}
           </p>
-          {order.currency && !isPaymentFailed && (
-            <div className="mt-3">
-              <OrderCurrencyBadge 
-                orderCurrency={order.currency} 
-                isRTL={isRTL}
-              />
-            </div>
-          )}
+          {order.currency && !isPaymentFailed && (() => {
+            const paidCurrencyMeta = order.meta_data?.find((m) => m.key === "_myfatoorah_paid_currency");
+            const paidCurrencyValueMeta = order.meta_data?.find((m) => m.key === "_myfatoorah_paid_currency_value");
+            return (
+              <div className="mt-3">
+                <OrderCurrencyBadge 
+                  orderCurrency={order.currency} 
+                  paidCurrency={paidCurrencyMeta?.value}
+                  paidCurrencyValue={paidCurrencyValueMeta?.value}
+                  isRTL={isRTL}
+                />
+              </div>
+            );
+          })()}
         </div>
 
         {/* Only show order details/invoice when payment is successful (not failed) */}

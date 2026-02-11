@@ -308,6 +308,9 @@ interface PaymentMetaData {
   card_issuer?: string;
   card_issuer_country?: string;
   card_funding_method?: string;
+  // Paid currency details (actual gateway currency)
+  paid_currency?: string;
+  paid_currency_value?: string;
   // Error details
   error_code?: string;
   error_message?: string;
@@ -415,6 +418,13 @@ export async function PUT(request: NextRequest) {
       }
       if (body.payment_details.card_funding_method) {
         metaData.push({ key: "_myfatoorah_card_funding_method", value: body.payment_details.card_funding_method });
+      }
+      // Paid currency details
+      if (body.payment_details.paid_currency) {
+        metaData.push({ key: "_myfatoorah_paid_currency", value: body.payment_details.paid_currency });
+      }
+      if (body.payment_details.paid_currency_value) {
+        metaData.push({ key: "_myfatoorah_paid_currency_value", value: body.payment_details.paid_currency_value });
       }
       // Error details
       if (body.payment_details.error_code) {
