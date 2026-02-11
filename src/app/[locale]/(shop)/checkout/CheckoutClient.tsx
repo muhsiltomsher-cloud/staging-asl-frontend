@@ -785,6 +785,7 @@ export default function CheckoutClient() {
                 state: formData.shipping.state,
                 postcode: formData.shipping.postalCode,
                 country: formData.shipping.country,
+                phone: formData.shipping.phone,
               },
             }),
           });
@@ -955,6 +956,7 @@ export default function CheckoutClient() {
           state: formData.shipping.state,
           postcode: formData.shipping.postalCode,
           country: formData.shipping.country,
+          phone: formData.shipping.phone,
         },
         line_items: lineItems,
         coupon_lines: couponLines,
