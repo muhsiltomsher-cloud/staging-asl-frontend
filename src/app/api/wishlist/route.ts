@@ -49,8 +49,8 @@ function setCachedShareKey(userId: number, shareKey: string): void {
 
 // WooCommerce REST API authentication (required for /wc/v3/ endpoints)
 function getWooCommerceCredentials() {
-  const consumerKey = getEnvVar("WC_CONSUMER_KEY") || "";
-  const consumerSecret = getEnvVar("WC_CONSUMER_SECRET") || "";
+  const consumerKey = getEnvVar("WC_CONSUMER_KEY") || getEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY") || "";
+  const consumerSecret = getEnvVar("WC_CONSUMER_SECRET") || getEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET") || "";
   return { consumerKey, consumerSecret };
 }
 
