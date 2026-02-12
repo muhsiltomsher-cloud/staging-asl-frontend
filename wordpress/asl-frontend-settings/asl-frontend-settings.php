@@ -65,3 +65,6 @@ require_once ASL_SETTINGS_PATH . 'includes/class-asl-forms.php';
 
 // Include Frontend URLs module (rewrite admin URLs to headless frontend)
 require_once ASL_SETTINGS_PATH . 'includes/class-asl-frontend-urls.php';
+
+// Include Email Templates module (custom WooCommerce email templates)
+require_once ASL_SETTINGS_PATH . 'includes/class-asl-email-templates.php';
