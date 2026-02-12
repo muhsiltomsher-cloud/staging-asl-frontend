@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, Minus, Plus, ChevronDown, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Grid, Layers, Move, Share2 } from "lucide-react";
+import { Heart, Minus, Plus, ChevronDown, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Grid, Layers, Move, Share2, ShoppingBag } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Thumbs, FreeMode } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
@@ -313,6 +313,8 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   const [addonPrice, setAddonPrice] = useState(0);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [addonErrors, setAddonErrors] = useState<Record<string, string>>({});
+  const [showStickyBar, setShowStickyBar] = useState(false);
+  const addToCartRef = useRef<HTMLDivElement>(null);
     const { addToCart } = useCart();
     const { currency } = useCurrency();
     const { addToWishlist, removeFromWishlist, isInWishlist, getWishlistItemId } = useWishlist();
@@ -323,6 +325,23 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   const toggleAccordion = (section: string) => {
     setOpenAccordion(openAccordion === section ? null : section);
   };
+
+  const handleStickyObserver = useCallback((entries: IntersectionObserverEntry[]) => {
+    entries.forEach((entry) => {
+      setShowStickyBar(!entry.isIntersecting);
+    });
+  }, []);
+
+  useEffect(() => {
+    const target = addToCartRef.current;
+    if (!target) return;
+    const observer = new IntersectionObserver(handleStickyObserver, {
+      threshold: 0,
+      rootMargin: "0px",
+    });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [handleStickyObserver]);
 
   const primaryCategory = product.categories?.[0];
   // Use English category slug for URLs (falls back to localized slug if English slug not available)
@@ -871,7 +890,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           />
 
           {/* Add to Cart Section */}
-          <div className="space-y-4">
+          <div ref={addToCartRef} className="space-y-4">
             {/* Quantity Selector and Add to Cart Button Row */}
             <div className="flex items-center gap-4 flex-wrap">
               {/* Pill-shaped Quantity Selector */}
@@ -1054,6 +1073,69 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           isRTL={isRTL}
         />
       )}
+
+      {/* Sticky Add to Cart Bar */}
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur-md shadow-[0_-4px_20px_rgba(0,0,0,0.08)] transition-transform duration-300 ${showStickyBar && !isOutOfStock && !isFullscreen ? "translate-y-0" : "translate-y-full"}`}
+      >
+        <div className="container mx-auto flex items-center justify-between gap-4 px-4 py-3">
+          <div className="flex items-center gap-3 min-w-0">
+            {images.length > 0 && (
+              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg">
+                <Image
+                  src={images[0].src}
+                  alt={product.name}
+                  width={48}
+                  height={48}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-gray-900">{product.name}</p>
+              <FormattedPrice
+                price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
+                className="text-sm font-bold text-amber-800"
+                iconSize="sm"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="hidden sm:flex items-center rounded-full bg-[#E8E0D5] overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                disabled={quantity <= 1}
+                className="flex h-9 w-9 items-center justify-center bg-[#C4885B] text-white rounded-full transition-all duration-300 hover:bg-[#b07a4f] disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label={isRTL ? "تقليل الكمية" : "Decrease quantity"}
+              >
+                <Minus className="h-3.5 w-3.5" />
+              </button>
+              <span className="w-8 text-center text-sm font-bold text-[#5C4A3D]">{quantity}</span>
+              <button
+                type="button"
+                onClick={() => setQuantity(Math.min(quantity + 1, product.add_to_cart.maximum || 99))}
+                disabled={quantity >= (product.add_to_cart.maximum || 99)}
+                className="flex h-9 w-9 items-center justify-center bg-[#C4885B] text-white rounded-full transition-all duration-300 hover:bg-[#b07a4f] disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label={isRTL ? "زيادة الكمية" : "Increase quantity"}
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={!product.is_purchasable || isAddingToCart}
+              className="flex items-center justify-center gap-2 bg-[#C4885B] px-6 py-2.5 text-sm font-medium uppercase tracking-wide text-white transition-all duration-300 border-2 border-[#C4885B] rounded-full hover:bg-transparent hover:text-[#C4885B] disabled:cursor-not-allowed disabled:bg-gray-400 disabled:border-gray-400"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              {isAddingToCart
+                ? (isRTL ? "جاري الإضافة..." : "Adding...")
+                : (isRTL ? "أضف إلى السلة" : "Add to Cart")}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
