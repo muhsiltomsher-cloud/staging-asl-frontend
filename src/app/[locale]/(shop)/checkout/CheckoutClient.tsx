@@ -559,6 +559,35 @@ export default function CheckoutClient() {
           return `${coupon.amount} ${currency}`;
         };
 
+    const taxRate = useMemo(() => {
+      const coCartSubtotal = parseFloat(cart?.totals?.subtotal || "0") || 0;
+      const coCartShipping = parseFloat(cart?.totals?.shipping_total || "0") || 0;
+      const coCartTotalTax = parseFloat(cart?.totals?.total_tax || "0") || 0;
+      const taxableBase = coCartSubtotal + coCartShipping;
+      return taxableBase > 0 ? coCartTotalTax / taxableBase : 0;
+    }, [cart?.totals?.subtotal, cart?.totals?.shipping_total, cart?.totals?.total_tax]);
+
+    const displayTax = useMemo(() => {
+      if (shippingPackages.length > 0) {
+        const subtotal = parseFloat(cartSubtotal) || 0;
+        const shipping = parseFloat(shippingTotal) || 0;
+        const discount = couponDiscount || 0;
+        const newTaxableBase = subtotal - discount + shipping;
+        return Math.round(newTaxableBase * taxRate);
+      }
+      return parseFloat(cart?.totals?.total_tax || "0") || 0;
+    }, [cartSubtotal, shippingTotal, couponDiscount, taxRate, shippingPackages, cart?.totals?.total_tax]);
+
+    const checkoutTotal = useMemo(() => {
+      if (shippingPackages.length > 0) {
+        const subtotal = parseFloat(cartSubtotal) || 0;
+        const shipping = parseFloat(shippingTotal) || 0;
+        const discount = couponDiscount || 0;
+        return subtotal - discount + shipping + displayTax;
+      }
+      return parseFloat(cartTotal) || 0;
+    }, [cartSubtotal, shippingTotal, couponDiscount, displayTax, shippingPackages, cartTotal]);
+
     const breadcrumbItems = [
     { name: isRTL ? "السلة" : "Cart", href: `/${locale}/cart` },
     { name: isRTL ? "الدفع" : "Checkout", href: `/${locale}/checkout` },
@@ -2141,11 +2170,11 @@ export default function CheckoutClient() {
                                 )}
                               </div>
                               {/* VAT/Tax */}
-                              {cart?.totals?.total_tax && parseFloat(cart.totals.total_tax) > 0 && (
+                              {displayTax > 0 && (
                                 <div className="flex justify-between text-sm text-gray-600">
                                   <span>{isRTL ? "ضريبة القيمة المضافة" : "VAT"}</span>
                                   <FormattedPrice
-                                    price={parseFloat(cart.totals.total_tax) / divisor}
+                                    price={displayTax / divisor}
                                     iconSize="xs"
                                   />
                                 </div>
@@ -2155,7 +2184,7 @@ export default function CheckoutClient() {
               <div className="hidden py-4 text-lg font-bold text-gray-900 lg:flex lg:justify-between">
                 <span>{isRTL ? "الإجمالي" : "Total"}</span>
                 <FormattedPrice
-                  price={parseFloat(cartTotal) / divisor}
+                  price={checkoutTotal / divisor}
                   iconSize="sm"
                 />
               </div>
@@ -2207,7 +2236,7 @@ export default function CheckoutClient() {
           <div className="flex flex-col">
             <span className="text-xs text-gray-500">{isRTL ? "الإجمالي" : "Total"}</span>
             <FormattedPrice
-              price={parseFloat(cartTotal) / divisor}
+              price={checkoutTotal / divisor}
               className="text-lg font-bold text-gray-900"
               iconSize="sm"
             />
