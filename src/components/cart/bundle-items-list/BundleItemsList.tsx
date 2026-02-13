@@ -18,8 +18,9 @@ export function BundleItemsList({ item, locale, compact = false, showPrices = tr
   const bundleTotal = baseBundleTotal * cartQuantity;
   const boxPrice = baseBoxPrice !== null ? baseBoxPrice * cartQuantity : null;
   
-  const regularItems = bundleItems.filter(bi => !bi.is_addon);
-  const addonItems = bundleItems.filter(bi => bi.is_addon);
+  const regularItems = bundleItems.filter(bi => !bi.is_addon && !bi.is_free);
+  const addonItems = bundleItems.filter(bi => bi.is_addon && !bi.is_free);
+  const freeItems = bundleItems.filter(bi => bi.is_free);
   
   const regularItemsTotal = getBundleItemsTotal(regularItems) * cartQuantity;
   const addonItemsTotal = getBundleItemsTotal(addonItems) * cartQuantity;
@@ -100,6 +101,30 @@ export function BundleItemsList({ item, locale, compact = false, showPrices = tr
                 <FormattedPrice price={addonItemsTotal} className="text-xs text-amber-600 flex-shrink-0" iconSize="xs" />
               </div>
             )}
+          </>
+        )}
+
+        {freeItems.length > 0 && (
+          <>
+            <div className="mt-1 pt-1 border-t border-gray-100">
+              <span className="font-medium text-green-600">{isRTL ? "مجاني:" : "Free:"}</span>
+            </div>
+            <ul className="mt-0.5 space-y-0.5">
+              {freeItems.map((bi, idx) => {
+                const baseQty = bi.quantity || 1;
+                const displayQty = baseQty * cartQuantity;
+                return (
+                  <li key={`free-${bi.product_id}-${idx}`} className="flex items-center justify-between gap-1">
+                    <span className="flex items-center gap-1">
+                      <span className="h-1 w-1 rounded-full bg-green-500 flex-shrink-0"></span>
+                      <span className="truncate">{bi.name || `Product #${bi.product_id}`}</span>
+                      <span className="text-gray-400 flex-shrink-0">x{displayQty}</span>
+                    </span>
+                    <span className="text-xs font-semibold text-green-600 flex-shrink-0">{isRTL ? "مجاني" : "FREE"}</span>
+                  </li>
+                );
+              })}
+            </ul>
           </>
         )}
         
@@ -192,6 +217,30 @@ export function BundleItemsList({ item, locale, compact = false, showPrices = tr
               <FormattedPrice price={addonItemsTotal} className="text-xs text-amber-600 flex-shrink-0" iconSize="xs" />
             </div>
           )}
+        </>
+      )}
+
+      {freeItems.length > 0 && (
+        <>
+          <div className="mt-3 pt-2 border-t border-gray-200">
+            <p className="mb-2 text-xs font-medium text-green-600">{isRTL ? "مجاني:" : "Free:"}</p>
+          </div>
+          <ul className="space-y-1.5">
+            {freeItems.map((bi, idx) => {
+              const baseQty = bi.quantity || 1;
+              const displayQty = baseQty * cartQuantity;
+              return (
+                <li key={`free-${bi.product_id}-${idx}`} className="flex items-center justify-between gap-2 text-xs">
+                  <span className="flex items-center gap-1.5 text-green-700">
+                    <span className="h-1.5 w-1.5 rounded-full bg-green-500 flex-shrink-0"></span>
+                    <span>{bi.name || `Product #${bi.product_id}`}</span>
+                    <span className="text-gray-400">x{displayQty}</span>
+                  </span>
+                  <span className="text-xs font-semibold text-green-600 flex-shrink-0">{isRTL ? "مجاني" : "FREE"}</span>
+                </li>
+              );
+            })}
+          </ul>
         </>
       )}
       
