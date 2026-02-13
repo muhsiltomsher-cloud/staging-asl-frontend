@@ -297,9 +297,10 @@ interface ProductDetailProps {
   englishCategorySlug?: string | null;
   localizedCategoryName?: string | null;
   hiddenGiftProductIds?: number[];
+  freeShippingThreshold?: number | null;
 }
 
-export function ProductDetail({ product, locale, relatedProducts = [], upsellProducts = [], addonForms = [], englishCategorySlug, localizedCategoryName, hiddenGiftProductIds = [] }: ProductDetailProps) {
+export function ProductDetail({ product, locale, relatedProducts = [], upsellProducts = [], addonForms = [], englishCategorySlug, localizedCategoryName, hiddenGiftProductIds = [], freeShippingThreshold }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -1025,11 +1026,19 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                     ? "نقبل جميع بطاقات الائتمان الرئيسية والدفع عند الاستلام."
                     : "We accept all major credit cards and cash on delivery."}
                 </p>
-                <p>
-                  {isRTL
-                    ? "شحن مجاني للطلبات التي تزيد عن 500 درهم. التوصيل خلال 2-5 أيام عمل."
-                    : "Free shipping on orders over 500 AED. Delivery within 2-5 business days."}
-                </p>
+                {freeShippingThreshold ? (
+                  <p>
+                    {isRTL
+                      ? `شحن مجاني للطلبات التي تزيد عن ${freeShippingThreshold} درهم. التوصيل خلال 2-5 أيام عمل.`
+                      : `Free shipping on orders over ${freeShippingThreshold} AED. Delivery within 2-5 business days.`}
+                  </p>
+                ) : (
+                  <p>
+                    {isRTL
+                      ? "التوصيل خلال 2-5 أيام عمل."
+                      : "Delivery within 2-5 business days."}
+                  </p>
+                )}
               </div>
             </AccordionSection>
           </div>

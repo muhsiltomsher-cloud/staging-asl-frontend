@@ -81,6 +81,7 @@ interface BuildYourOwnSetClientProps {
   locale: Locale;
   bundleProduct?: WCProduct | null;
   bundleConfig?: BundleConfig | null;
+  freeShippingThreshold?: number | null;
 }
 
 export function BuildYourOwnSetClient({
@@ -88,6 +89,7 @@ export function BuildYourOwnSetClient({
   locale,
   bundleProduct,
   bundleConfig,
+  freeShippingThreshold,
 }: BuildYourOwnSetClientProps) {
   const isRTL = locale === "ar";
   const { addToCart } = useCart();
@@ -486,7 +488,9 @@ export function BuildYourOwnSetClient({
               sku: "SKU",
               noDescription: "No description available",
               paymentInfo: "We accept all major credit cards and cash on delivery.",
-              deliveryInfo: "Free shipping on orders over 500 AED. Delivery within 2-5 business days.",
+              deliveryInfo: freeShippingThreshold
+                ? `Free shipping on orders over ${freeShippingThreshold} AED. Delivery within 2-5 business days.`
+                : "Delivery within 2-5 business days.",
             },
             ar:{
       title: "اصنع مجموعتك الخاصة",
@@ -528,7 +532,9 @@ export function BuildYourOwnSetClient({
           sku: "رمز المنتج",
           noDescription: "لا يوجد وصف متاح",
           paymentInfo: "نقبل جميع بطاقات الائتمان الرئيسية والدفع عند الاستلام.",
-          deliveryInfo: "شحن مجاني للطلبات التي تزيد عن 500 درهم. التوصيل خلال 2-5 أيام عمل.",
+          deliveryInfo: freeShippingThreshold
+            ? `شحن مجاني للطلبات التي تزيد عن ${freeShippingThreshold} درهم. التوصيل خلال 2-5 أيام عمل.`
+            : "التوصيل خلال 2-5 أيام عمل.",
         },
       };
 

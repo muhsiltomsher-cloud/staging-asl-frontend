@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { getProductBySlug, getRelatedProducts, getProducts, getEnglishSlugForProduct, getBundleConfig, getFreeGiftProductIds, getHiddenProductIds, getCategoryBySlug, getEnglishSlugForCategory, getProductUpsellIds, getProductsByIds } from "@/lib/api/woocommerce";
 import { getProductAddons } from "@/lib/api/wcpa";
 import { generateMetadata as generateSeoMetadata, generateProductJsonLd } from "@/lib/utils/seo";
+import { getTopbarSettings } from "@/lib/api/wordpress";
 import { ProductDetail } from "./ProductDetail";
 import { BuildYourOwnSetClient } from "../../build-your-own-set/BuildYourOwnSetClient";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
@@ -128,9 +129,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  // Check if this product has a bundle configuration
-  // Pass locale to get correct product/category IDs for the current language
-  const bundleConfig = await getBundleConfig(slug, locale as Locale);
+  // Fetch topbar settings and bundle config in parallel
+  const [bundleConfig, topbarSettings] = await Promise.all([
+    getBundleConfig(slug, locale as Locale),
+    getTopbarSettings(),
+  ]);
+  const freeShippingThreshold = topbarSettings.freeShippingThreshold;
   
   // If bundle is enabled for this product, show the bundle builder inline
   if (bundleConfig && bundleConfig.enabled) {
@@ -163,6 +167,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             locale={locale as Locale}
             bundleProduct={product}
             bundleConfig={bundleConfig}
+            freeShippingThreshold={freeShippingThreshold}
           />
         </div>
       </>
@@ -224,6 +229,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         englishCategorySlug={englishCategorySlug}
         localizedCategoryName={localizedCategoryName}
         hiddenGiftProductIds={hiddenGiftProductIds}
+        freeShippingThreshold={freeShippingThreshold}
       />
     </>
   );
