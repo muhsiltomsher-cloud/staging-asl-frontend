@@ -849,8 +849,10 @@ export default function CheckoutClient() {
             // The bundle has a fixed total price regardless of what items are selected
             correctBundleTotal = fixedPrice || storedBundleTotal || boxPrice || 0;
           } else {
-            // For sum pricing mode, add items total + box price
-            correctBundleTotal = bundleItemsTotal + (boxPrice || 0);
+            // For sum pricing mode, use the actual cart item price from CoCart
+            // The backend already calculated the correct bundle price
+            const cartItemPrice = parseFloat(item.price) / divisor;
+            correctBundleTotal = cartItemPrice > 0 ? cartItemPrice : bundleItemsTotal + (boxPrice || 0);
           }
           
           // Multiply by quantity for the line item total

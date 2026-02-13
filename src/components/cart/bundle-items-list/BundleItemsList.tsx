@@ -128,23 +128,9 @@ export function BundleItemsList({ item, locale, compact = false, showPrices = tr
           </>
         )}
         
-        {showPrices && !isFixedPricing && bundleTotal > 0 && (
+        {showPrices && isFixedPricing && (
           <div className="mt-1 flex items-center justify-between border-t border-gray-200 pt-1">
-            <span className="font-medium">{isRTL ? "مجموع المنتجات:" : "Items Total:"}</span>
-            <FormattedPrice price={bundleTotal} className="text-xs font-medium text-amber-600" iconSize="xs" />
-          </div>
-        )}
-        
-        {showPrices && !isFixedPricing && boxPrice !== null && boxPrice > 0 && (
-          <div className="flex items-center justify-between py-0.5">
-            <span className="font-medium">{isRTL ? "سعر الصندوق:" : "Box Price:"}</span>
-            <FormattedPrice price={boxPrice} className="text-xs text-gray-500 flex-shrink-0" iconSize="xs" />
-          </div>
-        )}
-        
-        {showPrices && (isFixedPricing || (boxPrice !== null && boxPrice > 0)) && (
-          <div className="mt-1 flex items-center justify-between border-t border-gray-200 pt-1">
-            <span className="font-medium">{isRTL ? (isFixedPricing ? "سعر الباقة:" : "الإجمالي:") : (isFixedPricing ? "Bundle Price:" : "Total:")}</span>
+            <span className="font-medium">{isRTL ? "سعر الباقة:" : "Bundle Price:"}</span>
             <FormattedPrice price={totalPrice} className="text-xs font-medium text-amber-600" iconSize="xs" />
           </div>
         )}
@@ -244,23 +230,9 @@ export function BundleItemsList({ item, locale, compact = false, showPrices = tr
         </>
       )}
       
-      {showPrices && !isFixedPricing && bundleTotal > 0 && (
+      {showPrices && isFixedPricing && (
         <div className="mt-2 flex items-center justify-between border-t border-gray-200 pt-2">
-          <span className="text-xs font-medium text-gray-600">{isRTL ? "مجموع المنتجات:" : "Items Total:"}</span>
-          <FormattedPrice price={bundleTotal} className="text-sm font-semibold text-amber-600" iconSize="xs" />
-        </div>
-      )}
-      
-      {showPrices && !isFixedPricing && boxPrice !== null && boxPrice > 0 && (
-        <div className="flex items-center justify-between py-1">
-          <span className="text-xs font-medium text-gray-600">{isRTL ? "سعر الصندوق:" : "Box Price:"}</span>
-          <FormattedPrice price={boxPrice} className="text-xs font-medium text-gray-600 flex-shrink-0" iconSize="xs" />
-        </div>
-      )}
-      
-      {showPrices && (isFixedPricing || (boxPrice !== null && boxPrice > 0)) && (
-        <div className="mt-1 flex items-center justify-between border-t border-gray-200 pt-2">
-          <span className="text-xs font-medium text-gray-600">{isRTL ? (isFixedPricing ? "سعر الباقة:" : "الإجمالي:") : (isFixedPricing ? "Bundle Price:" : "Total:")}</span>
+          <span className="text-xs font-medium text-gray-600">{isRTL ? "سعر الباقة:" : "Bundle Price:"}</span>
           <FormattedPrice price={totalPrice} className="text-sm font-semibold text-amber-600" iconSize="xs" />
         </div>
       )}
