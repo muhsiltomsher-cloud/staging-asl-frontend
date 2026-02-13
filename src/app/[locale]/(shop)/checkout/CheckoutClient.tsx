@@ -974,7 +974,7 @@ export default function CheckoutClient() {
           shippingLines.push({
             method_id: selectedRate.method_id,
             method_title: selectedRate.name,
-            total: shippingTotal,
+            total: (parseFloat(shippingTotal) / divisor).toFixed(2),
           });
         }
       }
