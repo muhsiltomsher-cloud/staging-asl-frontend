@@ -968,8 +968,8 @@ export function BuildYourOwnSetClient({
                         <p className="line-clamp-2 text-xs sm:text-sm font-medium text-gray-900 uppercase break-words">
                           {product.name}
                         </p>
-                        <p className="mt-1 text-xs sm:text-sm font-semibold text-amber-700">
-                          <FormattedPrice price={product.price} iconSize="sm" />
+                        <p className={`mt-1 text-xs sm:text-sm font-semibold ${activeSlot !== null && isSlotFree(activeSlot) ? "text-green-600" : "text-amber-700"}`}>
+                          {activeSlot !== null && isSlotFree(activeSlot) ? t.free : <FormattedPrice price={product.price} iconSize="sm" />}
                         </p>
                       </div>
                       {!isDisabled && (
