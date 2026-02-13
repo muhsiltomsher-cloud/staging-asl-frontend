@@ -145,7 +145,7 @@ export default function CheckoutClient() {
   const searchParams = useSearchParams();
         const { cart, cartItems, cartSubtotal, cartTotal, clearCart, applyCoupon, removeCoupon, selectedCoupons, couponDiscount, clearSelectedCoupons, isLoading: isCartLoading } = useCart();
         const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
-        const { currency } = useCurrency();
+        const { currency, convertPrice } = useCurrency();
     const isRTL = locale === "ar";
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -874,15 +874,16 @@ export default function CheckoutClient() {
           let correctBundleTotal: number;
           
           if (pricingMode === "fixed") {
-            // For fixed pricing mode, use the fixed price or stored bundle total
-            // The bundle has a fixed total price regardless of what items are selected
             correctBundleTotal = fixedPrice || storedBundleTotal || boxPrice || 0;
           } else {
-            // For sum pricing mode, use the actual cart item price from CoCart
-            // The backend already calculated the correct bundle price
-            const cartItemPrice = parseFloat(item.price) / divisor;
-            correctBundleTotal = cartItemPrice > 0 ? cartItemPrice : bundleItemsTotal + (boxPrice || 0);
+            const cartItemPriceAED = parseFloat(item.price) / divisor;
+            correctBundleTotal = cartItemPriceAED > 0 ? cartItemPriceAED : bundleItemsTotal + (boxPrice || 0);
           }
+          
+          // CoCart and WooCommerce prices are in AED (base currency).
+          // Convert to the order's display currency so the WooCommerce order
+          // and payment gateway receive the correct amount.
+          correctBundleTotal = convertPrice(correctBundleTotal);
           
           // Multiply by quantity for the line item total
           const quantity = item.quantity?.value || 1;
@@ -974,7 +975,7 @@ export default function CheckoutClient() {
           shippingLines.push({
             method_id: selectedRate.method_id,
             method_title: selectedRate.name,
-            total: (parseFloat(shippingTotal) / divisor).toFixed(2),
+            total: convertPrice(parseFloat(shippingTotal) / divisor).toFixed(2),
           });
         }
       }
