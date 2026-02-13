@@ -95,7 +95,7 @@ export function WCProductListCard({
         className="flex gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-300 hover:border-amber-200 hover:shadow-md md:gap-6"
       >
         {/* Product Image */}
-        <div className="relative h-32 w-32 flex-shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-amber-50 to-amber-100 md:h-40 md:w-40">
+        <div className="relative h-32 w-32 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 md:h-40 md:w-40">
           {mainImage ? (
             <Image
               src={mainImage.src}
