@@ -1,10 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
-import { ArrowRight } from "lucide-react";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -15,7 +13,7 @@ interface IngredientItem {
   title: string;
   excerpt: string;
   image: string;
-  link: string;
+  link?: string;
 }
 
 interface IngredientsCarouselProps {
@@ -66,40 +64,25 @@ export function IngredientsCarousel({
       >
         {items.map((item) => (
           <SwiperSlide key={item.key}>
-            <Link
-              href={item.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group block overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:shadow-xl"
-            >
-              {/* Image */}
+            <div className="overflow-hidden rounded-2xl bg-white shadow-lg">
               <div className="relative aspect-square overflow-hidden">
                 <Image
                   src={item.image}
                   alt={item.title}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  className="object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
               </div>
-
-              {/* Content */}
               <div className="p-6">
-                <h3 className="mb-3 text-xl font-bold text-amber-900 transition-colors group-hover:text-amber-700">
+                <h3 className="mb-3 text-xl font-bold text-amber-900">
                   {item.title}
                 </h3>
-                <p className="mb-4 line-clamp-3 text-sm leading-relaxed text-amber-700/70">
+                <p className="line-clamp-3 text-sm leading-relaxed text-amber-700/70">
                   {item.excerpt}
                 </p>
-                <div className="flex items-center gap-2 text-sm font-medium text-amber-600 transition-colors group-hover:text-amber-800">
-                  <span>{isRTL ? "اقرأ المزيد" : "Read More"}</span>
-                  <ArrowRight
-                    className={`h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 ${isRTL ? "rotate-180 group-hover:-translate-x-1" : ""}`}
-                  />
-                </div>
               </div>
-            </Link>
+            </div>
           </SwiperSlide>
         ))}
       </Swiper>
