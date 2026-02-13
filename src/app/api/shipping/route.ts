@@ -289,13 +289,20 @@ function buildShippingRates(
   }
 
   if (rates.length > 0) {
-    const firstSelectable = rates.find(
-      r => !(r.method_id === "free_shipping" && r.free_shipping_eligible === false)
+    const eligibleFreeShipping = rates.find(
+      r => r.method_id === "free_shipping" && r.free_shipping_eligible !== false
     );
-    if (firstSelectable) {
-      firstSelectable.selected = true;
+    if (eligibleFreeShipping) {
+      eligibleFreeShipping.selected = true;
     } else {
-      rates[0].selected = true;
+      const firstSelectable = rates.find(
+        r => !(r.method_id === "free_shipping" && r.free_shipping_eligible === false)
+      );
+      if (firstSelectable) {
+        firstSelectable.selected = true;
+      } else {
+        rates[0].selected = true;
+      }
     }
   }
 
