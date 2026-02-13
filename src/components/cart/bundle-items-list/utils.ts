@@ -38,6 +38,7 @@ export function getBundleItems(item: CoCartItem): BundleItem[] | null {
         price: typeof bundleItem.price === "number" || typeof bundleItem.price === "string" ? bundleItem.price : undefined,
         quantity: typeof bundleItem.quantity === "number" ? bundleItem.quantity : undefined,
         is_addon: typeof bundleItem.is_addon === "boolean" ? bundleItem.is_addon : undefined,
+        is_free: typeof bundleItem.is_free === "boolean" ? bundleItem.is_free : undefined,
       }));
   } catch {
     return null;
@@ -46,6 +47,7 @@ export function getBundleItems(item: CoCartItem): BundleItem[] | null {
 
 export function getBundleItemsTotal(bundleItems: BundleItem[]): number {
   return bundleItems.reduce((total, item) => {
+    if (item.is_free) return total;
     const price = typeof item.price === "string" ? parseFloat(item.price) : (item.price || 0);
     const quantity = item.quantity || 1;
     return total + (price * quantity);

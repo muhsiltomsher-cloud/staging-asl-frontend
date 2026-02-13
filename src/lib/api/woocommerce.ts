@@ -729,6 +729,37 @@ export async function getBundleConfig(
     }
 
     const data = JSON.parse(text);
+
+    if (data.eligible_categories && !Array.isArray(data.eligible_categories)) {
+      data.eligible_categories = Object.values(data.eligible_categories);
+    }
+    if (data.eligible_products && !Array.isArray(data.eligible_products)) {
+      data.eligible_products = Object.values(data.eligible_products);
+    }
+    if (data.exclude_categories && !Array.isArray(data.exclude_categories)) {
+      data.exclude_categories = Object.values(data.exclude_categories);
+    }
+    if (data.exclude_products && !Array.isArray(data.exclude_products)) {
+      data.exclude_products = Object.values(data.exclude_products);
+    }
+    if (Array.isArray(data.slots)) {
+      data.slots = data.slots.map((slot: Record<string, unknown>) => {
+        if (slot.eligible_categories && !Array.isArray(slot.eligible_categories)) {
+          slot.eligible_categories = Object.values(slot.eligible_categories);
+        }
+        if (slot.eligible_products && !Array.isArray(slot.eligible_products)) {
+          slot.eligible_products = Object.values(slot.eligible_products);
+        }
+        if (slot.exclude_categories && !Array.isArray(slot.exclude_categories)) {
+          slot.exclude_categories = Object.values(slot.exclude_categories);
+        }
+        if (slot.exclude_products && !Array.isArray(slot.exclude_products)) {
+          slot.exclude_products = Object.values(slot.exclude_products);
+        }
+        return slot;
+      });
+    }
+
     return data;
   } catch {
     return null;

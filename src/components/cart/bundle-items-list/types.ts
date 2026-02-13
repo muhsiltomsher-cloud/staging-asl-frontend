@@ -6,6 +6,7 @@ export interface BundleItem {
   price?: number | string;
   quantity?: number;
   is_addon?: boolean;
+  is_free?: boolean;
 }
 
 export interface BundleItemsListProps {
