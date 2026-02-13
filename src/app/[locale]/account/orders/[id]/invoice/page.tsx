@@ -436,7 +436,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
           opacity: 0.06;
         }
         .invoice-content {
-          font-family: var(--font-inter), 'Noto Sans Arabic', Arial, Helvetica, sans-serif;
+          font-family: var(--font-inter), var(--font-noto-sans-arabic), Arial, Helvetica, sans-serif;
         }
         .invoice-content * {
           font-family: inherit;
@@ -447,7 +447,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
             print-color-adjust: exact;
           }
           .invoice-content {
-            font-family: var(--font-inter), 'Noto Sans Arabic', Arial, Helvetica, sans-serif !important;
+            font-family: var(--font-inter), var(--font-noto-sans-arabic), Arial, Helvetica, sans-serif !important;
           }
           .invoice-content * {
             font-family: inherit !important;
