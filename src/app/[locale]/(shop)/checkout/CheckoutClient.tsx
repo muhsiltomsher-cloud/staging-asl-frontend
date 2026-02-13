@@ -453,11 +453,13 @@ export default function CheckoutClient() {
           setIsLoadingShipping(true);
           try {
             const subtotal = cartSubtotal ? parseFloat(String(cartSubtotal)) : 0;
+            const weight = cart?.items_weight || 0;
             const params = new URLSearchParams({
               country: country || "AE",
               city: city || "",
               postcode: postcode || "",
               cart_subtotal: String(subtotal),
+              cart_weight: String(weight),
               currency_code: currency || "AED",
             });
             const response = await fetch(`/api/shipping?${params.toString()}`);

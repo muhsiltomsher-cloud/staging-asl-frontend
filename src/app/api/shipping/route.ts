@@ -51,6 +51,12 @@ export interface ShippingPackage {
   shipping_rates: ShippingRate[];
 }
 
+interface WeightRule {
+  minWeight: number;
+  maxWeight: number;
+  cost: number;
+}
+
 interface ZoneMethod {
   id: number;
   instance_id: number;
@@ -134,11 +140,57 @@ async function getZoneMethods(zoneId: number): Promise<ZoneMethod[]> {
   return response.json();
 }
 
+function parseFlexibleShippingRules(settings: Record<string, { value: string }>): WeightRule[] {
+  const rulesKeys = ["method_rules", "rules", "shipping_rules"];
+  for (const key of rulesKeys) {
+    if (settings[key]?.value) {
+      try {
+        const parsed = JSON.parse(settings[key].value);
+        if (Array.isArray(parsed)) {
+          const rules: WeightRule[] = [];
+          for (const rule of parsed) {
+            const conditions = rule.conditions || [];
+            const weightCondition = conditions.find(
+              (c: { condition_id?: string }) => c.condition_id === "weight"
+            );
+            if (weightCondition) {
+              const cost = parseFloat(rule.cost_per_order?.value || rule.cost || "0");
+              rules.push({
+                minWeight: parseFloat(weightCondition.min || "0"),
+                maxWeight: parseFloat(weightCondition.max || "999999"),
+                cost,
+              });
+            }
+          }
+          if (rules.length > 0) return rules;
+        }
+      } catch {
+        continue;
+      }
+    }
+  }
+  return [];
+}
+
+function calculateWeightBasedCost(rules: WeightRule[], weight: number): number | null {
+  const sorted = [...rules].sort((a, b) => a.minWeight - b.minWeight);
+  for (const rule of sorted) {
+    if (weight >= rule.minWeight && weight <= rule.maxWeight) {
+      return rule.cost;
+    }
+  }
+  if (sorted.length > 0 && weight > sorted[sorted.length - 1].maxWeight) {
+    return sorted[sorted.length - 1].cost;
+  }
+  return null;
+}
+
 function buildShippingRates(
   methods: ZoneMethod[],
   cartSubtotal: number,
   currencyCode: string,
-  currencySymbol: string
+  currencySymbol: string,
+  cartWeight: number
 ): ShippingRate[] {
   const rates: ShippingRate[] = [];
 
@@ -149,8 +201,30 @@ function buildShippingRates(
     const name = method.title || method.method_title;
 
     if (method.method_id === "flat_rate") {
-      const cost = method.settings?.cost?.value || "0";
-      price = String(Math.round(parseFloat(cost) * 100));
+      const rules = parseFlexibleShippingRules(method.settings);
+      if (rules.length > 0 && cartWeight > 0) {
+        const weightCost = calculateWeightBasedCost(rules, cartWeight);
+        if (weightCost !== null) {
+          price = String(Math.round(weightCost * 100));
+        } else {
+          const cost = method.settings?.cost?.value || "0";
+          price = String(Math.round(parseFloat(cost) * 100));
+        }
+      } else {
+        const cost = method.settings?.cost?.value || "0";
+        price = String(Math.round(parseFloat(cost) * 100));
+      }
+    } else if (method.method_id === "flexible_shipping_single" || method.method_id === "flexible_shipping") {
+      const rules = parseFlexibleShippingRules(method.settings);
+      if (rules.length > 0 && cartWeight > 0) {
+        const weightCost = calculateWeightBasedCost(rules, cartWeight);
+        if (weightCost !== null) {
+          price = String(Math.round(weightCost * 100));
+        }
+      } else {
+        const cost = method.settings?.cost?.value || "0";
+        price = String(Math.round(parseFloat(cost) * 100));
+      }
     } else if (method.method_id === "free_shipping") {
       price = "0";
       const requires = method.settings?.requires?.value || "";
@@ -234,6 +308,7 @@ export async function GET(request: NextRequest) {
     const city = request.nextUrl.searchParams.get("city") || "";
     const postcode = request.nextUrl.searchParams.get("postcode") || "";
     const cartSubtotal = parseFloat(request.nextUrl.searchParams.get("cart_subtotal") || "0");
+    const cartWeight = parseFloat(request.nextUrl.searchParams.get("cart_weight") || "0");
     const currencyCode = request.nextUrl.searchParams.get("currency_code") || "AED";
     const currencySymbol = request.nextUrl.searchParams.get("currency_symbol") || "د.إ";
 
@@ -247,7 +322,7 @@ export async function GET(request: NextRequest) {
     }
 
     const methods = await getZoneMethods(zoneId);
-    const shippingRates = buildShippingRates(methods, cartSubtotal, currencyCode, currencySymbol);
+    const shippingRates = buildShippingRates(methods, cartSubtotal, currencyCode, currencySymbol, cartWeight);
 
     const selectedRate = shippingRates.find(r => r.selected);
     const shippingTotal = selectedRate ? selectedRate.price : "0";
