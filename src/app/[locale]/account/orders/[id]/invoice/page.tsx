@@ -181,7 +181,7 @@ export default function InvoicePage({ params }: InvoicePageProps) {
           </Button>
         </div>
 
-        <div className="mx-auto max-w-4xl bg-white rounded-lg shadow-sm print:shadow-none print:rounded-none relative overflow-hidden">
+        <div className="mx-auto max-w-4xl bg-white rounded-lg shadow-sm print:shadow-none print:rounded-none relative overflow-hidden invoice-content">
           {logoUrl && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none invoice-watermark">
               <div className="relative w-[400px] h-[400px]">
@@ -435,10 +435,22 @@ export default function InvoicePage({ params }: InvoicePageProps) {
         .invoice-watermark {
           opacity: 0.06;
         }
+        .invoice-content {
+          font-family: var(--font-inter), 'Noto Sans Arabic', Arial, Helvetica, sans-serif;
+        }
+        .invoice-content * {
+          font-family: inherit;
+        }
         @media print {
           body {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+          }
+          .invoice-content {
+            font-family: var(--font-inter), 'Noto Sans Arabic', Arial, Helvetica, sans-serif !important;
+          }
+          .invoice-content * {
+            font-family: inherit !important;
           }
           .invoice-watermark {
             opacity: 0.03;
