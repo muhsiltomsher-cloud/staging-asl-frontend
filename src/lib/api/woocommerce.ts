@@ -105,6 +105,7 @@ export async function getProducts(params?: {
   search?: string;
   orderby?: string;
   order?: "asc" | "desc";
+  include?: number[];
   locale?: Locale;
   currency?: Currency;
 }): Promise<WCProductsResponse> {
@@ -117,6 +118,7 @@ export async function getProducts(params?: {
     if (params?.search) searchParams.set("search", params.search);
     if (params?.orderby) searchParams.set("orderby", params.orderby);
     if (params?.order) searchParams.set("order", params.order);
+    if (params?.include?.length) searchParams.set("include", params.include.join(","));
 
     const queryString = searchParams.toString();
     const endpoint = `/products${queryString ? `?${queryString}` : ""}`;
@@ -1034,7 +1036,18 @@ export async function getNewProducts(params?: {
   });
 }
 
-// Get bestseller products (ordered by popularity/total sales)
+const BESTSELLER_PRODUCT_IDS = [
+  8004, // Dark Musk Perfume
+  8009, // Velvet Amber Perfume
+  8007, // Secret Leather Perfume
+  8030, // Cool Violet Air Fresheners
+  8021, // Dark Musk Oil
+  9617, // Velvet Amber Oil
+  8036, // Hand Body Lotion Velvet Amber
+  8012, // Hair Mist Dark Musk
+  8019, // Hair Mist Royal Tobacco
+];
+
 export async function getBestsellerProducts(params?: {
   page?: number;
   per_page?: number;
@@ -1043,8 +1056,8 @@ export async function getBestsellerProducts(params?: {
 }): Promise<WCProductsResponse> {
   return getProducts({
     ...params,
-    orderby: "popularity",
-    order: "desc",
+    include: BESTSELLER_PRODUCT_IDS,
+    per_page: BESTSELLER_PRODUCT_IDS.length,
   });
 }
 
