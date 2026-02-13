@@ -470,6 +470,14 @@ export function formatDate(dateString: string, locale: string = "en", country?: 
   return date.toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US", options);
 }
 
+export function getOrderDate(order: Order): string {
+  const originalDate = order.meta_data?.find((m) => m.key === "_original_date_created");
+  if (originalDate?.value) {
+    return originalDate.value;
+  }
+  return order.date_created;
+}
+
 const SAVED_ADDRESSES_KEY = "asl_saved_addresses";
 
 function isAddressPopulated(address: CustomerAddress | undefined): boolean {

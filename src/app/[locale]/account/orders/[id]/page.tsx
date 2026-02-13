@@ -10,10 +10,10 @@ import { AccountAuthGuard } from "@/components/account/AccountAuthGuard";
 import { AccountLoadingSpinner } from "@/components/account/AccountLoadingSpinner";
 import { AccountEmptyState } from "@/components/account/AccountEmptyState";
 import { OrderPrice, OrderCurrencyBadge } from "@/components/common/OrderPrice";
-import { getOrder, formatOrderStatus, getOrderStatusColor, formatDate, canCancelOrder, cancelOrder, type Order, type OrderLineItem } from "@/lib/api/customer";
+import { getOrder, formatOrderStatus, getOrderStatusColor, formatDate, getOrderDate, canCancelOrder, cancelOrder, type Order, type OrderLineItem } from "@/lib/api/customer";
 import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/components/cart/OrderBundleItemsList";
 import { OrderNotes } from "@/components/account/OrderNotes";
-import { getProductsByIds } from "@/lib/api/woocommerce";
+import { getProductsByIds, searchProductByName } from "@/lib/api/woocommerce";
 
 interface OrderDetailPageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -220,25 +220,44 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
         if (response.success && response.data) {
           setOrder(response.data);
           
-          // Fetch product images for items that don't have images
           const itemsWithoutImages = response.data.line_items.filter(
             (item: OrderLineItem) => !item.image?.src
           );
           
           if (itemsWithoutImages.length > 0) {
-            const productIds = itemsWithoutImages.map((item: OrderLineItem) => item.product_id);
-            try {
-              const products = await getProductsByIds(productIds, locale);
-              const imageMap: Record<number, string> = {};
-              products.forEach((product) => {
-                if (product.images && product.images.length > 0) {
-                  imageMap[product.id] = product.images[0].src;
+            const imageMap: Record<number, string> = {};
+            
+            const validIdItems = itemsWithoutImages.filter((item: OrderLineItem) => item.product_id > 0);
+            if (validIdItems.length > 0) {
+              try {
+                const productIds = validIdItems.map((item: OrderLineItem) => item.product_id);
+                const products = await getProductsByIds(productIds, locale);
+                products.forEach((product) => {
+                  if (product.images && product.images.length > 0) {
+                    imageMap[product.id] = product.images[0].src;
+                  }
+                });
+              } catch (imgErr) {
+                console.error("Failed to fetch product images by ID:", imgErr);
+              }
+            }
+            
+            const zeroIdItems = itemsWithoutImages.filter((item: OrderLineItem) => item.product_id === 0 && item.name);
+            if (zeroIdItems.length > 0) {
+              const searchPromises = zeroIdItems.map(async (item: OrderLineItem) => {
+                try {
+                  const product = await searchProductByName(item.name, locale);
+                  if (product?.images && product.images.length > 0) {
+                    imageMap[item.id] = product.images[0].src;
+                  }
+                } catch {
+                  // skip
                 }
               });
-              setProductImages(imageMap);
-            } catch (imgErr) {
-              console.error("Failed to fetch product images:", imgErr);
+              await Promise.all(searchPromises);
             }
+            
+            setProductImages(imageMap);
           }
         } else {
           setError(response.error?.message || "Failed to load order");
@@ -260,13 +279,14 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   
   // Helper function to get image URL for an order item
   const getItemImageUrl = (item: OrderLineItem): string | null => {
-    // First try to use the image from the order line item
     if (item.image?.src) {
       return item.image.src;
     }
-    // Fall back to fetched product image
-    if (productImages[item.product_id]) {
+    if (item.product_id > 0 && productImages[item.product_id]) {
       return productImages[item.product_id];
+    }
+    if (productImages[item.id]) {
+      return productImages[item.id];
     }
     return null;
   };
@@ -339,7 +359,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           </span>
         </div>
         <p className="mt-2 text-gray-500">
-          {t.orderDate}: {formatDate(order.date_created, locale, order.billing?.country)}
+          {t.orderDate}: {formatDate(getOrderDate(order), locale, order.billing?.country)}
         </p>
         {order.currency && (() => {
                     const paidCurrencyMeta = order.meta_data?.find((m) => m.key === "myfatoorah_paid_currency");

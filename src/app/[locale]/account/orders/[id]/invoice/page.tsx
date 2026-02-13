@@ -11,7 +11,7 @@ import { AccountLoadingSpinner } from "@/components/account/AccountLoadingSpinne
 import { AccountEmptyState } from "@/components/account/AccountEmptyState";
 import { OrderPrice } from "@/components/common/OrderPrice";
 import { AEDIcon } from "@/components/common/AEDIcon";
-import { getOrder, formatDate, type Order } from "@/lib/api/customer";
+import { getOrder, formatDate, getOrderDate, type Order } from "@/lib/api/customer";
 import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/components/cart/OrderBundleItemsList";
 import { siteConfig } from "@/config/site";
 
@@ -201,9 +201,9 @@ export default function InvoicePage({ params }: InvoicePageProps) {
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">{t.invoice}</h1>
                 <div className="space-y-1 text-sm text-gray-600">
                   <p><span className="font-medium">{t.invoiceNumber}:</span> INV-{order.number}</p>
-                  <p><span className="font-medium">{t.invoiceDate}:</span> {formatDate(order.date_created, locale, order.billing?.country)}</p>
+                  <p><span className="font-medium">{t.invoiceDate}:</span> {formatDate(getOrderDate(order), locale, order.billing?.country)}</p>
                   <p><span className="font-medium">{t.orderNumber}:</span> {order.number}</p>
-                  <p><span className="font-medium">{t.orderDate}:</span> {formatDate(order.date_created, locale, order.billing?.country)}</p>
+                  <p><span className="font-medium">{t.orderDate}:</span> {formatDate(getOrderDate(order), locale, order.billing?.country)}</p>
                   {order.payment_method_title && (
                     <p><span className="font-medium">{t.paymentMethod}:</span> {order.payment_method_title}</p>
                   )}

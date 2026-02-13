@@ -10,7 +10,7 @@ import { AccountAuthGuard } from "@/components/account/AccountAuthGuard";
 import { AccountPageHeader } from "@/components/account/AccountPageHeader";
 import { AccountEmptyState } from "@/components/account/AccountEmptyState";
 import { AccountLoadingSpinner } from "@/components/account/AccountLoadingSpinner";
-import { getCustomerOrders, formatOrderStatus, getOrderStatusColor, formatDate, type Order } from "@/lib/api/customer";
+import { getCustomerOrders, formatOrderStatus, getOrderStatusColor, formatDate, getOrderDate, type Order } from "@/lib/api/customer";
 
 interface OrdersPageProps {
   params: Promise<{ locale: string }>;
@@ -133,7 +133,7 @@ export default function OrdersPage({ params }: OrdersPageProps) {
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                    <span>{formatDate(order.date_created, locale, order.billing?.country)}</span>
+                    <span>{formatDate(getOrderDate(order), locale, order.billing?.country)}</span>
                     <span>
                       {order.line_items.length} {t.items}
                     </span>

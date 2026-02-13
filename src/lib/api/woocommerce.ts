@@ -305,6 +305,33 @@ export async function getProductsByIds(
   }
 }
 
+export async function searchProductByName(
+  name: string,
+  locale?: Locale,
+  currency?: Currency
+): Promise<WCProduct | null> {
+  if (!name) return null;
+
+  try {
+    const products = await fetchAPI<WCProduct[]>(
+      `/products?search=${encodeURIComponent(name)}&per_page=1`,
+      {
+        tags: ["products", `product-search-${name}`],
+        locale,
+        currency,
+        revalidate: 300,
+      }
+    );
+
+    if (products.length > 0) {
+      return products[0];
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // Categories API - Memoized for request deduplication
 export const getCategories = cache(async function getCategories(locale?: Locale, currency?: Currency): Promise<WCCategory[]> {
   try {
