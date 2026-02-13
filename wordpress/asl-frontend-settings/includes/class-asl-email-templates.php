@@ -25,6 +25,14 @@ class ASL_Email_Templates {
 
 	private function __construct() {
 		add_filter( 'woocommerce_locate_template', array( $this, 'override_woocommerce_template' ), 10, 3 );
+		add_filter( 'woocommerce_currency_symbol', array( $this, 'replace_aed_currency_symbol' ), 10, 2 );
+	}
+
+	public function replace_aed_currency_symbol( $currency_symbol, $currency ) {
+		if ( 'AED' === $currency ) {
+			return 'AED';
+		}
+		return $currency_symbol;
 	}
 
 	public function override_woocommerce_template( $template, $template_name, $template_path ) {
