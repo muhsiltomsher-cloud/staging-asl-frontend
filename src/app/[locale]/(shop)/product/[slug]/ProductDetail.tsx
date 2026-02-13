@@ -1015,34 +1015,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                 </p>
               )}
             </AccordionSection>
-
-            {/* Payment & Delivery */}
-            <AccordionSection
-              title={isRTL ? "الدفع والتوصيل" : "Payment & Delivery"}
-              isOpen={openAccordion === "payment"}
-              onToggle={() => toggleAccordion("payment")}
-            >
-              <div className="space-y-3 text-sm text-gray-600">
-                <p>
-                  {isRTL 
-                    ? "نقبل جميع بطاقات الائتمان الرئيسية والدفع عند الاستلام."
-                    : "We accept all major credit cards and cash on delivery."}
-                </p>
-                {convertedShippingThreshold ? (
-                  <p>
-                    {isRTL
-                      ? `شحن مجاني للطلبات التي تزيد عن ${convertedShippingThreshold} ${currencyInfo.code}. التوصيل خلال 2-5 أيام عمل.`
-                      : `Free shipping on orders over ${convertedShippingThreshold} ${currencyInfo.code}. Delivery within 2-5 business days.`}
-                  </p>
-                ) : (
-                  <p>
-                    {isRTL
-                      ? "التوصيل خلال 2-5 أيام عمل."
-                      : "Delivery within 2-5 business days."}
-                  </p>
-                )}
-              </div>
-            </AccordionSection>
           </div>
 
         </div>
