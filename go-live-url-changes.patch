@@ -1,0 +1,256 @@
+From 9d57e20f77834c432c6d827c1e68a4f60553afac Mon Sep 17 00:00:00 2001
+From: Devin AI <158243242+devin-ai-integration[bot]@users.noreply.github.com>
+Date: Fri, 13 Feb 2026 22:54:46 +0000
+Subject: [PATCH] Update URLs for production: staging ->
+ cms.aromaticscentslab.com, app -> aromaticscentslab.com
+
+Co-Authored-By: michael jackson <muhsiltomsher@gmail.com>
+---
+ .env.example                                          |  4 ++--
+ next.config.ts                                        |  2 +-
+ src/app/[locale]/(pages)/about/page.tsx               |  4 ++--
+ src/app/[locale]/(pages)/store-locator/page.tsx       |  2 +-
+ src/app/[locale]/forgot-password/page.tsx             |  2 +-
+ src/app/[locale]/login/page.tsx                       |  2 +-
+ src/app/[locale]/page.tsx                             |  2 +-
+ src/app/[locale]/register/page.tsx                    |  2 +-
+ src/app/[locale]/reset-password/ResetPasswordForm.tsx |  4 ++--
+ src/app/[locale]/reset-password/page.tsx              |  2 +-
+ src/config/site.ts                                    | 11 +++++------
+ src/lib/graphql/client.ts                             |  2 +-
+ src/types/woocommerce.ts                              |  2 +-
+ wordpress/asl-frontend-settings.php                   |  2 +-
+ .../asl-frontend-settings/asl-frontend-settings.php   |  2 +-
+ 15 files changed, 22 insertions(+), 23 deletions(-)
+
+diff --git a/.env.example b/.env.example
+index f5ae3d6..4d08421 100644
+--- a/.env.example
++++ b/.env.example
+@@ -6,10 +6,10 @@
+ # ===========================================
+ 
+ # WordPress GraphQL endpoint URL
+-NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL=https://staging.aromaticscentslab.com/graphql
++NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL=https://cms.aromaticscentslab.com/graphql
+ 
+ # Site URL (your frontend URL)
+-NEXT_PUBLIC_SITE_URL=https://app.aromaticscentslab.com
++NEXT_PUBLIC_SITE_URL=https://aromaticscentslab.com
+ 
+ # ===========================================
+ # WooCommerce REST API Credentials
+diff --git a/next.config.ts b/next.config.ts
+index 8ed6afe..5939d75 100644
+--- a/next.config.ts
++++ b/next.config.ts
+@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
+     remotePatterns: [
+       {
+         protocol: "https",
+-        hostname: "staging.aromaticscentslab.com",
++        hostname: "cms.aromaticscentslab.com",
+         pathname: "/wp-content/uploads/**",
+       },
+     ],
+diff --git a/src/app/[locale]/(pages)/about/page.tsx b/src/app/[locale]/(pages)/about/page.tsx
+index 32efb19..15dfc65 100644
+--- a/src/app/[locale]/(pages)/about/page.tsx
++++ b/src/app/[locale]/(pages)/about/page.tsx
+@@ -50,7 +50,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
+         {/* Background Image */}
+         <div className="absolute inset-0">
+           <Image
+-            src="https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
++            src="https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
+             alt="Aromatic Scents Lab"
+             fill
+             className="object-cover"
+@@ -155,7 +155,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
+                 {/* Main Image */}
+                 <div className="relative aspect-[4/5] overflow-hidden rounded-3xl shadow-2xl">
+                   <Image
+-                    src="https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
++                    src="https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
+                     alt={isRTL ? "قصتنا" : "Our Story"}
+                     fill
+                     sizes="(max-width: 1024px) 100vw, 50vw"
+diff --git a/src/app/[locale]/(pages)/store-locator/page.tsx b/src/app/[locale]/(pages)/store-locator/page.tsx
+index 346921b..b6c66de 100644
+--- a/src/app/[locale]/(pages)/store-locator/page.tsx
++++ b/src/app/[locale]/(pages)/store-locator/page.tsx
+@@ -76,7 +76,7 @@ export default function StoreLocatorPage() {
+     <div 
+       className="min-h-screen"
+       style={{ 
+-        backgroundImage: 'url(https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
++        backgroundImage: 'url(https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
+         backgroundSize: 'cover',
+         backgroundPosition: 'center',
+         backgroundRepeat: 'no-repeat',
+diff --git a/src/app/[locale]/forgot-password/page.tsx b/src/app/[locale]/forgot-password/page.tsx
+index ef06125..8ce7753 100644
+--- a/src/app/[locale]/forgot-password/page.tsx
++++ b/src/app/[locale]/forgot-password/page.tsx
+@@ -99,7 +99,7 @@ export default function ForgotPasswordPage({ params }: ForgotPasswordPageProps)
+       <div 
+         className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12"
+         style={{ 
+-          backgroundImage: 'url(https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
++          backgroundImage: 'url(https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
+           backgroundSize: 'cover',
+           backgroundPosition: 'center',
+           backgroundRepeat: 'no-repeat'
+diff --git a/src/app/[locale]/login/page.tsx b/src/app/[locale]/login/page.tsx
+index fb5321a..ea7f6ad 100644
+--- a/src/app/[locale]/login/page.tsx
++++ b/src/app/[locale]/login/page.tsx
+@@ -114,7 +114,7 @@ export default function LoginPage({ params }: LoginPageProps) {
+       <div 
+         className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12"
+         style={{ 
+-          backgroundImage: 'url(https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
++          backgroundImage: 'url(https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
+           backgroundSize: 'cover',
+           backgroundPosition: 'center',
+           backgroundRepeat: 'no-repeat'
+diff --git a/src/app/[locale]/page.tsx b/src/app/[locale]/page.tsx
+index e45267d..709dc95 100644
+--- a/src/app/[locale]/page.tsx
++++ b/src/app/[locale]/page.tsx
+@@ -214,7 +214,7 @@ export default async function HomePage({ params }: HomePageProps) {
+               <div className="absolute -inset-4 rounded-2xl bg-gradient-to-br from-amber-200/20 to-stone-200/20 blur-sm" />
+               <div className="relative aspect-[4/5] overflow-hidden rounded-2xl shadow-xl lg:aspect-square">
+                 <Image
+-                  src="https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
++                  src="https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
+                   alt={isRTL ? "قصتنا" : "Our Story"}
+                   fill
+                   sizes="(max-width: 1024px) 100vw, 50vw"
+diff --git a/src/app/[locale]/register/page.tsx b/src/app/[locale]/register/page.tsx
+index ce54d25..f5050f7 100644
+--- a/src/app/[locale]/register/page.tsx
++++ b/src/app/[locale]/register/page.tsx
+@@ -170,7 +170,7 @@ export default function RegisterPage({ params }: RegisterPageProps) {
+       <div 
+         className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12"
+         style={{ 
+-          backgroundImage: 'url(https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
++          backgroundImage: 'url(https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
+           backgroundSize: 'cover',
+           backgroundPosition: 'center',
+           backgroundRepeat: 'no-repeat'
+diff --git a/src/app/[locale]/reset-password/ResetPasswordForm.tsx b/src/app/[locale]/reset-password/ResetPasswordForm.tsx
+index 706a8e7..2a0126f 100644
+--- a/src/app/[locale]/reset-password/ResetPasswordForm.tsx
++++ b/src/app/[locale]/reset-password/ResetPasswordForm.tsx
+@@ -133,7 +133,7 @@ export default function ResetPasswordForm({ locale }: ResetPasswordFormProps) {
+       <div 
+         className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12"
+         style={{ 
+-          backgroundImage: 'url(https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
++          backgroundImage: 'url(https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
+           backgroundSize: 'cover',
+           backgroundPosition: 'center',
+           backgroundRepeat: 'no-repeat'
+@@ -171,7 +171,7 @@ export default function ResetPasswordForm({ locale }: ResetPasswordFormProps) {
+     <div 
+       className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12"
+       style={{ 
+-        backgroundImage: 'url(https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
++        backgroundImage: 'url(https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
+         backgroundSize: 'cover',
+         backgroundPosition: 'center',
+         backgroundRepeat: 'no-repeat'
+diff --git a/src/app/[locale]/reset-password/page.tsx b/src/app/[locale]/reset-password/page.tsx
+index 7f9227b..fcd418e 100644
+--- a/src/app/[locale]/reset-password/page.tsx
++++ b/src/app/[locale]/reset-password/page.tsx
+@@ -10,7 +10,7 @@ function LoadingFallback() {
+     <div 
+       className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12"
+       style={{ 
+-        backgroundImage: 'url(https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
++        backgroundImage: 'url(https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
+         backgroundSize: 'cover',
+         backgroundPosition: 'center',
+         backgroundRepeat: 'no-repeat'
+diff --git a/src/config/site.ts b/src/config/site.ts
+index 42612cd..22860fc 100644
+--- a/src/config/site.ts
++++ b/src/config/site.ts
+@@ -13,16 +13,15 @@ export const siteConfig = {
+   
+   // Frontend URL - update this when deploying to production
+   // Local: http://localhost:3000
+-  // Production: https://app.aromaticscentslab.com
+-  url: "https://app.aromaticscentslab.com",
++  // Production: https://aromaticscentslab.com
++  url: "https://aromaticscentslab.com",
+   
+   // Open Graph image URL - used for social media sharing
+-  ogImage: "https://app.aromaticscentslab.com/og.jpg",
++  ogImage: "https://aromaticscentslab.com/og.jpg",
+   
+   // WordPress/WooCommerce Backend API URL
+-  // Staging: https://staging.aromaticscentslab.com
+-  // Production: https://aromaticscentslab.com (or your production backend)
+-  apiUrl: "https://staging.aromaticscentslab.com",
++  // Production: https://cms.aromaticscentslab.com
++  apiUrl: "https://cms.aromaticscentslab.com",
+   
+   // Social media links
+   links: {
+diff --git a/src/lib/graphql/client.ts b/src/lib/graphql/client.ts
+index 46b2d46..e6c505a 100644
+--- a/src/lib/graphql/client.ts
++++ b/src/lib/graphql/client.ts
+@@ -3,7 +3,7 @@ import { setContext } from "@apollo/client/link/context";
+ 
+ const WORDPRESS_GRAPHQL_ENDPOINT =
+   process.env.NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL ||
+-  "https://staging.aromaticscentslab.com/graphql";
++  "https://cms.aromaticscentslab.com/graphql";
+ 
+ const httpLink = createHttpLink({
+   uri: WORDPRESS_GRAPHQL_ENDPOINT,
+diff --git a/src/types/woocommerce.ts b/src/types/woocommerce.ts
+index e0076e9..8c18508 100644
+--- a/src/types/woocommerce.ts
++++ b/src/types/woocommerce.ts
+@@ -1,5 +1,5 @@
+ // WooCommerce Store API Types
+-// Based on https://staging.aromaticscentslab.com/wp-json/wc/store/v1/
++// Based on https://cms.aromaticscentslab.com/wp-json/wc/store/v1/
+ 
+ export interface WCProductImage {
+   id: number;
+diff --git a/wordpress/asl-frontend-settings.php b/wordpress/asl-frontend-settings.php
+index 2fc4171..400f18d 100644
+--- a/wordpress/asl-frontend-settings.php
++++ b/wordpress/asl-frontend-settings.php
+@@ -914,7 +914,7 @@ function asl_bundle_metabox_render($post) {
+     }
+     
+     // Get frontend URL from options or use default
+-    $frontend_url = get_option('asl_frontend_url', 'https://staging.aromaticscentslab.com');
++    $frontend_url = get_option('asl_frontend_url', 'https://cms.aromaticscentslab.com');
+     ?>
+     <div class="asl-bundle-metabox">
+         <p>
+diff --git a/wordpress/asl-frontend-settings/asl-frontend-settings.php b/wordpress/asl-frontend-settings/asl-frontend-settings.php
+index 2fc4171..400f18d 100644
+--- a/wordpress/asl-frontend-settings/asl-frontend-settings.php
++++ b/wordpress/asl-frontend-settings/asl-frontend-settings.php
+@@ -914,7 +914,7 @@ function asl_bundle_metabox_render($post) {
+     }
+     
+     // Get frontend URL from options or use default
+-    $frontend_url = get_option('asl_frontend_url', 'https://staging.aromaticscentslab.com');
++    $frontend_url = get_option('asl_frontend_url', 'https://cms.aromaticscentslab.com');
+     ?>
+     <div class="asl-bundle-metabox">
+         <p>
+-- 
+2.34.1
+
