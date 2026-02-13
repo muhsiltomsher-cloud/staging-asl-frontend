@@ -110,6 +110,43 @@ export function getHeaderCategoryLinks(locale: Locale) {
   }));
 }
 
+const menuArabicTranslations: Record<string, string> = {
+  "shop all": "تسوق الكل",
+  "shop": "تسوق",
+  "home fragrances": "عطور المنزل",
+  "perfumes": "العطور",
+  "personal care": "العناية الشخصية",
+  "gifts set": "مجموعات الهدايا",
+  "gift sets": "مجموعات الهدايا",
+  "oils": "الزيوت",
+  "fragrance oils": "زيوت العطور",
+  "perfumes & oils": "العطور والزيوت",
+  "hair & body mist": "بخاخ الشعر والجسم",
+  "hand & body lotion": "لوشن اليدين والجسم",
+  "reed diffusers": "موزعات العطر",
+  "candles": "الشموع",
+  "diffusers": "موزعات العطر",
+  "room sprays": "بخاخات الغرف",
+  "incense": "البخور",
+  "for him": "له",
+  "for her": "لها",
+  "luxury sets": "مجموعات فاخرة",
+  "men's perfumes": "عطور رجالية",
+  "women's perfumes": "عطور نسائية",
+  "unisex perfumes": "عطور للجنسين",
+  "oud perfumes": "عطور العود",
+  "home": "الرئيسية",
+  "about": "من نحن",
+  "contact": "اتصل بنا",
+  "faq": "الأسئلة الشائعة",
+};
+
+export function translateToArabic(englishTitle: string): string {
+  const decoded = decodeHtmlEntities(englishTitle);
+  const key = decoded.toLowerCase().trim();
+  return menuArabicTranslations[key] || decoded;
+}
+
 /**
  * Navigation item type for dynamic WordPress menu
  */
@@ -197,7 +234,7 @@ export function getDynamicNavigationItems(
   
   return topLevelItems.map((item) => ({
     id: item.id,
-    name: decodeHtmlEntities(item.title),
+    name: locale === "ar" ? translateToArabic(item.title) : decodeHtmlEntities(item.title),
     href: normalizeMenuUrl(item.url, locale),
     hasMegaMenu: shouldHaveMegaMenu(item.title),
   }));
