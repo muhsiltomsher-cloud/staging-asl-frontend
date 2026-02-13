@@ -10,7 +10,8 @@ import { AccountAuthGuard } from "@/components/account/AccountAuthGuard";
 import { AccountLoadingSpinner } from "@/components/account/AccountLoadingSpinner";
 import { AccountEmptyState } from "@/components/account/AccountEmptyState";
 import { OrderPrice } from "@/components/common/OrderPrice";
-import { getOrder, formatOrderStatus, formatDate, type Order } from "@/lib/api/customer";
+import { AEDIcon } from "@/components/common/AEDIcon";
+import { getOrder, formatDate, type Order } from "@/lib/api/customer";
 import { OrderBundleItemsList, isOrderBundleProduct, isOrderFreeGift } from "@/components/cart/OrderBundleItemsList";
 import { siteConfig } from "@/config/site";
 
@@ -22,9 +23,10 @@ const translations = {
   en: {
     invoice: "Invoice",
     backToOrder: "Back to Order",
-    orderNumber: "Order",
+    orderNumber: "Order Number",
     invoiceNumber: "Invoice Number",
     invoiceDate: "Invoice Date",
+    orderDate: "Order Date",
     status: "Status",
     billTo: "Bill To",
     shipTo: "Ship To",
@@ -50,9 +52,10 @@ const translations = {
   ar: {
     invoice: "الفاتورة",
     backToOrder: "العودة إلى الطلب",
-    orderNumber: "طلب",
+    orderNumber: "رقم الطلب",
     invoiceNumber: "رقم الفاتورة",
     invoiceDate: "تاريخ الفاتورة",
+    orderDate: "تاريخ الطلب",
     status: "الحالة",
     billTo: "فاتورة إلى",
     shipTo: "شحن إلى",
@@ -199,7 +202,11 @@ export default function InvoicePage({ params }: InvoicePageProps) {
                 <div className="space-y-1 text-sm text-gray-600">
                   <p><span className="font-medium">{t.invoiceNumber}:</span> INV-{order.number}</p>
                   <p><span className="font-medium">{t.invoiceDate}:</span> {formatDate(order.date_created, locale, order.billing?.country)}</p>
-                  <p><span className="font-medium">{t.status}:</span> {formatOrderStatus(order.status)}</p>
+                  <p><span className="font-medium">{t.orderNumber}:</span> {order.number}</p>
+                  <p><span className="font-medium">{t.orderDate}:</span> {formatDate(order.date_created, locale, order.billing?.country)}</p>
+                  {order.payment_method_title && (
+                    <p><span className="font-medium">{t.paymentMethod}:</span> {order.payment_method_title}</p>
+                  )}
                 </div>
               </div>
               <div className={`${isRTL ? "text-left" : "text-right"}`}>
@@ -328,7 +335,10 @@ export default function InvoicePage({ params }: InvoicePageProps) {
                         </td>
                         <td className={`py-4 ${isRTL ? "text-left" : "text-right"} font-medium text-gray-900`}>
                           {isFreeGift ? (
-                            <span className="text-amber-600">{order.currency_symbol}0.00</span>
+                            <span className="text-amber-600 inline-flex items-center gap-1">
+                              {order.currency === "AED" ? <AEDIcon size="xs" /> : <span>{order.currency_symbol}</span>}
+                              0.00
+                            </span>
                           ) : (
                             <OrderPrice 
                               price={item.total} 
