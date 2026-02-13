@@ -1,4 +1,5 @@
 import { siteConfig, type Locale } from "@/config/site";
+import { decodeHtmlEntities } from "@/lib/utils";
 import type {
   HomePageACF,
   SiteSettings,
@@ -1118,7 +1119,7 @@ export async function getMegaMenuData(locale?: Locale): Promise<MegaMenuData | n
     const childSlug = extractCategorySlugFromUrl(child.url);
     const column: MegaMenuColumn = {
       id: child.id,
-      name: child.title,
+      name: decodeHtmlEntities(child.title),
       slug: childSlug,
       url: transformToFrontendCategoryUrl(child.url, childSlug, locale),
       image: null,
@@ -1136,7 +1137,7 @@ export async function getMegaMenuData(locale?: Locale): Promise<MegaMenuData | n
         const subChildSlug = extractCategorySlugFromUrl(subChild.url);
         column.children.push({
           id: subChild.id,
-          name: subChild.title,
+          name: decodeHtmlEntities(subChild.title),
           slug: subChildSlug,
           url: transformToFrontendCategoryUrl(subChild.url, subChildSlug, locale),
         });

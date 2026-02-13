@@ -19,7 +19,7 @@ import type { HeaderSettings, TopbarSettings } from "@/lib/api/wordpress";
 import { CategoriesDrawer } from "@/components/layout/CategoriesDrawer";
 import { DesktopSearchDropdown } from "@/components/layout/DesktopSearchDropdown";
 import { MegaMenu } from "@/components/layout/MegaMenu";
-import { getHeaderCategoryLinks } from "@/config/menu";
+import { getHeaderCategoryLinks, getDynamicNavigationItems } from "@/config/menu";
 
 interface HeaderProps {
   locale: Locale;
@@ -30,8 +30,7 @@ interface HeaderProps {
   topbarSettings?: TopbarSettings | null;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function Header({ locale, dictionary, siteSettings, headerSettings, menuItems: _menuItems, topbarSettings }: HeaderProps) {
+export function Header({ locale, dictionary, siteSettings, headerSettings, menuItems, topbarSettings }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
         const megaMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -100,8 +99,9 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
     setIsMegaMenuOpen(false);
   }, []);
 
-  // Static header category links (overrides WordPress menu)
-  const navigation = getHeaderCategoryLinks(locale);
+  const navigation = menuItems && menuItems.length > 0
+    ? getDynamicNavigationItems(menuItems, locale)
+    : getHeaderCategoryLinks(locale);
 
   return (
     <>

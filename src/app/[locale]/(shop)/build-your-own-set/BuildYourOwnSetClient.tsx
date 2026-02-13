@@ -551,7 +551,7 @@ export function BuildYourOwnSetClient({
         {/* Product Info */}
         <div className="space-y-6">
           {/* Title */}
-          <h1 className="font-serif text-2xl sm:text-3xl font-medium uppercase tracking-normal sm:tracking-wide text-amber-800 md:text-4xl leading-tight">
+          <h1 className="text-base font-medium text-gray-900 md:text-2xl uppercase">
             {bundleProduct?.name || t.title}
           </h1>
 

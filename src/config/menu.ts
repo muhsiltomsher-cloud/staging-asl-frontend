@@ -8,6 +8,7 @@
  */
 
 import type { Locale } from "@/config/site";
+import { decodeHtmlEntities } from "@/lib/utils";
 
 /**
  * Navigation Item Type
@@ -196,7 +197,7 @@ export function getDynamicNavigationItems(
   
   return topLevelItems.map((item) => ({
     id: item.id,
-    name: item.title,
+    name: decodeHtmlEntities(item.title),
     href: normalizeMenuUrl(item.url, locale),
     hasMegaMenu: shouldHaveMegaMenu(item.title),
   }));
