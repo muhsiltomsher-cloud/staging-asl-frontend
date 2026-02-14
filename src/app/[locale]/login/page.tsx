@@ -57,6 +57,10 @@ export default function LoginPage({ params }: LoginPageProps) {
       rateLimitMessage: "Too many login attempts. Please try again in",
       minutes: "min",
       seconds: "sec",
+      returningUserMessage: "If you previously had an account on our old website, please use",
+      returningUserLink: "Forgot Password",
+      returningUserSuffix: "to set up your new password.",
+      loginFailedSuggestion: "Forgot your password? Click here to reset it.",
     },
     ar: {
       login: "تسجيل الدخول",
@@ -78,6 +82,10 @@ export default function LoginPage({ params }: LoginPageProps) {
       rateLimitMessage: "محاولات تسجيل دخول كثيرة. يرجى المحاولة مرة أخرى بعد",
       minutes: "د",
       seconds: "ث",
+      returningUserMessage: "إذا كان لديك حساب سابق على موقعنا القديم، يرجى استخدام",
+      returningUserLink: "نسيت كلمة المرور",
+      returningUserSuffix: "لإعداد كلمة مرور جديدة.",
+      loginFailedSuggestion: "نسيت كلمة المرور؟ اضغط هنا لإعادة تعيينها.",
     },
   };
 
@@ -229,6 +237,18 @@ export default function LoginPage({ params }: LoginPageProps) {
               </div>
             )}
 
+            <div className={`mb-6 rounded-md bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800 ${isRTL ? "text-right" : "text-left"}`}>
+              <p>
+                {texts.returningUserMessage}{" "}
+                <Link
+                  href={`/${locale}/forgot-password`}
+                  className="font-semibold text-[#92400e] underline hover:text-[#78350f]"
+                >
+                  {texts.returningUserLink}
+                </Link>{" "}
+                {texts.returningUserSuffix}
+              </p>
+            </div>
             {errors.general && (
               <div className="mb-6 rounded-md bg-red-50 p-4 text-sm text-red-600">
                 {rateLimitSeconds > 0 ? (
@@ -239,7 +259,15 @@ export default function LoginPage({ params }: LoginPageProps) {
                     </p>
                   </div>
                 ) : (
-                  errors.general
+                  <div>
+                    <p>{errors.general}</p>
+                    <Link
+                      href={`/${locale}/forgot-password`}
+                      className="mt-2 inline-block font-semibold text-[#92400e] underline hover:text-[#78350f]"
+                    >
+                      {texts.loginFailedSuggestion}
+                    </Link>
+                  </div>
                 )}
               </div>
             )}
