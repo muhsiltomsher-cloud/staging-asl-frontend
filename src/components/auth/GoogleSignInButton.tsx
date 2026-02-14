@@ -50,6 +50,9 @@ export function GoogleSignInButton({
   const [scriptLoaded, setScriptLoaded] = useState(
     () => typeof window !== "undefined" && !!window.google?.accounts?.id
   );
+  const [clientId, setClientId] = useState<string | null>(
+    () => process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || null
+  );
 
   const handleCredentialResponse = useCallback(
     (response: { credential: string; select_by: string }) => {
@@ -84,9 +87,19 @@ export function GoogleSignInButton({
   }, [scriptLoaded, onError]);
 
   useEffect(() => {
-    if (!scriptLoaded || !containerRef.current || !window.google?.accounts?.id) return;
+    if (clientId) return;
+    let cancelled = false;
+    fetch("/api/auth/google-client-id")
+      .then((res) => res.json())
+      .then((data: { clientId?: string }) => {
+        if (!cancelled && data.clientId) setClientId(data.clientId);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [clientId]);
 
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  useEffect(() => {
+    if (!scriptLoaded || !containerRef.current || !window.google?.accounts?.id) return;
     if (!clientId) return;
 
     window.google.accounts.id.initialize({
@@ -105,7 +118,7 @@ export function GoogleSignInButton({
       shape: "pill",
       locale,
     });
-  }, [scriptLoaded, handleCredentialResponse, text, locale]);
+  }, [scriptLoaded, clientId, handleCredentialResponse, text, locale]);
 
   return (
     <div
