@@ -4,7 +4,7 @@ import { Button } from "@/components/common/Button";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import { getNewProducts, getFeaturedProducts, getBestsellerProducts, getCategories, getFreeGiftProductInfo, getBundleEnabledProductSlugs } from "@/lib/api/woocommerce";
-import { getHomePageSettings } from "@/lib/api/wordpress";
+import { getHomePageSettings, getSeoSettings } from "@/lib/api/wordpress";
 import {
   HeroSlider,
   ProductSection,
@@ -26,15 +26,25 @@ export async function generateMetadata({
   params,
 }: HomePageProps): Promise<Metadata> {
   const { locale } = await params;
-  return generateSeoMetadata({
-    title: locale === "ar" ? "الرئيسية" : "Home",
-    description:
-      locale === "ar"
-        ? "اكتشف مجموعتنا الفاخرة من العطور والمنتجات العطرية"
-        : "Discover our premium collection of fragrances and aromatic products",
-    locale: locale as Locale,
+  const validLocale = locale as Locale;
+  const isArabic = validLocale === "ar";
+
+  const seoSettings = await getSeoSettings(validLocale);
+
+  const seoTitle = (isArabic ? seoSettings.titleAr : seoSettings.title) || "Aromatic Scents Lab";
+  const seoDescription = (isArabic ? seoSettings.descriptionAr : seoSettings.description) || "";
+
+  const baseMetadata = generateSeoMetadata({
+    title: seoTitle,
+    description: seoDescription,
+    locale: validLocale,
     pathname: "",
   });
+
+  return {
+    ...baseMetadata,
+    title: { absolute: seoTitle },
+  };
 }
 
 export default async function HomePage({ params }: HomePageProps) {
