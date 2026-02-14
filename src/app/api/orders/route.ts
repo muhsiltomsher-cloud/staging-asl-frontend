@@ -210,8 +210,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     const orderData: CreateOrderRequest = {
-      payment_method: body.payment_method || "cod",
-      payment_method_title: body.payment_method === "cod" ? "Cash on Delivery" : "Credit Card",
+      payment_method: body.payment_method || "myfatoorah_v2",
+      payment_method_title: "Credit/Debit Card",
       set_paid: false,
       ...(body.currency ? { currency: body.currency } : {}),
       billing: {

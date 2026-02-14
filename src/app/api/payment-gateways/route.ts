@@ -60,10 +60,6 @@ const PAYMENT_METHOD_DETAILS: Record<string, { title: string; description: strin
     title: "Tamara - Buy Now Pay Later",
     description: "Pay in easy installments with Tamara",
   },
-  cod: {
-    title: "Cash on Delivery",
-    description: "Pay with cash upon delivery",
-  },
   bacs: {
     title: "Bank Transfer",
     description: "Make your payment directly into our bank account",
@@ -112,7 +108,7 @@ export async function GET() {
         const data: WCPaymentGateway[] = await response.json();
         
         const enabledGateways = data
-          .filter((gateway) => gateway.enabled)
+          .filter((gateway) => gateway.enabled && gateway.id !== "cod")
           .sort((a, b) => a.order - b.order)
           .map((gateway) => {
             const details = PAYMENT_METHOD_DETAILS[gateway.id];
@@ -177,7 +173,7 @@ export async function GET() {
     const excludedFromFallback = ["tamara", "tamara-gateway", "tabby", "tabby_installments", "tabby_checkout"];
     
     const gateways = paymentMethodIds
-      .filter((id: string) => !excludedFromFallback.includes(id))
+      .filter((id: string) => !excludedFromFallback.includes(id) && id !== "cod")
       .map((id: string, index: number) => {
         const details = PAYMENT_METHOD_DETAILS[id] || {
           title: id.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),

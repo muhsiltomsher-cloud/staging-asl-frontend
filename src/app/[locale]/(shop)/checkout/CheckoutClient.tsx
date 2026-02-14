@@ -194,7 +194,7 @@ export default function CheckoutClient() {
     shipping: { ...emptyAddress },
     billing: { ...emptyAddress },
     sameAsShipping: true,
-    paymentMethod: "cod",
+    paymentMethod: "myfatoorah_v2",
     orderNotes: "",
   });
 
@@ -1203,12 +1203,9 @@ export default function CheckoutClient() {
               } else {
                 throw new Error(tamaraData.error?.message || "Failed to initiate Tamara payment");
               }
-            } else if (data.payment_url && formData.paymentMethod !== "cod") {
-              // Redirect to external payment gateway (for other gateways, but not COD)
-              // COD orders should stay on the Next.js frontend, not redirect to WordPress
+            } else if (data.payment_url) {
               window.location.href = data.payment_url;
             } else {
-              // For COD and other non-redirect payment methods, go to order confirmation
               router.push(`/${locale}/order-confirmation?order_id=${data.order_id}&order_key=${data.order_key}`);
             }
     } catch (err) {
@@ -1858,7 +1855,6 @@ export default function CheckoutClient() {
                               filteredPaymentGateways.map((gateway) => {
                                                                 const getGatewayLabel = (id: string, title: string) => {
                                                                   const labels: Record<string, { en: string; ar: string }> = {
-                                                                    cod: { en: "Cash on Delivery", ar: "الدفع عند الاستلام" },
                                                                     tabby_installments: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
                                                                     tabby_checkout: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
                                                                     tabby: { en: "Pay with Tabby", ar: "الدفع مع تابي" },
@@ -1879,7 +1875,6 @@ export default function CheckoutClient() {
 
                                                                 const getGatewayDescription = (id: string, description: string) => {
                                                                   const descriptions: Record<string, { en: string; ar: string }> = {
-                                                                    cod: { en: "Pay cash when you receive your order", ar: "ادفع نقداً عند التسليم" },
                                                                     tabby_installments: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
                                                                     tabby_checkout: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
                                                                     tabby: { en: "Split your payment into 4 interest-free installments", ar: "قسّم دفعتك إلى 4 أقساط بدون فوائد" },
@@ -1927,17 +1922,6 @@ export default function CheckoutClient() {
                                                                         src="/images/payment/credit-debit-card.png"
                                                                         alt="Credit/Debit Card"
                                                                         width={80}
-                                                                        height={32}
-                                                                        className="h-8 w-auto object-contain"
-                                                                      />
-                                                                    );
-                                                                  }
-                                                                  if (id === "cod") {
-                                                                    return (
-                                                                      <Image
-                                                                        src="/images/payment/cod.png"
-                                                                        alt="Cash on Delivery"
-                                                                        width={60}
                                                                         height={32}
                                                                         className="h-8 w-auto object-contain"
                                                                       />

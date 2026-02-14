@@ -373,9 +373,8 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
         // Check if this is a successful payment or COD order
         const orderStatus = data.data?.status;
         const isSuccessfulPayment = orderStatus === "processing" || orderStatus === "completed" || orderStatus === "on-hold";
-        const isCODOrder = data.data?.payment_method === "cod";
         
-        if (!cartClearedRef.current && shouldClearCart && (isSuccessfulPayment || isCODOrder)) {
+        if (!cartClearedRef.current && shouldClearCart && isSuccessfulPayment) {
           cartClearedRef.current = true;
           try {
             await clearCart();
