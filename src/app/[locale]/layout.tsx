@@ -46,8 +46,11 @@ export async function generateMetadata({
   ]);
   
   const faviconUrl = siteSettings.favicon?.url;
-  const faviconWithCacheBust = faviconUrl 
-    ? `${faviconUrl}${faviconUrl.includes('?') ? '&' : '?'}v=${siteSettings.favicon?.id || Date.now()}`
+  const proxiedFaviconUrl = faviconUrl
+    ? faviconUrl.replace(/^https?:\/\/[^/]+\/wp-content\/uploads\//, '/cms-media/')
+    : undefined;
+  const faviconWithCacheBust = proxiedFaviconUrl 
+    ? `${proxiedFaviconUrl}${proxiedFaviconUrl.includes('?') ? '&' : '?'}v=${siteSettings.favicon?.id || Date.now()}`
     : undefined;
 
   const isArabic = validLocale === "ar";

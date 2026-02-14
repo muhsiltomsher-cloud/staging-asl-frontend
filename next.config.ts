@@ -35,7 +35,15 @@ const nextConfig: NextConfig = {
       static: 180, // 3 minutes for static routes
     },
   },
-  // Configure headers for better caching
+  async rewrites() {
+    const apiUrl = process.env.NEXT_PUBLIC_WC_API_URL || "https://staging.aromaticscentslab.com";
+    return [
+      {
+        source: '/cms-media/:path*',
+        destination: `${apiUrl}/wp-content/uploads/:path*`,
+      },
+    ];
+  },
   async headers() {
     return [
       {
@@ -71,5 +79,6 @@ const nextConfig: NextConfig = {
     ];
   },
 };
+
 
 export default nextConfig;
