@@ -24,6 +24,7 @@ interface AuthContextType {
   isAccountDrawerOpen: boolean;
   setIsAccountDrawerOpen: (open: boolean) => void;
   login: (credentials: LoginCredentials) => Promise<LoginResponse>;
+  googleLogin: (credential: string) => Promise<LoginResponse>;
   logout: () => void;
 }
 
@@ -128,6 +129,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const googleLogin = useCallback(async (credential: string): Promise<LoginResponse> => {
+    setIsLoading(true);
+    try {
+      const apiResponse = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ credential }),
+      });
+
+      const response: LoginResponse = await apiResponse.json();
+
+      if (response.success && response.user) {
+        setCookie(AUTH_TOKEN_KEY, response.user.token, {
+          ...secureCookieOptions,
+          maxAge: 60 * 60 * 24 * 7,
+        });
+        setCookie(AUTH_USER_KEY, JSON.stringify(response.user), {
+          ...secureCookieOptions,
+          maxAge: 60 * 60 * 24 * 7,
+        });
+        if (response.user.refresh_token) {
+          setCookie(AUTH_REFRESH_TOKEN_KEY, response.user.refresh_token, {
+            ...secureCookieOptions,
+            maxAge: 60 * 60 * 24 * 30,
+          });
+        }
+        if (response.user.wp_token) {
+          setCookie(AUTH_WP_TOKEN_KEY, response.user.wp_token, {
+            ...secureCookieOptions,
+            maxAge: 60 * 60 * 24 * 7,
+          });
+        }
+        setUser(response.user);
+      }
+
+      return response;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const logout = useCallback(() => {
     deleteCookie(AUTH_TOKEN_KEY);
     deleteCookie(AUTH_USER_KEY);
@@ -145,6 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isAccountDrawerOpen,
           setIsAccountDrawerOpen,
           login,
+          googleLogin,
           logout,
         }}
       >

@@ -10,6 +10,8 @@ import { PhoneInput } from "@/components/common/PhoneInput";
 import { register } from "@/lib/api/auth";
 import { validatePhoneNumber, parsePhoneNumber } from "@/lib/utils/phone";
 import { useNotification } from "@/contexts/NotificationContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 interface RegisterPageProps {
   params: Promise<{ locale: string }>;
@@ -18,6 +20,8 @@ interface RegisterPageProps {
 export default function RegisterPage({ params }: RegisterPageProps) {
   const router = useRouter();
   const { notify } = useNotification();
+  const { googleLogin } = useAuth();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [locale, setLocale] = useState<string>("en");
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -72,6 +76,8 @@ export default function RegisterPage({ params }: RegisterPageProps) {
       termsRequired: "You must accept the Terms & Conditions",
       registerSuccess: "Registration successful! Please login.",
       registerError: "Registration failed. Please try again.",
+      orDivider: "or",
+      googleSignUpError: "Google sign-up failed. Please try again.",
     },
     ar: {
       register: "التسجيل",
@@ -100,6 +106,8 @@ export default function RegisterPage({ params }: RegisterPageProps) {
       termsRequired: "يجب الموافقة على الشروط والأحكام",
       registerSuccess: "تم إنشاء الحساب بنجاح! يرجى تسجيل الدخول.",
       registerError: "فشل إنشاء الحساب. يرجى المحاولة مرة أخرى.",
+      orDivider: "أو",
+      googleSignUpError: "فشل التسجيل بحساب جوجل. يرجى المحاولة مرة أخرى.",
     },
   };
 
@@ -240,6 +248,40 @@ export default function RegisterPage({ params }: RegisterPageProps) {
             {successMessage && (
               <div className="mb-6 rounded-md bg-green-50 p-4 text-sm text-green-600">
                 {successMessage}
+              </div>
+            )}
+
+            <GoogleSignInButton
+              onSuccess={async (credential) => {
+                setIsGoogleLoading(true);
+                setErrors({});
+                try {
+                  const response = await googleLogin(credential);
+                  if (response.success) {
+                    router.push(`/${locale}/account`);
+                  } else {
+                    setErrors({ general: response.error?.message || texts.googleSignUpError });
+                  }
+                } catch {
+                  setErrors({ general: texts.googleSignUpError });
+                } finally {
+                  setIsGoogleLoading(false);
+                }
+              }}
+              onError={() => setErrors({ general: texts.googleSignUpError })}
+              text="signup_with"
+              locale={locale}
+            />
+
+            <div className="flex items-center gap-4 my-6">
+              <div className="flex-1 h-px bg-gray-300"></div>
+              <span className="text-sm text-gray-500">{texts.orDivider}</span>
+              <div className="flex-1 h-px bg-gray-300"></div>
+            </div>
+
+            {isGoogleLoading && (
+              <div className="mb-6 rounded-md bg-blue-50 p-4 text-sm text-blue-600 text-center">
+                {texts.registering}
               </div>
             )}
 

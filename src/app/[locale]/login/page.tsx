@@ -7,6 +7,7 @@ import { Home } from "lucide-react";
 import { Input } from "@/components/common/Input";
 import { Button } from "@/components/common/Button";
 import { useAuth } from "@/contexts/AuthContext";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 interface LoginPageProps {
   params: Promise<{ locale: string }>;
@@ -14,7 +15,8 @@ interface LoginPageProps {
 
 export default function LoginPage({ params }: LoginPageProps) {
   const router = useRouter();
-  const { login, isLoading } = useAuth();
+  const { login, googleLogin, isLoading } = useAuth();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [locale, setLocale] = useState<string>("en");
   const [formData, setFormData] = useState({
     username: "",
@@ -50,6 +52,8 @@ export default function LoginPage({ params }: LoginPageProps) {
       passwordRequired: "Password is required",
       loginError: "Invalid username or password",
       forgotPassword: "Forgot your password?",
+      orDivider: "or",
+      googleSignInError: "Google sign-in failed. Please try again.",
       rateLimitMessage: "Too many login attempts. Please try again in",
       minutes: "min",
       seconds: "sec",
@@ -69,6 +73,8 @@ export default function LoginPage({ params }: LoginPageProps) {
       passwordRequired: "كلمة المرور مطلوبة",
       loginError: "اسم المستخدم أو كلمة المرور غير صحيحة",
       forgotPassword: "نسيت كلمة المرور؟",
+      orDivider: "أو",
+      googleSignInError: "فشل تسجيل الدخول بحساب جوجل. يرجى المحاولة مرة أخرى.",
       rateLimitMessage: "محاولات تسجيل دخول كثيرة. يرجى المحاولة مرة أخرى بعد",
       minutes: "د",
       seconds: "ث",
@@ -188,6 +194,40 @@ export default function LoginPage({ params }: LoginPageProps) {
             <h2 className={`text-xl md:text-2xl font-semibold text-gray-800 mb-6 md:mb-8 ${isRTL ? "text-right" : "text-left"}`}>
               {texts.loginTitle}
             </h2>
+
+            <GoogleSignInButton
+              onSuccess={async (credential) => {
+                setIsGoogleLoading(true);
+                setErrors({});
+                try {
+                  const response = await googleLogin(credential);
+                  if (response.success) {
+                    router.push(`/${locale}/account`);
+                  } else {
+                    setErrors({ general: response.error?.message || texts.googleSignInError });
+                  }
+                } catch {
+                  setErrors({ general: texts.googleSignInError });
+                } finally {
+                  setIsGoogleLoading(false);
+                }
+              }}
+              onError={() => setErrors({ general: texts.googleSignInError })}
+              text="signin_with"
+              locale={locale}
+            />
+
+            <div className="flex items-center gap-4 my-6">
+              <div className="flex-1 h-px bg-gray-300"></div>
+              <span className="text-sm text-gray-500">{texts.orDivider}</span>
+              <div className="flex-1 h-px bg-gray-300"></div>
+            </div>
+
+            {isGoogleLoading && (
+              <div className="mb-6 rounded-md bg-blue-50 p-4 text-sm text-blue-600 text-center">
+                {texts.loggingIn}
+              </div>
+            )}
 
             {errors.general && (
               <div className="mb-6 rounded-md bg-red-50 p-4 text-sm text-red-600">
