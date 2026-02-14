@@ -689,7 +689,7 @@ export default function CartPage() {
                   {isRTL ? "هل تحتاج مساعدة في طلبك؟" : "Need help with your order?"}
                 </p>
                 <a
-                  href="https://wa.me/971563554303"
+                  href="https://wa.me/971506071405"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-green-700 hover:text-green-800"
