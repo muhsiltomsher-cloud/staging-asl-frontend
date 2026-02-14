@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { siteConfig } from "@/config/site";
+import { getEnvVar } from "@/lib/utils/loadEnv";
+import { API_BASE as BASE_URL } from "@/lib/utils/backendFetch";
 
-const API_BASE = `${siteConfig.apiUrl}/wp-json/wc/v3`;
+const API_BASE = `${BASE_URL}/wp-json/wc/v3`;
 
 function getWooCommerceCredentials() {
-  const consumerKey = process.env.WC_CONSUMER_KEY || process.env.NEXT_PUBLIC_WC_CONSUMER_KEY || "";
-  const consumerSecret = process.env.WC_CONSUMER_SECRET || process.env.NEXT_PUBLIC_WC_CONSUMER_SECRET || "";
+  const consumerKey = getEnvVar("WC_CONSUMER_KEY") || getEnvVar("NEXT_PUBLIC_WC_CONSUMER_KEY") || "";
+  const consumerSecret = getEnvVar("WC_CONSUMER_SECRET") || getEnvVar("NEXT_PUBLIC_WC_CONSUMER_SECRET") || "";
   return { consumerKey, consumerSecret };
 }
 
