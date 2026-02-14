@@ -27,7 +27,7 @@ Aromatic Scents Lab (ASL) is a modern, bilingual e-commerce platform for premium
 | **Type** | Headless E-commerce Platform |
 | **Languages** | English, Arabic (RTL) |
 | **Currencies** | AED, BHD, KWD, OMR, QAR, SAR, USD |
-| **Frontend URL** | https://app.aromaticscentslab.com |
+| **Frontend URL** | https://aromaticscentslab.com |
 | **Backend URL** | https://staging.aromaticscentslab.com |
 
 ---
@@ -401,7 +401,7 @@ MySQL Database
 #### Frontend (.env.local)
 
 ```
-NEXT_PUBLIC_SITE_URL=https://app.aromaticscentslab.com
+NEXT_PUBLIC_SITE_URL=https://aromaticscentslab.com
 NEXT_PUBLIC_WC_API_URL=https://staging.aromaticscentslab.com
 WC_CONSUMER_KEY=ck_xxxxx
 WC_CONSUMER_SECRET=cs_xxxxx

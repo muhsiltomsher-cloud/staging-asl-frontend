@@ -542,7 +542,7 @@ Comprehensive testing completed for all 7 criteria in both English and Arabic:
 These issues are NOT frontend bugs and require WordPress/WooCommerce backend configuration:
 
 1. **403 Image Errors**: Staging server blocks requests from production domain
-   - Fix: Configure CORS/hotlinking on WordPress to allow `app.aromaticscentslab.com`
+   - Fix: Configure CORS/hotlinking on WordPress to allow `aromaticscentslab.com`
    
 2. **500 Cart API Errors**: CoCart API connectivity issues
    - Fix: Check CoCart plugin configuration and server logs
@@ -579,7 +579,7 @@ Create these rules in Cloudflare Dashboard → Rules → Cache Rules. **Order ma
 
 **Expression:**
 ```
-(http.host eq "app.aromaticscentslab.com" and (
+(http.host eq "aromaticscentslab.com" and (
   http.request.uri.path contains "/cart" or
   http.request.uri.path contains "/checkout" or
   http.request.uri.path contains "/account" or
@@ -603,7 +603,7 @@ Create these rules in Cloudflare Dashboard → Rules → Cache Rules. **Order ma
 
 **Expression:**
 ```
-(http.host eq "app.aromaticscentslab.com" and (
+(http.host eq "aromaticscentslab.com" and (
   starts_with(http.request.uri.path, "/_next/static/") or
   starts_with(http.request.uri.path, "/static/") or
   starts_with(http.request.uri.path, "/images/") or
@@ -662,7 +662,7 @@ For immediate updates, use Cloudflare API to purge specific URLs:
 curl -X POST "https://api.cloudflare.com/client/v4/zones/{zone_id}/purge_cache" \
   -H "Authorization: Bearer {api_token}" \
   -H "Content-Type: application/json" \
-  --data '{"files":["https://app.aromaticscentslab.com/en/product/example"]}'
+  --data '{"files":["https://aromaticscentslab.com/en/product/example"]}'
 ```
 
 ---

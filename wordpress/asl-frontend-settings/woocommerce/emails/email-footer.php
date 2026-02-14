@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Frontend app URL for headless setup
-$frontend_url = 'https://app.aromaticscentslab.com';
+$frontend_url = 'https://aromaticscentslab.com';
 ?>
 						</td>
 					</tr>

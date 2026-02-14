@@ -1178,7 +1178,7 @@ If using WPML or Polylang for multilingual support:
 1. Ensure images are uploaded to the WordPress media library
 2. Check that image URLs are accessible (no CORS issues)
 3. Verify image field returns full URL in REST API response
-4. **Important**: If images return 403 errors, configure CORS/hotlinking on WordPress to allow requests from the frontend domain (e.g., `app.aromaticscentslab.com`)
+4. **Important**: If images return 403 errors, configure CORS/hotlinking on WordPress to allow requests from the frontend domain (e.g., `aromaticscentslab.com`)
 
 **Note**: The frontend now has graceful fallback handling (PR #537). When product images fail to load, the ASL logo is displayed instead of broken images. However, fixing the backend CORS configuration is still recommended for optimal performance.
 
@@ -1223,7 +1223,7 @@ For technical support or custom development, contact the development team.
 
 ### Known Backend Issues to Address
 
-1. **403 Image Errors**: Configure CORS/hotlinking on WordPress to allow `app.aromaticscentslab.com`
+1. **403 Image Errors**: Configure CORS/hotlinking on WordPress to allow `aromaticscentslab.com`
 2. **500 Cart API Errors**: Check CoCart plugin configuration and server logs
 3. **WooCommerce Credentials**: Ensure `WC_CONSUMER_KEY` and `WC_CONSUMER_SECRET` are set in frontend environment
 

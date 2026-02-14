@@ -27,7 +27,7 @@ if ( $custom_logo_id ) {
 }
 
 // Frontend app URL for headless setup
-$frontend_url = 'https://app.aromaticscentslab.com';
+$frontend_url = 'https://aromaticscentslab.com';
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>

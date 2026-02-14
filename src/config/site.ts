@@ -13,11 +13,11 @@ export const siteConfig = {
   description: "Premium fragrances and aromatic products",
   
   // Frontend URL - reads from NEXT_PUBLIC_SITE_URL environment variable
-  // Fallback for local development: https://app.aromaticscentslab.com
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://app.aromaticscentslab.com",
+  // Fallback for local development: https://aromaticscentslab.com
+  url: process.env.NEXT_PUBLIC_SITE_URL || "https://aromaticscentslab.com",
   
   // Open Graph image URL - uses the site URL for the og image
-  ogImage: `${process.env.NEXT_PUBLIC_SITE_URL || "https://app.aromaticscentslab.com"}/og.jpg`,
+  ogImage: `${process.env.NEXT_PUBLIC_SITE_URL || "https://aromaticscentslab.com"}/og.jpg`,
   
   // WordPress/WooCommerce Backend API URL - reads from NEXT_PUBLIC_WC_API_URL environment variable
   // Fallback for local development: https://staging.aromaticscentslab.com

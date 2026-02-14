@@ -11,7 +11,7 @@
 defined( 'ABSPATH' ) || exit;
 
 // Frontend app URL for headless setup
-$frontend_url = 'https://app.aromaticscentslab.com';
+$frontend_url = 'https://aromaticscentslab.com';
 // Correct URL structure: /en/account/orders/{id}/
 $order_url = $frontend_url . '/en/account/orders/' . $order->get_id() . '/';
 

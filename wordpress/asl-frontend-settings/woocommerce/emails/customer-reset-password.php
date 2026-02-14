@@ -11,7 +11,7 @@
 defined( 'ABSPATH' ) || exit;
 
 // Frontend app URL for headless setup
-$frontend_url = 'https://app.aromaticscentslab.com';
+$frontend_url = 'https://aromaticscentslab.com';
 // Correct URL structure: /en/reset-password/?key=...&login=...
 $reset_url = $frontend_url . '/en/reset-password/?key=' . rawurlencode( $reset_key ) . '&login=' . rawurlencode( $user_login );
 

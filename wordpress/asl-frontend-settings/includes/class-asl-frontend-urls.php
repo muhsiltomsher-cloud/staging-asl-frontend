@@ -16,7 +16,7 @@ class ASL_Frontend_Urls {
     private $frontend_url = '';
 
     public function __construct() {
-        $this->frontend_url = get_option('asl_frontend_url', 'https://app.aromaticscentslab.com');
+        $this->frontend_url = get_option('asl_frontend_url', 'https://aromaticscentslab.com');
 
         if (empty($this->frontend_url)) {
             return;
@@ -52,7 +52,7 @@ class ASL_Frontend_Urls {
         register_setting('asl_frontend_url_group', 'asl_frontend_url', array(
             'type' => 'string',
             'sanitize_callback' => 'esc_url_raw',
-            'default' => 'https://app.aromaticscentslab.com',
+            'default' => 'https://aromaticscentslab.com',
         ));
     }
 
@@ -68,7 +68,7 @@ class ASL_Frontend_Urls {
                     <tr>
                         <th scope="row"><label for="asl_frontend_url">Frontend URL</label></th>
                         <td>
-                            <input type="url" id="asl_frontend_url" name="asl_frontend_url" value="<?php echo esc_attr($this->frontend_url); ?>" class="regular-text" placeholder="https://app.aromaticscentslab.com">
+                            <input type="url" id="asl_frontend_url" name="asl_frontend_url" value="<?php echo esc_attr($this->frontend_url); ?>" class="regular-text" placeholder="https://aromaticscentslab.com">
                             <p class="description">The public URL of your Next.js frontend (no trailing slash).</p>
                         </td>
                     </tr>
