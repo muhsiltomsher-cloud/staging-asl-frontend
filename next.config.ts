@@ -5,6 +5,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "cms.aromaticscentslab.com",
+        pathname: "/wp-content/uploads/**",
+      },
+      {
+        protocol: "https",
         hostname: "staging.aromaticscentslab.com",
         pathname: "/wp-content/uploads/**",
       },
