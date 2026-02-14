@@ -21,6 +21,7 @@ import { CookieConsentBanner } from "@/components/common/CookieConsentBanner";
 import { WhatsAppFloatingButton } from "@/components/common/WhatsAppFloatingButton";
 import { NetworkStatusBanner } from "@/components/common/NetworkStatusBanner";
 import { getSiteSettings, getHeaderSettings, getMobileBarSettings, getPrimaryMenu, getTopbarSettings, getSeoSettings } from "@/lib/api/wordpress";
+import { TrackingScripts } from "@/components/tracking";
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
@@ -111,6 +112,7 @@ export async function generateMetadata({
     },
     other: {
       ...(seoSettings.openGraph.fbAppId ? { "fb:app_id": seoSettings.openGraph.fbAppId } : {}),
+      ...(process.env.NEXT_PUBLIC_PINTEREST_DOMAIN_VERIFY ? { "p:domain_verify": process.env.NEXT_PUBLIC_PINTEREST_DOMAIN_VERIFY } : {}),
     },
     icons: faviconWithCacheBust ? {
       icon: faviconWithCacheBust,
@@ -135,13 +137,14 @@ export default async function LocaleLayout({
   const dictionary = await getDictionary(validLocale);
   const { dir } = localeConfig[validLocale];
 
-  // Fetch site settings, header settings, mobile bar settings, topbar settings, and menu in parallel
-  const [siteSettings, headerSettings, mobileBarSettings, topbarSettings, menuItems] = await Promise.all([
+  // Fetch site settings, header settings, mobile bar settings, topbar settings, menu, and SEO settings in parallel
+  const [siteSettings, headerSettings, mobileBarSettings, topbarSettings, menuItems, seoSettings] = await Promise.all([
     getSiteSettings(validLocale),
     getHeaderSettings(),
     getMobileBarSettings(validLocale),
     getTopbarSettings(validLocale),
     getPrimaryMenu(validLocale),
+    getSeoSettings(validLocale),
   ]);
 
   return (
@@ -152,6 +155,13 @@ export default async function LocaleLayout({
                                           <FreeGiftProvider locale={validLocale}>
                       <WishlistProvider>
               <JsonLd data={generateOrganizationJsonLd()} />
+              <TrackingScripts
+                gaId={seoSettings.analytics.gaId}
+                googleAdsId={process.env.NEXT_PUBLIC_GOOGLE_ADS_ID}
+                fbPixelId={seoSettings.analytics.fbPixelId}
+                tiktokPixelId={seoSettings.analytics.tiktokPixelId}
+                snapPixelId={seoSettings.analytics.snapPixelId}
+              />
               <NextTopLoader
                 color="#92400e"
                 initialPosition={0.08}
