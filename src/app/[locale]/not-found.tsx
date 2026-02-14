@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useParams } from "next/navigation";
-import { Home, Search, ArrowLeft } from "lucide-react";
+import { Home, ShoppingBag, Search, Sparkles, Heart } from "lucide-react";
 import { Button } from "@/components/common/Button";
 
 export default function NotFound() {
@@ -12,63 +13,147 @@ export default function NotFound() {
 
   const t = {
     en: {
-      title: "Page Not Found",
-      heading: "404",
-      description: "Oops! The page you're looking for doesn't exist or has been moved.",
+      heading: "Looks like this page has drifted away...",
+      description:
+        "The page you were looking for may have moved, but your perfect scent is still waiting. Let us help you find what you need.",
       backHome: "Back to Home",
-      browseShop: "Browse Shop",
-      searchProducts: "Search Products",
+      browseShop: "Explore Our Shop",
+      popularTitle: "Popular Categories",
+      perfumes: "Perfumes",
+      oils: "Fragrance Oils",
+      candles: "Candles",
+      diffusers: "Diffusers",
+      hairMist: "Hair Mist",
+      bodyMist: "Body Mist",
+      helpTitle: "Need Help?",
+      helpDescription:
+        "Our team is here to help you find exactly what you're looking for.",
+      contactUs: "Contact Us",
     },
     ar: {
-      title: "الصفحة غير موجودة",
-      heading: "404",
-      description: "عذراً! الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
+      heading: "يبدو أن هذه الصفحة قد انتقلت...",
+      description:
+        "الصفحة التي كنت تبحث عنها ربما تم نقلها، لكن عطرك المثالي لا يزال في انتظارك. دعنا نساعدك في العثور على ما تحتاجه.",
       backHome: "العودة للرئيسية",
-      browseShop: "تصفح المتجر",
-      searchProducts: "البحث عن المنتجات",
+      browseShop: "استكشف متجرنا",
+      popularTitle: "الفئات الشائعة",
+      perfumes: "العطور",
+      oils: "زيوت عطرية",
+      candles: "شموع",
+      diffusers: "معطرات",
+      hairMist: "بخاخ الشعر",
+      bodyMist: "بخاخ الجسم",
+      helpTitle: "تحتاج مساعدة؟",
+      helpDescription:
+        "فريقنا هنا لمساعدتك في العثور على ما تبحث عنه بالضبط.",
+      contactUs: "اتصل بنا",
     },
   };
 
   const texts = t[locale as keyof typeof t] || t.en;
 
+  const categories = [
+    { name: texts.perfumes, href: `/${locale}/shop`, icon: Sparkles },
+    { name: texts.oils, href: `/${locale}/shop`, icon: Heart },
+    { name: texts.candles, href: `/${locale}/shop`, icon: Sparkles },
+    { name: texts.diffusers, href: `/${locale}/shop`, icon: Heart },
+    { name: texts.hairMist, href: `/${locale}/shop`, icon: Sparkles },
+    { name: texts.bodyMist, href: `/${locale}/shop`, icon: Heart },
+  ];
+
   return (
-    <div
-      className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-16"
-      style={{ backgroundColor: "#F5F0E8" }}
-      dir={isRTL ? "rtl" : "ltr"}
-    >
-      <div className="text-center">
-        <h1 className="mb-2 text-9xl font-bold text-[#C4885B]">{texts.heading}</h1>
-        <h2 className="mb-4 text-2xl font-semibold text-gray-900 md:text-3xl">
-          {texts.title}
-        </h2>
-        <p className="mx-auto mb-8 max-w-md text-gray-600">{texts.description}</p>
+    <div className="flex min-h-[80vh] flex-col" dir={isRTL ? "rtl" : "ltr"}>
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#F5F0E8] to-white px-4 py-16 md:py-24">
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -left-20 -top-20 h-96 w-96 animate-pulse rounded-full bg-amber-200/20 blur-3xl" />
+          <div
+            className="absolute -bottom-32 -right-32 h-[400px] w-[400px] animate-pulse rounded-full bg-amber-100/30 blur-3xl"
+            style={{ animationDelay: "1s" }}
+          />
+        </div>
 
-        <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-          <Button asChild>
-            <Link href={`/${locale}`} className="flex items-center gap-2">
-              <Home className="h-4 w-4" />
-              {texts.backHome}
-            </Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href={`/${locale}/shop`} className="flex items-center gap-2">
-              <Search className="h-4 w-4" />
-              {texts.browseShop}
+        <div className="container relative mx-auto max-w-4xl text-center">
+          <div className="mb-6">
+            <Image
+              src="https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
+              alt="Aromatic Scents Lab"
+              width={120}
+              height={120}
+              className="mx-auto rounded-full object-cover shadow-lg"
+              style={{ width: 120, height: 120 }}
+            />
+          </div>
+
+          <h1 className="mb-4 text-2xl font-bold text-amber-900 md:text-4xl">
+            {texts.heading}
+          </h1>
+          <p className="mx-auto mb-10 max-w-xl text-base text-amber-700/80 md:text-lg">
+            {texts.description}
+          </p>
+
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+            <Button asChild size="lg">
+              <Link href={`/${locale}`} className="flex items-center gap-2">
+                <Home className="h-4 w-4" />
+                {texts.backHome}
+              </Link>
+            </Button>
+            <Button variant="outline" asChild size="lg">
+              <Link href={`/${locale}/shop`} className="flex items-center gap-2">
+                <ShoppingBag className="h-4 w-4" />
+                {texts.browseShop}
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white px-4 py-12 md:py-16">
+        <div className="container mx-auto max-w-4xl">
+          <div className="mb-8 flex items-center justify-center gap-3">
+            <div className="h-px w-12 bg-gradient-to-r from-transparent to-amber-400" />
+            <h2 className="text-lg font-semibold uppercase tracking-widest text-amber-600 md:text-xl">
+              {texts.popularTitle}
+            </h2>
+            <div className="h-px w-12 bg-gradient-to-l from-transparent to-amber-400" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4">
+            {categories.map((cat) => (
+              <Link
+                key={cat.name}
+                href={cat.href}
+                className="group flex items-center gap-3 rounded-xl border border-amber-100 bg-[#F5F0E8]/50 p-4 transition-all duration-300 hover:border-amber-300 hover:bg-[#F5F0E8] hover:shadow-md"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 transition-colors group-hover:bg-amber-200">
+                  <cat.icon className="h-5 w-5 text-amber-700" />
+                </div>
+                <span className="text-sm font-medium text-amber-900 md:text-base">
+                  {cat.name}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-gradient-to-b from-white to-[#F5F0E8] px-4 py-12">
+        <div className="container mx-auto max-w-2xl text-center">
+          <Search className="mx-auto mb-4 h-8 w-8 text-amber-400" />
+          <h3 className="mb-2 text-lg font-semibold text-amber-900">
+            {texts.helpTitle}
+          </h3>
+          <p className="mb-6 text-amber-700/70">{texts.helpDescription}</p>
+          <Button variant="outline" asChild size="sm">
+            <Link
+              href={`/${locale}/contact`}
+              className="flex items-center gap-2"
+            >
+              {texts.contactUs}
             </Link>
           </Button>
         </div>
-
-        <div className="mt-8">
-          <Link
-            href={`/${locale}`}
-            className="inline-flex items-center gap-2 text-sm text-gray-500 transition-colors hover:text-[#C4885B]"
-          >
-            <ArrowLeft className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
-            {texts.backHome}
-          </Link>
-        </div>
-      </div>
+      </section>
     </div>
   );
 }
