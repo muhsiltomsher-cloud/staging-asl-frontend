@@ -59,7 +59,7 @@ const stores: Store[] = [
     country: "uae",
     countryAr: "الإمارات",
     googleMapsUrl: "https://maps.google.com/?q=Yas+Mall+Abu+Dhabi",
-    image: "https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp",
+    image: "https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp",
   },
   {
     id: 2,
@@ -74,7 +74,7 @@ const stores: Store[] = [
     country: "uae",
     countryAr: "الإمارات",
     googleMapsUrl: "https://maps.google.com/?q=Bawabat+Al+Sharq+Mall+Abu+Dhabi",
-    image: "https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp",
+    image: "https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp",
   },
   {
     id: 3,
@@ -89,7 +89,7 @@ const stores: Store[] = [
     country: "uae",
     countryAr: "الإمارات",
     googleMapsUrl: "https://maps.google.com/?q=Bawadi+Mall+Al+Ain",
-    image: "https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp",
+    image: "https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp",
   },
   {
     id: 4,
@@ -104,7 +104,7 @@ const stores: Store[] = [
     country: "uae",
     countryAr: "الإمارات",
     googleMapsUrl: "https://maps.google.com/?q=Makani+Zakher+Mall+Al+Ain",
-    image: "https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp",
+    image: "https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp",
   },
   {
     id: 5,
@@ -119,7 +119,7 @@ const stores: Store[] = [
     country: "uae",
     countryAr: "الإمارات",
     googleMapsUrl: "https://maps.google.com/?q=Fujairah+City+Centre",
-    image: "https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp",
+    image: "https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp",
   },
   {
     id: 6,
@@ -134,7 +134,7 @@ const stores: Store[] = [
     country: "oman",
     countryAr: "عمان",
     googleMapsUrl: "https://maps.google.com/?q=Oman+Mall+Muscat",
-    image: "https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp",
+    image: "https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp",
   },
 ];
 
@@ -216,7 +216,7 @@ export default function StoreLocatorPage() {
         {/* Background Image */}
         <div className="absolute inset-0">
           <Image
-            src="https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
+            src="https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
             alt="Store Locator"
             fill
             className="object-cover"

@@ -104,7 +104,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
         {/* Background Image */}
         <div className="absolute inset-0">
           <Image
-            src="https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
+            src="https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
             alt="Contact Us"
             fill
             className="object-cover"

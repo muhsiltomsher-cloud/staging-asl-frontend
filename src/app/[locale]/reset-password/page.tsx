@@ -10,7 +10,7 @@ function LoadingFallback() {
     <div 
       className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12"
       style={{ 
-        backgroundImage: 'url(https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
+        backgroundImage: 'url(https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'

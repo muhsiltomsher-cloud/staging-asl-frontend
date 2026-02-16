@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $header_text = $email_heading;
 
 // Get the custom logo URL - fallback to ASL logo
-$logo_url = 'https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/logo-asl-main.png';
+$logo_url = 'https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/logo-asl-main.png';
 
 // Try to get the site logo from WordPress customizer
 $custom_logo_id = get_theme_mod( 'custom_logo' );

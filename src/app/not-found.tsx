@@ -26,7 +26,7 @@ export default function NotFound() {
         <div className="container relative mx-auto max-w-4xl text-center">
           <div className="mb-6">
             <Image
-              src="https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
+              src="https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
               alt="Aromatic Scents Lab"
               width={120}
               height={120}
