@@ -367,6 +367,25 @@ async function syncByOrderId(orderId: number, apiKey: string): Promise<SyncResul
       metaData.push({ key: "_myfatoorah_invoice_id", value: String(searchData.Data.InvoiceId) });
     }
     metaData.push({ key: "_myfatoorah_invoice_status", value: invoiceStatus });
+    if (searchData.Data?.InvoiceReference) {
+      metaData.push({ key: "_myfatoorah_invoice_reference", value: searchData.Data.InvoiceReference });
+    }
+    if (searchData.Data?.InvoiceValue) {
+      metaData.push({ key: "_myfatoorah_invoice_value", value: String(searchData.Data.InvoiceValue) });
+    }
+    if (searchData.Data?.CreatedDate) {
+      metaData.push({ key: "_myfatoorah_created_date", value: searchData.Data.CreatedDate });
+    }
+    // Customer details
+    if (searchData.Data?.CustomerName) {
+      metaData.push({ key: "_myfatoorah_customer_name", value: searchData.Data.CustomerName });
+    }
+    if (searchData.Data?.CustomerEmail) {
+      metaData.push({ key: "_myfatoorah_customer_email", value: searchData.Data.CustomerEmail });
+    }
+    if (searchData.Data?.CustomerMobile) {
+      metaData.push({ key: "_myfatoorah_customer_mobile", value: searchData.Data.CustomerMobile });
+    }
     // Transaction details
     if (successfulTransaction.TransactionId) {
       metaData.push({ key: "_myfatoorah_transaction_id", value: successfulTransaction.TransactionId });
@@ -385,12 +404,37 @@ async function syncByOrderId(orderId: number, apiKey: string): Promise<SyncResul
     if (successfulTransaction.TrackId) {
       metaData.push({ key: "_myfatoorah_track_id", value: successfulTransaction.TrackId });
     }
+    if (successfulTransaction.AuthorizationId) {
+      metaData.push({ key: "_myfatoorah_authorization_id", value: successfulTransaction.AuthorizationId });
+    }
     if (successfulTransaction.TransactionDate) {
       metaData.push({ key: "_myfatoorah_transaction_date", value: successfulTransaction.TransactionDate });
     }
     // Card details
+    if (successfulTransaction.CardBrand) {
+      metaData.push({ key: "_myfatoorah_card_brand", value: successfulTransaction.CardBrand });
+    }
     if (successfulTransaction.CardNumber) {
       metaData.push({ key: "_myfatoorah_card_number", value: successfulTransaction.CardNumber });
+    }
+    if (successfulTransaction.CardIssuer) {
+      metaData.push({ key: "_myfatoorah_card_issuer", value: successfulTransaction.CardIssuer });
+    }
+    // Amount details
+    if (successfulTransaction.TransactionValue) {
+      metaData.push({ key: "_myfatoorah_payable_amount", value: successfulTransaction.TransactionValue });
+    }
+    if (successfulTransaction.CustomerServiceCharge) {
+      metaData.push({ key: "_myfatoorah_client_deduction", value: successfulTransaction.CustomerServiceCharge });
+    }
+    if (successfulTransaction.DueValue) {
+      metaData.push({ key: "_myfatoorah_receivable_amount", value: successfulTransaction.DueValue });
+    }
+    if (successfulTransaction.IpAddress) {
+      metaData.push({ key: "_myfatoorah_customer_ip", value: successfulTransaction.IpAddress });
+    }
+    if (successfulTransaction.Country) {
+      metaData.push({ key: "_myfatoorah_customer_country", value: successfulTransaction.Country });
     }
 
     if (metaData.length > 0) {
@@ -411,7 +455,7 @@ async function syncByOrderId(orderId: number, apiKey: string): Promise<SyncResul
         payment_status: "success",
         payment_method: successfulTransaction.PaymentGateway,
         transaction_id: successfulTransaction.TransactionId || successfulTransaction.PaymentId,
-        card_brand: successfulTransaction.CardNumber,
+        card_brand: successfulTransaction.CardBrand,
         synced: true,
         message: "Order updated to processing",
       };
@@ -500,6 +544,24 @@ async function updateOrderFromPayment(
     metaData.push({ key: "_myfatoorah_invoice_id", value: String(paymentData.InvoiceId) });
   }
   metaData.push({ key: "_myfatoorah_invoice_status", value: paymentData.InvoiceStatus });
+  if (paymentData.InvoiceReference) {
+    metaData.push({ key: "_myfatoorah_invoice_reference", value: paymentData.InvoiceReference });
+  }
+  if (paymentData.InvoiceValue) {
+    metaData.push({ key: "_myfatoorah_invoice_value", value: String(paymentData.InvoiceValue) });
+  }
+  if (paymentData.CreatedDate) {
+    metaData.push({ key: "_myfatoorah_created_date", value: paymentData.CreatedDate });
+  }
+  if (paymentData.CustomerName) {
+    metaData.push({ key: "_myfatoorah_customer_name", value: paymentData.CustomerName });
+  }
+  if (paymentData.CustomerEmail) {
+    metaData.push({ key: "_myfatoorah_customer_email", value: paymentData.CustomerEmail });
+  }
+  if (paymentData.CustomerMobile) {
+    metaData.push({ key: "_myfatoorah_customer_mobile", value: paymentData.CustomerMobile });
+  }
   if (successfulTransaction.TransactionId) {
     metaData.push({ key: "_myfatoorah_transaction_id", value: successfulTransaction.TransactionId });
   }
@@ -515,6 +577,9 @@ async function updateOrderFromPayment(
   }
   if (successfulTransaction.TrackId) {
     metaData.push({ key: "_myfatoorah_track_id", value: successfulTransaction.TrackId });
+  }
+  if (successfulTransaction.AuthorizationId) {
+    metaData.push({ key: "_myfatoorah_authorization_id", value: successfulTransaction.AuthorizationId });
   }
   if (successfulTransaction.TransactionDate) {
     metaData.push({ key: "_myfatoorah_transaction_date", value: successfulTransaction.TransactionDate });
@@ -533,6 +598,21 @@ async function updateOrderFromPayment(
   }
   if (successfulTransaction.CardIssuer) {
     metaData.push({ key: "_myfatoorah_card_issuer", value: successfulTransaction.CardIssuer });
+  }
+  if (successfulTransaction.CardIssuingCountry) {
+    metaData.push({ key: "_myfatoorah_card_issuer_country", value: successfulTransaction.CardIssuingCountry });
+  }
+  if (successfulTransaction.CardFundingMethod) {
+    metaData.push({ key: "_myfatoorah_card_funding_method", value: successfulTransaction.CardFundingMethod });
+  }
+  if (successfulTransaction.TransactionValue) {
+    metaData.push({ key: "_myfatoorah_payable_amount", value: successfulTransaction.TransactionValue });
+  }
+  if (successfulTransaction.CustomerServiceCharge) {
+    metaData.push({ key: "_myfatoorah_client_deduction", value: successfulTransaction.CustomerServiceCharge });
+  }
+  if (successfulTransaction.DueValue) {
+    metaData.push({ key: "_myfatoorah_receivable_amount", value: successfulTransaction.DueValue });
   }
 
   if (metaData.length > 0) {
@@ -576,6 +656,9 @@ function extractPaymentDetails(metaData: Array<{ key: string; value: string }>) 
   const paymentMetaKeys = [
     "_myfatoorah_invoice_id",
     "_myfatoorah_invoice_status",
+    "_myfatoorah_invoice_reference",
+    "_myfatoorah_invoice_value",
+    "_myfatoorah_created_date",
     "_myfatoorah_transaction_id",
     "_myfatoorah_transaction_status",
     "_myfatoorah_payment_id",
@@ -586,11 +669,17 @@ function extractPaymentDetails(metaData: Array<{ key: string; value: string }>) 
     "_myfatoorah_transaction_date",
     "_myfatoorah_customer_ip",
     "_myfatoorah_customer_country",
+    "_myfatoorah_customer_name",
+    "_myfatoorah_customer_email",
+    "_myfatoorah_customer_mobile",
     "_myfatoorah_card_brand",
     "_myfatoorah_card_number",
     "_myfatoorah_card_issuer",
     "_myfatoorah_card_issuer_country",
     "_myfatoorah_card_funding_method",
+    "_myfatoorah_payable_amount",
+    "_myfatoorah_client_deduction",
+    "_myfatoorah_receivable_amount",
     "_myfatoorah_error_code",
     "_myfatoorah_error_message",
   ];

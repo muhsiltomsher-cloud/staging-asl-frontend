@@ -221,6 +221,12 @@ export async function GET(request: NextRequest) {
       customer_reference: data.Data?.UserDefinedField || null,
       error_code: errorCode || null,
       error_message: errorMessage || null,
+      invoice_reference: data.Data?.InvoiceReference || null,
+      invoice_value: data.Data?.InvoiceValue ? String(data.Data.InvoiceValue) : null,
+      created_date: data.Data?.CreatedDate || null,
+      customer_name: data.Data?.CustomerName || null,
+      customer_email: data.Data?.CustomerEmail || null,
+      customer_mobile: data.Data?.CustomerMobile || null,
       payment_details: {
         payment_id: activeTransaction?.PaymentId || null,
         reference_id: activeTransaction?.ReferenceId || null,
@@ -234,6 +240,9 @@ export async function GET(request: NextRequest) {
         card_issuer: activeTransaction?.CardIssuer || null,
         card_issuer_country: activeTransaction?.CardIssuingCountry || null,
         card_funding_method: activeTransaction?.CardFundingMethod || null,
+        payable_amount: activeTransaction?.TransactionValue || null,
+        client_deduction: activeTransaction?.CustomerServiceCharge || null,
+        receivable_amount: activeTransaction?.DueValue || null,
       },
     });
   } catch (error) {

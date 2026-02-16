@@ -50,6 +50,9 @@ interface PaymentDetails {
   card_issuer?: string;
   card_issuer_country?: string;
   card_funding_method?: string;
+  payable_amount?: string;
+  client_deduction?: string;
+  receivable_amount?: string;
 }
 
 interface PaymentVerificationResult {
@@ -58,11 +61,17 @@ interface PaymentVerificationResult {
   status_message?: string;
   invoice_id?: string;
   invoice_status?: string;
+  invoice_reference?: string;
+  invoice_value?: string;
+  created_date?: string;
   transaction_id?: string;
   transaction_status?: string;
   payment_method?: string;
   paid_currency?: string;
   paid_currency_value?: string;
+  customer_name?: string;
+  customer_email?: string;
+  customer_mobile?: string;
   error_code?: string;
   error_message?: string;
   payment_details?: PaymentDetails;
@@ -296,11 +305,17 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                           ...verifyData.payment_details,
                           invoice_id: verifyData.invoice_id,
                           invoice_status: verifyData.invoice_status,
+                          invoice_reference: verifyData.invoice_reference,
+                          invoice_value: verifyData.invoice_value,
+                          created_date: verifyData.created_date,
                           transaction_id: verifyData.transaction_id,
                           transaction_status: verifyData.transaction_status,
                           payment_method: verifyData.payment_method,
                           paid_currency: verifyData.paid_currency,
                           paid_currency_value: verifyData.paid_currency_value,
+                          customer_name: verifyData.customer_name,
+                          customer_email: verifyData.customer_email,
+                          customer_mobile: verifyData.customer_mobile,
                         },
                       }),
                     });
@@ -325,9 +340,15 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
                           ...verifyData.payment_details,
                           invoice_id: verifyData.invoice_id,
                           invoice_status: verifyData.invoice_status,
+                          invoice_reference: verifyData.invoice_reference,
+                          invoice_value: verifyData.invoice_value,
+                          created_date: verifyData.created_date,
                           transaction_id: verifyData.transaction_id,
                           transaction_status: verifyData.transaction_status,
                           payment_method: verifyData.payment_method,
+                          customer_name: verifyData.customer_name,
+                          customer_email: verifyData.customer_email,
+                          customer_mobile: verifyData.customer_mobile,
                           error_code: verifyData.error_code,
                           error_message: verifyData.error_message,
                         },
