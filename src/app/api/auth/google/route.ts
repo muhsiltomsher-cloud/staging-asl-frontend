@@ -4,8 +4,13 @@ import { API_BASE, backendPostHeaders, noCacheUrl, safeJsonResponse } from "@/li
 import { checkRateLimit, rateLimitResponse, API_RATE_LIMIT } from "@/lib/security";
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-const WC_KEY = process.env.WC_CONSUMER_KEY;
-const WC_SECRET = process.env.WC_CONSUMER_SECRET;
+
+function getWcCredentials(): { key: string; secret: string } | null {
+  const key = process.env.WC_CONSUMER_KEY;
+  const secret = process.env.WC_CONSUMER_SECRET;
+  if (key && secret) return { key, secret };
+  return null;
+}
 
 interface GoogleTokenInfo {
   aud?: string;
@@ -31,10 +36,10 @@ function getSocialPassword(googleUserId: string): string {
   return crypto.createHmac("sha256", secret).update(`google:${googleUserId}`).digest("hex");
 }
 
-function wcUrl(path: string): string {
+function wcUrl(path: string, creds: { key: string; secret: string }): string {
   const base = `${API_BASE}/wp-json/wc/v3${path}`;
   const sep = base.includes("?") ? "&" : "?";
-  return `${base}${sep}consumer_key=${WC_KEY}&consumer_secret=${WC_SECRET}`;
+  return `${base}${sep}consumer_key=${creds.key}&consumer_secret=${creds.secret}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -61,6 +66,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const wcCreds = getWcCredentials();
+    if (!wcCreds) {
+      return NextResponse.json(
+        { success: false, error: { code: "config_error", message: "WooCommerce API credentials are not configured" } },
+        { status: 500 }
+      );
+    }
+
     const tokenRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
     const tokenInfo: GoogleTokenInfo = await tokenRes.json();
 
@@ -82,18 +95,24 @@ export async function POST(request: NextRequest) {
 
     const socialPassword = getSocialPassword(googleUserId);
 
-    const searchRes = await fetch(wcUrl(`/customers?email=${encodeURIComponent(email)}`));
+    const searchRes = await fetch(wcUrl(`/customers?email=${encodeURIComponent(email)}`, wcCreds));
     let customers: WcCustomer[] = [];
-    try {
-      const parsed = await searchRes.json();
-      if (Array.isArray(parsed)) customers = parsed;
-    } catch {
-      // ignore parse errors
+
+    if (searchRes.ok) {
+      try {
+        const parsed = await searchRes.json();
+        if (Array.isArray(parsed)) customers = parsed;
+      } catch {
+        // ignore parse errors
+      }
+    } else {
+      const searchErr = await safeJsonResponse(searchRes);
+      console.error(`[google-auth] WC customer search failed (${searchRes.status}):`, searchErr);
     }
 
     if (customers.length > 0) {
       const customer = customers[0];
-      await fetch(wcUrl(`/customers/${customer.id}`), {
+      const updateRes = await fetch(wcUrl(`/customers/${customer.id}`, wcCreds), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -101,9 +120,12 @@ export async function POST(request: NextRequest) {
           meta_data: [{ key: "_google_social_login", value: "1" }],
         }),
       });
+      if (!updateRes.ok) {
+        console.error(`[google-auth] WC customer update failed (${updateRes.status})`);
+      }
     } else {
       const displayName = tokenInfo.name || tokenInfo.given_name || email.split("@")[0];
-      const createRes = await fetch(wcUrl("/customers"), {
+      const createRes = await fetch(wcUrl("/customers", wcCreds), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
