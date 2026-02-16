@@ -662,10 +662,6 @@ export default function CartPage() {
                 />
               </div>
 
-              <p className="text-xs text-gray-500 text-center mb-3">
-                {isRTL ? "جميع الأسعار شاملة ضريبة القيمة المضافة" : "All prices are inclusive of VAT"}
-              </p>
-
               <Button className="w-full" size="lg" asChild>
                 <Link href={`/${locale}/checkout`}>{texts.checkout}</Link>
               </Button>

@@ -2196,10 +2196,6 @@ export default function CheckoutClient() {
               </Button>
 
               <p className="mt-2 hidden text-center text-xs text-gray-500 lg:block">
-                {isRTL ? "جميع الأسعار شاملة ضريبة القيمة المضافة" : "All prices are inclusive of VAT"}
-              </p>
-
-              <p className="mt-4 hidden text-center text-xs text-gray-500 lg:block">
                 {isRTL
                   ? "بالنقر على تأكيد الطلب، فإنك توافق على شروط الخدمة وسياسة الخصوصية."
                   : "By clicking Place Order, you agree to our Terms of Service and Privacy Policy."}

@@ -162,7 +162,9 @@ export default function InvoicePage({ params }: InvoicePageProps) {
 
   const renderInvoice = () => {
     if (!order) return null;
-    const subtotal = parseFloat(order.total) - parseFloat(order.shipping_total) + parseFloat(order.discount_total);
+    const orderTax = parseFloat(order.total_tax || "0");
+    const totalWithoutTax = parseFloat(order.total) - orderTax;
+    const subtotal = totalWithoutTax - parseFloat(order.shipping_total) + parseFloat(order.discount_total);
 
     return (
       <div className="min-h-screen bg-gray-50" dir={isRTL ? "rtl" : "ltr"}>
@@ -397,16 +399,13 @@ export default function InvoicePage({ params }: InvoicePageProps) {
                   <div className="flex justify-between border-t-2 border-gray-200 pt-2 text-base font-semibold">
                     <span className="text-gray-900">{t.grandTotal}</span>
                     <OrderPrice 
-                      price={order.total} 
+                      price={totalWithoutTax} 
                       orderCurrency={order.currency} 
                       orderCurrencySymbol={order.currency_symbol}
                       className="text-gray-900"
                       iconSize="sm"
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {isRTL ? "جميع الأسعار شاملة ضريبة القيمة المضافة" : "All prices are inclusive of VAT"}
-                  </p>
                 </div>
 
                 {order.payment_method_title && (
