@@ -215,9 +215,9 @@ export default function RegisterPage({ params }: RegisterPageProps) {
       }}
     >
       <div className="w-full max-w-md">
-        <div className="overflow-hidden rounded-2xl shadow-2xl">
+        <div className="rounded-2xl shadow-2xl">
           {/* Registration Form */}
-          <div className="bg-white p-6 md:p-8 lg:p-12">
+          <div className="bg-white rounded-2xl p-6 md:p-8 lg:p-12">
             {/* Home Icon */}
             <div className="mb-4">
               <Link
