@@ -148,11 +148,11 @@ export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-8 border-t pt-6 md:mt-12 md:pt-8">
-          <p className="text-center text-xs text-gray-600 md:text-sm">
+        <div className="mt-8 flex flex-col items-center gap-2 border-t pt-6 md:mt-12 md:flex-row md:justify-between md:pt-8">
+          <p className="text-center text-xs text-gray-600 md:text-left md:text-sm">
             &copy; {currentYear} {siteConfig.name}. {dictionary.footer.copyright}
           </p>
-          <p className="mt-2 text-center text-xs text-gray-500">
+          <p className="text-center text-xs text-gray-500 md:text-right">
             Powered by{" "}
             <a
               href="https://cadvil.com/"
