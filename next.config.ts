@@ -5,11 +5,6 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "cms.aromaticscentslab.com",
-        pathname: "/wp-content/uploads/**",
-      },
-      {
-        protocol: "https",
         hostname: "staging.aromaticscentslab.com",
         pathname: "/wp-content/uploads/**",
       },
@@ -36,7 +31,7 @@ const nextConfig: NextConfig = {
     },
   },
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_WC_API_URL || "https://cms.aromaticscentslab.com";
+    const apiUrl = process.env.NEXT_PUBLIC_WC_API_URL || "https://staging.aromaticscentslab.com";
     return [
       {
         source: '/cms-media/:path*',

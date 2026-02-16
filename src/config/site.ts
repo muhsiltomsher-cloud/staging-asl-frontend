@@ -20,8 +20,8 @@ export const siteConfig = {
   ogImage: `${process.env.NEXT_PUBLIC_SITE_URL || "https://app.aromaticscentslab.com"}/og.jpg`,
   
   // WordPress/WooCommerce Backend API URL - reads from NEXT_PUBLIC_WC_API_URL environment variable
-  // Fallback for local development: https://cms.aromaticscentslab.com
-  apiUrl: process.env.NEXT_PUBLIC_WC_API_URL || "https://cms.aromaticscentslab.com",
+  // Fallback for local development: https://staging.aromaticscentslab.com
+  apiUrl: process.env.NEXT_PUBLIC_WC_API_URL || "https://staging.aromaticscentslab.com",
   
   // Social media links
   links: {

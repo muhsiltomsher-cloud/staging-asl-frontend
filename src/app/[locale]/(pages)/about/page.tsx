@@ -50,7 +50,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
         {/* Background Image */}
         <div className="absolute inset-0">
           <Image
-            src="https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
+            src="https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
             alt="Aromatic Scents Lab"
             fill
             className="object-cover"
@@ -155,7 +155,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
                 {/* Main Image */}
                 <div className="relative aspect-[4/5] overflow-hidden rounded-3xl shadow-2xl">
                   <Image
-                    src="https://cms.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
+                    src="https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/ASL-Website-Images-Patchouli-Glow-06.webp"
                     alt={isRTL ? "قصتنا" : "Our Story"}
                     fill
                     sizes="(max-width: 1024px) 100vw, 50vw"
