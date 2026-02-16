@@ -109,11 +109,14 @@ export function GoogleSignInButton({
       cancel_on_tap_outside: true,
     });
 
+    const containerWidth = containerRef.current.offsetWidth;
+    const buttonWidth = Math.min(containerWidth, 400);
+
     window.google.accounts.id.renderButton(containerRef.current, {
       type: "standard",
       theme: "outline",
       size: "large",
-      width: 400,
+      width: buttonWidth,
       text,
       shape: "pill",
       locale,
@@ -123,7 +126,7 @@ export function GoogleSignInButton({
   return (
     <div
       ref={containerRef}
-      className="flex justify-center w-full [&>div]:w-full"
+      className="flex justify-center w-full max-w-full overflow-hidden [&>div]:w-full [&>div]:max-w-full"
     />
   );
 }

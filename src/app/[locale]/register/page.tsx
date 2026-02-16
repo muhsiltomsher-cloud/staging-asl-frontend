@@ -251,7 +251,6 @@ export default function RegisterPage({ params }: RegisterPageProps) {
               </div>
             )}
 
-            {/* Google Sign-In hidden until Google Cloud Console origin is configured
             <GoogleSignInButton
               onSuccess={async (credential) => {
                 setIsGoogleLoading(true);
@@ -285,7 +284,6 @@ export default function RegisterPage({ params }: RegisterPageProps) {
                 {texts.registering}
               </div>
             )}
-            */}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input

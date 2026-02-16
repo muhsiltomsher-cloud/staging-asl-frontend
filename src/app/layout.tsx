@@ -17,6 +17,9 @@ const notoSansArabic = Noto_Sans_Arabic({
 export const metadata: Metadata = {
   title: "Aromatic Scents Lab",
   description: "Premium fragrances and perfumes",
+  verification: {
+    google: "f_mMaADw5xQDw862fP3PjCa-2conJWM6uY0H_goWpE8",
+  },
   // iOS Home Screen Optimization
   appleWebApp: {
     capable: true,
