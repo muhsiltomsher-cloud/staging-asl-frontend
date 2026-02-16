@@ -203,7 +203,6 @@ export default function LoginPage({ params }: LoginPageProps) {
               {texts.loginTitle}
             </h2>
 
-            {/* Google Sign-In hidden until Google Cloud Console origin is configured
             <GoogleSignInButton
               onSuccess={async (credential) => {
                 setIsGoogleLoading(true);
@@ -237,7 +236,6 @@ export default function LoginPage({ params }: LoginPageProps) {
                 {texts.loggingIn}
               </div>
             )}
-            */}
 
             <div className={`mb-6 rounded-md bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800 ${isRTL ? "text-right" : "text-left"}`}>
               <p>
