@@ -78,6 +78,17 @@ export function CheckoutFooter({ locale, dictionary, siteSettings }: CheckoutFoo
           <p className="text-center text-xs text-gray-500">
             &copy; {currentYear} {siteConfig.name}. {dictionary.footer.copyright}
           </p>
+          <p className="mt-2 text-center text-xs text-gray-400">
+            Powered by{" "}
+            <a
+              href="https://cadvil.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-500 underline hover:text-gray-700"
+            >
+              Cadvil Solutions
+            </a>
+          </p>
         </div>
       </div>
     </footer>

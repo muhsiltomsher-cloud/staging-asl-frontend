@@ -152,6 +152,17 @@ export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
           <p className="text-center text-xs text-gray-600 md:text-sm">
             &copy; {currentYear} {siteConfig.name}. {dictionary.footer.copyright}
           </p>
+          <p className="mt-2 text-center text-xs text-gray-500">
+            Powered by{" "}
+            <a
+              href="https://cadvil.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-600 underline hover:text-gray-900"
+            >
+              Cadvil Solutions
+            </a>
+          </p>
         </div>
       </div>
     </footer>
