@@ -110,7 +110,7 @@ export function GoogleSignInButton({
     });
 
     const containerWidth = containerRef.current.offsetWidth;
-    const buttonWidth = Math.min(containerWidth, 400);
+    const buttonWidth = Math.max(Math.min(containerWidth - 20, 400), 200);
 
     window.google.accounts.id.renderButton(containerRef.current, {
       type: "standard",
@@ -126,7 +126,7 @@ export function GoogleSignInButton({
   return (
     <div
       ref={containerRef}
-      className="flex justify-center w-full max-w-full overflow-hidden [&>div]:w-full [&>div]:max-w-full"
+      className="flex justify-center w-full"
     />
   );
 }
