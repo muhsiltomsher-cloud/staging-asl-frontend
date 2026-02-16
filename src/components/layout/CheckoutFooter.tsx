@@ -75,9 +75,22 @@ export function CheckoutFooter({ locale, dictionary, siteSettings }: CheckoutFoo
             </a>
           </div>
 
-          <p className="text-center text-xs text-gray-500">
-            &copy; {currentYear} {siteConfig.name}. {dictionary.footer.copyright}
-          </p>
+          <div className="flex w-full flex-col items-center gap-2 md:flex-row md:justify-between">
+            <p className="text-center text-xs text-gray-500 md:text-left">
+              &copy; {currentYear} {siteConfig.name}. {dictionary.footer.copyright}
+            </p>
+            <p className="text-center text-xs text-gray-400 md:text-right">
+              Powered by{" "}
+              <a
+                href="https://cadvil.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 underline hover:text-gray-700"
+              >
+                Cadvil Solutions
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </footer>
