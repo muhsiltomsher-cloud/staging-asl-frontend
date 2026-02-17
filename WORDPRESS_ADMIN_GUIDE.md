@@ -1120,6 +1120,799 @@ Password reset functionality using multiple fallback methods.
   ```
 - **Notes:** Tries WooCommerce reset first, falls back to WordPress reset if needed
 
+### Token Verification API
+
+#### Verify Token
+- **Endpoint:** `POST /api/auth/verify` (Next.js API route)
+- **Description:** Validates if a JWT token is still valid
+- **Headers:** `Authorization: Bearer {token}`
+- **Response (Success):**
+  ```json
+  {
+    "success": true,
+    "valid": true
+  }
+  ```
+- **Response (Error):**
+  ```json
+  {
+    "success": false,
+    "valid": false
+  }
+  ```
+
+### Token Renewal API
+
+#### Renew Token
+- **Endpoint:** `POST /api/auth/renew` (Next.js API route)
+- **Description:** Refreshes an expired JWT token using a refresh token
+- **Request Body:**
+  ```json
+  {
+    "refresh_token": "string"
+  }
+  ```
+- **Response (Success):**
+  ```json
+  {
+    "success": true,
+    "token": "string (new JWT token)"
+  }
+  ```
+
+### Google Authentication APIs
+
+#### Google Sign-In
+- **Endpoint:** `POST /api/auth/google` (Next.js API route)
+- **Description:** Authenticates user via Google OAuth credential. Creates a new WooCommerce customer if one does not exist for the Google email, or links to existing account.
+- **Request Body:**
+  ```json
+  {
+    "credential": "string (Google ID token)"
+  }
+  ```
+- **Response (Success):**
+  ```json
+  {
+    "success": true,
+    "user": {
+      "token": "string (JWT token)",
+      "wp_token": "string (WordPress JWT token)",
+      "user_id": "number",
+      "user_email": "string",
+      "user_nicename": "string",
+      "user_display_name": "string"
+    }
+  }
+  ```
+- **Response (Error):**
+  ```json
+  {
+    "success": false,
+    "error": {
+      "code": "google_auth_failed | invalid_credential | server_error",
+      "message": "string"
+    }
+  }
+  ```
+
+#### Get Google Client ID
+- **Endpoint:** `GET /api/auth/google-client-id` (Next.js API route)
+- **Description:** Returns the Google OAuth client ID for frontend initialization
+- **Response:**
+  ```json
+  {
+    "clientId": "string"
+  }
+  ```
+
+### Customer Email Check API
+
+#### Check Email Registration
+- **Endpoint:** `GET /api/customer/check-email` (Next.js API route)
+- **Description:** Checks whether an email address is already registered
+- **Query Parameters:**
+  - `email` (required): Email address to check
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "isRegistered": "boolean"
+    }
+  }
+  ```
+
+### Order Cancellation API
+
+#### Cancel Order
+- **Endpoint:** `POST /api/orders/cancel` (Next.js API route)
+- **Description:** Cancels an order. Only orders with status `pending`, `processing`, or `on-hold` can be cancelled.
+- **Request Body:**
+  ```json
+  {
+    "order_id": "number",
+    "customer_id": "number"
+  }
+  ```
+- **Response (Success):**
+  ```json
+  {
+    "success": true,
+    "message": "Order cancelled successfully",
+    "order": {
+      "id": "number",
+      "status": "cancelled"
+    }
+  }
+  ```
+- **Response (Error):**
+  ```json
+  {
+    "success": false,
+    "error": {
+      "code": "invalid_order | unauthorized | cannot_cancel",
+      "message": "string"
+    }
+  }
+  ```
+
+### Order Notes API
+
+#### Get Order Notes
+- **Endpoint:** `GET /api/orders/notes` (Next.js API route)
+- **Description:** Retrieves notes for a specific order (customer notes only)
+- **Query Parameters:**
+  - `orderId` (required): Order ID
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "id": "number",
+        "note": "string",
+        "date_created": "string",
+        "customer_note": "boolean"
+      }
+    ]
+  }
+  ```
+
+### Shipping APIs
+
+#### Calculate Shipping Rates
+- **Endpoint:** `GET /api/shipping` (Next.js API route)
+- **Description:** Calculates available shipping rates based on destination country, cart weight, and subtotal. Supports free shipping threshold (500 AED equivalent).
+- **Query Parameters:**
+  - `country` (required): ISO country code (e.g., AE, SA, US)
+  - `weight` (optional): Total cart weight in kg
+  - `subtotal` (optional): Cart subtotal in AED
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "rates": [
+      {
+        "id": "string",
+        "method_id": "string",
+        "method_title": "string",
+        "cost": "number",
+        "currency": "string",
+        "free_shipping": "boolean",
+        "free_shipping_threshold": "number",
+        "zone_name": "string"
+      }
+    ]
+  }
+  ```
+
+#### Select Shipping Rate
+- **Endpoint:** `POST /api/shipping` (Next.js API route)
+- **Description:** Selects a specific shipping rate for the current cart session
+- **Request Body:**
+  ```json
+  {
+    "rate_id": "string",
+    "cart_key": "string (optional)"
+  }
+  ```
+- **Response:** Returns updated cart object with selected shipping
+
+### Shipping Countries API
+
+#### Get Available Shipping Countries
+- **Endpoint:** `GET /api/shipping-countries` (Next.js API route)
+- **Description:** Retrieves the list of countries available for shipping, extracted from WooCommerce shipping zones
+- **Caching:** 300 seconds (5 minutes)
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "countries": [
+      {
+        "code": "string (ISO country code)",
+        "name": "string (country name)"
+      }
+    ]
+  }
+  ```
+
+### Payment Gateways API
+
+#### Get Available Payment Gateways
+- **Endpoint:** `GET /api/payment-gateways` (Next.js API route)
+- **Description:** Retrieves the list of enabled payment gateways from WooCommerce, filtered by country/currency
+- **Query Parameters:**
+  - `country` (optional): ISO country code to filter gateways
+  - `currency` (optional): Currency code to filter gateways
+- **Caching:** 300 seconds (5 minutes)
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "gateways": [
+      {
+        "id": "string (e.g., myfatoorah, tabby, tamara, cod)",
+        "title": "string",
+        "description": "string",
+        "enabled": "boolean",
+        "order": "number"
+      }
+    ]
+  }
+  ```
+
+### Free Gifts API
+
+#### Get Free Gift Rules
+- **Endpoint:** `GET /api/free-gifts` (Next.js API route)
+- **Description:** Retrieves active free gift promotion rules from the WordPress backend
+- **Caching:** 300 seconds (5 minutes)
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "rules": [
+      {
+        "id": "number",
+        "enabled": "boolean",
+        "min_amount": "number",
+        "gift_product_id": "number",
+        "gift_product_name": "string",
+        "gift_product_image": "string",
+        "message": "string"
+      }
+    ]
+  }
+  ```
+
+### Bundle Slugs API
+
+#### Get Bundle Product Slugs
+- **Endpoint:** `GET /api/bundle-slugs` (Next.js API route)
+- **Description:** Returns the slugs of all enabled bundle products for frontend routing
+- **Caching:** 60 seconds
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "slugs": ["string"]
+  }
+  ```
+
+### CSRF Token API
+
+#### Get CSRF Token
+- **Endpoint:** `GET /api/csrf` (Next.js API route)
+- **Description:** Generates a CSRF token and sets it as an HttpOnly cookie. Used for form protection.
+- **Response:**
+  ```json
+  {
+    "token": "string"
+  }
+  ```
+- **Cookie Set:** `csrf_token` (HttpOnly, Secure, SameSite=Strict)
+
+### Contact Form API
+
+#### Submit Contact Form
+- **Endpoint:** `POST /api/contact` (Next.js API route)
+- **Description:** Submits a contact form message. Sends email notification to site administrators.
+- **Request Body:**
+  ```json
+  {
+    "name": "string",
+    "email": "string",
+    "subject": "string (optional)",
+    "message": "string",
+    "phone": "string (optional)"
+  }
+  ```
+- **Response (Success):**
+  ```json
+  {
+    "success": true,
+    "message": "Message sent successfully"
+  }
+  ```
+- **Response (Error):**
+  ```json
+  {
+    "success": false,
+    "error": {
+      "code": "validation_error | send_failed",
+      "message": "string"
+    }
+  }
+  ```
+
+### Newsletter API
+
+#### Subscribe to Newsletter
+- **Endpoint:** `POST /api/newsletter` (Next.js API route)
+- **Description:** Subscribes an email address to the newsletter mailing list
+- **Request Body:**
+  ```json
+  {
+    "email": "string"
+  }
+  ```
+- **Response (Success):**
+  ```json
+  {
+    "success": true,
+    "message": "Successfully subscribed to newsletter"
+  }
+  ```
+- **Response (Error):**
+  ```json
+  {
+    "success": false,
+    "error": {
+      "code": "validation_error | already_subscribed | subscription_failed",
+      "message": "string"
+    }
+  }
+  ```
+
+### Health Check API
+
+#### Health Check
+- **Endpoint:** `GET /api/health` or `HEAD /api/health` (Next.js API route)
+- **Description:** Returns a simple health check response for monitoring and uptime checks
+- **Response:**
+  ```json
+  {
+    "status": "ok"
+  }
+  ```
+
+### Debug Backend API
+
+#### Debug Backend Connectivity
+- **Endpoint:** `GET /api/debug-backend` (Next.js API route)
+- **Description:** Diagnostic endpoint that tests connectivity to the WordPress backend and reports configuration status
+- **Response:**
+  ```json
+  {
+    "backend_url": "string",
+    "has_consumer_key": "boolean",
+    "has_consumer_secret": "boolean",
+    "wp_api_accessible": "boolean",
+    "wc_api_accessible": "boolean",
+    "cocart_accessible": "boolean",
+    "errors": ["string"]
+  }
+  ```
+
+### MyFatoorah Payment APIs
+
+All MyFatoorah endpoints proxy to the MyFatoorah API using server-side credentials. The API key and country code are stored as environment variables (`MYFATOORAH_API_KEY`, `MYFATOORAH_COUNTRY`). Test mode is controlled by `MYFATOORAH_TEST_MODE`.
+
+#### Create Payment Session (Embedded)
+- **Endpoint:** `POST /api/myfatoorah/create-session` (Next.js API route)
+- **Description:** Creates an embedded payment session for the MyFatoorah payment form. Supports multiple payment methods and saved cards.
+- **Request Body:**
+  ```json
+  {
+    "order_id": "number",
+    "order_key": "string",
+    "amount": "number",
+    "currency": "string (e.g., AED, SAR, KWD)",
+    "customer_name": "string",
+    "customer_email": "string",
+    "customer_phone": "string (optional)",
+    "customer_reference": "string (optional)",
+    "language": "string (en or ar, optional)"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "session_id": "string",
+    "country_code": "string"
+  }
+  ```
+
+#### Initiate Payment (Redirect)
+- **Endpoint:** `POST /api/myfatoorah/initiate-payment` (Next.js API route)
+- **Description:** Initiates a redirect-based MyFatoorah payment. Customer is redirected to MyFatoorah's payment page.
+- **Request Body:**
+  ```json
+  {
+    "order_id": "number",
+    "order_key": "string",
+    "amount": "number",
+    "currency": "string",
+    "customer_name": "string",
+    "customer_email": "string",
+    "customer_phone": "string (optional)",
+    "payment_method_id": "number (optional)",
+    "callback_url": "string",
+    "error_url": "string",
+    "language": "string (optional)"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "payment_url": "string (redirect URL)",
+    "invoice_id": "number"
+  }
+  ```
+
+#### Verify Payment
+- **Endpoint:** `GET /api/myfatoorah/verify-payment` (Next.js API route)
+- **Description:** Verifies the status of a MyFatoorah payment after customer returns from payment page
+- **Query Parameters:**
+  - `paymentId` (required): The MyFatoorah payment/invoice ID
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "payment_status": "string (Paid, Failed, Pending, etc.)",
+    "invoice_id": "number",
+    "invoice_status": "string",
+    "invoice_reference": "string",
+    "order_reference": "string",
+    "amount": "number",
+    "currency": "string",
+    "payment_method": "string",
+    "customer_name": "string",
+    "customer_email": "string"
+  }
+  ```
+
+#### Get Payment Details
+- **Endpoint:** `GET /api/myfatoorah/get-payment` (Next.js API route)
+- **Description:** Retrieves detailed payment information including transaction details
+- **Query Parameters:**
+  - `paymentId` (required): The MyFatoorah payment ID
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "payment_id": "string",
+    "status": "string",
+    "payment_method": "string",
+    "amount": "number",
+    "currency": "string",
+    "transaction_date": "string",
+    "order": { "id": "string", "reference": "string" },
+    "customer": { "name": "string", "email": "string" },
+    "card": { "number": "string", "brand": "string" },
+    "authorization_id": "string",
+    "reference_id": "string",
+    "track_id": "string"
+  }
+  ```
+
+#### Get Session Details
+- **Endpoint:** `GET /api/myfatoorah/get-session` (Next.js API route)
+- **Description:** Retrieves MyFatoorah payment session details
+- **Query Parameters:**
+  - `sessionId` (required): The session ID
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "session_id": "string",
+    "session_expiry": "string",
+    "status": "string",
+    "operation_type": "string",
+    "order": { "id": "string", "reference": "string", "amount": "number", "currency": "string" },
+    "customer": { "name": "string", "email": "string" },
+    "transaction": { "id": "string", "status": "string", "payment_method": "string" }
+  }
+  ```
+
+#### Get Customer Details
+- **Endpoint:** `GET /api/myfatoorah/get-customer` (Next.js API route)
+- **Description:** Retrieves customer details from MyFatoorah including saved payment cards
+- **Query Parameters:**
+  - `customerIdentifier` (required): Customer email or phone
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "customer": {
+      "name": "string",
+      "email": "string",
+      "phone": "string",
+      "saved_cards": [
+        {
+          "token": "string",
+          "card_number": "string (masked)",
+          "brand": "string",
+          "expiry": "string"
+        }
+      ]
+    }
+  }
+  ```
+
+#### Refund
+- **Endpoint:** `POST /api/myfatoorah/refund` (Next.js API route)
+- **Description:** Creates a refund for a MyFatoorah payment
+- **Request Body:**
+  ```json
+  {
+    "invoice_id": "number",
+    "key_type": "string (InvoiceId or PaymentId)",
+    "amount": "number",
+    "comment": "string (optional)",
+    "order_id": "number (WooCommerce order ID, optional)"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "refund_id": "string",
+    "refund_reference": "string",
+    "amount": "number",
+    "status": "string"
+  }
+  ```
+
+#### Get Refund Status
+- **Endpoint:** `GET /api/myfatoorah/refund` (Next.js API route)
+- **Description:** Retrieves the status of a refund
+- **Query Parameters:**
+  - `refundId` (required): The refund ID
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "refund_id": "string",
+    "status": "string",
+    "amount": "number",
+    "comment": "string"
+  }
+  ```
+
+#### Sync Orders
+- **Endpoint:** `POST /api/myfatoorah/sync-orders` (Next.js API route)
+- **Description:** Syncs WooCommerce order status with MyFatoorah payment status. Updates order status and adds payment notes.
+- **Request Body:**
+  ```json
+  {
+    "order_id": "number (WooCommerce order ID)",
+    "invoice_id": "number (MyFatoorah invoice ID, optional)"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "order_id": "number",
+    "previous_status": "string",
+    "new_status": "string",
+    "payment_status": "string",
+    "synced": "boolean"
+  }
+  ```
+
+#### Get Order Sync Details
+- **Endpoint:** `GET /api/myfatoorah/sync-orders` (Next.js API route)
+- **Description:** Retrieves MyFatoorah payment details for a WooCommerce order
+- **Query Parameters:**
+  - `orderId` (required): WooCommerce order ID
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "order_id": "number",
+    "order_status": "string",
+    "payment_details": {
+      "invoice_id": "number",
+      "payment_status": "string",
+      "amount": "number",
+      "currency": "string",
+      "payment_method": "string"
+    }
+  }
+  ```
+
+### Tabby Payment APIs
+
+Tabby endpoints proxy to the Tabby v2 Checkout API. Credentials are stored as `TABBY_SECRET_KEY` and `TABBY_MERCHANT_CODE`.
+
+#### Create Tabby Session
+- **Endpoint:** `POST /api/tabby/create-session` (Next.js API route)
+- **Description:** Creates a Tabby BNPL checkout session. Customer is redirected to Tabby to complete payment in installments.
+- **Request Body:**
+  ```json
+  {
+    "order_id": "number",
+    "order_key": "string",
+    "amount": "number",
+    "currency": "string",
+    "description": "string (optional)",
+    "buyer": {
+      "name": "string",
+      "email": "string",
+      "phone": "string"
+    },
+    "shipping_address": {
+      "city": "string",
+      "address": "string",
+      "zip": "string (optional)"
+    },
+    "order_items": [
+      {
+        "title": "string",
+        "quantity": "number",
+        "unit_price": "number",
+        "category": "string (optional)"
+      }
+    ],
+    "tax_amount": "number (optional)",
+    "shipping_amount": "number (optional)",
+    "discount_amount": "number (optional)",
+    "language": "string (optional)",
+    "success_url": "string",
+    "cancel_url": "string",
+    "failure_url": "string"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "payment_url": "string (Tabby checkout URL)",
+    "session_id": "string",
+    "status": "string (created)"
+  }
+  ```
+
+#### Verify Tabby Payment
+- **Endpoint:** `GET /api/tabby/verify-payment` (Next.js API route)
+- **Description:** Verifies the status of a Tabby payment
+- **Query Parameters:**
+  - `payment_id` (required): Tabby payment ID
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "payment_status": "string (authorized, closed, rejected, expired)",
+    "status_message": "string",
+    "payment_id": "string",
+    "tabby_status": "string",
+    "amount": "number",
+    "currency": "string",
+    "order_reference": "string",
+    "is_test": "boolean",
+    "captures": [],
+    "refunds": []
+  }
+  ```
+- **Payment Statuses:**
+  - `CREATED` - Session created, awaiting customer
+  - `AUTHORIZED` - Payment authorized (success)
+  - `CLOSED` - Payment captured/completed
+  - `REJECTED` - Payment rejected by Tabby
+  - `EXPIRED` - Session expired
+
+### Tamara Payment APIs
+
+Tamara endpoints proxy to the Tamara API. Credentials are stored as `TAMARA_API_TOKEN`. Test mode is controlled by `TAMARA_TEST_MODE`.
+
+#### Create Tamara Checkout
+- **Endpoint:** `POST /api/tamara/create-checkout` (Next.js API route)
+- **Description:** Creates a Tamara BNPL checkout session for installment payments
+- **Request Body:**
+  ```json
+  {
+    "order_id": "number",
+    "order_key": "string",
+    "total_amount": "number",
+    "currency": "string",
+    "country_code": "string (e.g., AE, SA)",
+    "payment_type": "string (optional, e.g., PAY_BY_INSTALMENTS)",
+    "locale": "string (optional, e.g., en_US, ar_SA)",
+    "consumer": {
+      "first_name": "string",
+      "last_name": "string",
+      "email": "string",
+      "phone_number": "string"
+    },
+    "billing_address": {
+      "first_name": "string",
+      "last_name": "string",
+      "line1": "string",
+      "city": "string",
+      "country_code": "string"
+    },
+    "shipping_address": {
+      "first_name": "string",
+      "last_name": "string",
+      "line1": "string",
+      "city": "string",
+      "country_code": "string"
+    },
+    "items": [
+      {
+        "name": "string",
+        "quantity": "number",
+        "unit_price": "number",
+        "type": "string (optional)",
+        "sku": "string (optional)"
+      }
+    ],
+    "tax_amount": "number (optional)",
+    "shipping_amount": "number (optional)",
+    "discount_amount": "number (optional)",
+    "discount_name": "string (optional)",
+    "success_url": "string",
+    "failure_url": "string",
+    "cancel_url": "string"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "checkout_url": "string (Tamara checkout URL)",
+    "order_id": "string (Tamara order ID)"
+  }
+  ```
+
+#### Verify Tamara Payment
+- **Endpoint:** `GET /api/tamara/verify-payment` (Next.js API route)
+- **Description:** Verifies the status of a Tamara order/payment
+- **Query Parameters:**
+  - `order_id` (required): Tamara order ID
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "payment_status": "string (approved, declined, etc.)",
+    "status_message": "string",
+    "order_id": "string",
+    "tamara_status": "string",
+    "order_reference": "string",
+    "order_number": "string",
+    "amount": "number",
+    "currency": "string",
+    "paid_amount": "number",
+    "captured_amount": "number",
+    "refunded_amount": "number"
+  }
+  ```
+- **Payment Statuses:**
+  - `new` - Order created
+  - `approved` - Customer approved payment
+  - `authorised` - Payment authorized
+  - `captured` - Payment captured (success)
+  - `declined` - Payment declined
+  - `canceled` - Order cancelled
+  - `expired` - Order expired
+  - `refunded` - Payment refunded
+
 ### Error Response Format
 
 All API endpoints return errors in a consistent format:
