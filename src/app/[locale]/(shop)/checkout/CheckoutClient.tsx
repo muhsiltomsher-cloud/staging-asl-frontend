@@ -18,6 +18,7 @@ import { featureFlags, type Locale } from "@/config/site";
 import { MapPin, Check, ChevronDown, ChevronUp, Tag, X, Truck } from "lucide-react";
 import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice, getPricingMode, getFixedPrice, getBundleTotal } from "@/components/cart/BundleItemsList";
 import { PhoneInput } from "@/components/common/PhoneInput";
+import { useInfluencer } from "@/contexts/InfluencerContext";
 
 interface ShippingRate {
   rate_id: string;
@@ -145,6 +146,7 @@ export default function CheckoutClient() {
   const searchParams = useSearchParams();
         const { cart, cartItems, cartSubtotal, cartTotal, clearCart, applyCoupon, removeCoupon, selectedCoupons, couponDiscount, clearSelectedCoupons, isLoading: isCartLoading } = useCart();
         const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
+        const { referralCode, landingPage, visitDate } = useInfluencer();
         const { currency, convertPrice, getCurrencyInfo } = useCurrency();
     const isRTL = locale === "ar";
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -986,6 +988,17 @@ export default function CheckoutClient() {
 
       const billingEmail = billingData.email || formData.shipping.email || (isAuthenticated && user?.user_email ? user.user_email : "");
 
+      const orderMetaData: Array<{ key: string; value: string }> = [];
+      if (referralCode) {
+        orderMetaData.push({ key: "_influencer_ref", value: referralCode });
+        if (landingPage) {
+          orderMetaData.push({ key: "_influencer_landing_page", value: landingPage });
+        }
+        if (visitDate) {
+          orderMetaData.push({ key: "_influencer_visit_date", value: visitDate });
+        }
+      }
+
       const orderPayload = {
         payment_method: formData.paymentMethod,
         currency: currency || "AED",
@@ -1016,6 +1029,7 @@ export default function CheckoutClient() {
         shipping_lines: shippingLines,
         coupon_lines: couponLines,
         customer_note: formData.orderNotes,
+        ...(orderMetaData.length > 0 ? { meta_data: orderMetaData } : {}),
         ...(isAuthenticated && user?.user_id ? { customer_id: user.user_id } : newCustomerId ? { customer_id: newCustomerId } : {}),
       };
 

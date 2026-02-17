@@ -12,6 +12,7 @@ import { WishlistProvider } from "@/contexts/WishlistContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { FreeGiftProvider } from "@/contexts/FreeGiftContext";
+import { InfluencerProvider } from "@/contexts/InfluencerContext";
 import { getDictionary } from "@/i18n";
 import { siteConfig, localeConfig, type Locale } from "@/config/site";
 import { generateOrganizationJsonLd } from "@/lib/utils/seo";
@@ -154,6 +155,7 @@ export default async function LocaleLayout({
     <AuthProvider>
       <CurrencyProvider>
         <NotificationProvider>
+          <InfluencerProvider>
                                         <CartProvider locale={validLocale}>
                                           <FreeGiftProvider locale={validLocale}>
                       <WishlistProvider>
@@ -238,6 +240,7 @@ export default async function LocaleLayout({
                                                         </WishlistProvider>
                                             </FreeGiftProvider>
                     </CartProvider>
+          </InfluencerProvider>
         </NotificationProvider>
       </CurrencyProvider>
     </AuthProvider>

@@ -59,6 +59,11 @@ interface ShippingLine {
   total: string;
 }
 
+interface OrderMetaData {
+  key: string;
+  value: string;
+}
+
 interface CreateOrderRequest {
   payment_method: string;
   payment_method_title: string;
@@ -70,6 +75,7 @@ interface CreateOrderRequest {
   shipping_lines?: ShippingLine[];
   coupon_lines?: CouponLine[];
   fee_lines?: FeeLine[];
+  meta_data?: OrderMetaData[];
   customer_note?: string;
   customer_id?: number;
 }
@@ -248,6 +254,10 @@ export async function POST(request: NextRequest) {
 
     if (body.fee_lines && body.fee_lines.length > 0) {
       orderData.fee_lines = body.fee_lines;
+    }
+
+    if (body.meta_data && body.meta_data.length > 0) {
+      orderData.meta_data = body.meta_data;
     }
 
     if (body.customer_id) {
