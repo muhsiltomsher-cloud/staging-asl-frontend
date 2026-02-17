@@ -10,7 +10,6 @@
  * - Disables file editing from admin
  * - Blocks author enumeration via ?author= queries
  * - Adds security headers to WP responses
- * - Rate limits login attempts
  * 
  * @package ASL_Frontend_Settings
  * @since 5.10.0
@@ -19,8 +18,6 @@
 if (!defined('ABSPATH')) exit;
 
 class ASL_Security {
-
-    private $login_attempt_option = 'asl_login_attempts';
 
     public function __construct() {
         $this->disable_xmlrpc();
@@ -163,64 +160,16 @@ class ASL_Security {
     }
 
     /**
-     * Rate limit login attempts and add login security
+     * Add login page security (obfuscate errors, noindex login page)
      */
     private function protect_login() {
         add_filter('login_errors', function() {
             return 'Invalid credentials. Please try again.';
         });
 
-        add_action('wp_login_failed', array($this, 'log_failed_login'));
-        add_filter('authenticate', array($this, 'check_login_attempts'), 30, 3);
-
         add_action('login_head', function() {
             echo '<meta name="robots" content="noindex, nofollow">' . "\n";
         });
-    }
-
-    public function log_failed_login($username) {
-        $ip = $this->get_client_ip();
-        $attempts = get_transient($this->login_attempt_option . '_' . $ip);
-
-        if ($attempts === false) {
-            $attempts = 0;
-        }
-
-        $attempts++;
-        set_transient($this->login_attempt_option . '_' . $ip, $attempts, 15 * MINUTE_IN_SECONDS);
-    }
-
-    public function check_login_attempts($user, $username, $password) {
-        if (empty($username) || empty($password)) {
-            return $user;
-        }
-
-        $ip = $this->get_client_ip();
-        $attempts = get_transient($this->login_attempt_option . '_' . $ip);
-
-        if ($attempts !== false && $attempts >= 5) {
-            return new WP_Error(
-                'too_many_attempts',
-                sprintf(
-                    'Too many failed login attempts. Please try again in 15 minutes.',
-                    5
-                )
-            );
-        }
-
-        return $user;
-    }
-
-    private function get_client_ip() {
-        $ip = '';
-        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-            $ip = sanitize_text_field($_SERVER['HTTP_CLIENT_IP']);
-        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $ip = sanitize_text_field(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0]);
-        } elseif (!empty($_SERVER['REMOTE_ADDR'])) {
-            $ip = sanitize_text_field($_SERVER['REMOTE_ADDR']);
-        }
-        return $ip;
     }
 
     /**
