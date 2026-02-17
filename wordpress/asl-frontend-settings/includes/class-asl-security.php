@@ -6,6 +6,7 @@
  * - Blocks XML-RPC (brute force / DDoS vector)
  * - Disables REST API user enumeration
  * - Removes WordPress version fingerprinting
+ * - Redirects WP frontend visitors to main site
  * - Adds noindex/nofollow to WP frontend (headless CMS should not be indexed)
  * - Disables file editing from admin
  * - Blocks author enumeration via ?author= queries
@@ -19,10 +20,13 @@ if (!defined('ABSPATH')) exit;
 
 class ASL_Security {
 
+    private $frontend_redirect_url = 'https://aromaticscentslab.com';
+
     public function __construct() {
         $this->disable_xmlrpc();
         $this->hide_wp_version();
         $this->block_user_enumeration();
+        $this->redirect_frontend();
         $this->noindex_wp_frontend();
         $this->disable_file_editing();
         $this->add_security_headers();
@@ -99,6 +103,35 @@ class ASL_Security {
             }
             return $redirect_url;
         }, 10, 2);
+    }
+
+    /**
+     * Redirect WP frontend visitors to the main Next.js site.
+     * Admin, API, login, GraphQL, and cron requests are excluded.
+     */
+    private function redirect_frontend() {
+        add_action('template_redirect', function() {
+            if (is_admin()) return;
+            if (defined('DOING_AJAX') && DOING_AJAX) return;
+            if (defined('DOING_CRON') && DOING_CRON) return;
+            if (defined('REST_REQUEST') && REST_REQUEST) return;
+            if (defined('XMLRPC_REQUEST') && XMLRPC_REQUEST) return;
+
+            $uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+            if (
+                strpos($uri, '/wp-admin') !== false ||
+                strpos($uri, '/wp-login') !== false ||
+                strpos($uri, '/wp-json') !== false ||
+                strpos($uri, '/graphql') !== false ||
+                strpos($uri, 'wc-auth') !== false ||
+                strpos($uri, 'wp-cron') !== false
+            ) {
+                return;
+            }
+
+            wp_redirect($this->frontend_redirect_url, 301);
+            exit;
+        }, 1);
     }
 
     /**
