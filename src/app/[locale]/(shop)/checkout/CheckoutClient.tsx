@@ -13,7 +13,7 @@ import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { getCustomer, getSavedAddressesFromCustomer, resolveCountryCode, type Customer, type SavedAddress } from "@/lib/api/customer";
+import { getCustomer, getSavedAddressesFromCustomer, saveSavedAddresses, generateAddressId, resolveCountryCode, type Customer, type SavedAddress } from "@/lib/api/customer";
 import { featureFlags, type Locale } from "@/config/site";
 import { MapPin, Check, ChevronDown, ChevronUp, Tag, X, Truck } from "lucide-react";
 import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice, getPricingMode, getFixedPrice, getBundleTotal } from "@/components/cart/BundleItemsList";
@@ -1031,6 +1031,53 @@ export default function CheckoutClient() {
 
       if (!data.success) {
         throw new Error(data.error?.message || "Failed to create order");
+      }
+
+      if (isAuthenticated && user?.user_id) {
+        (async () => {
+          try {
+            const addressExists = savedAddresses.some(
+              (addr) =>
+                addr.address_1 === formData.shipping.address &&
+                addr.city === formData.shipping.city &&
+                addr.country === formData.shipping.country
+            );
+
+            if (!addressExists) {
+              const newAddress: SavedAddress = {
+                id: generateAddressId(),
+                label: savedAddresses.length === 0 ? "Home" : "Home",
+                first_name: formData.shipping.firstName,
+                last_name: formData.shipping.lastName,
+                company: "",
+                address_1: formData.shipping.address,
+                address_2: formData.shipping.address2,
+                city: formData.shipping.city,
+                state: formData.shipping.state,
+                postcode: formData.shipping.postalCode,
+                country: formData.shipping.country,
+                phone: formData.shipping.phone,
+                email: formData.shipping.email || user.user_email || "",
+                is_default: savedAddresses.length === 0,
+              };
+              const updatedAddresses = newAddress.is_default
+                ? [newAddress, ...savedAddresses]
+                : [...savedAddresses, newAddress];
+              await saveSavedAddresses(user.user_id, updatedAddresses);
+            }
+
+            await fetch(`/api/customer?customerId=${user.user_id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                billing: orderPayload.billing,
+                shipping: orderPayload.shipping,
+              }),
+            });
+          } catch (err) {
+            console.error("Failed to save address to profile:", err);
+          }
+        })();
       }
 
             // Check payment method type and handle accordingly
