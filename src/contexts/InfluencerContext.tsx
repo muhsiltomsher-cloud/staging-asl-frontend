@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
+import React, { Suspense, createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, usePathname } from "next/navigation";
 
 const STORAGE_KEY = "asl_influencer_ref";
@@ -88,10 +88,9 @@ interface InfluencerProviderProps {
   children: React.ReactNode;
 }
 
-export function InfluencerProvider({ children }: InfluencerProviderProps) {
+function InfluencerRefCapture({ dispatch }: { dispatch: React.ActionDispatch<[action: InfluencerAction]> }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const [state, dispatch] = useReducer(influencerReducer, null, getInitialState);
   const hasTrackedVisitRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -112,7 +111,13 @@ export function InfluencerProvider({ children }: InfluencerProviderProps) {
         body: JSON.stringify({ code, landing_page: pathname }),
       }).catch(() => {});
     }
-  }, [searchParams, pathname]);
+  }, [searchParams, pathname, dispatch]);
+
+  return null;
+}
+
+export function InfluencerProvider({ children }: InfluencerProviderProps) {
+  const [state, dispatch] = useReducer(influencerReducer, null, getInitialState);
 
   const clearReferral = useCallback(() => {
     if (typeof window !== "undefined") {
@@ -130,6 +135,9 @@ export function InfluencerProvider({ children }: InfluencerProviderProps) {
         clearReferral,
       }}
     >
+      <Suspense fallback={null}>
+        <InfluencerRefCapture dispatch={dispatch} />
+      </Suspense>
       {children}
     </InfluencerContext.Provider>
   );
