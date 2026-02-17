@@ -68,3 +68,6 @@ require_once ASL_SETTINGS_PATH . 'includes/class-asl-frontend-urls.php';
 
 // Include Email Templates module (custom WooCommerce email templates)
 require_once ASL_SETTINGS_PATH . 'includes/class-asl-email-templates.php';
+
+// Include Security module (XML-RPC blocking, user enumeration prevention, noindex WP frontend, login rate limiting)
+require_once ASL_SETTINGS_PATH . 'includes/class-asl-security.php';
