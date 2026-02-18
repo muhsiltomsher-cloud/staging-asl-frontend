@@ -487,149 +487,186 @@ function asl_influencer_render_stats_tab() {
         </tbody>
     </table>
 
-    <?php foreach ($influencer_stats as $stat): ?>
-    <div style="margin-top:35px;padding-top:20px;border-top:2px solid #0073aa;">
-        <h2 style="margin:0 0 5px 0;color:#1d2327;">
-            <?php echo esc_html($stat['name']); ?>
-            <span style="font-weight:normal;font-size:14px;color:#666;margin-left:10px;"><?php echo esc_html(ucfirst($stat['platform'])); ?> &bull; <code><?php echo esc_html($stat['code']); ?></code></span>
-            <?php echo $stat['active'] ? '<span style="background:#dff0d8;color:#3c763d;padding:2px 8px;border-radius:3px;font-size:11px;margin-left:8px;">Active</span>' : '<span style="background:#eee;color:#999;padding:2px 8px;border-radius:3px;font-size:11px;margin-left:8px;">Inactive</span>'; ?>
-        </h2>
-        <p style="margin:0 0 15px 0;color:#666;">
-            Tracking URL: <input type="text" value="<?php echo esc_attr($stat['tracking_url']); ?>" readonly onclick="this.select();" style="cursor:pointer;font-size:12px;width:350px;padding:3px 6px;">
-        </p>
+    <h3 style="margin-top:30px;">Influencer Details <span style="font-weight:normal;font-size:13px;color:#666;">— click an influencer to expand</span></h3>
 
-        <div style="display:flex;gap:10px;margin:0 0 20px 0;flex-wrap:wrap;">
-            <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;padding:12px 16px;min-width:100px;text-align:center;">
-                <div style="font-size:20px;font-weight:700;"><?php echo number_format($stat['visits']); ?></div>
-                <div style="font-size:11px;color:#666;">Visits</div>
+    <?php foreach ($influencer_stats as $idx => $stat): ?>
+    <div style="margin-bottom:2px;border:1px solid #ccd0d4;border-radius:4px;overflow:hidden;">
+        <div class="asl-accordion-header" data-target="asl-detail-<?php echo $idx; ?>" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#f9f9f9;cursor:pointer;user-select:none;transition:background 0.15s;" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background=this.classList.contains('asl-open')?'#f0f6fc':'#f9f9f9'">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <span class="asl-arrow" style="display:inline-block;transition:transform 0.2s;font-size:12px;color:#666;">&#9654;</span>
+                <strong style="font-size:14px;color:#1d2327;"><?php echo esc_html($stat['name']); ?></strong>
+                <span style="font-size:12px;color:#666;"><?php echo esc_html(ucfirst($stat['platform'])); ?></span>
+                <code style="font-size:11px;background:#eee;padding:1px 6px;border-radius:3px;"><?php echo esc_html($stat['code']); ?></code>
+                <?php echo $stat['active'] ? '<span style="background:#dff0d8;color:#3c763d;padding:1px 6px;border-radius:3px;font-size:10px;">Active</span>' : '<span style="background:#eee;color:#999;padding:1px 6px;border-radius:3px;font-size:10px;">Inactive</span>'; ?>
             </div>
-            <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;padding:12px 16px;min-width:100px;text-align:center;">
-                <div style="font-size:20px;font-weight:700;"><?php echo number_format($stat['orders']); ?></div>
-                <div style="font-size:11px;color:#666;">Orders</div>
-            </div>
-            <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;padding:12px 16px;min-width:100px;text-align:center;">
-                <div style="font-size:20px;font-weight:700;"><?php echo esc_html($currency_symbol); ?> <?php echo number_format($stat['revenue'], 2); ?></div>
-                <div style="font-size:11px;color:#666;">Revenue</div>
-            </div>
-            <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;padding:12px 16px;min-width:100px;text-align:center;">
-                <div style="font-size:20px;font-weight:700;"><?php echo esc_html($currency_symbol); ?> <?php echo number_format($stat['avg_order_value'], 2); ?></div>
-                <div style="font-size:11px;color:#666;">Avg Order</div>
-            </div>
-            <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;padding:12px 16px;min-width:100px;text-align:center;">
-                <div style="font-size:20px;font-weight:700;"><?php echo $stat['conversion_rate']; ?>%</div>
-                <div style="font-size:11px;color:#666;">Conversion</div>
-            </div>
-            <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;padding:12px 16px;min-width:100px;text-align:center;">
-                <div style="font-size:20px;font-weight:700;"><?php echo number_format($stat['free_gifts']); ?></div>
-                <div style="font-size:11px;color:#666;">Free Gifts</div>
+            <div style="display:flex;align-items:center;gap:16px;font-size:12px;color:#555;">
+                <span><strong><?php echo number_format($stat['orders']); ?></strong> orders</span>
+                <span><strong><?php echo esc_html($currency_symbol); ?> <?php echo number_format($stat['revenue'], 2); ?></strong></span>
+                <span style="color:<?php echo $stat['profit'] >= 0 ? '#0a6b0a' : '#a00'; ?>;font-weight:600;">
+                    <?php echo $stat['profit'] >= 0 ? '+' : ''; ?><?php echo esc_html($currency_symbol); ?> <?php echo number_format($stat['profit'], 2); ?>
+                </span>
+                <?php if ($stat['total_cost'] > 0): ?>
+                <span style="color:<?php echo $stat['roi'] >= 0 ? '#0a6b0a' : '#a00'; ?>;font-weight:600;"><?php echo number_format($stat['roi'], 1); ?>% ROI</span>
+                <?php endif; ?>
             </div>
         </div>
+        <div id="asl-detail-<?php echo $idx; ?>" class="asl-accordion-body" style="display:none;padding:20px;border-top:1px solid #ddd;background:#fff;">
+            <p style="margin:0 0 15px 0;color:#666;">
+                Tracking URL: <input type="text" value="<?php echo esc_attr($stat['tracking_url']); ?>" readonly onclick="this.select();" style="cursor:pointer;font-size:12px;width:350px;padding:3px 6px;">
+            </p>
 
-        <div style="display:flex;gap:10px;margin:0 0 20px 0;flex-wrap:wrap;">
-            <div style="background:#fff5f5;border:1px solid #e6a8a8;border-radius:4px;padding:12px 16px;min-width:120px;text-align:center;">
-                <div style="font-size:18px;font-weight:700;color:#a00;"><?php echo esc_html($currency_symbol); ?> <?php echo number_format($stat['total_cost'], 2); ?></div>
-                <div style="font-size:11px;color:#666;">Total Cost</div>
-                <div style="font-size:10px;color:#999;margin-top:2px;">
-                    <?php
-                    $cost_parts = array();
-                    if ($stat['commission_rate'] > 0) $cost_parts[] = $stat['commission_rate'] . '% comm = ' . $currency_symbol . ' ' . number_format($stat['total_commission'], 2);
-                    if ($stat['fixed_amount'] > 0) $cost_parts[] = 'Fixed = ' . $currency_symbol . ' ' . number_format($stat['fixed_amount'], 2);
-                    echo !empty($cost_parts) ? esc_html(implode(' + ', $cost_parts)) : 'No cost set';
-                    ?>
+            <div style="display:flex;gap:10px;margin:0 0 20px 0;flex-wrap:wrap;">
+                <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;padding:12px 16px;min-width:100px;text-align:center;">
+                    <div style="font-size:20px;font-weight:700;"><?php echo number_format($stat['visits']); ?></div>
+                    <div style="font-size:11px;color:#666;">Visits</div>
+                </div>
+                <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;padding:12px 16px;min-width:100px;text-align:center;">
+                    <div style="font-size:20px;font-weight:700;"><?php echo number_format($stat['orders']); ?></div>
+                    <div style="font-size:11px;color:#666;">Orders</div>
+                </div>
+                <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;padding:12px 16px;min-width:100px;text-align:center;">
+                    <div style="font-size:20px;font-weight:700;"><?php echo esc_html($currency_symbol); ?> <?php echo number_format($stat['revenue'], 2); ?></div>
+                    <div style="font-size:11px;color:#666;">Revenue</div>
+                </div>
+                <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;padding:12px 16px;min-width:100px;text-align:center;">
+                    <div style="font-size:20px;font-weight:700;"><?php echo esc_html($currency_symbol); ?> <?php echo number_format($stat['avg_order_value'], 2); ?></div>
+                    <div style="font-size:11px;color:#666;">Avg Order</div>
+                </div>
+                <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;padding:12px 16px;min-width:100px;text-align:center;">
+                    <div style="font-size:20px;font-weight:700;"><?php echo $stat['conversion_rate']; ?>%</div>
+                    <div style="font-size:11px;color:#666;">Conversion</div>
+                </div>
+                <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;padding:12px 16px;min-width:100px;text-align:center;">
+                    <div style="font-size:20px;font-weight:700;"><?php echo number_format($stat['free_gifts']); ?></div>
+                    <div style="font-size:11px;color:#666;">Free Gifts</div>
                 </div>
             </div>
-            <div style="background:<?php echo $stat['profit'] >= 0 ? '#f0faf0' : '#fff5f5'; ?>;border:1px solid <?php echo $stat['profit'] >= 0 ? '#b8dab8' : '#e6a8a8'; ?>;border-radius:4px;padding:12px 16px;min-width:120px;text-align:center;">
-                <div style="font-size:18px;font-weight:700;color:<?php echo $stat['profit'] >= 0 ? '#0a6b0a' : '#a00'; ?>;"><?php echo esc_html($currency_symbol); ?> <?php echo number_format($stat['profit'], 2); ?></div>
-                <div style="font-size:11px;color:#666;">Net Profit</div>
-            </div>
-            <div style="background:<?php echo $stat['roi'] >= 0 ? '#f0faf0' : '#fff5f5'; ?>;border:1px solid <?php echo $stat['roi'] >= 0 ? '#b8dab8' : '#e6a8a8'; ?>;border-radius:4px;padding:12px 16px;min-width:120px;text-align:center;">
-                <div style="font-size:18px;font-weight:700;color:<?php echo $stat['roi'] >= 0 ? '#0a6b0a' : '#a00'; ?>;">
-                    <?php echo $stat['total_cost'] > 0 ? number_format($stat['roi'], 1) . '%' : '&mdash;'; ?>
-                </div>
-                <div style="font-size:11px;color:#666;">ROI</div>
-            </div>
-        </div>
 
-        <?php if (!empty($stat['top_cities']) || !empty($stat['top_products'])): ?>
-        <div style="display:flex;gap:20px;margin:0 0 20px 0;flex-wrap:wrap;">
-            <?php if (!empty($stat['top_cities'])): ?>
-            <div style="flex:1;min-width:200px;">
-                <h4 style="margin:0 0 8px 0;font-size:13px;color:#1d2327;">Top Cities</h4>
-                <table class="widefat" style="width:auto;">
-                    <?php foreach ($stat['top_cities'] as $city_name => $city_count): ?>
-                    <tr><td><?php echo esc_html($city_name); ?></td><td><strong><?php echo intval($city_count); ?></strong> orders</td></tr>
-                    <?php endforeach; ?>
-                </table>
-            </div>
-            <?php endif; ?>
-            <?php if (!empty($stat['top_products'])): ?>
-            <div style="flex:1;min-width:200px;">
-                <h4 style="margin:0 0 8px 0;font-size:13px;color:#1d2327;">Top Products</h4>
-                <table class="widefat" style="width:auto;">
-                    <?php foreach ($stat['top_products'] as $prod_name => $prod_count): ?>
-                    <tr><td><?php echo esc_html($prod_name); ?></td><td><strong><?php echo intval($prod_count); ?></strong> sold</td></tr>
-                    <?php endforeach; ?>
-                </table>
-            </div>
-            <?php endif; ?>
-        </div>
-        <?php endif; ?>
-
-        <?php if (!empty($stat['order_details'])): ?>
-        <h4 style="margin:0 0 8px 0;font-size:13px;color:#1d2327;">
-            Orders (<?php echo count($stat['order_details']); ?> total, <?php echo esc_html($currency_symbol); ?> <?php echo number_format($stat['revenue'], 2); ?> revenue)
-        </h4>
-        <table class="wp-list-table widefat fixed striped" style="margin-top:0;">
-            <thead>
-                <tr>
-                    <th style="width:6%;">Order #</th>
-                    <th style="width:10%;">Date</th>
-                    <th style="width:6%;">Status</th>
-                    <th style="width:11%;">Customer</th>
-                    <th style="width:10%;">Email</th>
-                    <th style="width:8%;">Phone</th>
-                    <th style="width:8%;">Amount</th>
-                    <th style="width:7%;">Commission</th>
-                    <th style="width:4%;">Items</th>
-                    <th style="width:7%;">City</th>
-                    <th style="width:5%;">Country</th>
-                    <th style="width:7%;">Payment</th>
-                    <th style="width:4%;">Gift</th>
-                    <th style="width:7%;">Landing Page</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($stat['order_details'] as $od): ?>
-                <tr>
-                    <td><a href="<?php echo esc_url(admin_url('post.php?post=' . $od['id'] . '&action=edit')); ?>">#<?php echo intval($od['id']); ?></a></td>
-                    <td><?php echo esc_html($od['date']); ?></td>
-                    <td>
+            <div style="display:flex;gap:10px;margin:0 0 20px 0;flex-wrap:wrap;">
+                <div style="background:#fff5f5;border:1px solid #e6a8a8;border-radius:4px;padding:12px 16px;min-width:120px;text-align:center;">
+                    <div style="font-size:18px;font-weight:700;color:#a00;"><?php echo esc_html($currency_symbol); ?> <?php echo number_format($stat['total_cost'], 2); ?></div>
+                    <div style="font-size:11px;color:#666;">Total Cost</div>
+                    <div style="font-size:10px;color:#999;margin-top:2px;">
                         <?php
-                        $status_colors = array('completed' => '#7ad03a', 'processing' => '#73a724', 'on-hold' => '#999', 'pending' => '#f0ad4e', 'cancelled' => '#a00', 'refunded' => '#999', 'failed' => '#a00');
-                        $s_color = isset($status_colors[$od['status']]) ? $status_colors[$od['status']] : '#666';
+                        $cost_parts = array();
+                        if ($stat['commission_rate'] > 0) $cost_parts[] = $stat['commission_rate'] . '% comm = ' . $currency_symbol . ' ' . number_format($stat['total_commission'], 2);
+                        if ($stat['fixed_amount'] > 0) $cost_parts[] = 'Fixed = ' . $currency_symbol . ' ' . number_format($stat['fixed_amount'], 2);
+                        echo !empty($cost_parts) ? esc_html(implode(' + ', $cost_parts)) : 'No cost set';
                         ?>
-                        <span style="color:<?php echo esc_attr($s_color); ?>;"><?php echo esc_html(ucfirst($od['status'])); ?></span>
-                    </td>
-                    <td><?php echo esc_html($od['customer']); ?></td>
-                    <td style="font-size:11px;"><?php echo esc_html($od['email']); ?></td>
-                    <td style="font-size:11px;"><?php echo esc_html($od['phone']); ?></td>
-                    <td><strong><?php echo esc_html($currency_symbol); ?> <?php echo number_format($od['total'], 2); ?></strong></td>
-                    <td style="color:#a00;"><?php echo esc_html($currency_symbol); ?> <?php echo number_format($od['commission'], 2); ?></td>
-                    <td><?php echo intval($od['items']); ?></td>
-                    <td><?php echo esc_html($od['city']); ?></td>
-                    <td><?php echo esc_html($od['country']); ?></td>
-                    <td><?php echo esc_html($od['payment']); ?></td>
-                    <td><?php echo $od['has_gift'] ? '<span style="color:green;">Yes</span>' : '<span style="color:#ccc;">No</span>'; ?></td>
-                    <td style="font-size:11px;"><?php echo esc_html($od['landing_page'] ?: '—'); ?></td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-        <?php else: ?>
-        <p style="color:#999;font-style:italic;">No orders yet for this influencer.</p>
-        <?php endif; ?>
+                    </div>
+                </div>
+                <div style="background:<?php echo $stat['profit'] >= 0 ? '#f0faf0' : '#fff5f5'; ?>;border:1px solid <?php echo $stat['profit'] >= 0 ? '#b8dab8' : '#e6a8a8'; ?>;border-radius:4px;padding:12px 16px;min-width:120px;text-align:center;">
+                    <div style="font-size:18px;font-weight:700;color:<?php echo $stat['profit'] >= 0 ? '#0a6b0a' : '#a00'; ?>;"><?php echo esc_html($currency_symbol); ?> <?php echo number_format($stat['profit'], 2); ?></div>
+                    <div style="font-size:11px;color:#666;">Net Profit</div>
+                </div>
+                <div style="background:<?php echo $stat['roi'] >= 0 ? '#f0faf0' : '#fff5f5'; ?>;border:1px solid <?php echo $stat['roi'] >= 0 ? '#b8dab8' : '#e6a8a8'; ?>;border-radius:4px;padding:12px 16px;min-width:120px;text-align:center;">
+                    <div style="font-size:18px;font-weight:700;color:<?php echo $stat['roi'] >= 0 ? '#0a6b0a' : '#a00'; ?>;">
+                        <?php echo $stat['total_cost'] > 0 ? number_format($stat['roi'], 1) . '%' : '&mdash;'; ?>
+                    </div>
+                    <div style="font-size:11px;color:#666;">ROI</div>
+                </div>
+            </div>
+
+            <?php if (!empty($stat['top_cities']) || !empty($stat['top_products'])): ?>
+            <div style="display:flex;gap:20px;margin:0 0 20px 0;flex-wrap:wrap;">
+                <?php if (!empty($stat['top_cities'])): ?>
+                <div style="flex:1;min-width:200px;">
+                    <h4 style="margin:0 0 8px 0;font-size:13px;color:#1d2327;">Top Cities</h4>
+                    <table class="widefat" style="width:auto;">
+                        <?php foreach ($stat['top_cities'] as $city_name => $city_count): ?>
+                        <tr><td><?php echo esc_html($city_name); ?></td><td><strong><?php echo intval($city_count); ?></strong> orders</td></tr>
+                        <?php endforeach; ?>
+                    </table>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($stat['top_products'])): ?>
+                <div style="flex:1;min-width:200px;">
+                    <h4 style="margin:0 0 8px 0;font-size:13px;color:#1d2327;">Top Products</h4>
+                    <table class="widefat" style="width:auto;">
+                        <?php foreach ($stat['top_products'] as $prod_name => $prod_count): ?>
+                        <tr><td><?php echo esc_html($prod_name); ?></td><td><strong><?php echo intval($prod_count); ?></strong> sold</td></tr>
+                        <?php endforeach; ?>
+                    </table>
+                </div>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+
+            <?php if (!empty($stat['order_details'])): ?>
+            <h4 style="margin:0 0 8px 0;font-size:13px;color:#1d2327;">
+                Orders (<?php echo count($stat['order_details']); ?> total, <?php echo esc_html($currency_symbol); ?> <?php echo number_format($stat['revenue'], 2); ?> revenue)
+            </h4>
+            <table class="wp-list-table widefat fixed striped" style="margin-top:0;">
+                <thead>
+                    <tr>
+                        <th style="width:6%;">Order #</th>
+                        <th style="width:10%;">Date</th>
+                        <th style="width:6%;">Status</th>
+                        <th style="width:11%;">Customer</th>
+                        <th style="width:10%;">Email</th>
+                        <th style="width:8%;">Phone</th>
+                        <th style="width:8%;">Amount</th>
+                        <th style="width:7%;">Commission</th>
+                        <th style="width:4%;">Items</th>
+                        <th style="width:7%;">City</th>
+                        <th style="width:5%;">Country</th>
+                        <th style="width:7%;">Payment</th>
+                        <th style="width:4%;">Gift</th>
+                        <th style="width:7%;">Landing Page</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($stat['order_details'] as $od): ?>
+                    <tr>
+                        <td><a href="<?php echo esc_url(admin_url('post.php?post=' . $od['id'] . '&action=edit')); ?>">#<?php echo intval($od['id']); ?></a></td>
+                        <td><?php echo esc_html($od['date']); ?></td>
+                        <td>
+                            <?php
+                            $status_colors = array('completed' => '#7ad03a', 'processing' => '#73a724', 'on-hold' => '#999', 'pending' => '#f0ad4e', 'cancelled' => '#a00', 'refunded' => '#999', 'failed' => '#a00');
+                            $s_color = isset($status_colors[$od['status']]) ? $status_colors[$od['status']] : '#666';
+                            ?>
+                            <span style="color:<?php echo esc_attr($s_color); ?>;"><?php echo esc_html(ucfirst($od['status'])); ?></span>
+                        </td>
+                        <td><?php echo esc_html($od['customer']); ?></td>
+                        <td style="font-size:11px;"><?php echo esc_html($od['email']); ?></td>
+                        <td style="font-size:11px;"><?php echo esc_html($od['phone']); ?></td>
+                        <td><strong><?php echo esc_html($currency_symbol); ?> <?php echo number_format($od['total'], 2); ?></strong></td>
+                        <td style="color:#a00;"><?php echo esc_html($currency_symbol); ?> <?php echo number_format($od['commission'], 2); ?></td>
+                        <td><?php echo intval($od['items']); ?></td>
+                        <td><?php echo esc_html($od['city']); ?></td>
+                        <td><?php echo esc_html($od['country']); ?></td>
+                        <td><?php echo esc_html($od['payment']); ?></td>
+                        <td><?php echo $od['has_gift'] ? '<span style="color:green;">Yes</span>' : '<span style="color:#ccc;">No</span>'; ?></td>
+                        <td style="font-size:11px;"><?php echo esc_html($od['landing_page'] ?: '—'); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <?php else: ?>
+            <p style="color:#999;font-style:italic;">No orders yet for this influencer.</p>
+            <?php endif; ?>
+        </div>
     </div>
     <?php endforeach; ?>
+
+    <script>
+    jQuery(document).ready(function($) {
+        $('.asl-accordion-header').on('click', function() {
+            var target = $('#' + $(this).data('target'));
+            var arrow = $(this).find('.asl-arrow');
+            var header = $(this);
+            if (target.is(':visible')) {
+                target.slideUp(200);
+                arrow.css('transform', 'rotate(0deg)');
+                header.removeClass('asl-open').css('background', '#f9f9f9');
+            } else {
+                target.slideDown(200);
+                arrow.css('transform', 'rotate(90deg)');
+                header.addClass('asl-open').css('background', '#f0f6fc');
+            }
+        });
+    });
+    </script>
     <?php
 }
 
