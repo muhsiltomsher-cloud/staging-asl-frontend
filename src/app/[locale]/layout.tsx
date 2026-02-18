@@ -166,7 +166,6 @@ export default async function LocaleLayout({
                 fbPixelId={seoSettings.analytics.fbPixelId}
                 tiktokPixelId={seoSettings.analytics.tiktokPixelId}
                 snapPixelId={seoSettings.analytics.snapPixelId}
-                clarityId="vh6jxzu0av"
               />
               <NextTopLoader
                 color="#92400e"
