@@ -5,6 +5,8 @@ import { useSearchParams, usePathname } from "next/navigation";
 
 const STORAGE_KEY = "asl_influencer_ref";
 const EXPIRY_DAYS = 30;
+const MAX_CODE_LENGTH = 50;
+const CODE_PATTERN = /^[a-z0-9_-]+$/;
 
 interface InfluencerData {
   code: string;
@@ -97,8 +99,8 @@ function InfluencerRefCapture({ dispatch }: { dispatch: React.ActionDispatch<[ac
     const refParam = searchParams.get("ref");
     if (!refParam) return;
 
-    const code = refParam.trim().toLowerCase();
-    if (!code) return;
+    const code = refParam.trim().toLowerCase().slice(0, MAX_CODE_LENGTH);
+    if (!code || !CODE_PATTERN.test(code)) return;
 
     const stored = storeReferral(code, pathname);
     dispatch({ type: "SET_REFERRAL", code, landingPage: pathname, visitDate: stored.visitDate });
