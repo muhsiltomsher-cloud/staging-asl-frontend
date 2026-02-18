@@ -71,3 +71,6 @@ require_once ASL_SETTINGS_PATH . 'includes/class-asl-email-templates.php';
 
 // Include Security module (XML-RPC blocking, user enumeration prevention, noindex WP frontend, login rate limiting)
 require_once ASL_SETTINGS_PATH . 'includes/class-asl-security.php';
+
+// Include Influencer Tracking module (referral tracking, visit logging, stats)
+require_once ASL_SETTINGS_PATH . 'includes/class-asl-influencer-tracking.php';
