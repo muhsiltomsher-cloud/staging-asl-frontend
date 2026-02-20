@@ -12,6 +12,27 @@ const API_BASE = `${siteConfig.apiUrl}/wp-json/wc/store/v1`;
 // Default currency for Store API requests - ensures prices are returned in the base currency
 const DEFAULT_API_CURRENCY = API_BASE_CURRENCY;
 
+function isTestProduct(product: WCProduct): boolean {
+  const nameUpper = product.name.toUpperCase();
+  if (nameUpper.startsWith("TEST ") || nameUpper === "TEST") return true;
+  const slugUpper = product.slug.toUpperCase();
+  if (slugUpper.startsWith("TEST-") || slugUpper === "TEST") return true;
+  return false;
+}
+
+function hasNegativePrice(product: WCProduct): boolean {
+  const price = parseInt(product.prices.price, 10);
+  return price < 0;
+}
+
+function isTestCategory(category: WCCategory): boolean {
+  const nameUpper = category.name.toUpperCase();
+  if (nameUpper.startsWith("TEST") || nameUpper === "TEST") return true;
+  const slugUpper = category.slug.toUpperCase();
+  if (slugUpper.startsWith("TEST") || slugUpper === "TEST") return true;
+  return false;
+}
+
 interface FetchOptions {
   revalidate?: number;
   tags?: string[];
@@ -133,7 +154,9 @@ export async function getProducts(params?: {
     const visibleProducts = products.filter(
       (product) =>
         product.is_purchasable !== false &&
-        (!product.catalog_visibility || product.catalog_visibility === "visible" || product.catalog_visibility === "catalog")
+        (!product.catalog_visibility || product.catalog_visibility === "visible" || product.catalog_visibility === "catalog") &&
+        !isTestProduct(product) &&
+        !hasNegativePrice(product)
     );
 
     return {
@@ -341,10 +364,10 @@ export const getCategories = cache(async function getCategories(locale?: Locale,
       tags: ["categories"],
       locale,
       currency,
-      revalidate: 600, // Cache categories longer as they change less frequently
+      revalidate: 600,
     });
 
-    return categories;
+    return categories.filter((cat) => !isTestCategory(cat));
   } catch (error) {
     console.error("Failed to fetch categories:", error);
     return [];
@@ -1174,7 +1197,9 @@ export async function getFeaturedProducts(params?: {
     const visibleFeatured = transformedProducts.filter(
       (product) =>
         product.is_purchasable !== false &&
-        (!product.catalog_visibility || product.catalog_visibility === "visible" || product.catalog_visibility === "catalog")
+        (!product.catalog_visibility || product.catalog_visibility === "visible" || product.catalog_visibility === "catalog") &&
+        !isTestProduct(product) &&
+        !hasNegativePrice(product)
     );
 
     return {
