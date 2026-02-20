@@ -3,11 +3,9 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { X, Grid3X3, ChevronRight, ChevronDown } from "lucide-react";
-import MuiDrawer from "@mui/material/Drawer";
-import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
+import { Grid3X3, ChevronRight, ChevronDown } from "lucide-react";
+import { BottomSheet } from "@/components/common/BottomSheet";
+import { Skeleton } from "@/components/common/Skeleton";
 import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/config/site";
 import type { WCCategory } from "@/types/woocommerce";
@@ -26,13 +24,34 @@ interface CategoriesDrawerProps {
   dictionary: Dictionary;
 }
 
+function CategoryItemSkeleton() {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3">
+      <Skeleton className="h-10 w-10 rounded-lg" />
+      <div className="flex-1 space-y-1.5">
+        <Skeleton className="h-4 w-3/4" />
+      </div>
+      <Skeleton className="h-4 w-4 rounded" />
+    </div>
+  );
+}
+
+function CategoriesSkeletonList() {
+  return (
+    <div className="p-4 space-y-1">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <CategoryItemSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
+
 export function CategoriesDrawer({
   isOpen,
   onClose,
   locale,
   dictionary,
 }: CategoriesDrawerProps) {
-  // DEV MODE: Cache disabled for faster development
   const [categories, setCategories] = useState<WCCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const hasFetchedRef = useRef(false);
@@ -113,59 +132,29 @@ export function CategoriesDrawer({
     hasFetchedRef.current = false;
   }, [locale]);
 
-  return (
-    <MuiDrawer
-      anchor={isRTL ? "right" : "left"}
-      open={isOpen}
-      onClose={handleClose}
-      keepMounted
-      PaperProps={{
-        sx: {
-          width: { xs: "100%", sm: 320 },
-          maxWidth: "100%",
-        },
-      }}
+  const footerContent = (
+    <Link
+      href={`/${locale}/shop`}
+      onClick={handleClose}
+      className="flex w-full items-center justify-center rounded-lg bg-black px-4 py-3 font-medium text-white transition-all hover:bg-gray-800 active:scale-[0.98]"
     >
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-        }}
-        dir={isRTL ? "rtl" : "ltr"}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            borderBottom: "1px solid",
-            borderColor: "divider",
-            px: 2,
-            py: 2,
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Grid3X3 className="h-5 w-5" />
-            <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
-              {dictionary.common.categories || "Categories"}
-            </Typography>
-          </Box>
-                    <IconButton
-                      onClick={handleClose}
-                      aria-label="Close drawer"
-                      sx={{ color: "text.secondary" }}
-                    >
-                      <X className="h-5 w-5" />
-                    </IconButton>
-        </Box>
+      {dictionary.common.viewAll || "View All Products"}
+    </Link>
+  );
 
-        <Box sx={{ flex: 1, overflow: "auto" }}>
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-black" />
-            </div>
-          ) : categories.length === 0 ? (
+  return (
+    <BottomSheet
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={dictionary.common.categories || "Categories"}
+      titleIcon={<Grid3X3 className="h-5 w-5" />}
+      footer={footerContent}
+      maxHeight="85vh"
+    >
+      <div dir={isRTL ? "rtl" : "ltr"}>
+        {loading ? (
+          <CategoriesSkeletonList />
+        ) : categories.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Grid3X3 className="mb-4 h-12 w-12 text-gray-300" />
               <p className="text-gray-500">No categories found</p>
@@ -250,18 +239,7 @@ header                {parentCategories.map((category) => {
               </ul>
             </nav>
           )}
-        </Box>
-
-        <div className="border-t p-4">
-                    <Link
-                      href={`/${locale}/shop`}
-                      onClick={handleClose}
-                      className="flex w-full items-center justify-center rounded-lg bg-black px-4 py-3 font-medium text-white transition-all hover:bg-gray-800 active:scale-[0.98]"
-                    >
-            {dictionary.common.viewAll || "View All Products"}
-          </Link>
-        </div>
-      </Box>
-    </MuiDrawer>
+      </div>
+    </BottomSheet>
   );
 }

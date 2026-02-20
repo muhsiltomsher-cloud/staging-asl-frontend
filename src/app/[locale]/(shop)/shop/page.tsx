@@ -7,6 +7,7 @@ import { getProducts, getFreeGiftProductInfo, getBundleEnabledProductSlugs } fro
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { ShopClient } from "./ShopClient";
+import { PullToRefreshWrapper } from "@/components/common/PullToRefreshWrapper";
 
 // Increased revalidate time for better cache hit rates (5 minutes instead of 60 seconds)
 export const revalidate = 300;
@@ -60,6 +61,7 @@ export default async function ShopPage({ params }: ShopPageProps) {
   const filteredTotal = productsResult.total - (productsResult.products.length - filteredProducts.length);
 
   return (
+    <PullToRefreshWrapper>
     <div className="container mx-auto px-4 py-8">
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 
@@ -86,5 +88,6 @@ export default async function ShopPage({ params }: ShopPageProps) {
         />
       </Suspense>
     </div>
+    </PullToRefreshWrapper>
   );
 }

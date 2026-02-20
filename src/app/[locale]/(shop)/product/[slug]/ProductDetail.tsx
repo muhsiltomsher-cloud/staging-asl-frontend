@@ -21,6 +21,8 @@ import type { WCProduct } from "@/types/woocommerce";
 import type { WCPAForm, WCPAFormValues } from "@/types/wcpa";
 import type { Locale } from "@/config/site";
 import { decodeHtmlEntities, BLUR_DATA_URL } from "@/lib/utils";
+import { useSwipeBack } from "@/hooks/useSwipeBack";
+import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -321,6 +323,9 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
     const currencyInfo = getCurrencyInfo();
     const convertedShippingThreshold = freeShippingThreshold ? Math.ceil(convertPrice(freeShippingThreshold)) : null;
 
+  useSwipeBack();
+  const { vibrate } = useHapticFeedback();
+
   const toggleAccordion = (section: string) => {
     setOpenAccordion(openAccordion === section ? null : section);
   };
@@ -354,6 +359,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   ];
 
   const handleAddToCart = async () => {
+    vibrate("medium");
     setIsAddingToCart(true);
     try {
       // If there are addon forms and values, pass them as cart item data
@@ -375,6 +381,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   const isWishlisted = isInWishlist(product.id);
 
   const handleWishlistToggle = async () => {
+    vibrate("light");
     setIsAddingToWishlist(true);
     try {
       if (isWishlisted) {

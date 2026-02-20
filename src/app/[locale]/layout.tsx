@@ -21,6 +21,7 @@ import { LocationCurrencyBanner } from "@/components/common/LocationCurrencyBann
 import { CookieConsentBanner } from "@/components/common/CookieConsentBanner";
 import { WhatsAppFloatingButton } from "@/components/common/WhatsAppFloatingButton";
 import { NetworkStatusBanner } from "@/components/common/NetworkStatusBanner";
+import { AddToCartAnimationProvider } from "@/components/common/AddToCartAnimation";
 import { getSiteSettings, getHeaderSettings, getMobileBarSettings, getPrimaryMenu, getTopbarSettings, getSeoSettings } from "@/lib/api/wordpress";
 import { TrackingScripts } from "@/components/tracking";
 
@@ -189,7 +190,11 @@ export default async function LocaleLayout({
                     topbarSettings={topbarSettings}
                   />
                 </div>
-                <main className="flex-1">{children}</main>
+                <main className="flex-1">
+                  <AddToCartAnimationProvider>
+                    {children}
+                  </AddToCartAnimationProvider>
+                </main>
                 <div className="print:hidden">
                   <Footer locale={validLocale} dictionary={dictionary} siteSettings={siteSettings} />
                 </div>
