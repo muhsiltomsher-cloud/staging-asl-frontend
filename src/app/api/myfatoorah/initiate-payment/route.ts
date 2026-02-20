@@ -193,7 +193,10 @@ export async function POST(request: NextRequest) {
       UserDefinedField: order_key,
     };
 
-    const response = await fetch(`${getMyFatoorahApiBaseUrl()}/v2/SendPayment`, {
+    const apiBaseUrl = getMyFatoorahApiBaseUrl();
+    console.log("MyFatoorah API URL:", `${apiBaseUrl}/v2/SendPayment`);
+
+    const response = await fetch(`${apiBaseUrl}/v2/SendPayment`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -202,25 +205,48 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(paymentData),
     });
 
-    const data = await response.json();
-
-    if (!response.ok || !data.IsSuccess) {
+    const responseText = await response.text();
+    let data: Record<string, unknown>;
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch {
+      console.error("MyFatoorah returned non-JSON response:", responseText.slice(0, 500));
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: data.ValidationErrors?.[0]?.Name || "myfatoorah_error",
-            message: data.ValidationErrors?.[0]?.Error || data.Message || "Failed to initiate payment",
+            code: "invalid_response",
+            message: "MyFatoorah returned an invalid response. Please try again later.",
+          },
+        },
+        { status: 502 }
+      );
+    }
+
+    if (!response.ok || !data.IsSuccess) {
+      const validationErrors = data.ValidationErrors as Array<{ Name?: string; Error?: string }> | undefined;
+      console.error("MyFatoorah API error:", {
+        status: response.status,
+        message: data.Message,
+        validationErrors,
+      });
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: validationErrors?.[0]?.Name || "myfatoorah_error",
+            message: validationErrors?.[0]?.Error || (data.Message as string) || "Failed to initiate payment",
           },
         },
         { status: response.status || 400 }
       );
     }
 
+    const responseData = data.Data as { InvoiceURL?: string; InvoiceId?: number } | undefined;
     return NextResponse.json({
       success: true,
-      payment_url: data.Data?.InvoiceURL,
-      invoice_id: data.Data?.InvoiceId,
+      payment_url: responseData?.InvoiceURL,
+      invoice_id: responseData?.InvoiceId,
     });
   } catch (error) {
     console.error("MyFatoorah initiate-payment error:", error);

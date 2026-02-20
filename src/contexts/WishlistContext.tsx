@@ -15,6 +15,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNotification } from "@/contexts/NotificationContext";
 
 const WISHLIST_COUNT_CACHE_KEY = "asl_wishlist_count";
+const GUEST_WISHLIST_KEY = "asl_guest_wishlist";
+
+interface GuestWishlistItem {
+  product_id: number;
+  variation_id?: number;
+  added_at: string;
+}
 
 interface WishlistContextType {
   wishlist: WishlistResponse | null;
@@ -62,21 +69,75 @@ function clearCachedWishlistCount(): void {
   }
 }
 
+function getGuestWishlist(): GuestWishlistItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = localStorage.getItem(GUEST_WISHLIST_KEY);
+    return stored ? JSON.parse(stored) as GuestWishlistItem[] : [];
+  } catch {
+    return [];
+  }
+}
+
+function setGuestWishlist(items: GuestWishlistItem[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(GUEST_WISHLIST_KEY, JSON.stringify(items));
+  } catch {
+    // Ignore localStorage errors
+  }
+}
+
+function clearGuestWishlist(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(GUEST_WISHLIST_KEY);
+  } catch {
+    // Ignore localStorage errors
+  }
+}
+
+function guestItemsToWishlistItems(items: GuestWishlistItem[]): WishlistItem[] {
+  return items.map((item, index) => ({
+    id: -(index + 1),
+    product_id: item.product_id,
+    variation_id: item.variation_id,
+    product_name: "",
+    dateadded: item.added_at,
+  }));
+}
+
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const [wishlist, setWishlist] = useState<WishlistResponse | null>(null);
+  const [guestItems, setGuestItems] = useState<GuestWishlistItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [cachedCount, setCachedCount] = useState<number>(0);
   const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const { notify } = useNotification();
 
-  // Initialize cached count from localStorage on mount
   useEffect(() => {
     if (isAuthenticated && user) {
       setCachedCount(getCachedWishlistCount());
     } else {
       setCachedCount(0);
       clearCachedWishlistCount();
+      const stored = getGuestWishlist();
+      setGuestItems(stored);
+    }
+  }, [isAuthenticated, user]);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const stored = getGuestWishlist();
+      if (stored.length > 0) {
+        apiSyncWishlist(stored.map((i) => ({ product_id: i.product_id, variation_id: i.variation_id }))).then((response) => {
+          if (response.success) {
+            clearGuestWishlist();
+            setGuestItems([]);
+          }
+        });
+      }
     }
   }, [isAuthenticated, user]);
 
@@ -85,6 +146,8 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       setWishlist(null);
       clearCachedWishlistCount();
       setCachedCount(0);
+      const stored = getGuestWishlist();
+      setGuestItems(stored);
       return;
     }
     setIsLoading(true);
@@ -93,12 +156,10 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       if (response.success) {
         if (response.wishlist) {
           setWishlist(response.wishlist);
-          // Update cache with fresh count
           const newCount = response.wishlist.items_count || response.wishlist.items?.length || 0;
           setCachedWishlistCount(newCount);
           setCachedCount(newCount);
         } else {
-          // User has no wishlist yet - clear state to avoid stale data
           setWishlist(null);
           clearCachedWishlistCount();
           setCachedCount(0);
@@ -119,13 +180,23 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
   const addToWishlist = useCallback(
     async (productId: number, variationId?: number): Promise<boolean> => {
+      if (!isAuthenticated) {
+        const current = getGuestWishlist();
+        if (current.some((i) => i.product_id === productId)) {
+          notify("info", "Already in your wishlist");
+          return true;
+        }
+        const updated = [...current, { product_id: productId, variation_id: variationId, added_at: new Date().toISOString() }];
+        setGuestWishlist(updated);
+        setGuestItems(updated);
+        notify("success", "Added to wishlist");
+        return true;
+      }
       setIsLoading(true);
       NProgress.start();
       try {
         const response = await apiAddToWishlist(productId, variationId);
         if (response.success) {
-          // Use mutation response directly instead of calling refreshWishlist()
-          // This makes the operation faster by avoiding an extra API call
           if (response.wishlist) {
             setWishlist(response.wishlist);
             const newCount = response.wishlist.items_count || response.wishlist.items?.length || 0;
@@ -135,7 +206,6 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
           notify("success", "Added to wishlist");
           return true;
         } else if (response.error) {
-          // Check if item is already in wishlist
           if (response.error.code === "product_already_in_wishlist") {
             notify("info", "Already in your wishlist");
             return true;
@@ -154,15 +224,22 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         NProgress.done();
       }
     },
-    [notify]
+    [isAuthenticated, notify]
   );
 
   const removeFromWishlist = useCallback(
     async (productId: number, itemId?: number): Promise<boolean> => {
+      if (!isAuthenticated) {
+        const current = getGuestWishlist();
+        const updated = current.filter((i) => i.product_id !== productId);
+        setGuestWishlist(updated);
+        setGuestItems(updated);
+        notify("success", "Removed from wishlist");
+        return true;
+      }
       setIsLoading(true);
       NProgress.start();
       try {
-        // If itemId not provided, try to find it from wishlist items
         let resolvedItemId = itemId;
         if (!resolvedItemId && wishlist?.items) {
           const item = wishlist.items.find((i) => i.product_id === productId);
@@ -170,8 +247,6 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         }
         const response = await apiRemoveFromWishlist(productId, resolvedItemId);
         if (response.success) {
-          // Use mutation response directly instead of calling refreshWishlist()
-          // This makes the operation faster by avoiding an extra API call
           if (response.wishlist) {
             setWishlist(response.wishlist);
             const newCount = response.wishlist.items_count || response.wishlist.items?.length || 0;
@@ -195,16 +270,18 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         NProgress.done();
       }
     },
-    [wishlist, notify]
+    [isAuthenticated, wishlist, notify]
   );
 
   const syncWishlist = useCallback(
-    async (guestItems: Array<{ product_id: number; variation_id?: number }>) => {
+    async (syncItems: Array<{ product_id: number; variation_id?: number }>) => {
       setIsLoading(true);
       try {
-        const response = await apiSyncWishlist(guestItems);
+        const response = await apiSyncWishlist(syncItems);
         if (response.success && response.wishlist) {
           setWishlist(response.wishlist);
+          clearGuestWishlist();
+          setGuestItems([]);
         } else if (response.error) {
           console.error("Error syncing wishlist:", response.error.message);
         }
@@ -219,22 +296,32 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
   const isInWishlist = useCallback(
     (productId: number): boolean => {
+      if (!isAuthenticated) {
+        return guestItems.some((i) => i.product_id === productId);
+      }
       return checkIsInWishlist(wishlist?.items || [], productId);
     },
-    [wishlist]
+    [isAuthenticated, guestItems, wishlist]
   );
 
   const getWishlistItemId = useCallback(
     (productId: number): number | undefined => {
+      if (!isAuthenticated) {
+        const idx = guestItems.findIndex((i) => i.product_id === productId);
+        return idx >= 0 ? -(idx + 1) : undefined;
+      }
       const item = wishlist?.items?.find((i) => i.product_id === productId);
       return item?.id;
     },
-    [wishlist]
+    [isAuthenticated, guestItems, wishlist]
   );
 
-  const wishlistItems = wishlist?.items || [];
-  // Use cached count immediately while loading, then use actual count once loaded
-  const wishlistItemsCount = wishlist?.items_count || wishlistItems.length || cachedCount;
+  const wishlistItems = isAuthenticated
+    ? (wishlist?.items || [])
+    : guestItemsToWishlistItems(guestItems);
+  const wishlistItemsCount = isAuthenticated
+    ? (wishlist?.items_count || wishlistItems.length || cachedCount)
+    : guestItems.length;
 
   return (
     <WishlistContext.Provider

@@ -259,7 +259,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const action = searchParams.get("action");
+  let action = searchParams.get("action");
 
   try {
     const cartKey = await getCartKey();
@@ -267,6 +267,14 @@ export async function POST(request: NextRequest) {
     const currency = await getCurrency();
     const locale = await getLocale(request);
     const body = await request.json().catch(() => ({}));
+
+    if (!action && (body.id || body.product_id)) {
+      action = "add";
+      if (body.id && !body.product_id) {
+        body.product_id = body.id;
+      }
+    }
+
     let baseUrl: string;
     let method: string = "POST";
 

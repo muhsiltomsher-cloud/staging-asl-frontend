@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Heart, Minus, Plus, ChevronDown, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Grid, Layers, Move, Share2, ShoppingBag } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Thumbs, FreeMode } from "swiper/modules";
@@ -18,7 +17,6 @@ import { PaymentWidgets } from "@/components/payment/PaymentWidgets";
 import { useCart } from "@/contexts/CartContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useWishlist } from "@/contexts/WishlistContext";
-import { useAuth } from "@/contexts/AuthContext";
 import type { WCProduct } from "@/types/woocommerce";
 import type { WCPAForm, WCPAFormValues } from "@/types/wcpa";
 import type { Locale } from "@/config/site";
@@ -319,8 +317,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
     const { addToCart } = useCart();
     const { currency, convertPrice, getCurrencyInfo } = useCurrency();
     const { addToWishlist, removeFromWishlist, isInWishlist, getWishlistItemId } = useWishlist();
-    const { isAuthenticated } = useAuth();
-    const router = useRouter();
     const isRTL = locale === "ar";
     const currencyInfo = getCurrencyInfo();
     const convertedShippingThreshold = freeShippingThreshold ? Math.ceil(convertPrice(freeShippingThreshold)) : null;
@@ -379,11 +375,6 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
   const isWishlisted = isInWishlist(product.id);
 
   const handleWishlistToggle = async () => {
-    if (!isAuthenticated) {
-      router.push(`/${locale}/login`);
-      return;
-    }
-    
     setIsAddingToWishlist(true);
     try {
       if (isWishlisted) {
