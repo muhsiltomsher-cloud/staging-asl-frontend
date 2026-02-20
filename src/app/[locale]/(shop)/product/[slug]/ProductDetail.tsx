@@ -633,7 +633,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
         <ViewToggle />
         <div className="space-y-3">
           {/* Main Slider */}
-          <div className="relative w-full max-w-full overflow-hidden group/gallery" style={{ height: 'calc(100vw - 2rem)', maxHeight: '600px' }}>
+          <div className="relative overflow-hidden group/gallery" style={{ width: 'calc(100vw - 2rem)', maxWidth: '100%', height: 'calc(100vw - 2rem)', maxHeight: '600px' }}>
             <Swiper
               key={viewMode}
               modules={[Navigation, Thumbs]}
@@ -673,11 +673,15 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               ))}
             </Swiper>
             <style jsx global>{`
-              .product-gallery-swiper,
-              .product-gallery-swiper .swiper-wrapper,
-              .product-gallery-swiper .swiper-slide {
+              .product-gallery-swiper {
                 height: 100% !important;
                 width: 100% !important;
+              }
+              .product-gallery-swiper .swiper-wrapper {
+                height: 100% !important;
+              }
+              .product-gallery-swiper .swiper-slide {
+                height: 100% !important;
               }
             `}</style>
 
