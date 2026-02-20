@@ -725,7 +725,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
 
           {/* Thumbnails Slider */}
           {imageCount > 1 && (
-            <div className="overflow-hidden" style={{ height: 'calc((100vw - 2rem) / 4 + 8px)', maxHeight: '100px' }}>
+            <div className="overflow-hidden" style={{ width: 'calc(100vw - 2rem)', maxWidth: '100%', height: 'calc((100vw - 2rem) / 4 + 8px)', maxHeight: '100px' }}>
             <Swiper
               modules={[FreeMode, Thumbs]}
               onSwiper={setThumbsSwiper}
@@ -744,7 +744,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                 <SwiperSlide key={image.id}>
                   <button
                     type="button"
-                    className={`relative aspect-square w-full overflow-hidden rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
+                    className={`relative w-full h-full overflow-hidden rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
                       selectedImage === index 
                         ? "border-amber-800 ring-2 ring-amber-800/30 shadow-md" 
                         : "border-gray-200 hover:border-gray-400"
