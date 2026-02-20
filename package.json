@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "if [ -f .next/standalone/server.js ]; then sed -i \"s/process.env.HOSTNAME || '0.0.0.0'/'127.0.0.1'/g\" .next/standalone/server.js && echo 'Patched standalone hostname'; fi",
+    "postbuild": "if [ -f .next/standalone/server.js ]; then echo -e 'PassengerEnabled on\nPassengerAppRoot /home/u327034204/domains/app.aromaticscentslab.com/public_html\nPassengerAppType node\nPassengerNodejs /opt/alt/alt-nodejs20/root/bin/node\nPassengerStartupFile server.js\nPassengerBaseURI /' > .next/standalone/.htaccess && echo 'Created .htaccess with PassengerEnabled on'; fi",
     "start": "NODE_ENV=production node server.js",
     "lint": "eslint"
   },
