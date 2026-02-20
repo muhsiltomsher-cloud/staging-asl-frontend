@@ -1,5 +1,4 @@
-// Load environment variables from .env file
-require('dotenv').config();
+try { require('dotenv').config(); } catch(e) {}
 
 const { createServer } = require('http');
 const { parse } = require('url');
