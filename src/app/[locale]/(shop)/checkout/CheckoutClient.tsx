@@ -1154,7 +1154,7 @@ export default function CheckoutClient() {
                   customer_name: `${billingInfo.firstName} ${billingInfo.lastName}`,
                   customer_email: billingInfo.email || formData.shipping.email,
                   customer_phone: billingInfo.phone || formData.shipping.phone,
-                  currency_iso: data.order?.currency || "KWD",
+                  currency_iso: data.order?.currency || "AED",
                   language: locale === "ar" ? "ar" : "en",
                   callback_url: `${baseUrl}/${locale}/order-confirmation`,
                   error_url: `${baseUrl}/${locale}/order-confirmation`,
