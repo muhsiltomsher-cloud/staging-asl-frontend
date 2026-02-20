@@ -649,8 +649,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               {images.map((image, index) => (
                 <SwiperSlide key={image.id}>
                   <div 
-                    className="relative w-full cursor-zoom-in group/slide"
-                    style={{ paddingBottom: '100%' }}
+                    className="relative w-full aspect-square cursor-zoom-in group/slide"
                     onClick={() => setIsFullscreen(true)}
                   >
                     <Image
@@ -674,8 +673,10 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               ))}
             </Swiper>
             <style jsx global>{`
+              .product-gallery-swiper {
+                width: 100% !important;
+              }
               .product-gallery-swiper .swiper-slide {
-                height: auto !important;
                 width: 100% !important;
               }
             `}</style>
