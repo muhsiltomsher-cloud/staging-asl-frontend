@@ -162,7 +162,7 @@ export function CategoriesDrawer({
           ) : (
             <nav className="p-4">
               <ul className="space-y-1">
-header                {parentCategories.map((category) => {
+                {parentCategories.map((category) => {
                   const childCategories = getChildCategories(category.id);
                   const hasChildren = childCategories.length > 0;
                   const isExpanded = expandedCategories.has(category.id);
