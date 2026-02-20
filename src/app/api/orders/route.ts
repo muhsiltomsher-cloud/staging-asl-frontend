@@ -215,9 +215,24 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
+    const paymentMethodTitles: Record<string, string> = {
+      myfatoorah_v2: "Credit/Debit Card",
+      myfatoorah: "Credit/Debit Card",
+      myfatoorah_cards: "Credit/Debit Card",
+      myfatoorah_embedded: "Credit/Debit Card",
+      tabby_installments: "Tabby",
+      tabby_checkout: "Tabby",
+      tabby: "Tabby",
+      "tamara-gateway": "Tamara",
+      tamara: "Tamara",
+      cod: "Cash on Delivery",
+      bacs: "Bank Transfer",
+    };
+
+    const paymentMethod = body.payment_method || "myfatoorah_v2";
     const orderData: CreateOrderRequest = {
-      payment_method: body.payment_method || "myfatoorah_v2",
-      payment_method_title: "Credit/Debit Card",
+      payment_method: paymentMethod,
+      payment_method_title: paymentMethodTitles[paymentMethod] || paymentMethod,
       set_paid: false,
       ...(body.currency ? { currency: body.currency } : {}),
       billing: {
@@ -239,6 +254,7 @@ export async function POST(request: NextRequest) {
         state: body.shipping?.state || body.billing.state || "",
         postcode: body.shipping?.postcode || body.billing.postcode || "",
         country: body.shipping?.country || body.billing.country,
+        phone: body.shipping?.phone || body.billing.phone,
       },
       line_items: body.line_items,
       customer_note: body.customer_note || "",

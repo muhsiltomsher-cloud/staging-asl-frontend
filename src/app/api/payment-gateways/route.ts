@@ -64,6 +64,10 @@ const PAYMENT_METHOD_DETAILS: Record<string, { title: string; description: strin
     title: "Bank Transfer",
     description: "Make your payment directly into our bank account",
   },
+  cod: {
+    title: "Cash on Delivery",
+    description: "Pay with cash upon delivery",
+  },
 };
 
 interface WCPaymentGateway {
@@ -108,7 +112,7 @@ export async function GET() {
         const data: WCPaymentGateway[] = await response.json();
         
         const enabledGateways = data
-          .filter((gateway) => gateway.enabled && gateway.id !== "cod")
+          .filter((gateway) => gateway.enabled)
           .sort((a, b) => a.order - b.order)
           .map((gateway) => {
             const details = PAYMENT_METHOD_DETAILS[gateway.id];
@@ -173,7 +177,7 @@ export async function GET() {
     const excludedFromFallback = ["tamara", "tamara-gateway", "tabby", "tabby_installments", "tabby_checkout"];
     
     const gateways = paymentMethodIds
-      .filter((id: string) => !excludedFromFallback.includes(id) && id !== "cod")
+      .filter((id: string) => !excludedFromFallback.includes(id))
       .map((id: string, index: number) => {
         const details = PAYMENT_METHOD_DETAILS[id] || {
           title: id.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
