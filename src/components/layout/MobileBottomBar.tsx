@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Home, Grid3X3, Search, Heart, User } from "lucide-react";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useKeyboardVisible } from "@/hooks/useKeyboardVisible";
 import type { Locale } from "@/config/site";
 import type { MobileBarSettings } from "@/lib/api/wordpress";
 import type { Dictionary } from "@/i18n";
@@ -33,6 +34,7 @@ export function MobileBottomBar({ locale, settings, dictionary }: MobileBottomBa
   const [isSearchDrawerOpen, setIsSearchDrawerOpen] = useState(false);
   const [activeDrawer, setActiveDrawer] = useState<string | null>(null);
   const pathname = usePathname();
+  const isKeyboardVisible = useKeyboardVisible();
 
   if (!settings.enabled || settings.items.length === 0) {
     return null;
@@ -79,7 +81,7 @@ export function MobileBottomBar({ locale, settings, dictionary }: MobileBottomBa
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl border-t border-gray-100 bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.08)] xl:hidden">
+      <nav className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl border-t border-gray-100 bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.08)] xl:hidden transition-transform duration-300 ${isKeyboardVisible ? 'translate-y-full' : 'translate-y-0'}`}>
         <div className="flex h-16 items-center justify-around px-2 pb-safe">
           {settings.items.map((item, index) => {
             const IconComponent = iconMap[item.icon] || Home;

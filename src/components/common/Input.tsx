@@ -30,7 +30,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             required={required}
             className={cn(
-              "flex h-10 w-full rounded-md border bg-white px-3 py-2 text-sm transition-colors",
+              "flex h-10 w-full rounded-md border bg-white px-3 py-2 text-base sm:text-sm transition-colors",
               "placeholder:text-gray-400",
               "focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900",
               "disabled:cursor-not-allowed disabled:opacity-50",

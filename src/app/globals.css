@@ -130,7 +130,20 @@ input::-webkit-credentials-auto-fill-button {
     font-size: 14px;
   }
   
-  p, span, a, li, label, input, button, select, textarea {
+  p, span, a, li, label, button {
     font-size: 0.875rem;
+  }
+}
+
+/* Inputs/selects/textareas: 14px on tablet, 16px on mobile (prevents iOS Safari auto-zoom) */
+@media (min-width: 640px) and (max-width: 1023px) {
+  input, select, textarea {
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 639px) {
+  input, select, textarea {
+    font-size: 1rem !important;
   }
 }

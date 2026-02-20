@@ -19,6 +19,7 @@ import { MapPin, Check, ChevronDown, ChevronUp, Tag, X, Truck } from "lucide-rea
 import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice, getPricingMode, getFixedPrice, getBundleTotal } from "@/components/cart/BundleItemsList";
 import { PhoneInput } from "@/components/common/PhoneInput";
 import { useInfluencer } from "@/contexts/InfluencerContext";
+import { useKeyboardVisible } from "@/hooks/useKeyboardVisible";
 
 interface ShippingRate {
   rate_id: string;
@@ -188,8 +189,9 @@ export default function CheckoutClient() {
         const emailCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
         const [addressErrors, setAddressErrors] = useState<{ shippingAddress?: string; shippingCity?: string; billingAddress?: string; billingCity?: string }>({});
+        const isKeyboardVisible = useKeyboardVisible();
   
-  const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
+  const currencyMinorUnit= cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
 
   const [formData, setFormData] = useState<CheckoutFormData>({
@@ -2292,7 +2294,7 @@ export default function CheckoutClient() {
 
       {/* Mobile Sticky Order Summary - positioned above bottom nav bar */}
       {!isEmptyCart && (
-      <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-black/10 bg-white px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] lg:hidden" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
+      <div className={`fixed bottom-16 left-0 right-0 z-40 border-t border-black/10 bg-white px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] lg:hidden transition-transform duration-300 ${isKeyboardVisible ? 'translate-y-full' : 'translate-y-0'}`} style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
         <div className="flex items-center justify-between gap-4">
           <div className="flex flex-col">
             <span className="text-xs text-gray-500">{isRTL ? "الإجمالي" : "Total"}</span>
