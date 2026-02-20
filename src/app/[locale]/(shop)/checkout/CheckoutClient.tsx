@@ -1933,6 +1933,7 @@ export default function CheckoutClient() {
                                                                     myfatoorah: { en: "Credit/Debit Card", ar: "بطاقة ائتمان/خصم" },
                                                                     myfatoorah_cards: { en: "Credit/Debit Card", ar: "بطاقة ائتمان/خصم" },
                                                                     myfatoorah_embedded: { en: "Credit/Debit Card", ar: "بطاقة ائتمان/خصم" },
+                                                                    cod: { en: "Cash on Delivery", ar: "الدفع عند الاستلام" },
                                                                   };
                                                                   return labels[id]?.[isRTL ? "ar" : "en"] || title;
                                                                 };
@@ -1953,6 +1954,7 @@ export default function CheckoutClient() {
                                                                     myfatoorah: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "ادفع بأمان عبر كي نت، فيزا، ماستركارد، مدى، أبل باي" },
                                                                     myfatoorah_cards: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "ادفع بأمان عبر كي نت، فيزا، ماستركارد، مدى، أبل باي" },
                                                                     myfatoorah_embedded: { en: "Pay securely with KNET, VISA, Mastercard, MADA, Apple Pay", ar: "ادفع بأمان عبر كي نت، فيزا، ماستركارد، مدى، أبل باي" },
+                                                                    cod: { en: "Pay with cash upon delivery", ar: "ادفع نقداً عند الاستلام" },
                                                                   };
                                                                   return descriptions[id]?.[isRTL ? "ar" : "en"] || description || "";
                                                                 };
@@ -1991,6 +1993,15 @@ export default function CheckoutClient() {
                                                                       />
                                                                     );
                                                                   }
+                                  if (id === "cod") {
+                                    return (
+                                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
+                                        <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                      </div>
+                                    );
+                                  }
                                   if (id === "paypal") {
                                     return (
                                       <div className="flex h-8 w-12 items-center justify-center rounded bg-[#003087] px-1">
