@@ -41,7 +41,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
           success: false,
           error: {
             code: "missing_username",
-            message: "Username or email is required",
+            message: "Email is required",
           },
         },
         { status: 400 }
