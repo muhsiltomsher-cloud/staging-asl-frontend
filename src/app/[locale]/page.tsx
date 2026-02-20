@@ -15,6 +15,7 @@ import {
 } from "@/components/sections";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
+import { PullToRefreshWrapper } from "@/components/common/PullToRefreshWrapper";
 
 export const revalidate = 60;
 
@@ -201,6 +202,7 @@ export default async function HomePage({ params }: HomePageProps) {
     }> = [];
 
   return (
+    <PullToRefreshWrapper>
     <div className="flex flex-col">
       {/* Hero Slider */}
       <HeroSlider settings={homeSettings.hero_slider} />
@@ -341,5 +343,6 @@ export default async function HomePage({ params }: HomePageProps) {
       </section>
 
     </div>
+    </PullToRefreshWrapper>
   );
 }

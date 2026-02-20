@@ -15,6 +15,7 @@ import { useFreeGift, getLocalizedProduct, containsArabic } from "@/contexts/Fre
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { featureFlags, type Locale } from "@/config/site";
+import { PullToRefresh } from "@/components/common/PullToRefresh";
 
 interface PublicCoupon {
   code: string;
@@ -206,7 +207,13 @@ export default function CartPage() {
     }
   };
 
+  const handlePullRefresh = async () => {
+    window.location.reload();
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  };
+
   return (
+    <PullToRefresh onRefresh={handlePullRefresh}>
     <div className="min-h-screen pb-32 md:pb-8" style={{ backgroundColor: '#F5F0E8' }}>
       <div className="container mx-auto px-4 py-8">
         <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
@@ -721,5 +728,6 @@ export default function CartPage() {
         </div>
       )}
     </div>
+    </PullToRefresh>
   );
 }

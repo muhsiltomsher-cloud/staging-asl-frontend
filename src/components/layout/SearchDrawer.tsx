@@ -4,11 +4,9 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { X, Search, Loader2 } from "lucide-react";
-import MuiDrawer from "@mui/material/Drawer";
-import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
+import { Search, Loader2 } from "lucide-react";
+import { BottomSheet } from "@/components/common/BottomSheet";
+import { Skeleton } from "@/components/common/Skeleton";
 import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/config/site";
 import type { WCProduct } from "@/types/woocommerce";
@@ -97,51 +95,14 @@ export function SearchDrawer({
     }, [onClose]);
 
   return (
-    <MuiDrawer
-      anchor="top"
-      open={isOpen}
+    <BottomSheet
+      isOpen={isOpen}
       onClose={handleClose}
-      PaperProps={{
-        sx: {
-          width: "100%",
-          maxHeight: "80vh",
-        },
-      }}
+      title={dictionary.common.search}
+      titleIcon={<Search className="h-5 w-5" />}
+      maxHeight="85vh"
     >
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-        }}
-        dir={isRTL ? "rtl" : "ltr"}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            borderBottom: "1px solid",
-            borderColor: "divider",
-            px: 2,
-            py: 2,
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Search className="h-5 w-5" />
-            <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
-              {dictionary.common.search}
-            </Typography>
-          </Box>
-          <IconButton
-            onClick={handleClose}
-            aria-label="Close drawer"
-            sx={{ color: "text.secondary" }}
-          >
-            <X className="h-5 w-5" />
-          </IconButton>
-        </Box>
-
+      <div dir={isRTL ? "rtl" : "ltr"}>
         <div className="p-4">
           <form onSubmit={handleSubmit}>
             <div className="relative">
@@ -161,10 +122,19 @@ export function SearchDrawer({
           </form>
         </div>
 
-        <Box sx={{ flex: 1, overflow: "auto", px: 2, pb: 2 }}>
+        <div className="px-2 pb-2">
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-black" />
+            <div className="space-y-2 px-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 rounded-lg p-3">
+                  <Skeleton className="h-16 w-16 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-3 w-1/3" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/4" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : hasSearched && results.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -232,8 +202,8 @@ export function SearchDrawer({
               )}
             </div>
           ) : null}
-        </Box>
-      </Box>
-    </MuiDrawer>
+        </div>
+      </div>
+    </BottomSheet>
   );
 }
