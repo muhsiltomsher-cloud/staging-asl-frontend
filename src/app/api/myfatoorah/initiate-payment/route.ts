@@ -128,14 +128,15 @@ export async function POST(request: NextRequest) {
   try {
     const apiKey = getEnvVar("MYFATOORAH_API_KEY");
     
-    if (!apiKey) {
-      console.error("MyFatoorah API Error: MYFATOORAH_API_KEY environment variable is not configured");
+    if (!apiKey || apiKey === "your_myfatoorah_api_key_here") {
+      const isPlaceholder = apiKey === "your_myfatoorah_api_key_here";
+      console.error(`MyFatoorah API Error: MYFATOORAH_API_KEY is ${isPlaceholder ? "still set to placeholder value" : "not configured"}`);
       return NextResponse.json(
         {
           success: false,
           error: {
             code: "missing_api_key",
-            message: "MyFatoorah API key is not configured",
+            message: "Payment gateway is not configured. Please set a valid MyFatoorah API key.",
           },
         },
         { status: 500 }
@@ -245,8 +246,25 @@ export async function POST(request: NextRequest) {
         isSuccess: data.IsSuccess,
         message: data.Message,
         validationErrors,
+        apiUrl: `${apiBaseUrl}/v2/SendPayment`,
+        testMode: getEnvVar("MYFATOORAH_TEST_MODE"),
+        country: getEnvVar("MYFATOORAH_COUNTRY"),
         fullResponse: responseText.slice(0, 1000),
       }));
+
+      if (response.status === 401) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "unauthorized",
+              message: "Payment gateway authentication failed. The MyFatoorah API key is invalid or expired. Please update MYFATOORAH_API_KEY in your environment variables.",
+            },
+          },
+          { status: 401 }
+        );
+      }
+
       const errorMessage = allValidationMessages
         || (data.Message as string)
         || `Payment gateway error (HTTP ${response.status})`;
