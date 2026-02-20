@@ -633,7 +633,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
         <ViewToggle />
         <div className="space-y-3">
           {/* Main Slider */}
-          <div className="relative w-full max-w-full group/gallery">
+          <div className="relative overflow-hidden group/gallery" style={{ width: 'calc(100vw - 2rem)', maxWidth: '100%', height: 'calc(100vw - 2rem)', maxHeight: '600px' }}>
             <Swiper
               key={viewMode}
               modules={[Navigation, Thumbs]}
@@ -649,7 +649,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               {images.map((image, index) => (
                 <SwiperSlide key={image.id}>
                   <div 
-                    className="relative w-full aspect-square cursor-zoom-in group/slide"
+                    className="relative w-full h-full cursor-zoom-in group/slide"
                     onClick={() => setIsFullscreen(true)}
                   >
                     <Image
@@ -674,10 +674,14 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
             </Swiper>
             <style jsx global>{`
               .product-gallery-swiper {
+                height: 100% !important;
                 width: 100% !important;
               }
+              .product-gallery-swiper .swiper-wrapper {
+                height: 100% !important;
+              }
               .product-gallery-swiper .swiper-slide {
-                width: 100% !important;
+                height: 100% !important;
               }
             `}</style>
 
@@ -721,6 +725,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
 
           {/* Thumbnails Slider */}
           {imageCount > 1 && (
+            <div className="overflow-hidden" style={{ width: 'calc(100vw - 2rem)', maxWidth: '100%', height: 'calc((100vw - 2rem) / 4 + 8px)', maxHeight: '100px' }}>
             <Swiper
               modules={[FreeMode, Thumbs]}
               onSwiper={setThumbsSwiper}
@@ -733,13 +738,13 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                 480: { slidesPerView: 5, spaceBetween: 10 },
                 640: { slidesPerView: 6, spaceBetween: 10 },
               }}
-              className="thumbs-slider w-full max-w-full"
+              className="thumbs-slider w-full max-w-full h-full"
             >
               {images.map((image, index) => (
                 <SwiperSlide key={image.id}>
                   <button
                     type="button"
-                    className={`relative aspect-square w-full overflow-hidden rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
+                    className={`relative w-full h-full overflow-hidden rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
                       selectedImage === index 
                         ? "border-amber-800 ring-2 ring-amber-800/30 shadow-md" 
                         : "border-gray-200 hover:border-gray-400"
@@ -758,6 +763,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                 </SwiperSlide>
               ))}
             </Swiper>
+            </div>
           )}
         </div>
       </div>
