@@ -437,7 +437,8 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case "add": {
         // Get user's wishlist share_key
-        const { shareKey, error } = await getUserWishlistShareKey(userId);
+        const { shareKey: foundShareKey, error } = await getUserWishlistShareKey(userId);
+        let shareKey = foundShareKey;
         
         // Handle upstream auth errors
         if (error === "upstream_unauthorized") {
@@ -453,24 +454,52 @@ export async function POST(request: NextRequest) {
             { status: 503 }
           );
         }
-        
+
         if (!shareKey) {
-          return NextResponse.json(
-            {
-              success: false,
-              error: {
-                code: "no_wishlist",
-                message: "No wishlist found. Please create a wishlist first.",
-              },
+          // Auto-create wishlist for user
+          const createResponse = await fetch(noCacheUrl(`${WISHLIST_BASE}/create?${getBasicAuthParams()}`), {
+            method: "POST",
+            headers: {
+              ...backendHeaders(),
+              "Content-Type": "application/json",
             },
-            { status: 404 }
-          );
+            body: JSON.stringify({
+              user_id: userId,
+              title: "Default Wishlist",
+              status: "private",
+            }),
+          });
+
+          if (createResponse.ok) {
+            const createData = await createResponse.json();
+            const newShareKey = createData.share_key || (Array.isArray(createData) && createData[0]?.share_key);
+            if (newShareKey) {
+              shareKey = newShareKey;
+              setCachedShareKey(userId, newShareKey);
+            }
+          }
+
+          if (!shareKey) {
+            return NextResponse.json(
+              {
+                success: false,
+                error: {
+                  code: "no_wishlist",
+                  message: "Could not create wishlist. Please try again.",
+                },
+              },
+              { status: 500 }
+            );
+          }
         }
         
         // TI Wishlist: POST /{share_key}/add_product
         const response = await fetch(noCacheUrl(`${WISHLIST_BASE}/${shareKey}/add_product?${getBasicAuthParams()}`), {
           method: "POST",
-          headers: backendHeaders(),
+          headers: {
+            ...backendHeaders(),
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
             product_id: body.product_id,
             variation_id: body.variation_id || 0,
@@ -569,7 +598,10 @@ export async function POST(request: NextRequest) {
         // TI Wishlist: DELETE /{share_key}/remove_product/{item_id}
         const response = await fetch(noCacheUrl(`${WISHLIST_BASE}/${shareKey}/remove_product/${itemId}?${getBasicAuthParams()}`), {
           method: "DELETE",
-          headers: backendHeaders(),
+          headers: {
+            ...backendHeaders(),
+            "Content-Type": "application/json",
+          },
         });
         
         const responseText = await response.text();
@@ -626,7 +658,8 @@ export async function POST(request: NextRequest) {
         const results: Array<{ product_id: number; success: boolean }> = [];
         
         // Get user's wishlist share_key
-        const { shareKey, error } = await getUserWishlistShareKey(userId);
+        const { shareKey: foundSyncShareKey, error } = await getUserWishlistShareKey(userId);
+        let shareKey = foundSyncShareKey;
         
         // Handle upstream auth errors
         if (error === "upstream_unauthorized") {
@@ -642,18 +675,43 @@ export async function POST(request: NextRequest) {
             { status: 503 }
           );
         }
-        
+
         if (!shareKey) {
-          return NextResponse.json(
-            {
-              success: false,
-              error: {
-                code: "wishlist_error",
-                message: "Could not get wishlist for sync.",
-              },
+          // Auto-create wishlist for user during sync
+          const createResponse = await fetch(noCacheUrl(`${WISHLIST_BASE}/create?${getBasicAuthParams()}`), {
+            method: "POST",
+            headers: {
+              ...backendHeaders(),
+              "Content-Type": "application/json",
             },
-            { status: 500 }
-          );
+            body: JSON.stringify({
+              user_id: userId,
+              title: "Default Wishlist",
+              status: "private",
+            }),
+          });
+
+          if (createResponse.ok) {
+            const createData = await createResponse.json();
+            const newShareKey = createData.share_key || (Array.isArray(createData) && createData[0]?.share_key);
+            if (newShareKey) {
+              shareKey = newShareKey;
+              setCachedShareKey(userId, newShareKey);
+            }
+          }
+
+          if (!shareKey) {
+            return NextResponse.json(
+              {
+                success: false,
+                error: {
+                  code: "wishlist_error",
+                  message: "Could not create wishlist for sync.",
+                },
+              },
+              { status: 500 }
+            );
+          }
         }
         
         // Add each item to the wishlist
@@ -661,7 +719,10 @@ export async function POST(request: NextRequest) {
           try {
             const response = await fetch(noCacheUrl(`${WISHLIST_BASE}/${shareKey}/add_product?${getBasicAuthParams()}`), {
               method: "POST",
-              headers: backendHeaders(),
+              headers: {
+                ...backendHeaders(),
+                "Content-Type": "application/json",
+              },
               body: JSON.stringify({
                 product_id: item.product_id,
                 variation_id: item.variation_id || 0,

@@ -219,7 +219,7 @@ export function PhoneInput({
           required={required}
           disabled={disabled}
           className={cn(
-            "flex h-10 w-full border bg-white px-3 py-2 text-sm transition-colors flex-1 min-w-0",
+            "flex h-10 w-full border bg-white px-3 py-2 text-base sm:text-sm transition-colors flex-1 min-w-0",
             "placeholder:text-gray-400",
             "focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900",
             "disabled:cursor-not-allowed disabled:opacity-50",
@@ -245,7 +245,7 @@ export function PhoneInput({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={isRTL ? "ابحث عن دولة..." : "Search country..."}
-                  className="w-full rounded-md border border-gray-200 py-2 pl-9 pr-3 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                  className="w-full rounded-md border border-gray-200 py-2 pl-9 pr-3 text-base sm:text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
                   dir="ltr"
                 />
               </div>
