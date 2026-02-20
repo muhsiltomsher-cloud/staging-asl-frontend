@@ -213,7 +213,7 @@ export async function POST(request: NextRequest) {
       order_id,
       order_key,
       amount,
-      currency = "KWD",
+      currency = "AED",
       customer_name,
       customer_email,
       customer_phone,

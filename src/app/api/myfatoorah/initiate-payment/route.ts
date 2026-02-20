@@ -144,11 +144,14 @@ export async function POST(request: NextRequest) {
 
     const body: InitiatePaymentRequest = await request.json();
     
-    console.log("MyFatoorah initiate-payment request:", {
+    console.log("MyFatoorah initiate-payment request:", JSON.stringify({
       order_id: body.order_id,
       invoice_value: body.invoice_value,
       currency_iso: body.currency_iso,
-    });
+      customer_name: body.customer_name,
+      customer_email: body.customer_email,
+      customer_phone: body.customer_phone,
+    }));
     
     const {
       order_id,
@@ -157,19 +160,29 @@ export async function POST(request: NextRequest) {
       customer_name,
       customer_email,
       customer_phone,
-      currency_iso = "KWD",
+      currency_iso = "AED",
       language = "en",
       callback_url,
       error_url,
     } = body;
 
-    if (!order_id || !invoice_value || !customer_name || !callback_url || !error_url) {
+    const trimmedName = (customer_name || "").trim();
+
+    if (!order_id || !invoice_value || !trimmedName || !callback_url || !error_url) {
+      const missing = [
+        !order_id && "order_id",
+        !invoice_value && "invoice_value",
+        !trimmedName && "customer_name",
+        !callback_url && "callback_url",
+        !error_url && "error_url",
+      ].filter(Boolean);
+      console.error("MyFatoorah missing params:", missing);
       return NextResponse.json(
         {
           success: false,
           error: {
             code: "missing_params",
-            message: "Missing required parameters: order_id, invoice_value, customer_name, callback_url, error_url",
+            message: `Missing required parameters: ${missing.join(", ")}`,
           },
         },
         { status: 400 }
@@ -182,7 +195,7 @@ export async function POST(request: NextRequest) {
       NotificationOption: "LNK",
       InvoiceValue: invoice_value,
       DisplayCurrencyIso: currency_iso,
-      CustomerName: customer_name,
+      CustomerName: trimmedName,
       CustomerEmail: customer_email || "",
       CustomerMobile: parsedPhone.localNumber,
       ...(parsedPhone.countryCode && { MobileCountryCode: parsedPhone.countryCode }),
@@ -195,6 +208,7 @@ export async function POST(request: NextRequest) {
 
     const apiBaseUrl = getMyFatoorahApiBaseUrl();
     console.log("MyFatoorah API URL:", `${apiBaseUrl}/v2/SendPayment`);
+    console.log("MyFatoorah payment payload:", JSON.stringify(paymentData));
 
     const response = await fetch(`${apiBaseUrl}/v2/SendPayment`, {
       method: "POST",
@@ -225,17 +239,23 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok || !data.IsSuccess) {
       const validationErrors = data.ValidationErrors as Array<{ Name?: string; Error?: string }> | undefined;
-      console.error("MyFatoorah API error:", {
+      const allValidationMessages = validationErrors?.map(e => `${e.Name}: ${e.Error}`).join("; ");
+      console.error("MyFatoorah API error:", JSON.stringify({
         status: response.status,
+        isSuccess: data.IsSuccess,
         message: data.Message,
         validationErrors,
-      });
+        fullResponse: responseText.slice(0, 1000),
+      }));
+      const errorMessage = allValidationMessages
+        || (data.Message as string)
+        || `Payment gateway error (HTTP ${response.status})`;
       return NextResponse.json(
         {
           success: false,
           error: {
             code: validationErrors?.[0]?.Name || "myfatoorah_error",
-            message: validationErrors?.[0]?.Error || (data.Message as string) || "Failed to initiate payment",
+            message: errorMessage,
           },
         },
         { status: response.status || 400 }
