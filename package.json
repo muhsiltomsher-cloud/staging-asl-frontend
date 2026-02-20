@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "if [ -f .next/standalone/server.js ]; then cp server.js .next/standalone/server.js; fi",
+    "postbuild": "if [ -f .next/standalone/server.js ]; then sed -i \"s/process.env.HOSTNAME || '0.0.0.0'/'127.0.0.1'/g\" .next/standalone/server.js && echo 'Patched standalone hostname'; fi",
     "start": "NODE_ENV=production node server.js",
     "lint": "eslint"
   },
