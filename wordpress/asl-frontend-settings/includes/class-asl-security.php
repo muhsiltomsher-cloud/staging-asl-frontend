@@ -18,6 +18,11 @@
 
 if (!defined('ABSPATH')) exit;
 
+// Prevent fatal error if ASL_Security is already declared by another plugin (e.g. standalone asl-security)
+if (class_exists('ASL_Security')) {
+    return;
+}
+
 class ASL_Security {
 
     private $frontend_redirect_url = 'https://aromaticscentslab.com';
