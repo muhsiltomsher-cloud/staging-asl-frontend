@@ -80,16 +80,26 @@ jQuery(document).ready(function($) {
         var html = '<div class="asl-slide-item" style="background:#f9f9f9;padding:15px;margin-bottom:15px;border:1px solid #ddd;">' +
             '<h4>Slide ' + (count + 1) + ' <button type="button" class="button asl-remove-slide" style="float:right;color:red;">Remove</button></h4>' +
             '<table class="form-table">' +
-            '<tr><th>Desktop Image</th><td><div class="asl-image-field">' +
+            '<tr><th>Desktop Image (EN)</th><td><div class="asl-image-field">' +
             '<input type="hidden" name="asl_hero_slides[' + count + '][image]" id="asl_hero_slides_' + count + '_image" value="">' +
             '<button type="button" class="button asl-upload-btn" data-target="#asl_hero_slides_' + count + '_image" data-preview="#asl_hero_slides_' + count + '_image_preview">Upload Image</button>' +
             '<button type="button" class="button asl-remove-btn" data-target="#asl_hero_slides_' + count + '_image" data-preview="#asl_hero_slides_' + count + '_image_preview" style="display:none;">Remove</button>' +
             '<div id="asl_hero_slides_' + count + '_image_preview" class="asl-preview"></div></div></td></tr>' +
-            '<tr><th>Mobile Image</th><td><div class="asl-image-field">' +
+            '<tr><th>Mobile Image (EN)</th><td><div class="asl-image-field">' +
             '<input type="hidden" name="asl_hero_slides[' + count + '][mobile]" id="asl_hero_slides_' + count + '_mobile" value="">' +
             '<button type="button" class="button asl-upload-btn" data-target="#asl_hero_slides_' + count + '_mobile" data-preview="#asl_hero_slides_' + count + '_mobile_preview">Upload Image</button>' +
             '<button type="button" class="button asl-remove-btn" data-target="#asl_hero_slides_' + count + '_mobile" data-preview="#asl_hero_slides_' + count + '_mobile_preview" style="display:none;">Remove</button>' +
             '<div id="asl_hero_slides_' + count + '_mobile_preview" class="asl-preview"></div></div></td></tr>' +
+            '<tr><th>Desktop Image (AR)</th><td><div class="asl-image-field">' +
+            '<input type="hidden" name="asl_hero_slides[' + count + '][image_ar]" id="asl_hero_slides_' + count + '_image_ar" value="">' +
+            '<button type="button" class="button asl-upload-btn" data-target="#asl_hero_slides_' + count + '_image_ar" data-preview="#asl_hero_slides_' + count + '_image_ar_preview">Upload Image</button>' +
+            '<button type="button" class="button asl-remove-btn" data-target="#asl_hero_slides_' + count + '_image_ar" data-preview="#asl_hero_slides_' + count + '_image_ar_preview" style="display:none;">Remove</button>' +
+            '<div id="asl_hero_slides_' + count + '_image_ar_preview" class="asl-preview"></div></div></td></tr>' +
+            '<tr><th>Mobile Image (AR)</th><td><div class="asl-image-field">' +
+            '<input type="hidden" name="asl_hero_slides[' + count + '][mobile_ar]" id="asl_hero_slides_' + count + '_mobile_ar" value="">' +
+            '<button type="button" class="button asl-upload-btn" data-target="#asl_hero_slides_' + count + '_mobile_ar" data-preview="#asl_hero_slides_' + count + '_mobile_ar_preview">Upload Image</button>' +
+            '<button type="button" class="button asl-remove-btn" data-target="#asl_hero_slides_' + count + '_mobile_ar" data-preview="#asl_hero_slides_' + count + '_mobile_ar_preview" style="display:none;">Remove</button>' +
+            '<div id="asl_hero_slides_' + count + '_mobile_ar_preview" class="asl-preview"></div></div></td></tr>' +
             '<tr><th>Link URL</th><td><input type="url" name="asl_hero_slides[' + count + '][link]" value="" class="large-text"></td></tr>' +
             '</table></div>';
         container.append(html);
