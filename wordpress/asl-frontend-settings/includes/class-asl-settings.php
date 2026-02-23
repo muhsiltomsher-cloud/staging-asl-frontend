@@ -156,8 +156,10 @@ function asl_render_hero_tab() {
         <div class="asl-slide-item" style="background:#f9f9f9;padding:15px;margin-bottom:15px;border:1px solid #ddd;">
             <h4>Slide <?php echo $i+1; ?> <button type="button" class="button asl-remove-slide" style="float:right;color:red;">Remove</button></h4>
             <table class="form-table">
-                <tr><th>Desktop Image</th><td><?php asl_image_field("asl_hero_slides[{$i}][image]",$s['image']??''); ?></td></tr>
-                <tr><th>Mobile Image</th><td><?php asl_image_field("asl_hero_slides[{$i}][mobile]",$s['mobile']??''); ?></td></tr>
+                <tr><th>Desktop Image (EN)</th><td><?php asl_image_field("asl_hero_slides[{$i}][image]",$s['image']??''); ?></td></tr>
+                <tr><th>Mobile Image (EN)</th><td><?php asl_image_field("asl_hero_slides[{$i}][mobile]",$s['mobile']??''); ?></td></tr>
+                <tr><th>Desktop Image (AR)</th><td><?php asl_image_field("asl_hero_slides[{$i}][image_ar]",$s['image_ar']??''); ?></td></tr>
+                <tr><th>Mobile Image (AR)</th><td><?php asl_image_field("asl_hero_slides[{$i}][mobile_ar]",$s['mobile_ar']??''); ?></td></tr>
                 <tr><th>Link URL</th><td><input type="text" name="asl_hero_slides[<?php echo $i; ?>][link]" value="<?php echo esc_attr($s['link']??''); ?>" class="large-text" placeholder="/shop or https://example.com"></td></tr>
             </table>
         </div>
@@ -513,7 +515,7 @@ function asl_save_home_settings() {
             $slides = array();
             if (isset($_POST['asl_hero_slides']) && is_array($_POST['asl_hero_slides'])) {
                 foreach ($_POST['asl_hero_slides'] as $s) {
-                    $slides[] = array('image'=>esc_url_raw($s['image']??''),'mobile'=>esc_url_raw($s['mobile']??''),'link'=>asl_sanitize_link($s['link']??''));
+                    $slides[] = array('image'=>esc_url_raw($s['image']??''),'mobile'=>esc_url_raw($s['mobile']??''),'image_ar'=>esc_url_raw($s['image_ar']??''),'mobile_ar'=>esc_url_raw($s['mobile_ar']??''),'link'=>asl_sanitize_link($s['link']??''));
                 }
             }
             set_theme_mod('asl_hero_slides', $slides);
@@ -809,7 +811,16 @@ function asl_get_hero_settings() {
             if (!empty($img)) $slides[] = array('image'=>$img,'mobileImage'=>get_theme_mod("asl_hero_slide_{$i}_mobile",$img),'link'=>get_theme_mod("asl_hero_slide_{$i}_link",''));
         }
     } else {
-        $slides = array_map(function($s) { return array('image'=>$s['image']??'','mobileImage'=>$s['mobile']??$s['image']??'','link'=>$s['link']??''); }, $slides);
+        $lang = isset($_GET['lang']) ? sanitize_text_field($_GET['lang']) : 'en';
+        $slides = array_map(function($s) use ($lang) {
+            $image = $s['image'] ?? '';
+            $mobile = $s['mobile'] ?? $image;
+            if ($lang === 'ar') {
+                $image = !empty($s['image_ar']) ? $s['image_ar'] : $image;
+                $mobile = !empty($s['mobile_ar']) ? $s['mobile_ar'] : $mobile;
+            }
+            return array('image'=>$image,'mobileImage'=>$mobile,'link'=>$s['link']??'');
+        }, $slides);
     }
     return array('enabled'=>get_theme_mod('asl_hero_enabled',true),'hideOnMobile'=>get_theme_mod('asl_hero_hide_mobile',false),'hideOnDesktop'=>get_theme_mod('asl_hero_hide_desktop',false),'autoplay'=>get_theme_mod('asl_hero_autoplay',true),'autoplayDelay'=>get_theme_mod('asl_hero_autoplay_delay',5000),'loop'=>get_theme_mod('asl_hero_loop',true),'slides'=>$slides);
 }
