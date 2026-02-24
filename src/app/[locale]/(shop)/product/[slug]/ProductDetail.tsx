@@ -845,6 +845,9 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                             iconSize="md"
                           />
                         )}
+            {product.tags?.some(tag => tag.slug === "ramadan-special") && (
+              <Badge variant="special">{isRTL ? "عرض رمضان" : "Ramadan Special"}</Badge>
+            )}
           </div>
 
 
