@@ -854,7 +854,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           {/* Short description - now showing full description data */}
           {product.description && sanitizeProductDescription(product.description) && (
             <div
-              className="text-sm leading-relaxed text-gray-600"
+              className="text-sm leading-relaxed text-gray-600 [&_a]:underline"
               dangerouslySetInnerHTML={{ __html: sanitizeProductDescription(product.description) }}
             />
           )}
@@ -1014,7 +1014,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
             >
               {product.short_description ? (
                 <div
-                  className="prose prose-sm max-w-none text-gray-600"
+                  className="prose prose-sm max-w-none text-gray-600 [&_a]:underline"
                   dangerouslySetInnerHTML={{ __html: product.short_description }}
                 />
               ) : (
