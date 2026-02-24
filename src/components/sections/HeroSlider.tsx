@@ -35,36 +35,47 @@ export function HeroSlider({ settings }: HeroSliderProps) {
 
   const SlideContent = ({ slide, index }: { slide: HeroSliderSettings["slides"][0]; index: number }) => {
     const imageContent = (
-      <div className="relative h-[50vh] min-h-[400px] w-full md:h-[70vh] md:min-h-[500px]">
-        {slide.image?.url ? (
-          <>
+      <>
+        {/* Desktop image container */}
+        <div className="relative hidden w-full md:block md:h-[70vh] md:min-h-[500px]">
+          {slide.image?.url ? (
             <Image
               src={slide.image.url}
               alt={slide.image.alt || `Slide ${index + 1}`}
               fill
               priority={index === 0}
               sizes="100vw"
-              className="hidden object-cover md:block"
+              className="object-cover"
               placeholder="blur"
               blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAUH/8QAIhAAAgEDAwUBAAAAAAAAAAAAAQIDAAQRBRIhBhMiMUFR/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAZEQACAwEAAAAAAAAAAAAAAAABAgADESH/2gAMAwEAAhEDEEA/AKOm9R6hY2sNtDLGI4kCKDGpOAMDk/aKKKlZJJyTNQoUdZ//2Q=="
             />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gray-200">
+              <span className="text-gray-400">No image</span>
+            </div>
+          )}
+        </div>
+        {/* Mobile image container - uses aspect ratio to show full image without cropping */}
+        <div className="relative w-full md:hidden">
+          {(slide.mobile_image?.url || slide.image?.url) ? (
             <Image
               src={slide.mobile_image?.url || slide.image.url}
               alt={slide.mobile_image?.alt || slide.image.alt || `Slide ${index + 1}`}
-              fill
+              width={1080}
+              height={1475}
               priority={index === 0}
               sizes="100vw"
-              className="object-cover md:hidden"
+              className="h-auto w-full"
               placeholder="blur"
               blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAUH/8QAIhAAAgEDAwUBAAAAAAAAAAAAAQIDAAQRBRIhBhMiMUFR/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAZEQACAwEAAAAAAAAAAAAAAAABAgADESH/2gAMAwEAAhEDEEA/AKOm9R6hY2sNtDLGI4kCKDGpOAMDk/aKKKlZJJyTNQoUdZ//2Q=="
             />
-          </>
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gray-200">
-            <span className="text-gray-400">No image</span>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="flex aspect-[3/4] w-full items-center justify-center bg-gray-200">
+              <span className="text-gray-400">No image</span>
+            </div>
+          )}
+        </div>
+      </>
     );
 
     if (slide.link?.url) {
