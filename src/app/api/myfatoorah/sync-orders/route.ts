@@ -35,7 +35,7 @@ function getMyFatoorahApiBaseUrl(): string {
     case "OM":
     case "OMN":
     default:
-      return "https://api.myfatoorah.com";
+      return "https://api-ae.myfatoorah.com";
   }
 }
 
