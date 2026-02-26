@@ -42,6 +42,10 @@ const nextConfig: NextConfig = {
   async headers() {
     const securityHeaders = [
       {
+        key: "X-Robots-Tag",
+        value: "noindex, nofollow, noarchive, nosnippet",
+      },
+      {
         key: "X-Frame-Options",
         value: "DENY",
       },
