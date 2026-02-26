@@ -69,10 +69,6 @@ export async function generateMetadata({
   const twitterDescription = (isArabic ? seoSettings.twitter.descriptionAr : seoSettings.twitter.description) || ogDescription;
   const twitterImage = seoSettings.twitter.image || ogImage;
 
-  const robotsParts = seoSettings.robots.split(',');
-  const shouldIndex = !robotsParts.includes('noindex');
-  const shouldFollow = !robotsParts.includes('nofollow');
-
   return {
     title: {
       default: metaTitle,
@@ -101,19 +97,12 @@ export async function generateMetadata({
       images: twitterImage ? [twitterImage] : undefined,
     },
     robots: {
-      index: shouldIndex,
-      follow: shouldFollow,
+      index: false,
+      follow: false,
       googleBot: {
-        index: shouldIndex,
-        follow: shouldFollow,
-        "max-video-preview": -1,
-        "max-image-preview": "large" as const,
-        "max-snippet": -1,
+        index: false,
+        follow: false,
       },
-    },
-    verification: {
-      google: seoSettings.verification.google || undefined,
-      other: seoSettings.verification.bing ? { "msvalidate.01": seoSettings.verification.bing } : undefined,
     },
     other: {
       ...(seoSettings.openGraph.fbAppId ? { "fb:app_id": seoSettings.openGraph.fbAppId } : {}),

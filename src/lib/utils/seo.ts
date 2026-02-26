@@ -22,6 +22,8 @@ export function generateMetadata({
   image,
   locale,
   pathname,
+  // noIndex is kept for API compatibility but always enforced as true
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   noIndex = false,
   alternatePathnames,
 }: GenerateMetadataParams): Metadata {
@@ -69,22 +71,14 @@ export function generateMetadata({
       description: fullDescription,
       images: [ogImage],
     },
-    robots: noIndex
-      ? {
-          index: false,
-          follow: false,
-        }
-      : {
-          index: true,
-          follow: true,
-          googleBot: {
-            index: true,
-            follow: true,
-            "max-video-preview": -1,
-            "max-image-preview": "large",
-            "max-snippet": -1,
-          },
-        },
+    robots: {
+      index: false,
+      follow: false,
+      googleBot: {
+        index: false,
+        follow: false,
+      },
+    },
   };
 }
 
