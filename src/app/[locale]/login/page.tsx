@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Home } from "lucide-react";
 import { Input } from "@/components/common/Input";
 import { Button } from "@/components/common/Button";
@@ -15,7 +15,9 @@ interface LoginPageProps {
 
 export default function LoginPage({ params }: LoginPageProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login, googleLogin, isLoading } = useAuth();
+  const passwordChanged = searchParams.get("password_changed") === "true";
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [locale, setLocale] = useState<string>("en");
   const [formData, setFormData] = useState({
@@ -61,6 +63,7 @@ export default function LoginPage({ params }: LoginPageProps) {
       returningUserLink: "Forgot Password",
       returningUserSuffix: "to set up your new password.",
       loginFailedSuggestion: "Forgot your password? Click here to reset it.",
+      passwordChangedMessage: "Your password has been changed successfully. Please log in with your new password.",
     },
     ar: {
       login: "تسجيل الدخول",
@@ -86,6 +89,7 @@ export default function LoginPage({ params }: LoginPageProps) {
       returningUserLink: "نسيت كلمة المرور",
       returningUserSuffix: "لإعداد كلمة مرور جديدة.",
       loginFailedSuggestion: "نسيت كلمة المرور؟ اضغط هنا لإعادة تعيينها.",
+      passwordChangedMessage: "تم تغيير كلمة المرور بنجاح. يرجى تسجيل الدخول بكلمة المرور الجديدة.",
     },
   };
 
@@ -234,6 +238,12 @@ export default function LoginPage({ params }: LoginPageProps) {
             {isGoogleLoading && (
               <div className="mb-6 rounded-md bg-blue-50 p-4 text-sm text-blue-600 text-center">
                 {texts.loggingIn}
+              </div>
+            )}
+
+            {passwordChanged && (
+              <div className={`mb-6 rounded-md bg-green-50 border border-green-200 p-4 text-sm text-green-800 ${isRTL ? "text-right" : "text-left"}`}>
+                <p>{texts.passwordChangedMessage}</p>
               </div>
             )}
 
