@@ -681,11 +681,16 @@ export default function CheckoutClient() {
       } else {
         setIsEmailRegistered(false);
         setShowLoginPrompt(false);
+        // Restore createAccount to true when email is not registered
+        // This handles the case where user first typed a registered email (turning off createAccount)
+        // then corrected it to an unregistered email
+        setCreateAccount(true);
       }
     } catch (error) {
       console.error("Failed to check email registration:", error);
       setIsEmailRegistered(false);
       setShowLoginPrompt(false);
+      setCreateAccount(true);
     } finally {
       setIsCheckingEmail(false);
     }
