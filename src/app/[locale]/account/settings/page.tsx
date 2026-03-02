@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { User, Mail, Save, Lock, Bell, Eye, EyeOff } from "lucide-react";
 import { PhoneInput } from "@/components/common/PhoneInput";
@@ -37,7 +38,7 @@ const translations = {
     confirmPassword: "Confirm Password",
     updatePassword: "Update Password",
     updatingPassword: "Updating...",
-    passwordChanged: "Password changed successfully",
+    passwordChanged: "Password changed successfully. Logging you out...",
     passwordError: "Failed to change password",
     passwordMismatch: "Passwords do not match",
     passwordTooShort: "Password must be at least 6 characters",
@@ -71,7 +72,7 @@ const translations = {
     confirmPassword: "تأكيد كلمة المرور",
     updatePassword: "تحديث كلمة المرور",
     updatingPassword: "جاري التحديث...",
-    passwordChanged: "تم تغيير كلمة المرور بنجاح",
+    passwordChanged: "تم تغيير كلمة المرور بنجاح. جاري تسجيل الخروج...",
     passwordError: "فشل في تغيير كلمة المرور",
     passwordMismatch: "كلمات المرور غير متطابقة",
     passwordTooShort: "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
@@ -87,7 +88,8 @@ const translations = {
 };
 
 export default function SettingsPage({ params }: SettingsPageProps) {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
+  const router = useRouter();
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -219,7 +221,11 @@ export default function SettingsPage({ params }: SettingsPageProps) {
       if (response.success) {
         setPasswordMessage({ type: "success", text: t.passwordChanged });
         setPasswordData({ newPassword: "", confirmPassword: "" });
-        setTimeout(() => setPasswordMessage(null), 3000);
+        // Auto-logout and redirect to login page after password change
+        setTimeout(() => {
+          logout();
+          router.push(`/${locale}/login?password_changed=true`);
+        }, 1500);
       } else {
         setPasswordMessage({ type: "error", text: response.error?.message || t.passwordError });
       }
