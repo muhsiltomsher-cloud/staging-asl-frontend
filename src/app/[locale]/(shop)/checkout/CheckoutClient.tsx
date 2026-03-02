@@ -187,6 +187,11 @@ export default function CheckoutClient() {
         const [isCheckingEmail, setIsCheckingEmail] = useState(false);
         const [showLoginPrompt, setShowLoginPrompt] = useState(false);
         const emailCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+        // Track whether createAccount was auto-unchecked by registered-email detection
+        // vs explicitly unchecked by the user (to avoid overriding user's opt-out choice)
+        const wasAutoUncheckedRef = useRef(false);
+        const createAccountRef = useRef(createAccount);
+        createAccountRef.current = createAccount;
 
         const [addressErrors, setAddressErrors] = useState<{ shippingAddress?: string; shippingCity?: string; billingAddress?: string; billingCity?: string }>({});
         const isKeyboardVisible = useKeyboardVisible();
@@ -671,7 +676,8 @@ export default function CheckoutClient() {
         setIsEmailRegistered(true);
         // Auto-uncheck create account if email is already registered
         // This allows seamless guest checkout without extra clicks
-        if (createAccount) {
+        if (createAccountRef.current) {
+          wasAutoUncheckedRef.current = true;
           setCreateAccount(false);
           setAccountPassword("");
           setConfirmPassword("");
@@ -681,20 +687,25 @@ export default function CheckoutClient() {
       } else {
         setIsEmailRegistered(false);
         setShowLoginPrompt(false);
-        // Restore createAccount to true when email is not registered
-        // This handles the case where user first typed a registered email (turning off createAccount)
-        // then corrected it to an unregistered email
-        setCreateAccount(true);
+        // Only restore createAccount if it was auto-unchecked by registered-email detection
+        // Don't override if user explicitly unchecked the checkbox
+        if (wasAutoUncheckedRef.current) {
+          setCreateAccount(true);
+          wasAutoUncheckedRef.current = false;
+        }
       }
     } catch (error) {
       console.error("Failed to check email registration:", error);
       setIsEmailRegistered(false);
       setShowLoginPrompt(false);
-      setCreateAccount(true);
+      if (wasAutoUncheckedRef.current) {
+        setCreateAccount(true);
+        wasAutoUncheckedRef.current = false;
+      }
     } finally {
       setIsCheckingEmail(false);
     }
-  }, [isAuthenticated, createAccount]);
+  }, [isAuthenticated]);
 
   // Debounced email check when email changes
   useEffect(() => {
@@ -1484,6 +1495,8 @@ export default function CheckoutClient() {
                       onChange={(e) => {
                         const checked = e.target.checked;
                         setCreateAccount(checked);
+                        // Mark as user action so email check won't override this choice
+                        wasAutoUncheckedRef.current = false;
                         if (!checked) {
                           setAccountPassword("");
                           setConfirmPassword("");
