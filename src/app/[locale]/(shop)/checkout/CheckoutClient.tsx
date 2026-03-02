@@ -176,7 +176,7 @@ export default function CheckoutClient() {
         const [shippingTotal, setShippingTotal] = useState<string>("0");
         const [shippingCountries, setShippingCountries] = useState<CountryOption[] | undefined>(undefined);
         
-        const [createAccount, setCreateAccount] = useState(false);
+        const [createAccount, setCreateAccount] = useState(true);
         const [accountPassword, setAccountPassword] = useState("");
         const [confirmPassword, setConfirmPassword] = useState("");
         const [passwordError, setPasswordError] = useState<string | null>(null);
@@ -767,24 +767,28 @@ export default function CheckoutClient() {
         return;
       }
 
-      // Validate password if creating account
+      // Validate password if creating account with explicit password
       let newCustomerId: number | undefined;
       
-      if (createAccount && !isAuthenticated) {
-        // Validate passwords
-        if (!accountPassword || accountPassword.length < 6) {
-          setPasswordError(isRTL ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل" : "Password must be at least 6 characters");
-          setIsSubmitting(false);
-          return;
+      if (createAccount && !isAuthenticated && !isEmailRegistered) {
+        // If user provided a password, validate it
+        if (accountPassword) {
+          if (accountPassword.length < 6) {
+            setPasswordError(isRTL ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل" : "Password must be at least 6 characters");
+            setIsSubmitting(false);
+            return;
+          }
+          
+          if (accountPassword !== confirmPassword) {
+            setPasswordError(isRTL ? "كلمات المرور غير متطابقة" : "Passwords do not match");
+            setIsSubmitting(false);
+            return;
+          }
         }
         
-        if (accountPassword !== confirmPassword) {
-          setPasswordError(isRTL ? "كلمات المرور غير متطابقة" : "Passwords do not match");
-          setIsSubmitting(false);
-          return;
-        }
+        // Create account - use provided password or auto-generate one
+        const passwordToUse = accountPassword || (Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10) + "A1!");
         
-        // Create account
         setIsCreatingAccount(true);
         try {
           const customerResponse = await fetch("/api/customer", {
@@ -795,7 +799,7 @@ export default function CheckoutClient() {
             body: JSON.stringify({
               email: formData.shipping.email,
               username: formData.shipping.email,
-              password: accountPassword,
+              password: passwordToUse,
               first_name: formData.shipping.firstName,
               last_name: formData.shipping.lastName,
               billing: {
@@ -827,19 +831,15 @@ export default function CheckoutClient() {
           const customerData = await customerResponse.json();
           
           if (!customerData.success) {
-            const errorMessage = customerData.error?.message || (isRTL ? "فشل إنشاء الحساب" : "Failed to create account");
-            setPasswordError(errorMessage);
-            setIsSubmitting(false);
-            setIsCreatingAccount(false);
-            return;
+            // If account creation fails, log but don't block the order
+            // The order should still go through as guest checkout
+            console.error("Account creation failed during checkout:", customerData.error?.message);
+          } else {
+            newCustomerId = customerData.data?.id;
           }
-          
-          newCustomerId = customerData.data?.id;
-        } catch {
-          setPasswordError(isRTL ? "حدث خطأ أثناء إنشاء الحساب" : "An error occurred while creating account");
-          setIsSubmitting(false);
-          setIsCreatingAccount(false);
-          return;
+        } catch (err) {
+          // Account creation failure should not block checkout
+          console.error("Account creation error during checkout:", err);
         }
         setIsCreatingAccount(false);
       }
@@ -1491,7 +1491,9 @@ export default function CheckoutClient() {
                         {isRTL ? "إنشاء حساب لتتبع طلباتك" : "Create an account to track your orders"}
                       </label>
                       <p className="mt-0.5 text-xs text-gray-500">
-                        {isRTL ? "يمكنك تتبع طلباتك وحفظ عناوينك" : "Track your orders and save your addresses"}
+                        {isRTL 
+                          ? "سيتم إنشاء حسابك تلقائيًا وستتلقى تفاصيل تسجيل الدخول عبر البريد الإلكتروني. يمكنك أيضًا تعيين كلمة مرور أدناه." 
+                          : "Your account will be created automatically and you will receive login details via email. You can also set a password below."}
                       </p>
                     </div>
                   </div>
@@ -1509,28 +1511,31 @@ export default function CheckoutClient() {
                           {isRTL ? "جاري إنشاء الحساب..." : "Creating account..."}
                         </div>
                       )}
+                      <p className="text-xs text-gray-500">
+                        {isRTL ? "(اختياري) اختر كلمة مرور خاصة بك" : "(Optional) Choose your own password"}
+                      </p>
                       <Input
                         label={isRTL ? "كلمة المرور" : "Password"}
                         type="password"
-                        required={createAccount}
+                        required={false}
                         value={accountPassword}
                         onChange={(e) => {
                           setAccountPassword(e.target.value);
                           setPasswordError(null);
                         }}
-                        placeholder={isRTL ? "أدخل كلمة المرور" : "Enter password"}
+                        placeholder={isRTL ? "أدخل كلمة المرور (اختياري)" : "Enter password (optional)"}
                         disabled={isCreatingAccount}
                       />
                       <Input
                         label={isRTL ? "تأكيد كلمة المرور" : "Confirm Password"}
                         type="password"
-                        required={createAccount}
+                        required={false}
                         value={confirmPassword}
                         onChange={(e) => {
                           setConfirmPassword(e.target.value);
                           setPasswordError(null);
                         }}
-                        placeholder={isRTL ? "أعد إدخال كلمة المرور" : "Re-enter password"}
+                        placeholder={isRTL ? "أعد إدخال كلمة المرور (اختياري)" : "Re-enter password (optional)"}
                         disabled={isCreatingAccount}
                       />
                     </div>
