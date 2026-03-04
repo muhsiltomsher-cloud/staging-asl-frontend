@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation } from "swiper/modules";
 import { WCProductCard } from "@/components/shop/WCProductCard";
@@ -155,25 +155,21 @@ export function FeaturedProductsSlider({
             ))}
           </Swiper>
 
-          {displayProducts.length > 5 && (
+          {displayProducts.length > 2 && (
             <>
               <button
                 type="button"
-                className="featured-slider-prev absolute -left-4 top-[calc(50%-2.5rem)] z-10 hidden -translate-y-1/2 rounded-full bg-white p-3 shadow-lg transition-all hover:bg-stone-100 lg:block"
+                className={`featured-slider-prev absolute ${isRTL ? 'right-0' : 'left-0'} top-[32%] z-10 -translate-y-1/2 ${isRTL ? 'translate-x-2' : '-translate-x-2'} rounded-full bg-white p-3 shadow-lg transition-all hover:bg-stone-100 disabled:opacity-50 hidden md:flex items-center justify-center`}
                 aria-label="Previous products"
               >
-                <svg className="h-5 w-5 text-amber-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
+                <ChevronLeft className={`h-5 w-5 text-amber-900 ${isRTL ? 'rotate-180' : ''}`} />
               </button>
               <button
                 type="button"
-                className="featured-slider-next absolute -right-4 top-[calc(50%-2.5rem)] z-10 hidden -translate-y-1/2 rounded-full bg-white p-3 shadow-lg transition-all hover:bg-stone-100 lg:block"
+                className={`featured-slider-next absolute ${isRTL ? 'left-0' : 'right-0'} top-[32%] z-10 -translate-y-1/2 ${isRTL ? '-translate-x-2' : 'translate-x-2'} rounded-full bg-white p-3 shadow-lg transition-all hover:bg-stone-100 disabled:opacity-50 hidden md:flex items-center justify-center`}
                 aria-label="Next products"
               >
-                <svg className="h-5 w-5 text-amber-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+                <ChevronRight className={`h-5 w-5 text-amber-900 ${isRTL ? 'rotate-180' : ''}`} />
               </button>
             </>
           )}

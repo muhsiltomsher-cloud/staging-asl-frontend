@@ -87,6 +87,19 @@ const translations = {
   },
 };
 
+const EMAIL_NOTIFICATIONS_KEY = "asl_email_notifications";
+const SMS_NOTIFICATIONS_KEY = "asl_sms_notifications";
+
+function metaValueToBoolean(value: unknown, defaultValue: boolean): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["1", "true", "yes", "on"].includes(normalized)) return true;
+    if (["0", "false", "no", "off"].includes(normalized)) return false;
+  }
+  return defaultValue;
+}
+
 export default function SettingsPage({ params }: SettingsPageProps) {
   const { user, isAuthenticated, logout } = useAuth();
   const router = useRouter();
@@ -96,6 +109,8 @@ export default function SettingsPage({ params }: SettingsPageProps) {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsNotifications, setSmsNotifications] = useState(false);
+  const [isSavingNotifications, setIsSavingNotifications] = useState(false);
+  const [notificationsMessage, setNotificationsMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [passwordData, setPasswordData] = useState({
     newPassword: "",
     confirmPassword: "",
@@ -132,7 +147,13 @@ export default function SettingsPage({ params }: SettingsPageProps) {
             email: response.data.email || "",
             phone: response.data.billing?.phone || "",
           });
-        } else {
+
+          const meta = response.data.meta_data;
+          const emailMeta = meta?.find((m) => m.key === EMAIL_NOTIFICATIONS_KEY)?.value;
+          const smsMeta = meta?.find((m) => m.key === SMS_NOTIFICATIONS_KEY)?.value;
+          setEmailNotifications(metaValueToBoolean(emailMeta, true));
+          setSmsNotifications(metaValueToBoolean(smsMeta, false));
+        } else { 
           const nameParts = user.user_display_name?.split(" ") || ["", ""];
           setFormData({
             firstName: nameParts[0] || "",
@@ -161,6 +182,45 @@ export default function SettingsPage({ params }: SettingsPageProps) {
       setIsLoading(false);
     }
   }, [isAuthenticated, user]);
+
+  const saveNotificationPreferences = async (nextEmail: boolean, nextSms: boolean) => {
+    if (!user?.user_id) return;
+
+    setIsSavingNotifications(true);
+    setNotificationsMessage(null);
+
+    // Optimistic update
+    const prevEmail = emailNotifications;
+    const prevSms = smsNotifications;
+    setEmailNotifications(nextEmail);
+    setSmsNotifications(nextSms);
+
+    try {
+      const response = await updateCustomer(user.user_id, {
+        meta_data: [
+          { key: EMAIL_NOTIFICATIONS_KEY, value: nextEmail ? "yes" : "no" },
+          { key: SMS_NOTIFICATIONS_KEY, value: nextSms ? "yes" : "no" },
+        ],
+      } as Partial<Customer>);
+
+      if (response.success && response.data) {
+        setCustomer(response.data);
+        setNotificationsMessage({ type: "success", text: t.saved });
+        setTimeout(() => setNotificationsMessage(null), 3000);
+      } else {
+        setEmailNotifications(prevEmail);
+        setSmsNotifications(prevSms);
+        setNotificationsMessage({ type: "error", text: response.error?.message || t.error });
+      }
+    } catch (error) {
+      console.error("Failed to save notification preferences:", error);
+      setEmailNotifications(prevEmail);
+      setSmsNotifications(prevSms);
+      setNotificationsMessage({ type: "error", text: t.error });
+    } finally {
+      setIsSavingNotifications(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -457,10 +517,11 @@ export default function SettingsPage({ params }: SettingsPageProps) {
               </div>
               <button
                 type="button"
-                onClick={() => setEmailNotifications(!emailNotifications)}
+                onClick={() => saveNotificationPreferences(!emailNotifications, smsNotifications)}
+                disabled={isSavingNotifications}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   emailNotifications ? "bg-black" : "bg-gray-200"
-                }`}
+                } ${isSavingNotifications ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -477,10 +538,11 @@ export default function SettingsPage({ params }: SettingsPageProps) {
               </div>
               <button
                 type="button"
-                onClick={() => setSmsNotifications(!smsNotifications)}
+                onClick={() => saveNotificationPreferences(emailNotifications, !smsNotifications)}
+                disabled={isSavingNotifications}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   smsNotifications ? "bg-black" : "bg-gray-200"
-                }`}
+                } ${isSavingNotifications ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -489,6 +551,18 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                 />
               </button>
             </div>
+
+            {notificationsMessage && (
+              <div
+                className={`rounded-lg p-3 text-sm ${
+                  notificationsMessage.type === "success"
+                    ? "bg-green-50 text-green-800"
+                    : "bg-red-50 text-red-800"
+                }`}
+              >
+                {notificationsMessage.text}
+              </div>
+            )}
           </div>
         </div>
       </div>

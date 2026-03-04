@@ -54,13 +54,10 @@ export function checkRateLimit(
   const entry = rateLimitStore.get(key);
   
   if (!entry || now > entry.resetTime) {
-    rateLimitStore.set(key, {
-      count: 1,
-      resetTime: now + config.windowMs,
-    });
+    // No existing entry or expired — allow without incrementing
     return {
       allowed: true,
-      remaining: config.maxRequests - 1,
+      remaining: config.maxRequests,
       resetTime: now + config.windowMs,
     };
   }
@@ -73,12 +70,39 @@ export function checkRateLimit(
     };
   }
   
-  entry.count++;
   return {
     allowed: true,
     remaining: config.maxRequests - entry.count,
     resetTime: entry.resetTime,
   };
+}
+
+/**
+ * Increment the rate limit counter for a request.
+ * Call this only on failed attempts so that successful logins
+ * do not count toward the rate limit.
+ */
+export function incrementRateLimit(
+  request: NextRequest,
+  config: RateLimitConfig
+): void {
+  cleanupExpiredEntries();
+  
+  const clientId = getClientIdentifier(request);
+  const key = `${config.keyPrefix || "default"}:${clientId}`;
+  const now = Date.now();
+  
+  const entry = rateLimitStore.get(key);
+  
+  if (!entry || now > entry.resetTime) {
+    rateLimitStore.set(key, {
+      count: 1,
+      resetTime: now + config.windowMs,
+    });
+    return;
+  }
+  
+  entry.count++;
 }
 
 export function rateLimitResponse(resetTime: number): NextResponse {

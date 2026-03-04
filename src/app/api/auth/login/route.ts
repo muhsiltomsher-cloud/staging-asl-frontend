@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { checkRateLimit, rateLimitResponse, LOGIN_RATE_LIMIT } from "@/lib/security";
+import { checkRateLimit, incrementRateLimit, rateLimitResponse, LOGIN_RATE_LIMIT } from "@/lib/security";
 import { API_BASE, backendPostHeaders, noCacheUrl, safeJsonResponse } from "@/lib/utils/backendFetch";
 
 export interface LoginRequest {
@@ -25,7 +25,7 @@ export interface LoginResponse {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse<LoginResponse>> {
-  // Check rate limit
+  // Check rate limit (only checks, does not increment)
   const rateLimitResult = checkRateLimit(request, LOGIN_RATE_LIMIT);
   if (!rateLimitResult.allowed) {
     return rateLimitResponse(rateLimitResult.resetTime) as NextResponse<LoginResponse>;
@@ -70,6 +70,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
     const data = await safeJsonResponse(response);
 
     if (!response.ok) {
+      // Only increment rate limit counter on failed login attempts
+      incrementRateLimit(request, LOGIN_RATE_LIMIT);
       return NextResponse.json(
         {
           success: false,

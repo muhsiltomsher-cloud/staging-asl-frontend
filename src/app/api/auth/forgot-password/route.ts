@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
-import { checkRateLimit, rateLimitResponse, FORGOT_PASSWORD_RATE_LIMIT } from "@/lib/security";
+import { checkRateLimit, incrementRateLimit, rateLimitResponse, FORGOT_PASSWORD_RATE_LIMIT } from "@/lib/security";
 
 const API_BASE = siteConfig.apiUrl;
 
@@ -109,6 +109,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<ForgotPas
     }
 
     const trimmedEmail = email.trim();
+
+    // Count this as an attempt (prevent email spam / brute force)
+    incrementRateLimit(request, FORGOT_PASSWORD_RATE_LIMIT);
 
     const bdpwrResponse = await fetch(`${API_BASE}/wp-json/bdpwr/v1/reset-password`, {
       method: "POST",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, use } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Home } from "lucide-react";
@@ -13,13 +13,19 @@ interface LoginPageProps {
   params: Promise<{ locale: string }>;
 }
 
+const AUTH_PAGE_BG_STYLE = {
+  backgroundImage: "url(https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)",
+  backgroundSize: "cover",
+  backgroundPosition: "center",
+  backgroundRepeat: "no-repeat",
+} as const;
+
 export default function LoginPage({ params }: LoginPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, googleLogin, isLoading } = useAuth();
   const passwordChanged = searchParams.get("password_changed") === "true";
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [locale, setLocale] = useState<string>("en");
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -32,9 +38,8 @@ export default function LoginPage({ params }: LoginPageProps) {
   const [rateLimitSeconds, setRateLimitSeconds] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    params.then((p) => setLocale(p.locale));
-  }, [params]);
+  const resolvedParams = use(params);
+  const locale = resolvedParams.locale as string;
 
   const isRTL = locale === "ar";
 
@@ -173,14 +178,9 @@ export default function LoginPage({ params }: LoginPageProps) {
   };
 
   return (
-    <div 
+    <div
       className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-8 md:py-12"
-      style={{ 
-        backgroundImage: 'url(https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }}
+      style={AUTH_PAGE_BG_STYLE}
     >
       <div className="w-full max-w-md">
         <div className="rounded-2xl shadow-2xl">
