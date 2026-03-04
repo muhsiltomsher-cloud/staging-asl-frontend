@@ -154,9 +154,10 @@ export function ProductListing({
   }, [gridColumns]);
 
   const handleGridColumnsChange = useCallback((columns: GridColumns) => {
-    const newPreference = { viewMode, gridColumns: columns };
+    // Always save as grid mode since column changes imply grid view
+    const newPreference = { viewMode: "grid" as ViewMode, gridColumns: columns };
     savePreference(newPreference);
-  }, [viewMode]);
+  }, []);
 
   const handleSortChange = useCallback((sort: SortOption) => {
     setSortBy(sort);

@@ -136,7 +136,7 @@ export function ProductViewToggle({
               key={option.columns}
               type="button"
               onClick={() => {
-                if (viewMode !== "grid") onViewModeChange("grid");
+                onViewModeChange("grid");
                 onGridColumnsChange(option.columns);
               }}
               className={cn(
@@ -144,8 +144,7 @@ export function ProductViewToggle({
                 viewMode === "grid" && gridColumns === option.columns
                   ? "bg-white text-amber-700 shadow-sm"
                   : "text-gray-500 hover:text-gray-700",
-                option.columns === 5 && "hidden lg:flex",
-                option.columns >= 3 && "hidden md:flex"
+                option.columns === 5 ? "hidden lg:flex" : option.columns >= 3 ? "hidden md:flex" : undefined
               )}
               aria-label={`${option.columns} ${t.columns}`}
               title={`${option.columns} ${t.columns}`}
