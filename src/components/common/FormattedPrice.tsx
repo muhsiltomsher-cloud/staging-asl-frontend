@@ -41,9 +41,11 @@ export function FormattedPrice({
   // Convert price from source currency to user's selected currency
   const convertedPrice = convertPrice(numericPrice, sourceCurrency);
 
+  // Cap decimal places at 2 for consistent display across all currencies
+  const displayDecimals = Math.min(currencyInfo.decimals, 2);
   const formattedNumber = new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: currencyInfo.decimals,
-    maximumFractionDigits: currencyInfo.decimals,
+    minimumFractionDigits: displayDecimals,
+    maximumFractionDigits: displayDecimals,
   }).format(convertedPrice);
 
   const isAED = currency === "AED";

@@ -284,13 +284,6 @@ export function PhoneInput({
       {displayError && (
         <p className="mt-1.5 text-sm text-red-500">{displayError}</p>
       )}
-      {!displayError && selectedConfig && (
-        <p className="mt-1 text-xs text-gray-400">
-          {isRTL
-            ? `${currentConfig.minLength === currentConfig.maxLength ? currentConfig.minLength : `${currentConfig.minLength}-${currentConfig.maxLength}`} أرقام`
-            : `${currentConfig.minLength === currentConfig.maxLength ? currentConfig.minLength : `${currentConfig.minLength}-${currentConfig.maxLength}`} digits`}
-        </p>
-      )}
     </div>
   );
 }

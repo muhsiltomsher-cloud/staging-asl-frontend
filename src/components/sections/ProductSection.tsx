@@ -155,7 +155,7 @@ export function ProductSection({
           >
             {products.slice(0, settings.products_count).map((product) => (
               <SwiperSlide key={product.id}>
-                <WCProductCard product={product} locale={locale} bundleProductSlugs={bundleProductSlugs} englishSlug={englishProductSlugs[product.id]} />
+                <WCProductCard product={product} locale={locale} bundleProductSlugs={bundleProductSlugs} englishSlug={englishProductSlugs[product.id]} hideCategoryTag={true} />
               </SwiperSlide>
             ))}
           </Swiper>

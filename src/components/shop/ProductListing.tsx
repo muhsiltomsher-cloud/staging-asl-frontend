@@ -64,6 +64,7 @@ interface ProductListingProps {
   showToolbar?: boolean;
   toolbarClassName?: string;
   bundleProductSlugs?: string[];
+  hideCategoryTag?: boolean;
 }
 
 const DEFAULT_PREFERENCE: ViewPreference = {
@@ -133,6 +134,7 @@ export function ProductListing({
   showToolbar = true,
   toolbarClassName,
   bundleProductSlugs = [],
+  hideCategoryTag = false,
 }: ProductListingProps) {
   const preference = useSyncExternalStore(
     subscribeToPreference,
@@ -152,9 +154,10 @@ export function ProductListing({
   }, [gridColumns]);
 
   const handleGridColumnsChange = useCallback((columns: GridColumns) => {
-    const newPreference = { viewMode, gridColumns: columns };
+    // Always save as grid mode since column changes imply grid view
+    const newPreference = { viewMode: "grid" as ViewMode, gridColumns: columns };
     savePreference(newPreference);
-  }, [viewMode]);
+  }, []);
 
   const handleSortChange = useCallback((sort: SortOption) => {
     setSortBy(sort);
@@ -197,6 +200,7 @@ export function ProductListing({
           locale={locale}
           columns={gridColumns}
           bundleProductSlugs={bundleProductSlugs}
+          hideCategoryTag={hideCategoryTag}
         />
       ) : (
         <div className="space-y-4">
@@ -206,6 +210,7 @@ export function ProductListing({
               product={product}
               locale={locale}
               bundleProductSlugs={bundleProductSlugs}
+              hideCategoryTag={hideCategoryTag}
             />
           ))}
         </div>

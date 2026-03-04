@@ -17,6 +17,7 @@ export function CategoryClient({ products, locale, bundleProductSlugs = [] }: Ca
       locale={locale}
       showToolbar={true}
       bundleProductSlugs={bundleProductSlugs}
+      hideCategoryTag={true}
     />
   );
 }

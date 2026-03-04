@@ -112,7 +112,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
                 <div className="border-b border-gray-100 bg-[#f7f6f2] h-8">
                   <div className="container mx-auto flex h-8 items-center justify-between px-4">
                     {/* Mobile: Arabic on left */}
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 xl:gap-5">
                       <LanguageSwitcher locale={locale} />
                       {/* Desktop only: Currency next to language */}
                       <div className="hidden xl:block">
@@ -169,7 +169,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
             </Link>
 
             {/* Desktop navigation */}
-            <nav className="hidden xl:flex xl:gap-x-8">
+            <nav className="hidden xl:flex xl:gap-x-10">
               {navigation.map((item) => {
                 if (item.hasMegaMenu) {
                   return (

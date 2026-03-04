@@ -21,6 +21,7 @@ interface WCProductCardProps {
   className?: string;
   bundleProductSlugs?: string[];
   englishSlug?: string;
+  hideCategoryTag?: boolean;
 }
 
 export function WCProductCard({
@@ -29,6 +30,7 @@ export function WCProductCard({
   className,
   bundleProductSlugs = [],
   englishSlug,
+  hideCategoryTag = false,
 }: WCProductCardProps) {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
@@ -176,7 +178,7 @@ export function WCProductCard({
         </div>
 
         <div className="mt-4 space-y-2">
-                                        {product.categories?.[0] && (
+                                        {!hideCategoryTag && product.categories?.[0] && (
                                 <p className="text-[10px] font-medium uppercase tracking-wider text-amber-600 md:text-xs">
                                   {decodeHtmlEntities(product.categories[0].name)}
                                 </p>

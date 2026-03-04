@@ -170,9 +170,11 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
         return String(price);
       }
 
+      // Cap decimal places at 2 for consistent display
+      const displayDecimals = Math.min(currencyInfo.decimals, 2);
       const formattedNumber = new Intl.NumberFormat("en-US", {
-        minimumFractionDigits: currencyInfo.decimals,
-        maximumFractionDigits: currencyInfo.decimals,
+        minimumFractionDigits: displayDecimals,
+        maximumFractionDigits: displayDecimals,
       }).format(numericPrice);
 
       return showCode ? `${formattedNumber} ${currencyInfo.code}` : `${currencyInfo.symbol}${formattedNumber}`;
@@ -198,9 +200,11 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
       const divisor = Math.pow(10, minorUnit);
       const convertedPrice = numericPrice / divisor;
 
+      // Cap decimal places at 2 for consistent display
+      const displayDecimals = Math.min(currencyInfo.decimals, 2);
       const formattedNumber = new Intl.NumberFormat("en-US", {
-        minimumFractionDigits: currencyInfo.decimals,
-        maximumFractionDigits: currencyInfo.decimals,
+        minimumFractionDigits: displayDecimals,
+        maximumFractionDigits: displayDecimals,
       }).format(convertedPrice);
 
       return showCode ? `${formattedNumber} ${currencyInfo.code}` : `${currencyInfo.symbol}${formattedNumber}`;

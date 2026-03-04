@@ -198,11 +198,10 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
       {/* Uniqueness Section - Full Width Banner */}
       <section className="relative overflow-hidden bg-gradient-to-r from-amber-900 via-amber-800 to-stone-900 py-16 md:py-24">
-        {/* Animated Background */}
+        {/* Subtle animated background glow */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute left-1/4 top-0 h-full w-px bg-gradient-to-b from-transparent via-amber-400/20 to-transparent" />
-          <div className="absolute left-1/2 top-0 h-full w-px bg-gradient-to-b from-transparent via-amber-400/20 to-transparent" />
-          <div className="absolute left-3/4 top-0 h-full w-px bg-gradient-to-b from-transparent via-amber-400/20 to-transparent" />
+          <div className="absolute left-1/4 top-1/2 h-64 w-64 -translate-y-1/2 animate-pulse rounded-full bg-amber-400/5 blur-3xl" />
+          <div className="absolute right-1/4 top-1/3 h-48 w-48 animate-pulse rounded-full bg-amber-300/5 blur-3xl" style={{ animationDelay: "1.5s" }} />
         </div>
 
         <div className="container relative mx-auto px-4">
