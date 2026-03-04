@@ -301,7 +301,7 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        baseUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart/item/${removeKey}`, currency, locale);
+        baseUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart/item/${encodeURIComponent(removeKey)}`, currency, locale);
         method = "DELETE";
         break;
       }

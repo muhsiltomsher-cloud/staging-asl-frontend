@@ -211,13 +211,19 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
             return true;
           }
           console.error("Error adding to wishlist:", response.error.message);
-          notify("error", response.error.message || "Failed to add to wishlist");
+          // Show user-friendly message for upstream/server errors
+          const errorCode = response.error.code || "";
+          const isServerError = errorCode.includes("upstream") || errorCode.includes("misconfigured") || (response.error.data?.status && response.error.data.status >= 500);
+          const userMessage = isServerError
+            ? "Wishlist service is temporarily unavailable. Please try again later."
+            : (response.error.message || "Failed to add to wishlist");
+          notify("error", userMessage);
           return false;
         }
         return false;
       } catch (error) {
         console.error("Error adding to wishlist:", error);
-        notify("error", "Failed to add to wishlist");
+        notify("error", "Failed to add to wishlist. Please try again.");
         return false;
       } finally {
         setIsLoading(false);

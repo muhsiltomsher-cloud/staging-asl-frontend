@@ -81,6 +81,17 @@ export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
 
+    // Sanitize billing data - remove email field from billing if it would cause
+    // a WooCommerce validation error (e.g., email already in use by another customer)
+    const sanitizedBody = { ...body };
+    if (sanitizedBody.billing) {
+      // WooCommerce may reject updates if billing email doesn't match the customer's email
+      // Remove it to prevent "email already exists" errors
+      const { email: _removedEmail, ...billingWithoutEmail } = sanitizedBody.billing;
+      void _removedEmail; // intentionally unused - removed to prevent WooCommerce validation errors
+      sanitizedBody.billing = billingWithoutEmail;
+    }
+
     const response = await fetch(
       `${API_BASE}/customers/${customerId}?${getBasicAuthParams()}`,
       {
@@ -88,11 +99,17 @@ export async function PUT(request: NextRequest) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(sanitizedBody),
       }
     );
 
-    const data = await response.json();
+    let data;
+    const responseText = await response.text();
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      data = { message: responseText || "Failed to update customer." };
+    }
 
     if (!response.ok) {
       return NextResponse.json(

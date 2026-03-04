@@ -1,8 +1,56 @@
+import React from "react";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getDictionary } from "@/i18n";
 import { generateMetadata as generateSeoMetadata } from "@/lib/utils/seo";
 import type { Locale } from "@/config/site";
 import type { Metadata } from "next";
+
+/**
+ * Converts phone numbers and email addresses in text into clickable links.
+ * This ensures cross-browser compatibility (Safari, Edge) since auto-detection
+ * only works reliably in Chrome.
+ */
+function linkifyContent(text: string): React.ReactNode {
+  // Match phone numbers (with optional + prefix and spaces/dashes) and email addresses
+  const pattern = /(\+?\d[\d\s\-]{7,}\d)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(text)) !== null) {
+    // Add text before the match
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+
+    const matched = match[0];
+    if (match[1]) {
+      // Phone number
+      const cleanPhone = matched.replace(/[\s\-]/g, "");
+      parts.push(
+        <a key={match.index} href={`tel:${cleanPhone}`} className="text-amber-700 underline hover:text-amber-900">
+          {matched}
+        </a>
+      );
+    } else if (match[2]) {
+      // Email address
+      parts.push(
+        <a key={match.index} href={`mailto:${matched}`} className="text-amber-700 underline hover:text-amber-900">
+          {matched}
+        </a>
+      );
+    }
+
+    lastIndex = match.index + matched.length;
+  }
+
+  // Add remaining text
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : text;
+}
 
 interface ShippingPageProps {
   params: Promise<{ locale: string }>;
@@ -48,7 +96,7 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
                 {section.title}
               </h2>
               <p className="leading-relaxed text-gray-600">
-                {section.content}
+                {linkifyContent(section.content)}
               </p>
             </div>
           ))}

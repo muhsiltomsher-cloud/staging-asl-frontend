@@ -297,9 +297,9 @@ export default function StoreLocatorPage() {
       {/* Opening Hours Banner */}
       <section className="bg-gradient-to-r from-amber-50 to-stone-50">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col items-center justify-center gap-4 md:flex-row md:gap-8">
+          <div className="flex flex-row items-center justify-center gap-4 flex-wrap md:gap-8">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-amber-100">
                 <Clock className="h-5 w-5 text-amber-700" />
               </div>
               <div>
@@ -309,12 +309,12 @@ export default function StoreLocatorPage() {
             </div>
             <div className="hidden h-8 w-px bg-amber-200 md:block" />
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-amber-100">
                 <Phone className="h-5 w-5 text-amber-700" />
               </div>
               <div>
                 <p className="text-sm font-medium text-amber-900">{isRTL ? "اتصل بنا" : "Contact Us"}</p>
-                <p className="text-sm text-amber-700">+971 50 607 1405</p>
+                <a href="tel:+971506071405" className="text-sm text-amber-700 hover:underline">+971 50 607 1405</a>
               </div>
             </div>
           </div>

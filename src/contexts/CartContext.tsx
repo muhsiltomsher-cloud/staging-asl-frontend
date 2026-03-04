@@ -174,18 +174,30 @@ export function CartProvider({ children, locale }: CartProviderProps) {
     }
   }, [cart, locale]);
 
+  // Track previous locale to detect language switches
+  const prevLocaleRef = useRef(locale);
+
   // Seed SWR cache with localStorage data after hydration to avoid
   // server/client mismatch (React error #418). This runs only on the client
   // after the initial render, so both server and client start with null.
+  // When locale changes, clear old cache and force a fresh fetch to ensure
+  // product descriptions match the selected language.
   useEffect(() => {
-    const cached = getCachedCart(locale);
-    if (cached) {
-      mutateCart(cached, false);
+    if (prevLocaleRef.current !== locale) {
+      // Locale changed - clear old cache and force re-fetch from server
+      clearCachedCart();
+      mutateCart();
+      prevLocaleRef.current = locale;
+    } else {
+      // Same locale - seed from localStorage cache if available
+      const cached = getCachedCart(locale);
+      if (cached) {
+        mutateCart(cached, false);
+      }
     }
   }, [locale, mutateCart]);
 
-  // Refresh cart when user logs in - this ensures the authenticated user's
-  // cart is loaded immediately after login
+  // Refresh cart when user logs in or logs out
   useEffect(() => {
     // Check if user just logged in (transition from not authenticated to authenticated)
     if (isAuthenticated && !wasAuthenticatedRef.current) {
@@ -195,8 +207,17 @@ export function CartProvider({ children, locale }: CartProviderProps) {
       const timer = setTimeout(() => {
         mutateCart();
       }, 200);
+      wasAuthenticatedRef.current = isAuthenticated;
       return () => clearTimeout(timer);
     }
+    
+    // Check if user just logged out (transition from authenticated to not authenticated)
+    if (!isAuthenticated && wasAuthenticatedRef.current) {
+      // Clear cart cache and reset cart state immediately on logout
+      clearCachedCart();
+      mutateCart(null, false);
+    }
+    
     // Update the ref to track current auth state
     wasAuthenticatedRef.current = isAuthenticated;
   }, [isAuthenticated, user, mutateCart]);

@@ -370,14 +370,14 @@ export default function SettingsPage({ params }: SettingsPageProps) {
               </label>
               <div className="relative">
                 <Lock className={`absolute ${isRTL ? "right-3" : "left-3"} top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400`} />
-                <Input
+                <input
                   type={showNewPassword ? "text" : "password"}
                   value={passwordData.newPassword}
                   onChange={(e) =>
                     setPasswordData({ ...passwordData, newPassword: e.target.value })
                   }
                   placeholder={t.newPassword}
-                  className={isRTL ? "pr-10 pl-10" : "pl-10 pr-10"}
+                  className={`flex h-10 w-full rounded-md border border-gray-300 bg-white py-2 text-base sm:text-sm transition-colors placeholder:text-gray-400 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 ${isRTL ? "pr-10 pl-10" : "pl-10 pr-10"}`}
                 />
                 <button
                   type="button"
@@ -395,14 +395,14 @@ export default function SettingsPage({ params }: SettingsPageProps) {
               </label>
               <div className="relative">
                 <Lock className={`absolute ${isRTL ? "right-3" : "left-3"} top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400`} />
-                <Input
+                <input
                   type={showConfirmPassword ? "text" : "password"}
                   value={passwordData.confirmPassword}
                   onChange={(e) =>
                     setPasswordData({ ...passwordData, confirmPassword: e.target.value })
                   }
                   placeholder={t.confirmPassword}
-                  className={isRTL ? "pr-10 pl-10" : "pl-10 pr-10"}
+                  className={`flex h-10 w-full rounded-md border border-gray-300 bg-white py-2 text-base sm:text-sm transition-colors placeholder:text-gray-400 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 ${isRTL ? "pr-10 pl-10" : "pl-10 pr-10"}`}
                 />
                 <button
                   type="button"
