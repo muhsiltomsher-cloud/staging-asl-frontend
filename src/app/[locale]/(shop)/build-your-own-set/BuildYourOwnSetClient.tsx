@@ -781,7 +781,7 @@ export function BuildYourOwnSetClient({
 
           {/* Payment Widgets - Only shows if payment gateway is enabled */}
           {total > 0 && (
-            <PaymentWidgets price={total} currency={currency} locale={locale} />
+            <PaymentWidgets price={total * quantity} currency={currency} locale={locale} />
           )}
 
           {/* Quantity and Add to Cart */}

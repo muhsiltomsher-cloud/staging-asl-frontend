@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -35,6 +35,7 @@ export function SearchDrawer({
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const isRTL = locale === "ar";
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -83,11 +84,12 @@ export function SearchDrawer({
     setQuery(value);
     if (value.trim()) setShowEmptyError(false);
     
-    const timeoutId = setTimeout(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
       handleSearch(value);
     }, 300);
-
-    return () => clearTimeout(timeoutId);
   };
 
     const handleClose = useCallback(() => {
