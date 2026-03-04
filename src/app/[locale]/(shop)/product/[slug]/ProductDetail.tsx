@@ -71,7 +71,7 @@ function AccordionSection({ title, isOpen, onToggle, children }: AccordionSectio
       </button>
       <div
         className={`overflow-hidden transition-all duration-200 ${
-          isOpen ? "max-h-[500px] pb-4" : "max-h-0"
+          isOpen ? "max-h-[2000px] pb-4" : "max-h-0"
         }`}
       >
         {children}

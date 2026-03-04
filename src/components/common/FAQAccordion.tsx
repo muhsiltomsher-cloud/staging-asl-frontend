@@ -18,7 +18,7 @@ export function FAQAccordion({ items, defaultOpenIndex = 0 }: FAQAccordionProps)
   const [openIndex, setOpenIndex] = useState<number | null>(defaultOpenIndex);
 
   return (
-    <div className="divide-y rounded-lg border">
+    <div className="divide-y rounded-lg border overflow-hidden">
       {items.map((item, index) => (
         <div key={index} className="bg-white">
           <button
@@ -38,7 +38,7 @@ export function FAQAccordion({ items, defaultOpenIndex = 0 }: FAQAccordionProps)
           <div
             className={cn(
               "overflow-hidden transition-all duration-200",
-              openIndex === index ? "max-h-96" : "max-h-0"
+              openIndex === index ? "max-h-[2000px]" : "max-h-0"
             )}
           >
             <p className="px-6 pb-4 text-gray-600">{item.answer}</p>

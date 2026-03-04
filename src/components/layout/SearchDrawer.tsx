@@ -195,7 +195,7 @@ export function SearchDrawer({
               {query.trim() && (
                 <button
                   onClick={handleSubmit}
-                  className="mt-4 flex w-full items-center justify-center rounded-lg bg-black px-4 py-3 font-medium text-white transition-all hover:bg-gray-800 active:scale-[0.98]"
+                  className="mt-4 flex w-full items-center justify-center rounded-lg bg-amber-800 px-4 py-3 font-medium text-white transition-all hover:bg-amber-900 active:scale-[0.98]"
                 >
                   {dictionary.common.viewAllResults || "View all results"}
                 </button>

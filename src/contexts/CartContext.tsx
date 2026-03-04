@@ -486,7 +486,9 @@ export function CartProvider({ children, locale }: CartProviderProps) {
   }, []);
 
   const cartItems = useMemo(() => cart?.items || [], [cart?.items]);
-  const cartItemsCount = cart?.item_count || 0;
+  // Use unique product lines count (number of distinct items) instead of total quantity
+  // This ensures adding 2 of the same product shows badge "1", not "2"
+  const cartItemsCount = cartItems.length;
   const rawCartSubtotal = cart?.totals?.subtotal || "0";
   const rawCartTotal = cart?.totals?.total || "0";
 
