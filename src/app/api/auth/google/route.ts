@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { API_BASE, backendPostHeaders, noCacheUrl, safeJsonResponse } from "@/lib/utils/backendFetch";
-import { checkRateLimit, rateLimitResponse, API_RATE_LIMIT } from "@/lib/security";
+import { checkRateLimit, incrementRateLimit, rateLimitResponse, API_RATE_LIMIT } from "@/lib/security";
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
@@ -47,6 +47,9 @@ export async function POST(request: NextRequest) {
   if (!rateLimitResult.allowed) {
     return rateLimitResponse(rateLimitResult.resetTime);
   }
+
+  // Count all Google auth calls toward API rate limit
+  incrementRateLimit(request, API_RATE_LIMIT);
 
   try {
     const body = await request.json();

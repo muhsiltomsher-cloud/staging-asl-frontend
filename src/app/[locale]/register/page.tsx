@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Home } from "lucide-react";
@@ -17,12 +17,18 @@ interface RegisterPageProps {
   params: Promise<{ locale: string }>;
 }
 
+const AUTH_PAGE_BG_STYLE = {
+  backgroundImage: "url(https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)",
+  backgroundSize: "cover",
+  backgroundPosition: "center",
+  backgroundRepeat: "no-repeat",
+} as const;
+
 export default function RegisterPage({ params }: RegisterPageProps) {
   const router = useRouter();
   const { notify } = useNotification();
   const { googleLogin } = useAuth();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [locale, setLocale] = useState<string>("en");
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -42,9 +48,8 @@ export default function RegisterPage({ params }: RegisterPageProps) {
   }>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    params.then((p) => setLocale(p.locale));
-  }, [params]);
+  const resolvedParams = use(params);
+  const locale = resolvedParams.locale as string;
 
   const isRTL = locale === "ar";
 
@@ -209,14 +214,9 @@ export default function RegisterPage({ params }: RegisterPageProps) {
   };
 
   return (
-    <div 
+    <div
       className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-8 md:py-12"
-      style={{ 
-        backgroundImage: 'url(https://staging.aromaticscentslab.com/wp-content/uploads/2025/12/page-bg.jpg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }}
+      style={AUTH_PAGE_BG_STYLE}
     >
       <div className="w-full max-w-md">
         <div className="rounded-2xl shadow-2xl">

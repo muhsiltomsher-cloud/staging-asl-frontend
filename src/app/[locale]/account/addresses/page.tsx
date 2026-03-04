@@ -386,7 +386,7 @@ function AddressModal({
               />
             </div>
 
-            <div className="flex gap-3 pt-4 border-t">
+            <div className="flex gap-3 pt-4">
               <Button
                 type="button"
                 variant="outline"

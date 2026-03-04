@@ -8,6 +8,7 @@ export {
 
 export {
   checkRateLimit,
+  incrementRateLimit,
   rateLimitResponse,
   LOGIN_RATE_LIMIT,
   FORGOT_PASSWORD_RATE_LIMIT,
