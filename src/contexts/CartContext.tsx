@@ -238,9 +238,25 @@ export function CartProvider({ children, locale }: CartProviderProps) {
         cacheKey,
         (currentCart: CoCartResponse | null | undefined) => {
           if (!currentCart) return currentCart;
+          // Check if this product already exists in the cart
+          const existingItemIndex = currentCart.items.findIndex(
+            (item) => item.id === productId && !item.item_key.startsWith("temp-")
+          );
+          let updatedItems;
+          if (existingItemIndex >= 0) {
+            // Update existing item's quantity instead of appending a new one
+            updatedItems = currentCart.items.map((item, index) =>
+              index === existingItemIndex
+                ? { ...item, quantity: { ...item.quantity, value: item.quantity.value + quantity } }
+                : item
+            );
+          } else {
+            // New product - append placeholder
+            updatedItems = [...currentCart.items, optimisticItem];
+          }
           return {
             ...currentCart,
-            items: [...currentCart.items, optimisticItem],
+            items: updatedItems,
             item_count: currentCart.item_count + quantity,
           };
         },
