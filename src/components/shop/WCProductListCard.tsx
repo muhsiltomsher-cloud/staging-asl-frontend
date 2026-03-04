@@ -20,6 +20,7 @@ interface WCProductListCardProps {
   locale: Locale;
   className?: string;
   bundleProductSlugs?: string[];
+  hideCategoryTag?: boolean;
 }
 
 export function WCProductListCard({
@@ -27,6 +28,7 @@ export function WCProductListCard({
   locale,
   className,
   bundleProductSlugs = [],
+  hideCategoryTag = false,
 }: WCProductListCardProps) {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
@@ -135,7 +137,7 @@ export function WCProductListCard({
         <div className="flex flex-1 flex-col justify-between">
           <div>
                         {/* Category */}
-                        {product.categories?.[0] && (
+                        {!hideCategoryTag && product.categories?.[0] && (
                           <p className="mb-1 text-xs font-medium uppercase tracking-wider text-amber-600">
                             {decodeHtmlEntities(product.categories[0].name)}
                           </p>

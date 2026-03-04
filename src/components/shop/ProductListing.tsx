@@ -210,6 +210,7 @@ export function ProductListing({
               product={product}
               locale={locale}
               bundleProductSlugs={bundleProductSlugs}
+              hideCategoryTag={hideCategoryTag}
             />
           ))}
         </div>
