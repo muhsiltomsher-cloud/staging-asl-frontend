@@ -32,13 +32,6 @@ export function QuantitySelector({
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value, 10);
-    if (!isNaN(value) && value >= min && value <= max) {
-      onChange(value);
-    }
-  };
-
   return (
     <div className={cn("flex items-center", className)}>
       <button
@@ -50,16 +43,12 @@ export function QuantitySelector({
       >
         <Minus className="h-4 w-4" />
       </button>
-      <input
-        type="number"
-        value={quantity}
-        onChange={handleInputChange}
-        disabled={disabled}
-        min={min}
-        max={max}
-        className="h-10 w-14 border-y border-gray-300 bg-white text-center text-sm focus:outline-none focus:ring-1 focus:ring-inset focus:ring-gray-900 disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      <span
+        className="flex h-10 w-14 items-center justify-center border-y border-gray-300 bg-white text-center text-sm select-none"
         aria-label="Quantity"
-      />
+      >
+        {quantity}
+      </span>
       <button
         type="button"
         onClick={handleIncrement}

@@ -17,10 +17,25 @@ export function NewsletterForm({ locale, dictionary }: NewsletterFormProps) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email.trim());
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     setError(null);
+
+    if (!validateEmail(email)) {
+      setError(
+        isRTL
+          ? "يرجى إدخال بريد إلكتروني صحيح"
+          : "Please enter a valid email address"
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
       const response = await fetch("/api/newsletter", {

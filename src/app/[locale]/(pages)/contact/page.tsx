@@ -259,7 +259,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
                           {item.content}
                         </a>
                       ) : (
-                        <p className="text-amber-700">{item.content}</p>
+                        <p className="text-amber-700 whitespace-pre-line">{item.content}</p>
                       )}
                     </div>
                   </div>

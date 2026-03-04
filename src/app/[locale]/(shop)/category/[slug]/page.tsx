@@ -91,7 +91,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">{decodeHtmlEntities(category.name)}</h1>
+        <h1 className="text-2xl font-bold text-amber-900 md:text-3xl">{decodeHtmlEntities(category.name)}</h1>
       </div>
 
       <Suspense fallback={<ProductGridSkeleton count={12} />}>
