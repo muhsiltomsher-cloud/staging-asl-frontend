@@ -62,6 +62,21 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
 
+  // Calculate subtotal excluding free gift items
+  const subtotalWithoutGifts = (() => {
+    const rawSubtotal = parseFloat(cartSubtotal);
+    if (!cartItems || cartItems.length === 0) return rawSubtotal;
+    
+    const giftItemsTotal = cartItems.reduce((total, item) => {
+      if (isFreeGiftItem(item.item_key)) {
+        return total + (parseFloat(item.price) * item.quantity.value);
+      }
+      return total;
+    }, 0);
+    
+    return rawSubtotal - giftItemsTotal;
+  })();
+
   const handleQuantityChange = async (itemKey: string, newQuantity: number) => {
     if (newQuantity < 1) return;
     setUpdatingItems(prev => new Set(prev).add(itemKey));
@@ -91,18 +106,13 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
       <div className="flex items-center justify-between">
         <span className="text-gray-600">{dictionary.subtotal}</span>
         <FormattedPrice
-          price={parseFloat(cartSubtotal) / divisor}
+          price={subtotalWithoutGifts / divisor}
           className="text-lg font-semibold"
           iconSize="sm"
         />
       </div>
 
             <div className="flex flex-col gap-3">
-              <Button asChild variant="outline" size="lg" className="w-full">
-                <Link href={`/${locale}/cart`} onClick={handleClose}>
-                  {dictionary.viewCart}
-                </Link>
-              </Button>
               <Button asChild variant="primary" size="lg" className="w-full">
                 <Link href={`/${locale}/checkout`} onClick={handleClose}>
                   {dictionary.checkout}

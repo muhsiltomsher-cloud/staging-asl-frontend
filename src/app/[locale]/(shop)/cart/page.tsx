@@ -55,6 +55,16 @@ export default function CartPage() {
   const currencyMinorUnit = cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
 
+  // Calculate subtotal and total excluding free gift items
+  const giftItemsTotal = cartItems.reduce((total, item) => {
+    if (isFreeGiftItem(item.item_key)) {
+      return total + (parseFloat(item.price) * item.quantity.value);
+    }
+    return total;
+  }, 0);
+  const displaySubtotal = parseFloat(cartSubtotal) - giftItemsTotal;
+  const displayTotal = parseFloat(cartTotal) - giftItemsTotal;
+
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
@@ -632,7 +642,7 @@ export default function CartPage() {
                 <div className="flex justify-between text-gray-600">
                   <span>{texts.subtotal}</span>
                   <FormattedPrice
-                    price={parseFloat(cartSubtotal) / divisor}
+                    price={displaySubtotal / divisor}
                     iconSize="xs"
                   />
                 </div>
@@ -665,7 +675,7 @@ export default function CartPage() {
                 <span className="font-bold">{texts.orderTotal}</span>
                 <span className="font-bold text-xl">
                   <FormattedPrice
-                    price={parseFloat(cartTotal) / divisor}
+                    price={displayTotal / divisor}
                     iconSize="sm"
                   />
                 </span>
@@ -718,7 +728,7 @@ export default function CartPage() {
             <div className="flex flex-col">
               <span className="text-xs text-gray-500">{texts.orderTotal}</span>
               <FormattedPrice
-                price={parseFloat(cartTotal) / divisor}
+                price={displayTotal / divisor}
                 className="text-lg font-bold text-gray-900"
                 iconSize="sm"
               />
