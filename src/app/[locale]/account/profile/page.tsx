@@ -122,15 +122,18 @@ export default function ProfilePage({ params }: ProfilePageProps) {
     setMessage(null);
 
     try {
+      // Build billing data without email to avoid WooCommerce validation errors
+      const billingData = {
+        ...customer?.billing,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        phone: formData.phone,
+      };
+
       const response = await updateCustomer(user.user_id, {
         first_name: formData.firstName,
         last_name: formData.lastName,
-        billing: {
-          ...customer?.billing,
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          phone: formData.phone,
-        } as Customer["billing"],
+        billing: billingData as Customer["billing"],
       });
 
       if (response.success && response.data) {
@@ -138,7 +141,9 @@ export default function ProfilePage({ params }: ProfilePageProps) {
         setMessage({ type: "success", text: t.saved });
         setTimeout(() => setMessage(null), 3000);
       } else {
-        setMessage({ type: "error", text: response.error?.message || t.error });
+        // Show user-friendly error message
+        const errorMsg = response.error?.message || t.error;
+        setMessage({ type: "error", text: errorMsg });
       }
     } catch (error) {
       console.error("Failed to save profile:", error);

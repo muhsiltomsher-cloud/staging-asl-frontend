@@ -80,7 +80,8 @@ export function CategoriesDrawer({
   };
 
   // Organize categories into parent/child structure
-  const parentCategories = categories.filter(cat => cat.parent === 0);
+  // Filter out unwanted categories like "Header" that shouldn't be displayed
+  const parentCategories = categories.filter(cat => cat.parent === 0 && cat.name.toLowerCase() !== "header");
   const getChildCategories = (parentId: number) =>
     categories.filter(cat => cat.parent === parentId);
 

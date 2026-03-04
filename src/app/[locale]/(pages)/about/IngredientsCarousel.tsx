@@ -59,7 +59,7 @@ export function IngredientsCarousel({
             spaceBetween: 24,
           },
         }}
-        className="ingredients-carousel pb-12"
+        className="ingredients-carousel pb-12 [&_.swiper-pagination]:!text-center [&_.swiper-pagination]:!left-0 [&_.swiper-pagination]:!right-0 [&_.swiper-pagination]:!w-full"
         dir={isRTL ? "rtl" : "ltr"}
       >
         {items.map((item) => (
