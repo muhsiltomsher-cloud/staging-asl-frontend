@@ -14,6 +14,7 @@ interface FooterProps {
 
 export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
   const currentYear = new Date().getFullYear();
+  const isRTL = locale === "ar";
 
     const footerLinks = {
       quickLinks: [
@@ -56,7 +57,10 @@ export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
               )}
             </Link>
             <p className="text-sm text-gray-600">
-              {siteSettings?.tagline || "Premium fragrances and aromatic products crafted with care."}
+              {siteSettings?.tagline || (isRTL
+                ? "اكتشف العطور الفاخرة والمنتجات العطرية في أروماتيك سينتس لاب. تسوق مجموعتنا الحصرية من العطور الفاخرة مع التوصيل في جميع أنحاء عُمان ودول الخليج."
+                : "Discover premium fragrances, perfumes, and aromatic products at Aromatic Scents Lab. Shop our exclusive collection of luxury scents with delivery across Oman and GCC."
+              )}
             </p>
             <div className="flex justify-center gap-4 md:justify-start">
               <a

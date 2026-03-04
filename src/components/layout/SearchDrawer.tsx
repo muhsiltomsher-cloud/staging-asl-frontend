@@ -65,17 +65,23 @@ export function SearchDrawer({
     }
   }, [locale, getFreeGiftProductIds]);
 
+  const [showEmptyError, setShowEmptyError] = useState(false);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
+      setShowEmptyError(false);
       router.push(`/${locale}/shop?search=${encodeURIComponent(query.trim())}`);
       onClose();
+    } else {
+      setShowEmptyError(true);
     }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
+    if (value.trim()) setShowEmptyError(false);
     
     const timeoutId = setTimeout(() => {
       handleSearch(value);
@@ -91,6 +97,7 @@ export function SearchDrawer({
       setQuery("");
       setResults([]);
       setHasSearched(false);
+      setShowEmptyError(false);
       onClose();
     }, [onClose]);
 
@@ -120,6 +127,11 @@ export function SearchDrawer({
               )}
             </div>
           </form>
+          {showEmptyError && (
+            <p className="mt-2 text-sm text-red-500">
+              {isRTL ? "يرجى إدخال كلمة للبحث" : "Please enter a search term"}
+            </p>
+          )}
         </div>
 
         <div className="px-2 pb-2">

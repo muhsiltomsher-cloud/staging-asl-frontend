@@ -96,12 +96,18 @@ export function DesktopSearchDropdown({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const [showEmptyError, setShowEmptyError] = useState(false);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
+      setShowEmptyError(false);
       router.push(`/${locale}/search?q=${encodeURIComponent(query.trim())}`);
       setIsOpen(false);
       setQuery("");
+    } else {
+      setShowEmptyError(true);
+      setIsOpen(true);
     }
   };
 
@@ -140,6 +146,7 @@ export function DesktopSearchDropdown({
     setQuery("");
     setResults([]);
     setHasSearched(false);
+    setShowEmptyError(false);
     inputRef.current?.focus();
   };
 
@@ -148,7 +155,7 @@ export function DesktopSearchDropdown({
     setQuery("");
   };
 
-  const showDropdown = isOpen && (query.trim().length > 0 || hasSearched);
+  const showDropdown = isOpen && (query.trim().length > 0 || hasSearched || showEmptyError);
 
   return (
     <div ref={containerRef} className="relative hidden lg:block">
@@ -201,7 +208,16 @@ export function DesktopSearchDropdown({
           )}
           dir={isRTL ? "rtl" : "ltr"}
         >
-          {loading ? (
+          {showEmptyError && !query.trim() ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="mb-4 rounded-full bg-gray-100 p-4">
+                <Search className="h-8 w-8 text-gray-400" />
+              </div>
+              <p className="text-sm text-red-500">
+                {isRTL ? "يرجى إدخال كلمة للبحث" : "Please enter a search term"}
+              </p>
+            </div>
+          ) : loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="flex flex-col items-center gap-3">
                 <div className="h-8 w-8 animate-spin rounded-full border-3 border-gray-200 border-t-amber-800" />

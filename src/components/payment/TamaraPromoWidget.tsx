@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 // Declare the custom element for TypeScript
 declare global {
@@ -57,6 +57,36 @@ export function TamaraPromoWidget({ price, currency, locale }: TamaraPromoWidget
   const publicKey = process.env.NEXT_PUBLIC_TAMARA_PUBLIC_KEY;
   // Country code for Tamara widget (SA for Saudi Arabia, AE for UAE)
   const country = process.env.NEXT_PUBLIC_TAMARA_COUNTRY || "AE";
+
+  // Prevent Tamara widget from scrolling the page when expanded/interacted with
+  const handleWidgetClick = useCallback(() => {
+    const scrollY = window.scrollY;
+    // Restore scroll position after any widget-triggered scroll changes
+    requestAnimationFrame(() => {
+      if (Math.abs(window.scrollY - scrollY) > 50) {
+        window.scrollTo({ top: scrollY, behavior: "instant" });
+      }
+    });
+  }, []);
+
+  // Observe DOM mutations inside the widget container to catch scroll jumps
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new MutationObserver(() => {
+      // When widget DOM changes (e.g., expansion), preserve scroll position
+      const scrollY = window.scrollY;
+      requestAnimationFrame(() => {
+        if (Math.abs(window.scrollY - scrollY) > 50) {
+          window.scrollTo({ top: scrollY, behavior: "instant" });
+        }
+      });
+    });
+
+    observer.observe(container, { childList: true, subtree: true, attributes: true });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (initialized.current) return;
@@ -116,7 +146,7 @@ export function TamaraPromoWidget({ price, currency, locale }: TamaraPromoWidget
   const formattedPrice = currency === "KWD" ? price.toFixed(3) : price.toFixed(2);
 
   return (
-    <div ref={containerRef} className="my-3 rounded-lg border border-[#e7e2d6] bg-[#e7e2d6] p-3">
+    <div ref={containerRef} onClick={handleWidgetClick} className="my-3 rounded-lg border border-[#e7e2d6] bg-[#e7e2d6] p-3">
       <tamara-widget
         type="tamara-summary"
         amount={formattedPrice}

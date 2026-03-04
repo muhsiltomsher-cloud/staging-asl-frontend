@@ -575,9 +575,9 @@ export function BuildYourOwnSetClient({
             {bundleProduct?.name || t.title}
           </h1>
 
-          {/* Price - Show bundle product price or calculated total */}
+          {/* Price - Show bundle product price or calculated total, multiplied by quantity */}
           <div className="text-xl font-bold text-gray-900">
-            <FormattedPrice price={bundleProductPrice > 0 ? bundleProductPrice : total} iconSize="md" />
+            <FormattedPrice price={(bundleProductPrice > 0 ? bundleProductPrice : total) * quantity} iconSize="md" />
           </div>
 
           {/* Description - Use product short_description from WordPress if available */}
@@ -772,9 +772,9 @@ export function BuildYourOwnSetClient({
             )}
             {/* Total */}
             <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-              <span className="text-lg font-bold text-gray-900">{t.total}</span>
+              <span className="text-lg font-bold text-gray-900">{t.total} {quantity > 1 ? `(x${quantity})` : ""}</span>
               <span className="text-xl font-bold text-gray-900">
-                <FormattedPrice price={total} iconSize="md" />
+                <FormattedPrice price={total * quantity} iconSize="md" />
               </span>
             </div>
           </div>
