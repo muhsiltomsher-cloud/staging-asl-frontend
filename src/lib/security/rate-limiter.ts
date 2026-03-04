@@ -104,7 +104,7 @@ export function rateLimitResponse(resetTime: number): NextResponse {
 
 export const LOGIN_RATE_LIMIT: RateLimitConfig = {
   windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 5, // 5 attempts per 15 minutes
+  maxRequests: 15, // 15 attempts per 15 minutes
   keyPrefix: "login",
 };
 

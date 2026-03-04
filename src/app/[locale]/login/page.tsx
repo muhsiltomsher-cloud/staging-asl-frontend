@@ -302,7 +302,7 @@ export default function LoginPage({ params }: LoginPageProps) {
                 value={formData.password}
                 onChange={handleInputChange}
                 error={errors.password}
-                autoComplete="current-password"
+                autoComplete="current-password webauthn"
                 dir={isRTL ? "rtl" : "ltr"}
                 className="border-gray-300 rounded-none"
               />
