@@ -661,12 +661,14 @@ export default function CartPage() {
                               </div>
                             </div>
 
-                            <div className="flex justify-between py-4 text-lg font-semibold text-gray-900">
-                <span>{texts.orderTotal}</span>
-                <FormattedPrice
-                  price={parseFloat(cartTotal) / divisor}
-                  iconSize="sm"
-                />
+                            <div className="flex justify-between py-4 text-lg font-bold text-gray-900">
+                <span className="font-bold">{texts.orderTotal}</span>
+                <span className="font-bold text-xl">
+                  <FormattedPrice
+                    price={parseFloat(cartTotal) / divisor}
+                    iconSize="sm"
+                  />
+                </span>
               </div>
 
               <p className="text-xs text-gray-500 text-center mb-3">

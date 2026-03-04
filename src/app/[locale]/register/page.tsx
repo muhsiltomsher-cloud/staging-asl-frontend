@@ -68,6 +68,7 @@ export default function RegisterPage({ params }: RegisterPageProps) {
       hasAccount: "Already have an account?",
       signInLink: "Sign in",
       nameRequired: "Name is required",
+      nameInvalid: "Name must contain only letters and spaces",
       phoneRequired: "Phone number is required",
       emailRequired: "Email is required",
       emailInvalid: "Please enter a valid email address",
@@ -98,6 +99,7 @@ export default function RegisterPage({ params }: RegisterPageProps) {
       hasAccount: "لديك حساب بالفعل؟",
       signInLink: "تسجيل الدخول",
       nameRequired: "الاسم مطلوب",
+      nameInvalid: "يجب أن يحتوي الاسم على أحرف ومسافات فقط",
       phoneRequired: "رقم الهاتف مطلوب",
       emailRequired: "البريد الإلكتروني مطلوب",
       emailInvalid: "يرجى إدخال بريد إلكتروني صحيح",
@@ -123,6 +125,8 @@ export default function RegisterPage({ params }: RegisterPageProps) {
 
     if (!formData.name.trim()) {
       newErrors.name = texts.nameRequired;
+    } else if (!/^[a-zA-Z\u0600-\u06FF\s]+$/.test(formData.name.trim())) {
+      newErrors.name = texts.nameInvalid;
     }
 
     if (!formData.phone.trim()) {
