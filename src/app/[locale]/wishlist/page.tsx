@@ -127,7 +127,7 @@ export default function WishlistPage({ params }: WishlistPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="min-h-[60vh] bg-gray-50 py-8" dir={isRTL ? "rtl" : "ltr"}>
       <div className="container mx-auto px-4">
         <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 

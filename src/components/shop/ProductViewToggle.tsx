@@ -113,24 +113,10 @@ export function ProductViewToggle({
         )}
       </div>
 
-      {/* Center: View Mode + Grid Columns */}
+      {/* Center: Layout Toggle */}
       <div className="flex items-center gap-3">
-        {/* View Mode Toggle */}
+        {/* Unified Layout Toggle: List + Grid column options */}
         <div className="flex items-center rounded-lg border border-gray-200 bg-gray-50 p-1">
-          <button
-            type="button"
-            onClick={() => onViewModeChange("grid")}
-            className={cn(
-              "flex items-center justify-center rounded-md p-2 transition-all",
-              viewMode === "grid"
-                ? "bg-white text-amber-700 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            )}
-            aria-label={t.grid}
-            title={t.grid}
-          >
-            <LayoutGrid className="h-4 w-4" />
-          </button>
           <button
             type="button"
             onClick={() => onViewModeChange("list")}
@@ -145,31 +131,29 @@ export function ProductViewToggle({
           >
             <List className="h-4 w-4" />
           </button>
+          {gridOptions.map((option) => (
+            <button
+              key={option.columns}
+              type="button"
+              onClick={() => {
+                if (viewMode !== "grid") onViewModeChange("grid");
+                onGridColumnsChange(option.columns);
+              }}
+              className={cn(
+                "flex h-8 w-8 items-center justify-center rounded-md transition-all",
+                viewMode === "grid" && gridColumns === option.columns
+                  ? "bg-white text-amber-700 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700",
+                option.columns === 5 && "hidden lg:flex",
+                option.columns >= 3 && "hidden md:flex"
+              )}
+              aria-label={`${option.columns} ${t.columns}`}
+              title={`${option.columns} ${t.columns}`}
+            >
+              {option.icon}
+            </button>
+          ))}
         </div>
-
-        {/* Grid Columns Toggle (only show when in grid mode, hidden on mobile) */}
-        {viewMode === "grid" && (
-          <div className="hidden items-center rounded-lg border border-gray-200 bg-gray-50 p-1 md:flex">
-            {gridOptions.map((option) => (
-              <button
-                key={option.columns}
-                type="button"
-                onClick={() => onGridColumnsChange(option.columns)}
-                className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-md transition-all",
-                  gridColumns === option.columns
-                    ? "bg-white text-amber-700 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700",
-                  option.columns === 5 && "hidden lg:flex"
-                )}
-                aria-label={`${option.columns} ${t.columns}`}
-                title={`${option.columns} ${t.columns}`}
-              >
-                {option.icon}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Right: Sorting Dropdown */}

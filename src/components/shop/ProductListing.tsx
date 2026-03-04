@@ -64,6 +64,7 @@ interface ProductListingProps {
   showToolbar?: boolean;
   toolbarClassName?: string;
   bundleProductSlugs?: string[];
+  hideCategoryTag?: boolean;
 }
 
 const DEFAULT_PREFERENCE: ViewPreference = {
@@ -133,6 +134,7 @@ export function ProductListing({
   showToolbar = true,
   toolbarClassName,
   bundleProductSlugs = [],
+  hideCategoryTag = false,
 }: ProductListingProps) {
   const preference = useSyncExternalStore(
     subscribeToPreference,
@@ -197,6 +199,7 @@ export function ProductListing({
           locale={locale}
           columns={gridColumns}
           bundleProductSlugs={bundleProductSlugs}
+          hideCategoryTag={hideCategoryTag}
         />
       ) : (
         <div className="space-y-4">
