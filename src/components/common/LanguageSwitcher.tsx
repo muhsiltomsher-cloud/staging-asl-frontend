@@ -45,6 +45,7 @@ export function LanguageSwitcher({ locale, className, alternateUrl }: LanguageSw
   };
 
   const currentLocaleData = locales.find((l) => l.code === locale);
+  const isRTL = locale === "ar";
 
   const translations = {
     en: {
@@ -74,7 +75,7 @@ export function LanguageSwitcher({ locale, className, alternateUrl }: LanguageSw
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 z-50 mt-1 min-w-[140px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+        <div className={cn("absolute top-full z-50 mt-1 min-w-[140px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg", isRTL ? "right-0" : "left-0")}>
           {locales.map((loc) => (
             <button
               key={loc.code}
