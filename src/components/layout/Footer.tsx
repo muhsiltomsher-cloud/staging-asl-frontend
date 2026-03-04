@@ -59,7 +59,7 @@ export function Footer({ locale, dictionary, siteSettings }: FooterProps) {
             <p className="text-sm text-gray-600">
               {isRTL
                 ? "اكتشف العطور الفاخرة والمنتجات العطرية في أروماتيك سينتس لاب. تسوق مجموعتنا الحصرية من العطور الفاخرة مع التوصيل في جميع أنحاء عُمان ودول الخليج."
-                : (siteSettings?.tagline || "Discover premium fragrances, perfumes, and aromatic products at Aromatic Scents Lab. Shop our exclusive collection of luxury scents with delivery across Oman and GCC.")
+                : "Discover premium fragrances, perfumes, and aromatic products at Aromatic Scents Lab. Shop our exclusive collection of luxury scents with delivery across Oman and GCC."
               }
             </p>
             <div className="flex justify-center gap-4 md:justify-start">
