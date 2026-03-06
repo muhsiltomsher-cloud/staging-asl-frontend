@@ -924,7 +924,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                     setQuantity(Math.min(Math.max(1, val), max));
                   }}
                   disabled={isOutOfStock}
-                  className="h-10 w-10 bg-transparent text-center text-sm font-bold text-[#5C4A3D] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  className="h-10 w-10 bg-transparent text-center text-sm font-bold text-[#5C4A3D] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 cursor-default caret-transparent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   min={1}
                   max={product.add_to_cart.maximum || 99}
                 />
@@ -990,12 +990,16 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
                   </div>
                 )}
                 {product.attributes && product.attributes.length > 0 && (
-                  product.attributes.map((attr) => (
-                    <div key={attr.id} className="flex justify-between">
-                      <span className="text-gray-500">{decodeHtmlEntities(attr.name)}</span>
-                      <span className="text-gray-900">{attr.terms?.map(t => decodeHtmlEntities(t.name)).join(", ")}</span>
-                    </div>
-                  ))
+                  product.attributes
+                    .filter((attr, index, self) => 
+                      self.findIndex(a => a.name.toLowerCase() === attr.name.toLowerCase()) === index
+                    )
+                    .map((attr) => (
+                      <div key={attr.id} className="flex justify-between">
+                        <span className="text-gray-500">{decodeHtmlEntities(attr.name)}</span>
+                        <span className="text-gray-900">{attr.terms?.map(t => decodeHtmlEntities(t.name)).join(", ")}</span>
+                      </div>
+                    ))
                 )}
                 {product.tags && product.tags.length > 0 && (
                   <div className="flex justify-between">

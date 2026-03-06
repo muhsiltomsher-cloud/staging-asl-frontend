@@ -33,7 +33,7 @@ export default async function ReturnsPage({ params }: ReturnsPageProps) {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8 md:py-12">
+    <div className="container mx-auto px-4 py-8 md:py-12" dir={locale === "ar" ? "rtl" : "ltr"}>
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 
       <div className="mx-auto max-w-3xl">
@@ -79,7 +79,7 @@ export default async function ReturnsPage({ params }: ReturnsPageProps) {
           <h2 className="mb-4 text-xl font-semibold text-gray-900">
             {pageContent.eligibleTitle}
           </h2>
-          <ul className="mb-8 list-disc space-y-2 pl-5 text-gray-600">
+          <ul className="mb-8 list-disc space-y-2 ps-5 text-gray-600">
             {pageContent.eligibleItems.map((item, index) => (
               <li key={index}>{item}</li>
             ))}
@@ -88,7 +88,7 @@ export default async function ReturnsPage({ params }: ReturnsPageProps) {
           <h2 className="mb-4 text-xl font-semibold text-gray-900">
             {pageContent.notEligibleTitle}
           </h2>
-          <ul className="list-disc space-y-2 pl-5 text-gray-600">
+          <ul className="list-disc space-y-2 ps-5 text-gray-600">
             {pageContent.notEligibleItems.map((item, index) => (
               <li key={index}>{item}</li>
             ))}

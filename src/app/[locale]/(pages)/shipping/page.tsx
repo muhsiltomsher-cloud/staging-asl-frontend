@@ -81,7 +81,7 @@ export default async function ShippingPage({ params }: ShippingPageProps) {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8 md:py-12">
+    <div className="container mx-auto px-4 py-8 md:py-12" dir={locale === "ar" ? "rtl" : "ltr"}>
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 
       <div className="mx-auto max-w-3xl">

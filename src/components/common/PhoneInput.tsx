@@ -214,7 +214,7 @@ export function PhoneInput({
           onChange={(e) => handleLocalNumberChange(e.target.value)}
           placeholder={
             placeholder ||
-            (isRTL ? "رقم الهاتف" : `${currentConfig.minLength} digits`)
+            (isRTL ? "رقم الهاتف" : "Phone number")
           }
           required={required}
           disabled={disabled}

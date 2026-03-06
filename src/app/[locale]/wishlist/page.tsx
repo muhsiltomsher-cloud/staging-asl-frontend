@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Heart, Trash2, ShoppingBag, ArrowLeft, Eye } from "lucide-react";
@@ -22,12 +22,9 @@ interface WishlistPageProps {
 }
 
 export default function WishlistPage({ params }: WishlistPageProps) {
-  const [locale, setLocale] = useState<string>("en");
+  const resolvedParams = use(params);
+  const locale = resolvedParams.locale as string;
   const [bundleProductSlugs, setBundleProductSlugs] = useState<string[]>([]);
-
-  useEffect(() => {
-    params.then((p) => setLocale(p.locale));
-  }, [params]);
 
   useEffect(() => {
     async function fetchBundleSlugs() {
@@ -143,12 +140,12 @@ export default function WishlistPage({ params }: WishlistPageProps) {
         </div>
 
         {isEmpty ? (
-          <div className="rounded-lg bg-white py-16 text-center shadow-sm">
-            <Heart className="mx-auto mb-4 h-16 w-16 text-gray-300" />
+          <div className="rounded-lg bg-white py-12 text-center shadow-sm">
+            <Heart className="mx-auto mb-4 h-12 w-12 text-gray-300" />
             <h2 className="mb-2 text-xl font-semibold text-gray-900">
               {texts.emptyWishlist}
             </h2>
-            <p className="mb-8 text-gray-600">{texts.emptyWishlistDesc}</p>
+            <p className="mb-6 text-gray-600">{texts.emptyWishlistDesc}</p>
             <Button asChild>
               <Link href={`/${locale}/shop`}>{texts.continueShopping}</Link>
             </Button>

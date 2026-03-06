@@ -247,18 +247,20 @@ export default function LoginPage({ params }: LoginPageProps) {
               </div>
             )}
 
-            <div className={`mb-6 rounded-md bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800 ${isRTL ? "text-right" : "text-left"}`}>
-              <p>
-                {texts.returningUserMessage}{" "}
-                <Link
-                  href={`/${locale}/forgot-password`}
-                  className="font-semibold text-[#92400e] underline hover:text-[#78350f]"
-                >
-                  {texts.returningUserLink}
-                </Link>{" "}
-                {texts.returningUserSuffix}
-              </p>
-            </div>
+            {!errors.general && (
+              <div className={`mb-6 rounded-md bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800 ${isRTL ? "text-right" : "text-left"}`}>
+                <p>
+                  {texts.returningUserMessage}{" "}
+                  <Link
+                    href={`/${locale}/forgot-password`}
+                    className="font-semibold text-[#92400e] underline hover:text-[#78350f]"
+                  >
+                    {texts.returningUserLink}
+                  </Link>{" "}
+                  {texts.returningUserSuffix}
+                </p>
+              </div>
+            )}
             {errors.general && (
               <div className="mb-6 rounded-md bg-red-50 p-4 text-sm text-red-600">
                 {rateLimitSeconds > 0 ? (
