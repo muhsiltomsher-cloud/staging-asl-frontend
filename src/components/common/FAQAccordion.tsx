@@ -18,16 +18,16 @@ export function FAQAccordion({ items, defaultOpenIndex = 0 }: FAQAccordionProps)
   const [openIndex, setOpenIndex] = useState<number | null>(defaultOpenIndex);
 
   return (
-    <div className="divide-y rounded-lg border overflow-hidden">
+    <div className="divide-y divide-gray-200 rounded-lg border border-gray-200 overflow-hidden">
       {items.map((item, index) => (
         <div key={index} className="bg-white">
           <button
             type="button"
             onClick={() => setOpenIndex(openIndex === index ? null : index)}
-            className="flex w-full items-center justify-between px-6 py-4 text-left"
+            className="flex w-full items-center justify-between gap-4 px-6 py-4 text-left"
             aria-expanded={openIndex === index}
           >
-            <span className="font-medium text-gray-900">{item.question}</span>
+            <span className="font-medium text-gray-900 break-words">{item.question}</span>
             <ChevronDown
               className={cn(
                 "h-5 w-5 flex-shrink-0 text-gray-500 transition-transform",
@@ -41,7 +41,7 @@ export function FAQAccordion({ items, defaultOpenIndex = 0 }: FAQAccordionProps)
               openIndex === index ? "max-h-[2000px]" : "max-h-0"
             )}
           >
-            <p className="px-6 pb-4 text-gray-600">{item.answer}</p>
+            <p className="px-6 pb-4 text-gray-600 break-words">{item.answer}</p>
           </div>
         </div>
       ))}
