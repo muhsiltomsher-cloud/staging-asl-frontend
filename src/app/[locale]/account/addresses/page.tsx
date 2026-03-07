@@ -218,6 +218,18 @@ function AddressModal({
   const [addressId, setAddressId] = useState<string | null>(null);
   const [prevIsOpen, setPrevIsOpen] = useState(false);
 
+  // Prevent background scroll when modal is open (SCRUM-65)
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   if (isOpen && !prevIsOpen) {
     if (initialAddress) {
       const { id, ...rest } = initialAddress as SavedAddress;
