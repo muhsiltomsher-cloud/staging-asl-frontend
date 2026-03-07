@@ -1051,18 +1051,33 @@ export default function CheckoutClient() {
         ...(isAuthenticated && user?.user_id ? { customer_id: user.user_id } : newCustomerId ? { customer_id: newCustomerId } : {}),
       };
 
-      const response = await fetch("/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(orderPayload),
-      });
+      // Add timeout to prevent indefinite hanging during order creation (SCRUM-145)
+      const orderController = new AbortController();
+      const orderTimeout = setTimeout(() => orderController.abort(), 60000); // 60s timeout
+      
+      let response;
+      try {
+        response = await fetch("/api/orders", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(orderPayload),
+          signal: orderController.signal,
+        });
+      } catch (fetchErr) {
+        clearTimeout(orderTimeout);
+        if (fetchErr instanceof DOMException && fetchErr.name === 'AbortError') {
+          throw new Error(isRTL ? "انتهت مهلة إنشاء الطلب. يرجى المحاولة مرة أخرى." : "Order creation timed out. Please try again.");
+        }
+        throw fetchErr;
+      }
+      clearTimeout(orderTimeout);
 
       const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.error?.message || "Failed to create order");
+        throw new Error(data.error?.message || (isRTL ? "فشل إنشاء الطلب. يرجى المحاولة مرة أخرى." : "Failed to create order. Please try again."));
       }
 
       if (isAuthenticated && user?.user_id) {
@@ -1287,7 +1302,7 @@ export default function CheckoutClient() {
               router.push(`/${locale}/order-confirmation?order_id=${data.order_id}&order_key=${data.order_key}`);
             }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred while placing your order");
+      setError(err instanceof Error ? err.message : (isRTL ? "حدث خطأ أثناء تقديم طلبك. يرجى المحاولة مرة أخرى." : "An error occurred while placing your order. Please try again."));
       setIsSubmitting(false);
     }
   };

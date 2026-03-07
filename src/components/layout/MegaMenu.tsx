@@ -11,7 +11,7 @@ import { getProductById } from "@/lib/api/woocommerce";
 import { cn, getProductSlugFromPermalink } from "@/lib/utils";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { MiniProductGridSkeleton, CategoriesGridSkeleton } from "@/components/common/Skeleton";
-import { getMegaMenuCategories } from "@/config/menu";
+import { getMegaMenuCategories, translateToArabic } from "@/config/menu";
 import { getMegaMenuData, type MegaMenuColumn, type MegaMenuData } from "@/lib/api/wordpress";
 
 const productsFetchPromise: Record<string, Promise<WCProduct[]> | null> = {};
@@ -170,8 +170,16 @@ export function MegaMenu({
   }, [locale]);
 
   // Use dynamic columns if available, otherwise fall back to static categories
+  // When in Arabic mode, apply translateToArabic to dynamic column names from WordPress API (SCRUM-48)
   const displayColumns: MegaMenuColumn[] = menuData?.columns && menuData.columns.length > 0
-    ? menuData.columns
+    ? menuData.columns.map((col) => ({
+        ...col,
+        name: isRTL ? translateToArabic(col.name) : col.name,
+        children: col.children.map((child) => ({
+          ...child,
+          name: isRTL ? translateToArabic(child.name) : child.name,
+        })),
+      }))
     : staticCategories.map((cat) => ({
         id: cat.id,
         name: cat.name,

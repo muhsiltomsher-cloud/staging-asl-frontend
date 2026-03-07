@@ -88,6 +88,30 @@ export function getLocalizedPath(pathname: string, locale: string): string {
   return `/${locale}${pathWithoutLocale}`;
 }
 
+/**
+ * Converts a string to Title Case, handling ALL CAPS and mixed case.
+ * Examples:
+ *   "PERSONAL CARE" -> "Personal Care"
+ *   "home fragrances" -> "Home Fragrances"
+ *   "Gifts Set" -> "Gifts Set" (already title case)
+ *   "PERFUMES & OILS" -> "Perfumes & Oils"
+ */
+export function toTitleCase(text: string): string {
+  if (!text) return text;
+  return text
+    .split(/\s+/)
+    .map((word) => {
+      if (word.length === 0) return word;
+      // Keep short connectors lowercase (except if it's the first word)
+      const lower = word.toLowerCase();
+      if (lower === '&' || lower === 'and' || lower === 'or') return lower;
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
+    .join(' ')
+    // Ensure first character is always uppercase
+    .replace(/^./, (c) => c.toUpperCase());
+}
+
 export function decodeHtmlEntities(text: string): string {
   const entities: Record<string, string> = {
     "&amp;": "&",

@@ -8,7 +8,7 @@ import { getCategoryBySlug, getProductsByCategory, getCategories, getFreeGiftPro
 import { siteConfig, type Locale } from "@/config/site";
 import type { Metadata } from "next";
 import { CategoryClient } from "./CategoryClient";
-import { decodeHtmlEntities } from "@/lib/utils";
+import { decodeHtmlEntities, toTitleCase } from "@/lib/utils";
 
 // Increased revalidate time for better cache hit rates (5 minutes instead of 60 seconds)
 export const revalidate = 300;
@@ -42,7 +42,7 @@ export async function generateMetadata({
 }: CategoryPageProps): Promise<Metadata> {
   const { locale, slug } = await params;
   const category = await getCategoryBySlug(slug, locale as Locale);
-  const categoryName = decodeHtmlEntities(category?.name || slug.charAt(0).toUpperCase() + slug.slice(1));
+  const categoryName = toTitleCase(decodeHtmlEntities(category?.name || slug.charAt(0).toUpperCase() + slug.slice(1)));
   
   return generateSeoMetadata({
     title: categoryName,
@@ -83,7 +83,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
     const breadcrumbItems = [
       { name: dictionary.common.shop, href: `/${locale}/shop` },
-      { name: decodeHtmlEntities(category.name), href: `/${locale}/category/${slug}` },
+      { name: toTitleCase(decodeHtmlEntities(category.name)), href: `/${locale}/category/${slug}` },
     ];
 
   return (
@@ -91,7 +91,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       <Breadcrumbs items={breadcrumbItems} locale={locale as Locale} />
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-amber-900 md:text-3xl">{decodeHtmlEntities(category.name)}</h1>
+        <h1 className="text-2xl font-bold text-amber-900 md:text-3xl">{toTitleCase(decodeHtmlEntities(category.name))}</h1>
       </div>
 
       <Suspense fallback={<ProductGridSkeleton count={12} />}>

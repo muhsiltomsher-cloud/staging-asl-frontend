@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/common/Skeleton";
 import type { WCCategory } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 import type { CategorySectionSettings } from "@/types/wordpress";
-import { decodeHtmlEntities } from "@/lib/utils";
+import { decodeHtmlEntities, toTitleCase } from "@/lib/utils";
 
 interface ExtraCategoryItem {
   id: string;
@@ -158,7 +158,7 @@ export function CategorySection({
                   </div>
                   <div className="mt-3 text-center">
                     <h3 className="text-base font-semibold text-amber-900 transition-colors group-hover:text-amber-700 md:text-lg">
-                      {decodeHtmlEntities(category.name)}
+                      {toTitleCase(decodeHtmlEntities(category.name))}
                     </h3>
                   </div>
                 </Link>

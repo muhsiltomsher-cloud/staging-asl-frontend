@@ -7,7 +7,7 @@ import { ShoppingBag, Heart, Eye } from "lucide-react";
 import { Badge } from "@/components/common/Badge";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { LazyImage } from "@/components/common/LazyImage";
-import { cn, decodeHtmlEntities, getProductSlugFromPermalink, BLUR_DATA_URL } from "@/lib/utils";
+import { cn, decodeHtmlEntities, toTitleCase, getProductSlugFromPermalink, BLUR_DATA_URL } from "@/lib/utils";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useAddToCartAnimation } from "@/components/common/AddToCartAnimation";
@@ -180,7 +180,7 @@ export function WCProductCard({
         <div className="mt-4 space-y-2">
                                         {!hideCategoryTag && product.categories?.[0] && (
                                 <p className="text-[10px] font-medium uppercase tracking-wider text-amber-600 md:text-xs">
-                                  {decodeHtmlEntities(product.categories[0].name)}
+                                  {toTitleCase(decodeHtmlEntities(product.categories[0].name))}
                                 </p>
                               )}
 

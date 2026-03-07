@@ -111,22 +111,37 @@ export function getHeaderCategoryLinks(locale: Locale) {
 }
 
 const menuArabicTranslations: Record<string, string> = {
+  // Navigation
   "shop all": "تسوق الكل",
   "shop": "تسوق",
+  "home": "الرئيسية",
+  "about": "من نحن",
+  "about us": "من نحن",
+  "contact": "اتصل بنا",
+  "contact us": "اتصل بنا",
+  "faq": "الأسئلة الشائعة",
+  // Main categories
   "home fragrances": "عطور المنزل",
   "perfumes": "العطور",
   "personal care": "العناية الشخصية",
   "gifts set": "مجموعات الهدايا",
   "gift sets": "مجموعات الهدايا",
+  "gift set": "مجموعة هدايا",
   "oils": "الزيوت",
   "fragrance oils": "زيوت العطور",
   "perfumes & oils": "العطور والزيوت",
+  // Subcategories
   "hair & body mist": "بخاخ الشعر والجسم",
   "hand & body lotion": "لوشن اليدين والجسم",
+  "hand and body lotion": "لوشن اليدين والجسم",
+  "body lotion": "لوشن الجسم",
+  "body mist": "بخاخ الجسم",
   "reed diffusers": "موزعات العطر",
+  "reed diffuser": "موزع العطر",
   "candles": "الشموع",
   "diffusers": "موزعات العطر",
   "room sprays": "بخاخات الغرف",
+  "room spray": "بخاخ الغرف",
   "incense": "البخور",
   "for him": "له",
   "for her": "لها",
@@ -135,10 +150,23 @@ const menuArabicTranslations: Record<string, string> = {
   "women's perfumes": "عطور نسائية",
   "unisex perfumes": "عطور للجنسين",
   "oud perfumes": "عطور العود",
-  "home": "الرئيسية",
-  "about": "من نحن",
-  "contact": "اتصل بنا",
-  "faq": "الأسئلة الشائعة",
+  "oud": "العود",
+  // Product types / tags
+  "new arrivals": "وصل حديثاً",
+  "best sellers": "الأكثر مبيعاً",
+  "bestsellers": "الأكثر مبيعاً",
+  "featured": "مميز",
+  "featured products": "منتجات مميزة",
+  "sale": "تخفيضات",
+  "on sale": "تخفيضات",
+  // Additional categories that may come from WooCommerce API
+  "uncategorized": "غير مصنف",
+  "tanning oil": "زيت التسمير",
+  "tanning oils": "زيوت التسمير",
+  "perfume": "عطر",
+  "lotion": "لوشن",
+  "spray": "بخاخ",
+  "mist": "رذاذ",
 };
 
 export function translateToArabic(englishTitle: string): string {
