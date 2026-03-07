@@ -8,7 +8,7 @@ import { Button } from "@/components/common/Button";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
-import { cn } from "@/lib/utils";
+import { cn, toTitleCase } from "@/lib/utils";
 import type { Product } from "@/types";
 import type { Locale } from "@/config/site";
 
@@ -107,7 +107,7 @@ export function ProductCard({ product, locale, className }: ProductCardProps) {
           {/* Category */}
                     {product.productCategories?.nodes?.[0] && (
                       <p className="text-[10px] text-gray-500 md:text-xs">
-                        {product.productCategories.nodes[0].name}
+                        {toTitleCase(product.productCategories.nodes[0].name)}
                       </p>
                     )}
 
