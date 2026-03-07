@@ -9,8 +9,11 @@ import { useAuth } from "./AuthContext";
 import { getBundleItems, getBundleItemsTotal } from "@/components/cart/BundleItemsList";
 import { getBundleData } from "@/lib/utils/bundleStorage";
 
-// Cache key now includes locale for proper multilingual support
-const getCartCacheKey = (locale: string) => `/api/cart?locale=${locale}`;
+// Use a single cache key for cart data regardless of locale.
+// Cart contents (product IDs, quantities, prices) are language-agnostic.
+// Passing locale to the backend API caused WPML to interfere with CoCart's
+// JWT-based cart retrieval for authenticated users on Arabic pages.
+const CART_CACHE_KEY = "/api/cart";
 
 // LocalStorage cache key for cart data (temporary caching strategy)
 const CART_STORAGE_KEY = "asl_cart_cache";
@@ -23,7 +26,7 @@ interface CachedCartData {
 }
 
 // Get cached cart from localStorage
-function getCachedCart(locale: string): CoCartResponse | null {
+function getCachedCart(): CoCartResponse | null {
   if (typeof window === "undefined") return null;
   
   try {
@@ -32,8 +35,7 @@ function getCachedCart(locale: string): CoCartResponse | null {
     
     const data: CachedCartData = JSON.parse(cached);
     
-    // Check if cache is for the same locale and not expired
-    if (data.locale !== locale) return null;
+    // Check if cache is not expired
     if (Date.now() - data.timestamp > CART_CACHE_TTL) {
       localStorage.removeItem(CART_STORAGE_KEY);
       return null;
@@ -46,13 +48,13 @@ function getCachedCart(locale: string): CoCartResponse | null {
 }
 
 // Save cart to localStorage cache
-function setCachedCart(cart: CoCartResponse, locale: string): void {
+function setCachedCart(cart: CoCartResponse): void {
   if (typeof window === "undefined") return;
   
   try {
     const data: CachedCartData = {
       cart,
-      locale,
+      locale: "_",
       timestamp: Date.now(),
     };
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(data));
@@ -145,8 +147,8 @@ interface CartProviderProps {
 }
 
 export function CartProvider({ children, locale }: CartProviderProps) {
-  // Use locale-aware cache key for proper multilingual support
-  const cacheKey = getCartCacheKey(locale);
+  // Single cache key for cart - cart data is language-agnostic
+  const cacheKey = CART_CACHE_KEY;
   
   // Get authentication state to refresh cart after login
   const { isAuthenticated, user } = useAuth();
@@ -170,32 +172,21 @@ export function CartProvider({ children, locale }: CartProviderProps) {
   // Update localStorage cache whenever cart data changes
   useEffect(() => {
     if (cart) {
-      setCachedCart(cart, locale);
+      setCachedCart(cart);
     }
-  }, [cart, locale]);
-
-  // Track previous locale to detect language switches
-  const prevLocaleRef = useRef(locale);
+  }, [cart]);
 
   // Seed SWR cache with localStorage data after hydration to avoid
   // server/client mismatch (React error #418). This runs only on the client
   // after the initial render, so both server and client start with null.
-  // When locale changes, clear old cache and force a fresh fetch to ensure
-  // product descriptions match the selected language.
+  // Cart data is language-agnostic so no cache clearing is needed on locale change.
   useEffect(() => {
-    if (prevLocaleRef.current !== locale) {
-      // Locale changed - clear old cache and force re-fetch from server
-      clearCachedCart();
-      mutateCart();
-      prevLocaleRef.current = locale;
-    } else {
-      // Same locale - seed from localStorage cache if available
-      const cached = getCachedCart(locale);
-      if (cached) {
-        mutateCart(cached, false);
-      }
+    const cached = getCachedCart();
+    if (cached) {
+      mutateCart(cached, false);
     }
-  }, [locale, mutateCart]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Refresh cart when user logs in or logs out
   useEffect(() => {

@@ -182,8 +182,10 @@ export async function GET(request: NextRequest) {
     const locale = await getLocale(request);
     
     // For authenticated users, don't use cart_key (use JWT identity)
-    // Append currency and lang parameters for WPML multicurrency and multilingual support
-    const authUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, locale);
+    // Don't pass lang parameter for authenticated users - WPML's language switching
+    // interferes with CoCart's JWT-based cart retrieval, causing empty cart on Arabic locale.
+    // Guest carts (cart_key based) are unaffected so we keep lang for them.
+    const authUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, null);
     const guestUrl = cartKey
       ? appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart?cart_key=${cartKey}`, currency, locale)
       : appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, locale);
@@ -268,6 +270,9 @@ export async function POST(request: NextRequest) {
     const locale = await getLocale(request);
     const body = await request.json().catch(() => ({}));
 
+    // Don't pass lang for authenticated users (same WPML/CoCart interference fix as GET)
+    const cartLocale = authToken ? null : locale;
+
     if (!action && (body.id || body.product_id)) {
       action = "add";
       if (body.id && !body.product_id) {
@@ -280,7 +285,7 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case "add":
-        baseUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart/add-item`, currency, locale);
+        baseUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart/add-item`, currency, cartLocale);
         break;
       case "update": {
         const itemKey = searchParams.get("item_key");
@@ -290,7 +295,7 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        baseUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart/item/${itemKey}`, currency, locale);
+        baseUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart/item/${itemKey}`, currency, cartLocale);
         break;
       }
       case "remove": {
@@ -301,12 +306,12 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        baseUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart/item/${encodeURIComponent(removeKey)}`, currency, locale);
+        baseUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart/item/${encodeURIComponent(removeKey)}`, currency, cartLocale);
         method = "DELETE";
         break;
       }
       case "clear":
-        baseUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart/clear`, currency, locale);
+        baseUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart/clear`, currency, cartLocale);
         break;
       case "apply-coupon":
       case "remove-coupon": {
@@ -350,8 +355,8 @@ export async function POST(request: NextRequest) {
         }
         
         const coCartUrl = cartKey
-          ? appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart?cart_key=${cartKey}`, currency, locale)
-          : appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, locale);
+          ? appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart?cart_key=${cartKey}`, currency, cartLocale)
+          : appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, cartLocale);
         
         const coCartResponse = await fetch(noCacheUrl(coCartUrl), {
           method: "GET",
