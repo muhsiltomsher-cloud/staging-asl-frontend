@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
 import { MapPin, Edit2, Plus, X, Save, Trash2, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -217,6 +217,18 @@ function AddressModal({
   const [formData, setFormData] = useState<Omit<SavedAddress, "id">>(emptyAddress);
   const [addressId, setAddressId] = useState<string | null>(null);
   const [prevIsOpen, setPrevIsOpen] = useState(false);
+
+  // Prevent background scroll when modal is open (SCRUM-65)
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   if (isOpen && !prevIsOpen) {
     if (initialAddress) {
