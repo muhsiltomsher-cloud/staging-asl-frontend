@@ -1010,13 +1010,18 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               </div>
             </AccordionSection>
 
-            {/* Description - now showing short description data */}
+            {/* Description - showing full description data */}
             <AccordionSection
               title={isRTL ? "الوصف" : "Description"}
               isOpen={openAccordion === "description"}
               onToggle={() => toggleAccordion("description")}
             >
-              {product.short_description ? (
+              {product.description ? (
+                <div
+                  className="prose prose-sm max-w-none text-gray-600 [&_a]:underline"
+                  dangerouslySetInnerHTML={{ __html: product.description }}
+                />
+              ) : product.short_description ? (
                 <div
                   className="prose prose-sm max-w-none text-gray-600 [&_a]:underline"
                   dangerouslySetInnerHTML={{ __html: product.short_description }}

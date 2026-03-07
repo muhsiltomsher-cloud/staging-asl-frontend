@@ -149,11 +149,19 @@ export function HeroSlider({ settings }: HeroSliderProps) {
       <style jsx global>{`
         .hero-slider .swiper-pagination {
           bottom: 20px !important;
+          left: 0 !important;
+          right: 0 !important;
+          width: 100% !important;
+          display: flex !important;
+          justify-content: center !important;
+          align-items: center !important;
+          gap: 8px !important;
         }
         .hero-slider .swiper-pagination-bullet {
-          width: 12px;
-          height: 12px;
-          margin: 0 6px !important;
+          width: 10px;
+          height: 10px;
+          margin: 0 !important;
+          flex-shrink: 0;
         }
       `}</style>
     </section>

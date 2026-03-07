@@ -86,9 +86,9 @@ export function ProductCard({ product, locale, className }: ProductCardProps) {
                       </button>
                     </div>
 
-          {/* Add to cart button */}
+          {/* Add to cart button - always visible on mobile, hover on desktop */}
           {!isOutOfStock && (
-            <div className="absolute bottom-2 left-2 right-2 opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="absolute bottom-2 left-2 right-2 transition-opacity opacity-100 md:opacity-0 md:group-hover:opacity-100">
               <Button
                 onClick={handleAddToCart}
                 isLoading={isLoading}

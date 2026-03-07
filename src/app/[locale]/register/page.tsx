@@ -78,7 +78,11 @@ export default function RegisterPage({ params }: RegisterPageProps) {
       emailRequired: "Email is required",
       emailInvalid: "Please enter a valid email address",
       passwordRequired: "Password is required",
-      passwordMinLength: "Password must be at least 6 characters",
+      passwordMinLength: "Password must be at least 8 characters",
+      passwordUppercase: "Must contain an uppercase letter",
+      passwordLowercase: "Must contain a lowercase letter",
+      passwordNumber: "Must contain a number",
+      passwordSpecial: "Must contain a special character (!@#$%^&*)",
       termsRequired: "You must accept the Terms & Conditions",
       registerSuccess: "Registration successful! Please login.",
       registerError: "Registration failed. Please try again.",
@@ -109,7 +113,11 @@ export default function RegisterPage({ params }: RegisterPageProps) {
       emailRequired: "البريد الإلكتروني مطلوب",
       emailInvalid: "يرجى إدخال بريد إلكتروني صحيح",
       passwordRequired: "كلمة المرور مطلوبة",
-      passwordMinLength: "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
+      passwordMinLength: "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
+      passwordUppercase: "يجب أن تحتوي على حرف كبير",
+      passwordLowercase: "يجب أن تحتوي على حرف صغير",
+      passwordNumber: "يجب أن تحتوي على رقم",
+      passwordSpecial: "يجب أن تحتوي على رمز خاص (!@#$%^&*)",
       termsRequired: "يجب الموافقة على الشروط والأحكام",
       registerSuccess: "تم إنشاء الحساب بنجاح! يرجى تسجيل الدخول.",
       registerError: "فشل إنشاء الحساب. يرجى المحاولة مرة أخرى.",
@@ -154,8 +162,16 @@ export default function RegisterPage({ params }: RegisterPageProps) {
 
     if (!formData.password) {
       newErrors.password = texts.passwordRequired;
-    } else if (formData.password.length < 6) {
+    } else if (formData.password.length < 8) {
       newErrors.password = texts.passwordMinLength;
+    } else if (!/[A-Z]/.test(formData.password)) {
+      newErrors.password = texts.passwordUppercase;
+    } else if (!/[a-z]/.test(formData.password)) {
+      newErrors.password = texts.passwordLowercase;
+    } else if (!/[0-9]/.test(formData.password)) {
+      newErrors.password = texts.passwordNumber;
+    } else if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password)) {
+      newErrors.password = texts.passwordSpecial;
     }
 
     if (!termsAccepted) {
@@ -327,17 +343,35 @@ export default function RegisterPage({ params }: RegisterPageProps) {
                 className="border-gray-300 rounded-none"
               />
 
-              <Input
-                name="password"
-                type="password"
-                placeholder={texts.passwordPlaceholder}
-                value={formData.password}
-                onChange={handleInputChange}
-                error={errors.password}
-                autoComplete="new-password"
-                dir={isRTL ? "rtl" : "ltr"}
-                className="border-gray-300 rounded-none"
-              />
+              <div>
+                <Input
+                  name="password"
+                  type="password"
+                  placeholder={texts.passwordPlaceholder}
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  error={errors.password}
+                  autoComplete="new-password"
+                  dir={isRTL ? "rtl" : "ltr"}
+                  className="border-gray-300 rounded-none"
+                />
+                {formData.password && (
+                  <div className="mt-2 space-y-1">
+                    {[
+                      { test: formData.password.length >= 8, label: isRTL ? "8 أحرف على الأقل" : "At least 8 characters" },
+                      { test: /[A-Z]/.test(formData.password), label: isRTL ? "حرف كبير" : "Uppercase letter" },
+                      { test: /[a-z]/.test(formData.password), label: isRTL ? "حرف صغير" : "Lowercase letter" },
+                      { test: /[0-9]/.test(formData.password), label: isRTL ? "رقم" : "Number" },
+                      { test: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password), label: isRTL ? "رمز خاص" : "Special character" },
+                    ].map((rule) => (
+                      <div key={rule.label} className={`flex items-center gap-1.5 text-xs ${rule.test ? "text-green-600" : "text-gray-400"}`}>
+                        <span>{rule.test ? "✓" : "○"}</span>
+                        <span>{rule.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Newsletter Checkbox */}
               <div className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>

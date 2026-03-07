@@ -1416,7 +1416,7 @@ export default function CheckoutClient() {
             {/* Contact Information */}
             <div className="rounded-2xl bg-white p-5 md:p-6 shadow-sm">
                             <h2 className="mb-5 flex items-center gap-3 text-base md:text-lg font-semibold text-gray-900">
-                              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-xs text-white shadow-sm">1</span>
+                              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-amber-700 to-amber-800 text-sm font-bold text-white shadow-md">1</span>
                               {isRTL ? "معلومات الاتصال" : "Contact Information"}
                             </h2>
               <div className={`grid gap-4 ${isAuthenticated ? "sm:grid-cols-1" : "sm:grid-cols-2"}`}>
@@ -1565,8 +1565,8 @@ export default function CheckoutClient() {
             {/* Shipping Address */}
             <div className="rounded-2xl bg-white p-5 md:p-6 shadow-sm">
                             <h2 className="mb-5 flex items-center gap-3 text-base md:text-lg font-semibold text-gray-900">
-                              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-xs text-white shadow-sm">2</span>
-                              {isRTL ? "عنوان الشحن" : "Delivery"}
+                                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-amber-700 to-amber-800 text-sm font-bold text-white shadow-md">2</span>
+                                            {isRTL ? "عنوان الشحن" : "Delivery"}
                             </h2>
 
               {/* Show saved addresses selector for authenticated users */}
@@ -1709,7 +1709,7 @@ export default function CheckoutClient() {
             {/* Shipping Method Selection */}
             <div className="rounded-2xl bg-white p-5 md:p-6 shadow-sm">
               <h2 className="mb-5 flex items-center gap-3 text-base md:text-lg font-semibold text-gray-900">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-xs text-white shadow-sm">3</span>
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-amber-700 to-amber-800 text-sm font-bold text-white shadow-md">3</span>
                 {isRTL ? "طريقة الشحن" : "Shipping Method"}
               </h2>
               
@@ -1811,7 +1811,7 @@ export default function CheckoutClient() {
             <div className="rounded-2xl bg-white p-5 md:p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
                                 <h2 className="flex items-center gap-3 text-base md:text-lg font-semibold text-gray-900">
-                                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-xs text-white shadow-sm">4</span>
+                                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-amber-700 to-amber-800 text-sm font-bold text-white shadow-md">4</span>
                                   {isRTL ? "عنوان الفاتورة" : "Billing Address"}
                                 </h2>
                 <button
@@ -1908,7 +1908,7 @@ export default function CheckoutClient() {
                         {/* Payment Method */}
                         <div className="rounded-2xl bg-white p-5 md:p-6 shadow-sm">
                                         <h2 className="mb-5 flex items-center gap-3 text-base md:text-lg font-semibold text-gray-900">
-                                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-xs text-white shadow-sm">5</span>
+                                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-amber-700 to-amber-800 text-sm font-bold text-white shadow-md">5</span>
                                           {isRTL ? "طريقة الدفع" : "Payment Method"}
                                         </h2>
                           
@@ -2072,7 +2072,7 @@ export default function CheckoutClient() {
             {/* Order Notes */}
             <div className="rounded-2xl bg-white p-5 md:p-6 shadow-sm">
                             <h2 className="mb-5 flex items-center gap-3 text-base md:text-lg font-semibold text-gray-900">
-                              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-xs text-white shadow-sm">6</span>
+                              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-amber-700 to-amber-800 text-sm font-bold text-white shadow-md">6</span>
                               {isRTL ? "ملاحظات الطلب" : "Order Notes"}
                             </h2>
               <textarea
