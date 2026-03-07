@@ -124,7 +124,11 @@ export function MegaMenu({
 
       const prods = await productsFetchPromise[locale];
       if (prods) {
-        setFeaturedProducts(prods);
+        // Deduplicate products by ID to prevent repeated items in dropdown
+        const uniqueProds = prods.filter((product, index, self) =>
+          self.findIndex(p => p.id === product.id) === index
+        );
+        setFeaturedProducts(uniqueProds);
       }
     } catch (error) {
       console.error(error);

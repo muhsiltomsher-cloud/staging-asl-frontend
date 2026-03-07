@@ -447,6 +447,22 @@ export default function SettingsPage({ params }: SettingsPageProps) {
                   {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
+              {passwordData.newPassword && (
+                <div className="mt-2 space-y-1">
+                  {[
+                    { test: passwordData.newPassword.length >= 8, label: isRTL ? "8 أحرف على الأقل" : "At least 8 characters" },
+                    { test: /[A-Z]/.test(passwordData.newPassword), label: isRTL ? "حرف كبير" : "Uppercase letter" },
+                    { test: /[a-z]/.test(passwordData.newPassword), label: isRTL ? "حرف صغير" : "Lowercase letter" },
+                    { test: /[0-9]/.test(passwordData.newPassword), label: isRTL ? "رقم" : "Number" },
+                    { test: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(passwordData.newPassword), label: isRTL ? "رمز خاص" : "Special character" },
+                  ].map((rule) => (
+                    <div key={rule.label} className={`flex items-center gap-1.5 text-xs ${rule.test ? "text-green-600" : "text-gray-400"}`}>
+                      <span>{rule.test ? "✓" : "○"}</span>
+                      <span>{rule.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>

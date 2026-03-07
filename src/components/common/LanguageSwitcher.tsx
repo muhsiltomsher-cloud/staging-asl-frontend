@@ -64,7 +64,7 @@ export function LanguageSwitcher({ locale, className, alternateUrl }: LanguageSw
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-medium transition-all hover:bg-gray-100",
+          "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-medium transition-all hover:bg-gray-100 cursor-default",
           className
         )}
         aria-label={t.selectLanguage}

@@ -105,7 +105,7 @@ export function Header({ locale, dictionary, siteSettings, headerSettings, menuI
 
   return (
     <>
-            <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-[#dad6cd] backdrop-blur supports-[backdrop-filter]:bg-[#dad6cd]/95">
+            <header className="sticky top-0 z-50 w-full bg-[#dad6cd] backdrop-blur supports-[backdrop-filter]:bg-[#dad6cd]/95">
               {/* Top bar - Mobile: Arabic left, Currency right | Desktop: both left */}
               {/* Hidden on cart and checkout pages */}
               {!hideTopBar && (

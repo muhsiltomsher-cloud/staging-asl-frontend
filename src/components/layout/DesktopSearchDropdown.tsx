@@ -313,7 +313,7 @@ export function DesktopSearchDropdown({
               <div className="border-t border-gray-100 bg-gray-50 p-3">
                 <button
                   onClick={handleSubmit}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-amber-800 px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-amber-900"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-gray-800"
                 >
                   <TrendingUp className="h-4 w-4" />
                   {dictionary.common.viewAllResults || "View all results"}
