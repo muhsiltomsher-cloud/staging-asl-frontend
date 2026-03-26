@@ -57,11 +57,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     ...secureCookieOptions,
                     maxAge: 60 * 60 * 24 * 7,
                   });
-                  userData.token = refreshResponse.token;
-                  setCookie(AUTH_USER_KEY, JSON.stringify(userData), {
-                    ...secureCookieOptions,
-                    maxAge: 60 * 60 * 24 * 7,
-                  });
+                      userData.token = refreshResponse.token;
+                      const { token: _t, wp_token: _w, refresh_token: _r, ...refreshedMeta } = userData;
+                      setCookie(AUTH_USER_KEY, JSON.stringify(refreshedMeta), {
+                        ...secureCookieOptions,
+                        maxAge: 60 * 60 * 24 * 7,
+                      });
                   setUser({ ...userData });
                 }
               } catch {
@@ -102,7 +103,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ...secureCookieOptions,
           maxAge: 60 * 60 * 24 * 7,
         });
-        setCookie(AUTH_USER_KEY, JSON.stringify(response.user), {
+        // Only store non-sensitive user metadata in asl_auth_user (no tokens)
+        const { token: _t, wp_token: _w, refresh_token: _r, ...userMetadata } = response.user;
+        setCookie(AUTH_USER_KEY, JSON.stringify(userMetadata), {
           ...secureCookieOptions,
           maxAge: 60 * 60 * 24 * 7,
         });
@@ -147,7 +150,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ...secureCookieOptions,
           maxAge: 60 * 60 * 24 * 7,
         });
-        setCookie(AUTH_USER_KEY, JSON.stringify(response.user), {
+        // Only store non-sensitive user metadata in asl_auth_user (no tokens)
+        const { token: _t, wp_token: _w, refresh_token: _r, ...userMetadata } = response.user;
+        setCookie(AUTH_USER_KEY, JSON.stringify(userMetadata), {
           ...secureCookieOptions,
           maxAge: 60 * 60 * 24 * 7,
         });

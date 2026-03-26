@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE, backendPostHeaders, noCacheUrl, safeJsonResponse } from "@/lib/utils/backendFetch";
+import { isTokenBlocked } from "@/lib/security/token-blocklist";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,6 +14,17 @@ export async function POST(request: NextRequest) {
           error: { code: "missing_token", message: "Refresh token is required" },
         },
         { status: 400 }
+      );
+    }
+
+    // Reject refresh tokens that were blocklisted during logout
+    if (isTokenBlocked(refresh_token)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: { code: "token_invalidated", message: "Refresh token has been invalidated" },
+        },
+        { status: 401 }
       );
     }
 
