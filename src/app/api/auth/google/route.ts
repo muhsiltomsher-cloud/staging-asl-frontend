@@ -238,10 +238,9 @@ export async function POST(request: NextRequest) {
         maxAge: 60 * 60 * 24 * 7,
       });
     }
+    // User data cookie (non-HttpOnly so client JS can read user info)
+    // Intentionally exclude sensitive tokens — they are only in the HttpOnly cookies above
     res.cookies.set("asl_auth_user", JSON.stringify({
-      token,
-      wp_token: wpToken,
-      refresh_token: refreshToken,
       user_id: userId,
       user_email: userEmail,
       user_nicename: userNicename,
