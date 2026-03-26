@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { API_BASE, backendPostHeaders, noCacheUrl, safeJsonResponse } from "@/lib/utils/backendFetch";
+import { isTokenBlocked } from "@/lib/security/token-blocklist";
 const AUTH_TOKEN_KEY = "asl_auth_token";
 const AUTH_USER_KEY = "asl_auth_user";
 const AUTH_REFRESH_TOKEN_KEY = "asl_refresh_token";
@@ -111,6 +112,18 @@ export async function verifyAuth(_request: NextRequest): Promise<AuthResult> {
         error: {
           code: "invalid_user_data",
           message: "User ID not found in cookie",
+        },
+      };
+    }
+
+    // Check if token has been blocklisted (invalidated via logout)
+    if (isTokenBlocked(token)) {
+      return {
+        authenticated: false,
+        user: null,
+        error: {
+          code: "token_invalidated",
+          message: "Token has been invalidated",
         },
       };
     }

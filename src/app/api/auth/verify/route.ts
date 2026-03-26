@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE, backendPostHeaders, noCacheUrl } from "@/lib/utils/backendFetch";
+import { isTokenBlocked } from "@/lib/security/token-blocklist";
 
 // Allowed JWT signing algorithms — reject "none" and any other unexpected algorithm
 const ALLOWED_JWT_ALGORITHMS = ["HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "ES256", "ES384", "ES512"];
@@ -32,6 +33,14 @@ export async function POST(request: NextRequest) {
     if (!isTokenAlgorithmSafe(token)) {
       return NextResponse.json(
         { success: false, valid: false, error: "Invalid token algorithm" },
+        { status: 401 }
+      );
+    }
+
+    // Reject tokens that have been blocklisted (invalidated via logout)
+    if (isTokenBlocked(token)) {
+      return NextResponse.json(
+        { success: false, valid: false, error: "Token has been invalidated" },
         { status: 401 }
       );
     }

@@ -25,7 +25,7 @@ interface AuthContextType {
   setIsAccountDrawerOpen: (open: boolean) => void;
   login: (credentials: LoginCredentials) => Promise<LoginResponse>;
   googleLogin: (credential: string) => Promise<LoginResponse>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -172,7 +172,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    // Call server-side logout to blocklist tokens before clearing cookies
+    try {
+      const token = getCookie(AUTH_TOKEN_KEY);
+      const refreshTokenValue = getCookie(AUTH_REFRESH_TOKEN_KEY);
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          refresh_token: refreshTokenValue || undefined,
+        }),
+      });
+    } catch {
+      // Continue with client-side cleanup even if server call fails
+    }
     deleteCookie(AUTH_TOKEN_KEY);
     deleteCookie(AUTH_USER_KEY);
     deleteCookie(AUTH_REFRESH_TOKEN_KEY);

@@ -24,3 +24,8 @@ export {
   csrfErrorResponse,
   setCsrfCookie,
 } from "./csrf";
+
+export {
+  blockToken,
+  isTokenBlocked,
+} from "./token-blocklist";
