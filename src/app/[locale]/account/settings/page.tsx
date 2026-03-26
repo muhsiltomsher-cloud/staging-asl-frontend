@@ -282,8 +282,8 @@ export default function SettingsPage({ params }: SettingsPageProps) {
         setPasswordMessage({ type: "success", text: t.passwordChanged });
         setPasswordData({ newPassword: "", confirmPassword: "" });
         // Auto-logout and redirect to login page after password change
-        setTimeout(() => {
-          logout();
+        setTimeout(async () => {
+          await logout();
           router.push(`/${locale}/login?password_changed=true`);
         }, 1500);
       } else {

@@ -4,7 +4,12 @@ import { blockToken } from "@/lib/security/token-blocklist";
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get("Authorization");
-    const token = authHeader?.replace(/^Bearer\s+/i, "");
+    let token = authHeader?.replace(/^Bearer\s+/i, "");
+
+    // Fallback: read token from cookie (browser sends it automatically)
+    if (!token) {
+      token = request.cookies.get("asl_auth_token")?.value;
+    }
 
     // Read refresh token from request body if provided
     let refreshToken: string | undefined;
@@ -13,6 +18,11 @@ export async function POST(request: NextRequest) {
       refreshToken = body.refresh_token;
     } catch {
       // Body may be empty — that's fine
+    }
+
+    // Fallback: read refresh token from cookie
+    if (!refreshToken) {
+      refreshToken = request.cookies.get("asl_refresh_token")?.value;
     }
 
     // Block the access token server-side so it cannot be replayed

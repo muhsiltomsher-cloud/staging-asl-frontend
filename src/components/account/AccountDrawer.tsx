@@ -96,8 +96,8 @@ export function AccountDrawer({
     setIsAccountDrawerOpen(false);
   }, [setIsAccountDrawerOpen]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     onClose();
   };
 

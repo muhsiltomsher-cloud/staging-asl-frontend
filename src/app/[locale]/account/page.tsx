@@ -92,8 +92,8 @@ export default function AccountPage({ params }: AccountPageProps) {
     },
   ];
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push(`/${locale}`);
   };
 
