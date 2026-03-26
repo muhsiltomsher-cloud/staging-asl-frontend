@@ -22,11 +22,24 @@ export interface AuthResult {
   };
 }
 
+// Allowed JWT signing algorithms — reject "none" and any other unexpected algorithm
+const ALLOWED_JWT_ALGORITHMS = ["HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "ES256", "ES384", "ES512"];
+
 function isValidJwtFormat(token: string): boolean {
   const parts = token.split(".");
   if (parts.length !== 3) return false;
+
+  // Reject tokens with empty signature (alg:none attack)
+  if (!parts[2] || parts[2].trim() === "") return false;
   
   try {
+    // Validate header — reject alg:none and unknown algorithms
+    const header = JSON.parse(atob(parts[0]));
+    const alg = String(header.alg || "").toUpperCase();
+    if (!alg || alg === "NONE" || !ALLOWED_JWT_ALGORITHMS.includes(alg)) {
+      return false;
+    }
+
     const payload = JSON.parse(atob(parts[1]));
     if (payload.exp && payload.exp * 1000 < Date.now()) {
       return false;
