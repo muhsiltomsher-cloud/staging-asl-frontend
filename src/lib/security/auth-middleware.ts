@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { API_BASE, backendPostHeaders, noCacheUrl, safeJsonResponse } from "@/lib/utils/backendFetch";
+import { isTokenBlocked } from "@/lib/security/token-blocklist";
 const AUTH_TOKEN_KEY = "asl_auth_token";
 const AUTH_USER_KEY = "asl_auth_user";
 const AUTH_REFRESH_TOKEN_KEY = "asl_refresh_token";
@@ -22,11 +23,24 @@ export interface AuthResult {
   };
 }
 
+// Allowed JWT signing algorithms — reject "none" and any other unexpected algorithm
+const ALLOWED_JWT_ALGORITHMS = ["HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "ES256", "ES384", "ES512"];
+
 function isValidJwtFormat(token: string): boolean {
   const parts = token.split(".");
   if (parts.length !== 3) return false;
+
+  // Reject tokens with empty signature (alg:none attack)
+  if (!parts[2] || parts[2].trim() === "") return false;
   
   try {
+    // Validate header — reject alg:none and unknown algorithms
+    const header = JSON.parse(atob(parts[0]));
+    const alg = String(header.alg || "").toUpperCase();
+    if (!alg || alg === "NONE" || !ALLOWED_JWT_ALGORITHMS.includes(alg)) {
+      return false;
+    }
+
     const payload = JSON.parse(atob(parts[1]));
     if (payload.exp && payload.exp * 1000 < Date.now()) {
       return false;
@@ -98,6 +112,18 @@ export async function verifyAuth(_request: NextRequest): Promise<AuthResult> {
         error: {
           code: "invalid_user_data",
           message: "User ID not found in cookie",
+        },
+      };
+    }
+
+    // Check if token has been blocklisted (invalidated via logout)
+    if (isTokenBlocked(token)) {
+      return {
+        authenticated: false,
+        user: null,
+        error: {
+          code: "token_invalidated",
+          message: "Token has been invalidated",
         },
       };
     }

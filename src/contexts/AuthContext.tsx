@@ -25,7 +25,7 @@ interface AuthContextType {
   setIsAccountDrawerOpen: (open: boolean) => void;
   login: (credentials: LoginCredentials) => Promise<LoginResponse>;
   googleLogin: (credential: string) => Promise<LoginResponse>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -57,11 +57,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     ...secureCookieOptions,
                     maxAge: 60 * 60 * 24 * 7,
                   });
-                  userData.token = refreshResponse.token;
-                  setCookie(AUTH_USER_KEY, JSON.stringify(userData), {
-                    ...secureCookieOptions,
-                    maxAge: 60 * 60 * 24 * 7,
-                  });
+                      userData.token = refreshResponse.token;
+                      const { token: _t, wp_token: _w, refresh_token: _r, ...refreshedMeta } = userData;
+                      setCookie(AUTH_USER_KEY, JSON.stringify(refreshedMeta), {
+                        ...secureCookieOptions,
+                        maxAge: 60 * 60 * 24 * 7,
+                      });
                   setUser({ ...userData });
                 }
               } catch {
@@ -102,7 +103,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ...secureCookieOptions,
           maxAge: 60 * 60 * 24 * 7,
         });
-        setCookie(AUTH_USER_KEY, JSON.stringify(response.user), {
+        // Only store non-sensitive user metadata in asl_auth_user (no tokens)
+        const { token: _t, wp_token: _w, refresh_token: _r, ...userMetadata } = response.user;
+        setCookie(AUTH_USER_KEY, JSON.stringify(userMetadata), {
           ...secureCookieOptions,
           maxAge: 60 * 60 * 24 * 7,
         });
@@ -147,7 +150,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ...secureCookieOptions,
           maxAge: 60 * 60 * 24 * 7,
         });
-        setCookie(AUTH_USER_KEY, JSON.stringify(response.user), {
+        // Only store non-sensitive user metadata in asl_auth_user (no tokens)
+        const { token: _t, wp_token: _w, refresh_token: _r, ...userMetadata } = response.user;
+        setCookie(AUTH_USER_KEY, JSON.stringify(userMetadata), {
           ...secureCookieOptions,
           maxAge: 60 * 60 * 24 * 7,
         });
@@ -172,7 +177,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    // Call server-side logout to blocklist tokens before clearing cookies
+    try {
+      const token = getCookie(AUTH_TOKEN_KEY);
+      const refreshTokenValue = getCookie(AUTH_REFRESH_TOKEN_KEY);
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          refresh_token: refreshTokenValue || undefined,
+        }),
+      });
+    } catch {
+      // Continue with client-side cleanup even if server call fails
+    }
     deleteCookie(AUTH_TOKEN_KEY);
     deleteCookie(AUTH_USER_KEY);
     deleteCookie(AUTH_REFRESH_TOKEN_KEY);

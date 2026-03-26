@@ -191,18 +191,66 @@ export async function POST(request: NextRequest) {
       // WP JWT token is optional
     }
 
-    return NextResponse.json({
+    const token = String((loginData.extras as Record<string, unknown>)?.jwt_token || loginData.jwt_token || loginData.token || "");
+    const refreshToken = String((loginData.extras as Record<string, unknown>)?.jwt_refresh || loginData.jwt_refresh_token || loginData.refresh_token || "");
+    const userId = parseInt(String(loginData.user_id || "0")) || (loginData.id as number) || 0;
+    const userEmail = String(loginData.email || loginData.user_email || email);
+    const userNicename = String(loginData.user_nicename || loginData.nicename || loginData.username || email);
+    const userDisplayName = String(loginData.display_name || loginData.user_display_name || loginData.username || tokenInfo.name || email);
+
+    const isSecure = process.env.NODE_ENV === "production";
+    const cookieOptions = {
+      path: "/",
+      sameSite: "lax" as const,
+      secure: isSecure,
+    };
+
+    const res = NextResponse.json({
       success: true,
       user: {
-        token: String((loginData.extras as Record<string, unknown>)?.jwt_token || loginData.jwt_token || loginData.token || ""),
+        token,
         wp_token: wpToken,
-        refresh_token: String((loginData.extras as Record<string, unknown>)?.jwt_refresh || loginData.jwt_refresh_token || loginData.refresh_token || ""),
-        user_id: parseInt(String(loginData.user_id || "0")) || (loginData.id as number) || 0,
-        user_email: String(loginData.email || loginData.user_email || email),
-        user_nicename: String(loginData.user_nicename || loginData.nicename || loginData.username || email),
-        user_display_name: String(loginData.display_name || loginData.user_display_name || loginData.username || tokenInfo.name || email),
+        refresh_token: refreshToken,
+        user_id: userId,
+        user_email: userEmail,
+        user_nicename: userNicename,
+        user_display_name: userDisplayName,
       },
     });
+
+    // Set HttpOnly cookies for sensitive tokens (not readable by client-side JS)
+    res.cookies.set("asl_auth_token", token, {
+      ...cookieOptions,
+      httpOnly: true,
+      maxAge: 60 * 60 * 24 * 7,
+    });
+    if (refreshToken) {
+      res.cookies.set("asl_refresh_token", refreshToken, {
+        ...cookieOptions,
+        httpOnly: true,
+        maxAge: 60 * 60 * 24 * 30,
+      });
+    }
+    if (wpToken) {
+      res.cookies.set("asl_wp_auth_token", wpToken, {
+        ...cookieOptions,
+        httpOnly: true,
+        maxAge: 60 * 60 * 24 * 7,
+      });
+    }
+    // User data cookie (non-HttpOnly so client JS can read user info)
+    // Intentionally exclude sensitive tokens — they are only in the HttpOnly cookies above
+    res.cookies.set("asl_auth_user", JSON.stringify({
+      user_id: userId,
+      user_email: userEmail,
+      user_nicename: userNicename,
+      user_display_name: userDisplayName,
+    }), {
+      ...cookieOptions,
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    return res;
   } catch (error) {
     return NextResponse.json(
       {

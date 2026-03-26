@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // F-10: Suppress X-Powered-By header to prevent technology disclosure
+  poweredByHeader: false,
   images: {
     remotePatterns: [
       {
@@ -40,6 +42,31 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
+    // Content Security Policy — whitelist all known third-party script/connect/image sources
+    const cspDirectives = [
+      "default-src 'self'",
+      // Scripts: Next.js inline scripts + analytics + payment widgets + Google Sign-In
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://connect.facebook.net https://analytics.tiktok.com https://sc-static.net https://cdn.tamara.co https://accounts.google.com https://www.recaptcha.net https://www.gstatic.com https://googleads.g.doubleclick.net https://www.googleadservices.com",
+      // Styles: Next.js inline styles + Google Fonts + Google Sign-In
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
+      // Images: self + WordPress backend + analytics pixels + flag CDN
+      "img-src 'self' data: blob: https://staging.aromaticscentslab.com https://aromaticscentslab.com https://www.facebook.com https://www.google-analytics.com https://analytics.google.com https://flagcdn.com https://www.googletagmanager.com https://tr.snapchat.com https://googleads.g.doubleclick.net https://www.google.com",
+      // Fonts: self + Google Fonts
+      "font-src 'self' https://fonts.gstatic.com data:",
+      // Connect: API calls + analytics endpoints
+      "connect-src 'self' https://staging.aromaticscentslab.com https://aromaticscentslab.com https://www.google-analytics.com https://analytics.google.com https://connect.facebook.net https://www.facebook.com https://analytics.tiktok.com https://sc-static.net https://accounts.google.com https://oauth2.googleapis.com https://region1.google-analytics.com https://region1.analytics.google.com https://www.google.com https://googleads.g.doubleclick.net https://www.googleadservices.com",
+      // Frames: restrict to self and payment provider redirects
+      "frame-src 'self' https://www.google.com https://www.recaptcha.net https://accounts.google.com https://td.doubleclick.net",
+      // Prevent the site from being embedded in iframes on other sites (clickjacking protection)
+      "frame-ancestors 'none'",
+      // Forms can only submit to self
+      "form-action 'self'",
+      // Base URI restriction
+      "base-uri 'self'",
+      // Upgrade HTTP to HTTPS
+      "upgrade-insecure-requests",
+    ];
+
     const securityHeaders = [
       {
         key: "X-Robots-Tag",
@@ -72,6 +99,10 @@ const nextConfig: NextConfig = {
       {
         key: "X-DNS-Prefetch-Control",
         value: "on",
+      },
+      {
+        key: "Content-Security-Policy",
+        value: cspDirectives.join("; "),
       },
     ];
 
