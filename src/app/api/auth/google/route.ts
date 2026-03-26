@@ -218,23 +218,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Set HttpOnly cookies for sensitive tokens (not readable by client-side JS)
+    // Set server-side cookies for auth tokens (not httpOnly — client reads them
+    // via document.cookie for API calls and auth persistence on reload)
     res.cookies.set("asl_auth_token", token, {
       ...cookieOptions,
-      httpOnly: true,
       maxAge: 60 * 60 * 24 * 7,
     });
     if (refreshToken) {
       res.cookies.set("asl_refresh_token", refreshToken, {
         ...cookieOptions,
-        httpOnly: true,
         maxAge: 60 * 60 * 24 * 30,
       });
     }
     if (wpToken) {
       res.cookies.set("asl_wp_auth_token", wpToken, {
         ...cookieOptions,
-        httpOnly: true,
         maxAge: 60 * 60 * 24 * 7,
       });
     }

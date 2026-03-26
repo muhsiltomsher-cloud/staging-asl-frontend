@@ -127,23 +127,24 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
       },
     });
 
-    // Set HttpOnly cookies for sensitive tokens (not readable by client-side JS)
+    // Set server-side cookies for auth tokens.
+    // Note: These are NOT httpOnly because the client-side AuthContext and
+    // getAuthToken() read them via document.cookie for API calls and auth
+    // persistence on page reload. The asl_auth_user cookie (below) has
+    // tokens stripped to limit XSS exposure of user metadata.
     res.cookies.set("asl_auth_token", token, {
       ...cookieOptions,
-      httpOnly: true,
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });
     if (refreshToken) {
       res.cookies.set("asl_refresh_token", refreshToken, {
         ...cookieOptions,
-        httpOnly: true,
         maxAge: 60 * 60 * 24 * 30, // 30 days
       });
     }
     if (wpToken) {
       res.cookies.set("asl_wp_auth_token", wpToken, {
         ...cookieOptions,
-        httpOnly: true,
         maxAge: 60 * 60 * 24 * 7, // 7 days
       });
     }
