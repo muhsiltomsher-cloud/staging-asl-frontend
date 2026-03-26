@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // F-10: Suppress X-Powered-By header to prevent technology disclosure
+  poweredByHeader: false,
   images: {
     remotePatterns: [
       {
