@@ -98,18 +98,70 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
     } catch {
     }
 
-    return NextResponse.json({
+    const token = String((data.extras as Record<string, unknown>)?.jwt_token || data.jwt_token || data.token || "");
+    const refreshToken = String((data.extras as Record<string, unknown>)?.jwt_refresh || data.jwt_refresh_token || data.refresh_token || "");
+    const userId = parseInt(String(data.user_id || "0")) || (data.id as number) || 0;
+    const userEmail = String(data.email || data.user_email || "");
+    const userNicename = String(data.user_nicename || data.nicename || data.username || "");
+    const userDisplayName = String(data.display_name || data.user_display_name || data.username || "");
+
+    const isSecure = process.env.NODE_ENV === "production";
+    const cookieOptions = {
+      path: "/",
+      sameSite: "lax" as const,
+      secure: isSecure,
+    };
+
+    // Return user info in JSON body (needed for client-side state),
+    // but set sensitive tokens as HttpOnly cookies so they are not accessible to JS/XSS
+    const res = NextResponse.json({
       success: true,
       user: {
-        token: String((data.extras as Record<string, unknown>)?.jwt_token || data.jwt_token || data.token || ""),
+        token,
         wp_token: wpToken,
-        refresh_token: String((data.extras as Record<string, unknown>)?.jwt_refresh || data.jwt_refresh_token || data.refresh_token || ""),
-        user_id: parseInt(String(data.user_id || "0")) || (data.id as number) || 0,
-        user_email: String(data.email || data.user_email || ""),
-        user_nicename: String(data.user_nicename || data.nicename || data.username || ""),
-        user_display_name: String(data.display_name || data.user_display_name || data.username || ""),
+        refresh_token: refreshToken,
+        user_id: userId,
+        user_email: userEmail,
+        user_nicename: userNicename,
+        user_display_name: userDisplayName,
       },
     });
+
+    // Set HttpOnly cookies for sensitive tokens (not readable by client-side JS)
+    res.cookies.set("asl_auth_token", token, {
+      ...cookieOptions,
+      httpOnly: true,
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+    if (refreshToken) {
+      res.cookies.set("asl_refresh_token", refreshToken, {
+        ...cookieOptions,
+        httpOnly: true,
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+      });
+    }
+    if (wpToken) {
+      res.cookies.set("asl_wp_auth_token", wpToken, {
+        ...cookieOptions,
+        httpOnly: true,
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      });
+    }
+    // User data cookie (non-HttpOnly so client JS can read user info)
+    res.cookies.set("asl_auth_user", JSON.stringify({
+      token,
+      wp_token: wpToken,
+      refresh_token: refreshToken,
+      user_id: userId,
+      user_email: userEmail,
+      user_nicename: userNicename,
+      user_display_name: userDisplayName,
+    }), {
+      ...cookieOptions,
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+
+    return res;
   } catch (error) {
     return NextResponse.json(
       {
