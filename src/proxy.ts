@@ -151,12 +151,14 @@ function validateApiToken(request: NextRequest): NextResponse | null {
       res.cookies.delete("asl_auth_token");
       return addSecurityHeaders(res);
     }
-    return addSecurityHeaders(
+    const res = addSecurityHeaders(
       NextResponse.json(
         { success: false, error: { code: "invalid_token_algorithm", message: "Token uses a disallowed signing algorithm" } },
         { status: 401 }
       )
     );
+    res.cookies.delete("asl_auth_token");
+    return res;
   }
 
   // F-05: Reject tokens that were invalidated via logout
@@ -166,12 +168,14 @@ function validateApiToken(request: NextRequest): NextResponse | null {
       res.cookies.delete("asl_auth_token");
       return addSecurityHeaders(res);
     }
-    return addSecurityHeaders(
+    const res = addSecurityHeaders(
       NextResponse.json(
         { success: false, error: { code: "token_invalidated", message: "Token has been invalidated" } },
         { status: 401 }
       )
     );
+    res.cookies.delete("asl_auth_token");
+    return res;
   }
 
   return null; // token looks fine
