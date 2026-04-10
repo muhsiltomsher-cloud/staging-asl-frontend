@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from "react";
 import useSWR, { mutate } from "swr";
 import type { CoCartResponse, CoCartItem } from "@/lib/api/cocart";
-import { getAuthToken } from "@/lib/api/auth";
 import { useNotification } from "./NotificationContext";
 import { useAuth } from "./AuthContext";
 import { getBundleItems, getBundleItemsTotal } from "@/components/cart/BundleItemsList";
@@ -75,16 +74,8 @@ function clearCachedCart(): void {
 }
 
 function getHeaders(): HeadersInit {
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-  };
-  
-  const token = getAuthToken();
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  
-  return headers;
+  // F-08: Auth tokens are HttpOnly cookies sent automatically by the browser.
+  return { "Content-Type": "application/json" };
 }
 
 // Fetcher that extracts locale from the cache key URL

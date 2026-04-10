@@ -2,21 +2,12 @@
 
 import useSWR, { mutate } from "swr";
 import type { CoCartResponse, CoCartItem, CartOperationResponse } from "@/lib/api/cocart";
-import { getAuthToken } from "@/lib/api/auth";
 
 const CART_CACHE_KEY = "/api/cart";
 
 function getHeaders(): HeadersInit {
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-  };
-  
-  const token = getAuthToken();
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  
-  return headers;
+  // F-08: Auth tokens are HttpOnly cookies sent automatically by the browser.
+  return { "Content-Type": "application/json" };
 }
 
 async function cartFetcher(): Promise<CoCartResponse | null> {

@@ -2,21 +2,12 @@
 
 import useSWR, { mutate } from "swr";
 import type { WishlistResponse, WishlistItem, WishlistOperationResponse } from "@/lib/api/wishlist";
-import { getAuthToken } from "@/lib/api/auth";
 
 const WISHLIST_CACHE_KEY = "/api/wishlist";
 
 function getHeaders(): HeadersInit {
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-  };
-
-  const token = getAuthToken();
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
-  return headers;
+  // F-08: Auth tokens are HttpOnly cookies sent automatically by the browser.
+  return { "Content-Type": "application/json" };
 }
 
 interface WishlistData {

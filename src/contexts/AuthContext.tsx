@@ -1,21 +1,10 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
-import { getCookie, setCookie, deleteCookie } from "cookies-next";
-import { validateToken, refreshToken as apiRefreshToken, type AuthUser, type LoginCredentials, type LoginResponse } from "@/lib/api/auth";
+import { getCookie, deleteCookie } from "cookies-next";
+import { fetchCurrentUser, type AuthUser, type LoginCredentials, type LoginResponse } from "@/lib/api/auth";
 
-const AUTH_TOKEN_KEY = "asl_auth_token";
 const AUTH_USER_KEY = "asl_auth_user";
-const AUTH_REFRESH_TOKEN_KEY = "asl_refresh_token";
-const AUTH_WP_TOKEN_KEY = "asl_wp_auth_token";
-
-const isProduction = typeof window !== "undefined" && window.location.protocol === "https:";
-
-const secureCookieOptions = {
-  path: "/",
-  sameSite: "lax" as const,
-  secure: isProduction,
-};
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -38,41 +27,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const token = getCookie(AUTH_TOKEN_KEY);
+        // First try the non-HttpOnly user metadata cookie for instant UI
         const userDataStr = getCookie(AUTH_USER_KEY);
-        const refreshTokenValue = getCookie(AUTH_REFRESH_TOKEN_KEY);
-
-        if (token && userDataStr) {
-          const userData = JSON.parse(userDataStr as string) as AuthUser;
-          setUser(userData);
-          setIsLoading(false);
-
+        if (userDataStr) {
           try {
-            const isValid = await validateToken(token as string);
-            if (!isValid && refreshTokenValue) {
-              try {
-                const refreshResponse = await apiRefreshToken(refreshTokenValue as string);
-                if (refreshResponse.success && refreshResponse.token) {
-                  setCookie(AUTH_TOKEN_KEY, refreshResponse.token, {
-                    ...secureCookieOptions,
-                    maxAge: 60 * 60 * 24 * 7,
-                  });
-                      userData.token = refreshResponse.token;
-                      const { token: _t, wp_token: _w, refresh_token: _r, ...refreshedMeta } = userData;
-                      setCookie(AUTH_USER_KEY, JSON.stringify(refreshedMeta), {
-                        ...secureCookieOptions,
-                        maxAge: 60 * 60 * 24 * 7,
-                      });
-                  setUser({ ...userData });
-                }
-              } catch {
-                // Refresh failed - keep user logged in from cookies
-              }
-            }
+            const userData = JSON.parse(userDataStr as string) as AuthUser;
+            setUser(userData);
           } catch {
-            // Validation failed - keep user logged in from cookies
+            // Cookie was corrupted; /api/auth/me will be the source of truth
           }
-          return;
+        }
+
+        // Verify auth state server-side (tokens are HttpOnly cookies)
+        const { authenticated, user: serverUser } = await fetchCurrentUser();
+        if (authenticated && serverUser) {
+          setUser(serverUser);
+        } else if (!authenticated) {
+          setUser(null);
         }
       } catch (error) {
         console.error("Error initializing auth:", error);
@@ -87,42 +58,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (credentials: LoginCredentials): Promise<LoginResponse> => {
     setIsLoading(true);
     try {
-      // Use the rate-limited API route for login
+      // F-08: Login via the server-side API route.
+      // Tokens are set as HttpOnly cookies by the server — never returned in JSON.
       const apiResponse = await fetch("/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(credentials),
       });
 
       const response: LoginResponse = await apiResponse.json();
 
       if (response.success && response.user) {
-        setCookie(AUTH_TOKEN_KEY, response.user.token, {
-          ...secureCookieOptions,
-          maxAge: 60 * 60 * 24 * 7,
-        });
-        // Only store non-sensitive user metadata in asl_auth_user (no tokens)
-        const { token: _t, wp_token: _w, refresh_token: _r, ...userMetadata } = response.user;
-        setCookie(AUTH_USER_KEY, JSON.stringify(userMetadata), {
-          ...secureCookieOptions,
-          maxAge: 60 * 60 * 24 * 7,
-        });
-        // Store refresh token if available
-        if (response.user.refresh_token) {
-          setCookie(AUTH_REFRESH_TOKEN_KEY, response.user.refresh_token, {
-            ...secureCookieOptions,
-            maxAge: 60 * 60 * 24 * 30, // 30 days for refresh token
-          });
-        }
-        // Store WordPress JWT token for YITH wishlist and other WP endpoints
-        if (response.user.wp_token) {
-          setCookie(AUTH_WP_TOKEN_KEY, response.user.wp_token, {
-            ...secureCookieOptions,
-            maxAge: 60 * 60 * 24 * 7, // 7 days
-          });
-        }
+        // User metadata (no tokens) comes from the JSON body
         setUser(response.user);
       }
 
@@ -137,37 +85,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const apiResponse = await fetch("/api/auth/google", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ credential }),
       });
 
       const response: LoginResponse = await apiResponse.json();
 
       if (response.success && response.user) {
-        setCookie(AUTH_TOKEN_KEY, response.user.token, {
-          ...secureCookieOptions,
-          maxAge: 60 * 60 * 24 * 7,
-        });
-        // Only store non-sensitive user metadata in asl_auth_user (no tokens)
-        const { token: _t, wp_token: _w, refresh_token: _r, ...userMetadata } = response.user;
-        setCookie(AUTH_USER_KEY, JSON.stringify(userMetadata), {
-          ...secureCookieOptions,
-          maxAge: 60 * 60 * 24 * 7,
-        });
-        if (response.user.refresh_token) {
-          setCookie(AUTH_REFRESH_TOKEN_KEY, response.user.refresh_token, {
-            ...secureCookieOptions,
-            maxAge: 60 * 60 * 24 * 30,
-          });
-        }
-        if (response.user.wp_token) {
-          setCookie(AUTH_WP_TOKEN_KEY, response.user.wp_token, {
-            ...secureCookieOptions,
-            maxAge: 60 * 60 * 24 * 7,
-          });
-        }
         setUser(response.user);
       }
 
@@ -178,27 +103,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    // Call server-side logout to blocklist tokens before clearing cookies
+    // F-08: Call server-side logout to blocklist tokens.
+    // HttpOnly cookies are sent automatically; the server clears them.
     try {
-      const token = getCookie(AUTH_TOKEN_KEY);
-      const refreshTokenValue = getCookie(AUTH_REFRESH_TOKEN_KEY);
       await fetch("/api/auth/logout", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          refresh_token: refreshTokenValue || undefined,
-        }),
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
     } catch {
       // Continue with client-side cleanup even if server call fails
     }
-    deleteCookie(AUTH_TOKEN_KEY);
+    // Clear the non-HttpOnly user metadata cookie client-side
     deleteCookie(AUTH_USER_KEY);
-    deleteCookie(AUTH_REFRESH_TOKEN_KEY);
-    deleteCookie(AUTH_WP_TOKEN_KEY);
     setUser(null);
   }, []);
 
