@@ -160,10 +160,10 @@ function createResponseWithCartKey(
     });
   }
   
-  // Update auth token cookie if we refreshed it
+  // Update auth token cookie if we refreshed it (F-08: must be HttpOnly)
   if (newAuthToken) {
     response.cookies.set(AUTH_TOKEN_COOKIE, newAuthToken, {
-      httpOnly: false, // Needs to be accessible by client-side JS
+      httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days

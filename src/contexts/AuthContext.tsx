@@ -103,16 +103,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    // F-08: Call server-side logout to blocklist tokens.
-    // HttpOnly cookies are sent automatically; the server clears them.
-    try {
-      await fetch("/api/auth/logout", {
+    // F-08: Call server-side logout to blocklist tokens and clear HttpOnly cookies.
+    // Retry once on failure because if the server call doesn't succeed the
+    // HttpOnly cookies (which JS cannot touch) will persist.
+    const doLogout = () =>
+      fetch("/api/auth/logout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
+
+    try {
+      const res = await doLogout();
+      if (!res.ok) throw new Error("logout failed");
     } catch {
-      // Continue with client-side cleanup even if server call fails
+      // Retry once after a short delay
+      try {
+        await new Promise((r) => setTimeout(r, 500));
+        await doLogout();
+      } catch {
+        // If retry also fails, continue with client-side cleanup
+      }
     }
     // Clear the non-HttpOnly user metadata cookie client-side
     deleteCookie(AUTH_USER_KEY);
