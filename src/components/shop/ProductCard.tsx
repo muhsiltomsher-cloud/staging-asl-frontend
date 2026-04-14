@@ -8,7 +8,7 @@ import { Button } from "@/components/common/Button";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
-import { cn, toTitleCase } from "@/lib/utils";
+import { cn, toTitleCase, decodeHtmlEntities } from "@/lib/utils";
 import type { Product } from "@/types";
 import type { Locale } from "@/config/site";
 
@@ -113,7 +113,7 @@ export function ProductCard({ product, locale, className }: ProductCardProps) {
 
                     {/* Name */}
                     <h3 className="text-xs font-medium text-gray-900 line-clamp-2 uppercase md:text-sm">
-                      {product.name}
+                      {decodeHtmlEntities(product.name)}
                     </h3>
 
           {/* Price */}

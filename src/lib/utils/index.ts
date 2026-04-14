@@ -123,7 +123,9 @@ export function decodeHtmlEntities(text: string): string {
     "&nbsp;": " ",
   };
   
-  return text.replace(/&(?:amp|lt|gt|quot|#39|apos|nbsp);/g, (match) => entities[match] || match);
+  return text
+    .replace(/&(?:amp|lt|gt|quot|#39|apos|nbsp);/g, (match) => entities[match] || match)
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)));
 }
 
 /**

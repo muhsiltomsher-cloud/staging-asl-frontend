@@ -145,7 +145,7 @@ export function WCProductListCard({
 
             {/* Name */}
             <h3 className="mb-2 text-base font-semibold text-gray-900 transition-colors group-hover:text-amber-800 md:text-lg uppercase">
-              {product.name}
+              {decodeHtmlEntities(product.name)}
             </h3>
 
             {/* Description */}

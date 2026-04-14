@@ -819,7 +819,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
           )}
 
                     {/* Title */}
-                    <h1 className="text-base font-medium text-gray-900 md:text-2xl uppercase">{product.name}</h1>
+                    <h1 className="text-base font-medium text-gray-900 md:text-2xl uppercase">{decodeHtmlEntities(product.name)}</h1>
 
           {/* Price - Bold and main color */}
           <div className="flex items-center gap-3">
@@ -1092,7 +1092,7 @@ export function ProductDetail({ product, locale, relatedProducts = [], upsellPro
               </div>
             )}
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-gray-900">{product.name}</p>
+              <p className="truncate text-sm font-medium text-gray-900">{decodeHtmlEntities(product.name)}</p>
               <FormattedPrice
                 price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
                 className="text-sm font-bold text-amber-800"

@@ -8,7 +8,7 @@ import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/config/site";
 import type { WCProduct } from "@/types/woocommerce";
 import { getProductById } from "@/lib/api/woocommerce";
-import { cn, getProductSlugFromPermalink } from "@/lib/utils";
+import { cn, getProductSlugFromPermalink, decodeHtmlEntities } from "@/lib/utils";
 import { FormattedPrice } from "@/components/common/FormattedPrice";
 import { MiniProductGridSkeleton, CategoriesGridSkeleton } from "@/components/common/Skeleton";
 import { getMegaMenuCategories, translateToArabic } from "@/config/menu";
@@ -325,7 +325,7 @@ export function MegaMenu({
                         </div>
                         <div className="mt-2">
                           <h4 className="text-xs font-medium text-gray-900 group-hover:text-[#7a3205] transition-colors line-clamp-2 break-words min-w-0">
-                            {product.name}
+                            {decodeHtmlEntities(product.name)}
                           </h4>
                           <p className="text-xs text-[#7a3205] font-medium mt-1">
                             <FormattedPrice 

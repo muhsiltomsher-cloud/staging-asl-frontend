@@ -10,6 +10,7 @@ import { useNotification } from "@/contexts/NotificationContext";
 import { useFreeGift } from "@/contexts/FreeGiftContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { saveBundleData } from "@/lib/utils/bundleStorage";
+import { decodeHtmlEntities } from "@/lib/utils";
 import type { WCProduct } from "@/types/woocommerce";
 import type { Locale } from "@/config/site";
 import type { BundleConfig } from "@/lib/api/woocommerce";
@@ -974,7 +975,7 @@ export function BuildYourOwnSetClient({
                       </div>
                       <div className="p-2 sm:p-3 min-w-0">
                         <p className="line-clamp-2 text-xs sm:text-sm font-medium text-gray-900 uppercase break-words">
-                          {product.name}
+                          {decodeHtmlEntities(product.name)}
                         </p>
                         <p className={`mt-1 text-xs sm:text-sm font-semibold ${activeSlot !== null && isSlotFree(activeSlot) ? "text-green-600" : "text-amber-700"}`}>
                           {activeSlot !== null && isSlotFree(activeSlot) ? t.free : <FormattedPrice price={product.price} iconSize="sm" />}
