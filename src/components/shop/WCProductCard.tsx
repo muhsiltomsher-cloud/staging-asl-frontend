@@ -185,7 +185,7 @@ export function WCProductCard({
                               )}
 
                               <h3 className="text-xs font-semibold text-gray-900 line-clamp-2 group-hover:text-amber-800 transition-colors uppercase md:text-sm">
-                                {product.name}
+                                {decodeHtmlEntities(product.name)}
                               </h3>
 
           <div className="flex items-center gap-2">

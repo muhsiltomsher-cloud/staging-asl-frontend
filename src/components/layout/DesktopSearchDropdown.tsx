@@ -290,7 +290,7 @@ export function DesktopSearchDropdown({
                           </p>
                         )}
                         <h3 className="font-medium text-gray-900 truncate text-sm uppercase">
-                          {product.name}
+                          {decodeHtmlEntities(product.name)}
                         </h3>
                         <FormattedPrice
                           price={parseInt(product.prices.price) / Math.pow(10, product.prices.currency_minor_unit)}
