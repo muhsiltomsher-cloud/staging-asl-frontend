@@ -10,9 +10,6 @@ export interface LoginRequest {
 export interface LoginResponse {
   success: boolean;
   user?: {
-    token: string;
-    wp_token?: string;
-    refresh_token?: string;
     user_id: number;
     user_email: string;
     user_nicename: string;
@@ -112,14 +109,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
       secure: isSecure,
     };
 
-    // Return user info in JSON body (needed for client-side state),
-    // but set sensitive tokens as HttpOnly cookies so they are not accessible to JS/XSS
+    // F-08: Return only non-sensitive user metadata in the JSON body.
+    // Tokens are set exclusively as HttpOnly cookies so they are never
+    // accessible to client-side JavaScript (mitigates XSS token theft).
     const res = NextResponse.json({
       success: true,
       user: {
-        token,
-        wp_token: wpToken,
-        refresh_token: refreshToken,
         user_id: userId,
         user_email: userEmail,
         user_nicename: userNicename,
@@ -127,29 +122,29 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
       },
     });
 
-    // Set server-side cookies for auth tokens.
-    // Note: These are NOT httpOnly because the client-side AuthContext and
-    // getAuthToken() read them via document.cookie for API calls and auth
-    // persistence on page reload. The asl_auth_user cookie (below) has
-    // tokens stripped to limit XSS exposure of user metadata.
+    // F-08: All token cookies are HttpOnly + Secure so client JS cannot read them.
+    // The browser sends them automatically on same-origin /api/* requests.
     res.cookies.set("asl_auth_token", token, {
       ...cookieOptions,
+      httpOnly: true,
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });
     if (refreshToken) {
       res.cookies.set("asl_refresh_token", refreshToken, {
         ...cookieOptions,
+        httpOnly: true,
         maxAge: 60 * 60 * 24 * 30, // 30 days
       });
     }
     if (wpToken) {
       res.cookies.set("asl_wp_auth_token", wpToken, {
         ...cookieOptions,
+        httpOnly: true,
         maxAge: 60 * 60 * 24 * 7, // 7 days
       });
     }
-    // User data cookie (non-HttpOnly so client JS can read user info)
-    // Intentionally exclude sensitive tokens — they are only in the HttpOnly cookies above
+    // User data cookie (non-HttpOnly so client JS can read user info for UI)
+    // Contains NO tokens — only display metadata
     res.cookies.set("asl_auth_user", JSON.stringify({
       user_id: userId,
       user_email: userEmail,

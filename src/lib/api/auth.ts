@@ -14,9 +14,6 @@ export interface RegisterData {
 }
 
 export interface AuthUser {
-  token: string;
-  wp_token?: string;
-  refresh_token?: string;
   user_id: number;
   user_email: string;
   user_nicename: string;
@@ -207,16 +204,18 @@ export async function refreshToken(refreshTokenValue: string): Promise<RefreshTo
   }
 }
 
-export function getAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-  const cookies = document.cookie.split(";");
-  for (const cookie of cookies) {
-    const [name, value] = cookie.trim().split("=");
-    if (name === "asl_auth_token") {
-      return decodeURIComponent(value);
-    }
+/**
+ * Fetch the current authenticated user from the server.
+ * Tokens are HttpOnly cookies and never exposed to JS (F-08).
+ */
+export async function fetchCurrentUser(): Promise<{ authenticated: boolean; user: AuthUser | null }> {
+  try {
+    const res = await fetch("/api/auth/me", { method: "GET", credentials: "include" });
+    if (!res.ok) return { authenticated: false, user: null };
+    return await res.json();
+  } catch {
+    return { authenticated: false, user: null };
   }
-  return null;
 }
 
 export async function forgotPassword(email: string): Promise<ForgotPasswordResponse> {

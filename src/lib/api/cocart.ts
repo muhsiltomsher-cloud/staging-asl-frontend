@@ -1,4 +1,3 @@
-import { getAuthToken } from "./auth";
 
 export interface CoCartItem {
   item_key: string;
@@ -114,16 +113,9 @@ export interface CartOperationResponse {
 }
 
 function getHeaders(): HeadersInit {
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-  };
-  
-  const token = getAuthToken();
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  
-  return headers;
+  // F-08: Auth tokens are HttpOnly cookies sent automatically by the browser.
+  // No Authorization header needed — the server reads tokens from cookies.
+  return { "Content-Type": "application/json" };
 }
 
 export async function getCart(): Promise<CartOperationResponse> {

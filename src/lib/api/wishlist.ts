@@ -1,4 +1,3 @@
-import { getAuthToken } from "./auth";
 
 export interface WishlistItem {
   id: number;
@@ -45,16 +44,8 @@ export interface WishlistOperationResponse {
 }
 
 function getHeaders(): HeadersInit {
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-  };
-
-  const token = getAuthToken();
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
-  return headers;
+  // F-08: Auth tokens are HttpOnly cookies sent automatically by the browser.
+  return { "Content-Type": "application/json" };
 }
 
 export async function getWishlist(): Promise<WishlistOperationResponse> {
