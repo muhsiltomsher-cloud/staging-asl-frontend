@@ -30,7 +30,7 @@ function asl_influencer_register_menu() {
         'Influencer Tracking',
         'Influencer Tracking',
         'manage_woocommerce',
-        'asl-influencer-tracking',
+        'ep-influencer-tracking',
         'asl_influencer_render_admin_page'
     );
 }
@@ -39,7 +39,7 @@ function asl_influencer_register_menu() {
  * Enqueue admin scripts and styles
  */
 function asl_influencer_enqueue_scripts($hook) {
-    if ($hook !== 'woocommerce_page_asl-influencer-tracking') return;
+    if ($hook !== 'woocommerce_page_ep-influencer-tracking') return;
     wp_enqueue_script('jquery');
     wp_enqueue_style('woocommerce_admin_styles');
     wp_add_inline_style('woocommerce_admin_styles', asl_influencer_get_admin_css());
@@ -236,9 +236,9 @@ function asl_influencer_render_admin_page() {
         <p class="asl-subtitle">Manage influencer referral codes and track visits, orders, and revenue from each influencer campaign.</p>
 
         <nav class="nav-tab-wrapper">
-            <a href="?page=asl-influencer-tracking&tab=influencers" class="nav-tab <?php echo $tab === 'influencers' ? 'nav-tab-active' : ''; ?>">Influencers</a>
-            <a href="?page=asl-influencer-tracking&tab=stats" class="nav-tab <?php echo $tab === 'stats' ? 'nav-tab-active' : ''; ?>">Stats &amp; Reports</a>
-            <a href="?page=asl-influencer-tracking&tab=visits" class="nav-tab <?php echo $tab === 'visits' ? 'nav-tab-active' : ''; ?>">Visit Log</a>
+            <a href="?page=ep-influencer-tracking&tab=influencers" class="nav-tab <?php echo $tab === 'influencers' ? 'nav-tab-active' : ''; ?>">Influencers</a>
+            <a href="?page=ep-influencer-tracking&tab=stats" class="nav-tab <?php echo $tab === 'stats' ? 'nav-tab-active' : ''; ?>">Stats &amp; Reports</a>
+            <a href="?page=ep-influencer-tracking&tab=visits" class="nav-tab <?php echo $tab === 'visits' ? 'nav-tab-active' : ''; ?>">Visit Log</a>
         </nav>
 
         <div class="asl-tab-content">
@@ -451,7 +451,7 @@ function asl_influencer_render_stats_tab() {
     if (empty($influencers)) {
         echo '<div style="text-align:center;padding:40px;color:#787c82;">';
         echo '<p style="font-size:16px;">No influencers configured yet.</p>';
-        echo '<p>Add influencers in the <a href="?page=asl-influencer-tracking&tab=influencers">Influencers tab</a> first.</p>';
+        echo '<p>Add influencers in the <a href="?page=ep-influencer-tracking&tab=influencers">Influencers tab</a> first.</p>';
         echo '</div>';
         return;
     }
@@ -465,7 +465,7 @@ function asl_influencer_render_stats_tab() {
 
     ?>
     <form method="get" class="asl-date-filter">
-        <input type="hidden" name="page" value="asl-influencer-tracking">
+        <input type="hidden" name="page" value="ep-influencer-tracking">
         <input type="hidden" name="tab" value="stats">
         <label>From:</label>
         <input type="date" name="date_from" value="<?php echo esc_attr($date_from); ?>">
@@ -473,10 +473,10 @@ function asl_influencer_render_stats_tab() {
         <input type="date" name="date_to" value="<?php echo esc_attr($date_to); ?>">
         <button type="submit" class="button button-primary">Filter</button>
         <?php if ($date_from || $date_to): ?>
-        <a href="?page=asl-influencer-tracking&tab=stats" class="button">Clear Filters</a>
+        <a href="?page=ep-influencer-tracking&tab=stats" class="button">Clear Filters</a>
         <?php endif; ?>
         <span style="margin-left:auto;">
-            <a href="<?php echo esc_url(admin_url('admin.php?page=asl-influencer-tracking&action=export_csv&tab=stats' . ($date_from ? '&date_from=' . $date_from : '') . ($date_to ? '&date_to=' . $date_to : '') . '&_wpnonce=' . wp_create_nonce('asl_export_csv'))); ?>" class="button">Export CSV</a>
+            <a href="<?php echo esc_url(admin_url('admin.php?page=ep-influencer-tracking&action=export_csv&tab=stats' . ($date_from ? '&date_from=' . $date_from : '') . ($date_to ? '&date_to=' . $date_to : '') . '&_wpnonce=' . wp_create_nonce('asl_export_csv'))); ?>" class="button">Export CSV</a>
         </span>
     </form>
     <?php
@@ -879,7 +879,7 @@ function asl_influencer_render_stats_tab() {
                         <td><?php echo esc_html($od['country']); ?></td>
                         <td><?php echo esc_html($od['payment']); ?></td>
                         <td><?php echo $od['has_gift'] ? '<span class="asl-badge asl-badge-active">Yes</span>' : '<span style="color:#c3c4c7;">No</span>'; ?></td>
-                        <td style="font-size:11px;"><?php echo esc_html($od['landing_page'] ?: '&mdash;'); ?></td>
+                        <td style="font-size:11px;"><?php echo esc_html($od['landing_page'] ?: '—'); ?></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -964,7 +964,7 @@ function asl_influencer_render_visits_tab() {
         <h2 style="margin:0;">Visit Log <span style="font-size:12px;color:#787c82;font-weight:400;">(<?php echo number_format($total); ?> total visits)</span></h2>
         <div style="display:flex;gap:8px;align-items:center;">
             <form method="get" style="display:flex;gap:6px;align-items:center;">
-                <input type="hidden" name="page" value="asl-influencer-tracking">
+                <input type="hidden" name="page" value="ep-influencer-tracking">
                 <input type="hidden" name="tab" value="visits">
                 <select name="filter_code" style="padding:4px 8px;">
                     <option value="">All Influencers</option>
@@ -1032,7 +1032,7 @@ function asl_influencer_render_visits_tab() {
             <?php if ($p === $current_page): ?>
                 <span class="button button-primary" style="pointer-events:none;"><?php echo $p; ?></span>
             <?php else: ?>
-                <a href="?page=asl-influencer-tracking&tab=visits<?php echo $filter_code ? '&filter_code=' . esc_attr($filter_code) : ''; ?>&vpage=<?php echo $p; ?>" class="button"><?php echo $p; ?></a>
+                <a href="?page=ep-influencer-tracking&tab=visits<?php echo $filter_code ? '&filter_code=' . esc_attr($filter_code) : ''; ?>&vpage=<?php echo $p; ?>" class="button"><?php echo $p; ?></a>
             <?php endif; ?>
         <?php endfor; ?>
     </div>
@@ -1045,7 +1045,7 @@ function asl_influencer_render_visits_tab() {
  * Handle CSV export
  */
 function asl_influencer_handle_csv_export() {
-    if (!isset($_GET['page']) || $_GET['page'] !== 'asl-influencer-tracking') return;
+    if (!isset($_GET['page']) || $_GET['page'] !== 'ep-influencer-tracking') return;
     if (!isset($_GET['action']) || $_GET['action'] !== 'export_csv') return;
     if (!current_user_can('manage_woocommerce')) return;
     if (!wp_verify_nonce(isset($_GET['_wpnonce']) ? $_GET['_wpnonce'] : '', 'asl_export_csv')) return;
