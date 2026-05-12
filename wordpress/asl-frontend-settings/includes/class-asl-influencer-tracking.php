@@ -879,7 +879,7 @@ function asl_influencer_render_stats_tab() {
                         <td><?php echo esc_html($od['country']); ?></td>
                         <td><?php echo esc_html($od['payment']); ?></td>
                         <td><?php echo $od['has_gift'] ? '<span class="asl-badge asl-badge-active">Yes</span>' : '<span style="color:#c3c4c7;">No</span>'; ?></td>
-                        <td style="font-size:11px;"><?php echo esc_html($od['landing_page'] ?: '&mdash;'); ?></td>
+                        <td style="font-size:11px;"><?php echo esc_html($od['landing_page'] ?: '—'); ?></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
