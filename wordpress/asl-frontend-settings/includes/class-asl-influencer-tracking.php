@@ -1107,7 +1107,7 @@ function asl_influencer_render_linkgen_tab() {
                 case 'custom':
                     if (!empty($gen_custom)) {
                         $gen_custom = ltrim($gen_custom, '/');
-                        if (preg_match('#^[a-zA-Z][a-zA-Z0-9+.-]*://#', $gen_custom)) {
+                        if (preg_match('#^https?://#i', $gen_custom) && filter_var($gen_custom, FILTER_VALIDATE_URL)) {
                             $landing_url = $gen_custom;
                         } else {
                             $landing_url = rtrim($site_url, '/') . '/' . $gen_custom;
@@ -1270,7 +1270,11 @@ function asl_influencer_render_linkgen_tab() {
             if (type === 'custom') {
                 var custom = $('#gen-custom-url').val().replace(/^\/+/, '');
                 if (custom) {
-                    if (/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(custom)) {
+                    var isFullUrl = false;
+                    if (/^https?:\/\//.test(custom)) {
+                        try { new URL(custom); isFullUrl = true; } catch(e) {}
+                    }
+                    if (isFullUrl) {
                         landingUrl = custom;
                     } else {
                         landingUrl = siteUrl + '/' + custom;
