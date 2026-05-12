@@ -1270,7 +1270,11 @@ function asl_influencer_render_linkgen_tab() {
             if (type === 'custom') {
                 var custom = $('#gen-custom-url').val().replace(/^\/+/, '');
                 if (custom) {
+                    var isFullUrl = false;
                     if (/^https?:\/\//.test(custom)) {
+                        try { new URL(custom); isFullUrl = true; } catch(e) {}
+                    }
+                    if (isFullUrl) {
                         landingUrl = custom;
                     } else {
                         landingUrl = siteUrl + '/' + custom;
