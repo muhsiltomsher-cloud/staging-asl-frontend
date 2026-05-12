@@ -184,12 +184,45 @@ function asl_influencer_get_admin_css() {
     .asl-search-box { margin-bottom: 16px; }
     .asl-search-box input { padding: 6px 12px; border: 1px solid #8c8f94; border-radius: 4px; width: 300px; max-width: 100%; font-size: 13px; }
 
+    /* Link Generator */
+    .asl-link-gen { background: #fff; border: 1px solid #dcdcde; border-radius: 8px; padding: 24px; margin-bottom: 20px; }
+    .asl-link-gen h3 { margin: 0 0 16px; font-size: 15px; color: #1d2327; }
+    .asl-link-gen .asl-gen-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
+    .asl-link-gen .asl-gen-field { display: flex; flex-direction: column; gap: 4px; }
+    .asl-link-gen .asl-gen-field label { font-size: 12px; font-weight: 600; color: #1d2327; text-transform: uppercase; letter-spacing: 0.3px; }
+    .asl-link-gen .asl-gen-field select, .asl-link-gen .asl-gen-field input[type="text"] { padding: 6px 10px; border: 1px solid #8c8f94; border-radius: 4px; font-size: 13px; min-width: 200px; }
+    .asl-gen-result { background: #f0f6fc; border: 1px solid #c3d9ed; border-radius: 6px; padding: 16px; display: none; }
+    .asl-gen-result.asl-visible { display: block; }
+    .asl-gen-result label { font-size: 11px; font-weight: 600; color: #646970; text-transform: uppercase; letter-spacing: 0.3px; display: block; margin-bottom: 6px; }
+    .asl-gen-url-wrap { display: flex; gap: 8px; align-items: center; }
+    .asl-gen-url-wrap input[type="text"] { flex: 1; padding: 8px 12px; font-size: 13px; border: 1px solid #c3d9ed; border-radius: 4px; background: #fff; font-family: monospace; }
+    .asl-gen-url-wrap .button { white-space: nowrap; }
+    .asl-gen-history { margin-top: 20px; }
+    .asl-gen-history h4 { margin: 0 0 8px; font-size: 13px; color: #1d2327; }
+    .asl-gen-history-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .asl-gen-history-table th { background: #f6f7f7; padding: 8px 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #c3c4c7; }
+    .asl-gen-history-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f1; }
+    .asl-gen-history-table tr:hover td { background: #fafafa; }
+
+    /* Activity Logs */
+    .asl-activity-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .asl-activity-table th { background: #f6f7f7; padding: 8px 10px; text-align: left; font-weight: 600; color: #1d2327; border-bottom: 2px solid #c3c4c7; white-space: nowrap; }
+    .asl-activity-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f1; vertical-align: middle; }
+    .asl-activity-table tr:hover td { background: #fafafa; }
+    .asl-log-activated { color: #00a32a; font-weight: 600; }
+    .asl-log-deactivated { color: #d63638; font-weight: 600; }
+    .asl-log-created { color: #2271b1; font-weight: 600; }
+    .asl-log-deleted { color: #b32d2e; font-weight: 600; }
+    .asl-log-updated { color: #dba617; font-weight: 600; }
+
     /* Responsive */
     @media (max-width: 782px) {
         .asl-kpi-grid { grid-template-columns: repeat(2, 1fr); }
         .asl-accordion-right { display: none; }
         .asl-side-tables { flex-direction: column; }
         .asl-date-filter { flex-direction: column; align-items: stretch; }
+        .asl-link-gen .asl-gen-row { flex-direction: column; }
+        .asl-link-gen .asl-gen-field select, .asl-link-gen .asl-gen-field input[type="text"] { min-width: 100%; }
     }
     ';
 }
@@ -239,6 +272,8 @@ function asl_influencer_render_admin_page() {
             <a href="?page=ep-influencer-tracking&tab=influencers" class="nav-tab <?php echo $tab === 'influencers' ? 'nav-tab-active' : ''; ?>">Influencers</a>
             <a href="?page=ep-influencer-tracking&tab=stats" class="nav-tab <?php echo $tab === 'stats' ? 'nav-tab-active' : ''; ?>">Stats &amp; Reports</a>
             <a href="?page=ep-influencer-tracking&tab=visits" class="nav-tab <?php echo $tab === 'visits' ? 'nav-tab-active' : ''; ?>">Visit Log</a>
+            <a href="?page=ep-influencer-tracking&tab=linkgen" class="nav-tab <?php echo $tab === 'linkgen' ? 'nav-tab-active' : ''; ?>">Link Generator</a>
+            <a href="?page=ep-influencer-tracking&tab=activity" class="nav-tab <?php echo $tab === 'activity' ? 'nav-tab-active' : ''; ?>">Activity Logs</a>
         </nav>
 
         <div class="asl-tab-content">
@@ -247,6 +282,10 @@ function asl_influencer_render_admin_page() {
             asl_influencer_render_stats_tab();
         } elseif ($tab === 'visits') {
             asl_influencer_render_visits_tab();
+        } elseif ($tab === 'linkgen') {
+            asl_influencer_render_linkgen_tab();
+        } elseif ($tab === 'activity') {
+            asl_influencer_render_activity_tab();
         } else {
             asl_influencer_render_influencers_tab($influencers);
         }
@@ -1042,6 +1081,361 @@ function asl_influencer_render_visits_tab() {
 }
 
 /**
+ * Render Link Generator tab
+ */
+function asl_influencer_render_linkgen_tab() {
+    $influencers = get_option('asl_influencers', array());
+    $site_url = get_option('asl_frontend_url', home_url());
+    $generated_links = get_option('asl_influencer_generated_links', array());
+
+    if (empty($influencers)) {
+        echo '<div style="text-align:center;padding:40px;color:#787c82;">';
+        echo '<p style="font-size:16px;">No influencers configured yet.</p>';
+        echo '<p>Add influencers in the <a href="?page=ep-influencer-tracking&tab=influencers">Influencers tab</a> first.</p>';
+        echo '</div>';
+        return;
+    }
+
+    if (isset($_POST['asl_generate_link']) && check_admin_referer('asl_linkgen_nonce')) {
+        $gen_code = sanitize_text_field($_POST['gen_influencer'] ?? '');
+        $gen_type = sanitize_text_field($_POST['gen_type'] ?? 'home');
+        $gen_custom = sanitize_text_field($_POST['gen_custom_url'] ?? '');
+
+        if (!empty($gen_code)) {
+            $landing_url = $site_url;
+            switch ($gen_type) {
+                case 'custom':
+                    if (!empty($gen_custom)) {
+                        $gen_custom = ltrim($gen_custom, '/');
+                        if (filter_var($gen_custom, FILTER_VALIDATE_URL)) {
+                            $landing_url = $gen_custom;
+                        } else {
+                            $landing_url = rtrim($site_url, '/') . '/' . $gen_custom;
+                        }
+                    }
+                    break;
+                default:
+                    $landing_url = $site_url;
+                    break;
+            }
+
+            $separator = (strpos($landing_url, '?') !== false) ? '&' : '?';
+            $full_url = $landing_url . $separator . 'ref=' . $gen_code;
+
+            $inf_name = '';
+            foreach ($influencers as $inf) {
+                if ($inf['code'] === $gen_code) {
+                    $inf_name = $inf['name'];
+                    break;
+                }
+            }
+
+            $new_link = array(
+                'timestamp' => current_time('mysql'),
+                'influencer' => $inf_name,
+                'code' => $gen_code,
+                'type' => $gen_type,
+                'landing_page' => $landing_url,
+                'full_url' => $full_url,
+            );
+
+            array_unshift($generated_links, $new_link);
+            $generated_links = array_slice($generated_links, 0, 100);
+            update_option('asl_influencer_generated_links', $generated_links);
+
+            echo '<div class="notice notice-success is-dismissible"><p>Tracking link generated successfully!</p></div>';
+        }
+    }
+
+    $last_url = !empty($generated_links) ? $generated_links[0]['full_url'] : '';
+
+    ?>
+    <div class="asl-link-gen">
+        <h3>Generate Tracking Link</h3>
+        <p class="description" style="margin-bottom:16px;">Create custom tracking links for any landing page. The <code>?ref=CODE</code> parameter will be appended automatically.</p>
+
+        <form method="post">
+            <?php wp_nonce_field('asl_linkgen_nonce'); ?>
+
+            <div class="asl-gen-row">
+                <div class="asl-gen-field">
+                    <label for="gen-influencer">Influencer</label>
+                    <select name="gen_influencer" id="gen-influencer">
+                        <option value="">— Select Influencer —</option>
+                        <?php foreach ($influencers as $inf): ?>
+                            <?php if (!empty($inf['active'])): ?>
+                            <option value="<?php echo esc_attr($inf['code']); ?>"><?php echo esc_html($inf['name'] . ' (' . $inf['code'] . ')'); ?></option>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        <optgroup label="Inactive">
+                        <?php foreach ($influencers as $inf): ?>
+                            <?php if (empty($inf['active'])): ?>
+                            <option value="<?php echo esc_attr($inf['code']); ?>"><?php echo esc_html($inf['name'] . ' (' . $inf['code'] . ')'); ?></option>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="asl-gen-field">
+                    <label for="gen-type">Landing Page Type</label>
+                    <select name="gen_type" id="gen-type">
+                        <option value="home">Home Page</option>
+                        <option value="custom">Custom URL / Path</option>
+                    </select>
+                </div>
+
+                <div class="asl-gen-field" id="gen-custom-wrap" style="display:none;">
+                    <label for="gen-custom-url">URL or Path</label>
+                    <input type="text" name="gen_custom_url" id="gen-custom-url" placeholder="e.g., shop/oud or https://example.com/product" style="min-width:350px;">
+                </div>
+
+                <div class="asl-gen-field">
+                    <button type="submit" name="asl_generate_link" class="button button-primary" style="height:34px;">Generate Link</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="asl-gen-result<?php echo $last_url ? ' asl-visible' : ''; ?>" id="gen-result">
+            <label>Generated Tracking URL</label>
+            <div class="asl-gen-url-wrap">
+                <input type="text" id="gen-result-url" value="<?php echo esc_attr($last_url); ?>" readonly onclick="this.select();">
+                <button type="button" class="button asl-btn-copy" data-url="<?php echo esc_attr($last_url); ?>" id="gen-copy-btn">Copy URL</button>
+            </div>
+        </div>
+    </div>
+
+    <?php if (!empty($generated_links)): ?>
+    <div class="asl-gen-history">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h4 style="margin:0;">Recently Generated Links <span style="font-size:12px;color:#787c82;font-weight:400;">(<?php echo count($generated_links); ?> links)</span></h4>
+        </div>
+        <table class="asl-gen-history-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Influencer</th>
+                    <th>Code</th>
+                    <th>Type</th>
+                    <th>Landing Page</th>
+                    <th>Full URL</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php $n = 0; foreach ($generated_links as $gl): $n++; ?>
+                <tr>
+                    <td><?php echo $n; ?></td>
+                    <td><?php echo esc_html($gl['timestamp']); ?></td>
+                    <td><strong><?php echo esc_html($gl['influencer']); ?></strong></td>
+                    <td><code style="font-size:11px;"><?php echo esc_html($gl['code']); ?></code></td>
+                    <td><?php echo esc_html(ucfirst($gl['type'])); ?></td>
+                    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="<?php echo esc_attr($gl['landing_page']); ?>"><?php echo esc_html($gl['landing_page']); ?></td>
+                    <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:monospace;font-size:11px;" title="<?php echo esc_attr($gl['full_url']); ?>"><?php echo esc_html($gl['full_url']); ?></td>
+                    <td><button type="button" class="asl-btn-copy" data-url="<?php echo esc_attr($gl['full_url']); ?>">Copy</button></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php endif; ?>
+
+    <script>
+    jQuery(document).ready(function($) {
+        var siteUrl = <?php echo wp_json_encode(rtrim($site_url, '/')); ?>;
+
+        $('#gen-type').on('change', function() {
+            if ($(this).val() === 'custom') {
+                $('#gen-custom-wrap').show();
+            } else {
+                $('#gen-custom-wrap').hide();
+                $('#gen-custom-url').val('');
+            }
+            updatePreview();
+        });
+
+        $('#gen-influencer, #gen-custom-url').on('input change', function() {
+            updatePreview();
+        });
+
+        function updatePreview() {
+            var code = $('#gen-influencer').val();
+            if (!code) {
+                $('#gen-result').removeClass('asl-visible');
+                return;
+            }
+            var type = $('#gen-type').val();
+            var landingUrl = siteUrl;
+            if (type === 'custom') {
+                var custom = $('#gen-custom-url').val().replace(/^\//, '');
+                if (custom) {
+                    if (custom.match(/^https?:\/\//)) {
+                        landingUrl = custom;
+                    } else {
+                        landingUrl = siteUrl + '/' + custom;
+                    }
+                }
+            }
+            var sep = landingUrl.indexOf('?') !== -1 ? '&' : '?';
+            var fullUrl = landingUrl + sep + 'ref=' + code;
+            $('#gen-result-url').val(fullUrl);
+            $('#gen-copy-btn').data('url', fullUrl);
+            $('#gen-result').addClass('asl-visible');
+        }
+
+        $(document).on('click', '.asl-btn-copy', function(e) {
+            e.preventDefault();
+            var btn = $(this);
+            var url = btn.data('url');
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(function() {
+                    btn.text('Copied!').addClass('copied');
+                    setTimeout(function() { btn.text(btn.is('#gen-copy-btn') ? 'Copy URL' : 'Copy').removeClass('copied'); }, 2000);
+                });
+            } else {
+                var input = $('<input>').val(url).appendTo('body').select();
+                document.execCommand('copy');
+                input.remove();
+                btn.text('Copied!').addClass('copied');
+                setTimeout(function() { btn.text(btn.is('#gen-copy-btn') ? 'Copy URL' : 'Copy').removeClass('copied'); }, 2000);
+            }
+        });
+    });
+    </script>
+    <?php
+}
+
+/**
+ * Render Activity Logs tab
+ */
+function asl_influencer_render_activity_tab() {
+    $logs = get_option('asl_influencer_activity_logs', array());
+
+    if (isset($_POST['asl_clear_activity_logs']) && check_admin_referer('asl_clear_activity_logs_nonce')) {
+        update_option('asl_influencer_activity_logs', array());
+        $logs = array();
+        echo '<div class="notice notice-success is-dismissible"><p>Activity logs cleared.</p></div>';
+    }
+
+    $filter_action = isset($_GET['filter_action']) ? sanitize_text_field($_GET['filter_action']) : '';
+
+    if ($filter_action) {
+        $logs = array_filter($logs, function($log) use ($filter_action) {
+            return $log['action'] === $filter_action;
+        });
+    }
+
+    $per_page = 50;
+    $current_page = isset($_GET['apage']) ? max(1, intval($_GET['apage'])) : 1;
+    $total = count($logs);
+    $total_pages = max(1, ceil($total / $per_page));
+    $paged_logs = array_slice($logs, ($current_page - 1) * $per_page, $per_page);
+
+    ?>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <h2 style="margin:0;">Activity Logs <span style="font-size:12px;color:#787c82;font-weight:400;">(<?php echo number_format($total); ?> entries)</span></h2>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <form method="get" style="display:flex;gap:6px;align-items:center;">
+                <input type="hidden" name="page" value="ep-influencer-tracking">
+                <input type="hidden" name="tab" value="activity">
+                <select name="filter_action" style="padding:4px 8px;">
+                    <option value="">All Actions</option>
+                    <option value="activated" <?php selected($filter_action, 'activated'); ?>>Activated</option>
+                    <option value="deactivated" <?php selected($filter_action, 'deactivated'); ?>>Deactivated</option>
+                    <option value="created" <?php selected($filter_action, 'created'); ?>>Created</option>
+                    <option value="deleted" <?php selected($filter_action, 'deleted'); ?>>Deleted</option>
+                    <option value="updated" <?php selected($filter_action, 'updated'); ?>>Updated</option>
+                </select>
+                <button type="submit" class="button">Filter</button>
+                <?php if ($filter_action): ?>
+                <a href="?page=ep-influencer-tracking&tab=activity" class="button">Clear</a>
+                <?php endif; ?>
+            </form>
+        </div>
+    </div>
+
+    <?php if ($total > 0): ?>
+    <form method="post" style="margin-bottom:16px;">
+        <?php wp_nonce_field('asl_clear_activity_logs_nonce'); ?>
+        <button type="submit" name="asl_clear_activity_logs" class="button" onclick="return confirm('Are you sure you want to clear all activity logs? This cannot be undone.');">Clear All Logs</button>
+    </form>
+    <?php endif; ?>
+
+    <?php if (empty($paged_logs)): ?>
+        <p style="text-align:center;padding:40px;color:#787c82;">No activity logs recorded yet.</p>
+    <?php else: ?>
+    <table class="asl-activity-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Timestamp</th>
+                <th>Action</th>
+                <th>Influencer</th>
+                <th>Code</th>
+                <th>Details</th>
+                <th>User</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            $row_num = ($current_page - 1) * $per_page;
+            foreach ($paged_logs as $log):
+                $row_num++;
+                $action_class = 'asl-log-' . esc_attr($log['action']);
+            ?>
+            <tr>
+                <td><?php echo $row_num; ?></td>
+                <td><?php echo esc_html($log['timestamp']); ?></td>
+                <td><span class="<?php echo $action_class; ?>"><?php echo esc_html(ucfirst($log['action'])); ?></span></td>
+                <td><strong><?php echo esc_html($log['influencer_name']); ?></strong></td>
+                <td><code style="font-size:11px;"><?php echo esc_html($log['influencer_code']); ?></code></td>
+                <td style="max-width:300px;"><?php echo esc_html($log['details']); ?></td>
+                <td><?php echo esc_html($log['user']); ?></td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+
+    <?php if ($total_pages > 1): ?>
+    <div style="margin-top:16px;display:flex;justify-content:center;gap:4px;">
+        <?php for ($p = 1; $p <= $total_pages; $p++): ?>
+            <?php if ($p === $current_page): ?>
+                <span class="button button-primary" style="pointer-events:none;"><?php echo $p; ?></span>
+            <?php else: ?>
+                <a href="?page=ep-influencer-tracking&tab=activity<?php echo $filter_action ? '&filter_action=' . esc_attr($filter_action) : ''; ?>&apage=<?php echo $p; ?>" class="button"><?php echo $p; ?></a>
+            <?php endif; ?>
+        <?php endfor; ?>
+    </div>
+    <?php endif; ?>
+    <?php endif; ?>
+    <?php
+}
+
+/**
+ * Log an activity event for influencer tracking
+ */
+function asl_influencer_log_activity($action, $influencer_name, $influencer_code, $details = '') {
+    $logs = get_option('asl_influencer_activity_logs', array());
+
+    $current_user = wp_get_current_user();
+    $user_display = $current_user->exists() ? $current_user->display_name . ' (' . $current_user->user_login . ')' : 'System';
+
+    $log_entry = array(
+        'timestamp' => current_time('mysql'),
+        'action' => $action,
+        'influencer_name' => $influencer_name,
+        'influencer_code' => $influencer_code,
+        'details' => $details,
+        'user' => $user_display,
+    );
+
+    array_unshift($logs, $log_entry);
+    $logs = array_slice($logs, 0, 500);
+    update_option('asl_influencer_activity_logs', $logs);
+}
+
+/**
  * Handle CSV export
  */
 function asl_influencer_handle_csv_export() {
@@ -1157,11 +1551,17 @@ function asl_influencer_save_settings() {
     $influencers = array();
     $existing = get_option('asl_influencers', array());
     $existing_by_id = array();
+    $existing_by_code = array();
     foreach ($existing as $e) {
         if (!empty($e['id'])) {
             $existing_by_id[$e['id']] = $e;
         }
+        if (!empty($e['code'])) {
+            $existing_by_code[$e['code']] = $e;
+        }
     }
+
+    $new_codes = array();
 
     if (isset($_POST['asl_influencers']) && is_array($_POST['asl_influencers'])) {
         foreach ($_POST['asl_influencers'] as $influencer) {
@@ -1178,10 +1578,13 @@ function asl_influencer_save_settings() {
             $id = !empty($submitted_id) ? $submitted_id : wp_generate_uuid4();
             $created_at = !empty($submitted_created) ? $submitted_created : current_time('mysql');
 
-            $influencers[] = array(
+            $new_active = isset($influencer['active']) ? true : false;
+            $new_name = sanitize_text_field($influencer['name'] ?? '');
+
+            $saved = array(
                 'id' => $id,
-                'active' => isset($influencer['active']) ? true : false,
-                'name' => sanitize_text_field($influencer['name'] ?? ''),
+                'active' => $new_active,
+                'name' => $new_name,
                 'code' => $code,
                 'platform' => sanitize_text_field($influencer['platform'] ?? 'instagram'),
                 'email' => sanitize_email($influencer['email'] ?? ''),
@@ -1190,6 +1593,38 @@ function asl_influencer_save_settings() {
                 'notes' => sanitize_textarea_field($influencer['notes'] ?? ''),
                 'created_at' => $created_at,
             );
+
+            $influencers[] = $saved;
+            $new_codes[] = $code;
+
+            if (isset($existing_by_id[$id])) {
+                $old = $existing_by_id[$id];
+                $old_active = !empty($old['active']);
+                if ($new_active && !$old_active) {
+                    asl_influencer_log_activity('activated', $new_name, $code, 'Influencer was activated');
+                } elseif (!$new_active && $old_active) {
+                    asl_influencer_log_activity('deactivated', $new_name, $code, 'Influencer was deactivated');
+                }
+                $changes = array();
+                if (($old['name'] ?? '') !== $new_name) $changes[] = 'name';
+                if (($old['platform'] ?? '') !== $saved['platform']) $changes[] = 'platform';
+                if (($old['email'] ?? '') !== $saved['email']) $changes[] = 'email';
+                if (floatval($old['commission_rate'] ?? 0) !== $saved['commission_rate']) $changes[] = 'commission_rate';
+                if (floatval($old['fixed_amount'] ?? 0) !== $saved['fixed_amount']) $changes[] = 'fixed_amount';
+                if (($old['notes'] ?? '') !== $saved['notes']) $changes[] = 'notes';
+                if (($old['code'] ?? '') !== $code) $changes[] = 'code';
+                if (!empty($changes)) {
+                    asl_influencer_log_activity('updated', $new_name, $code, 'Changed: ' . implode(', ', $changes));
+                }
+            } else {
+                asl_influencer_log_activity('created', $new_name, $code, 'New influencer added');
+            }
+        }
+    }
+
+    foreach ($existing as $old_inf) {
+        if (!empty($old_inf['code']) && !in_array($old_inf['code'], $new_codes)) {
+            asl_influencer_log_activity('deleted', $old_inf['name'] ?? '', $old_inf['code'], 'Influencer removed via save');
         }
     }
 
@@ -1201,6 +1636,12 @@ function asl_influencer_save_settings() {
  */
 function asl_influencer_delete($influencer_id) {
     $influencers = get_option('asl_influencers', array());
+    foreach ($influencers as $inf) {
+        if ($inf['id'] === $influencer_id) {
+            asl_influencer_log_activity('deleted', $inf['name'] ?? '', $inf['code'] ?? '', 'Influencer deleted');
+            break;
+        }
+    }
     $influencers = array_filter($influencers, function($inf) use ($influencer_id) {
         return $inf['id'] !== $influencer_id;
     });
