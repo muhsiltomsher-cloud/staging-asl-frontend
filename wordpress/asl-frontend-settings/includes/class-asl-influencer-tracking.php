@@ -1562,6 +1562,7 @@ function asl_influencer_save_settings() {
     }
 
     $new_codes = array();
+    $new_ids = array();
 
     if (isset($_POST['asl_influencers']) && is_array($_POST['asl_influencers'])) {
         foreach ($_POST['asl_influencers'] as $influencer) {
@@ -1596,6 +1597,7 @@ function asl_influencer_save_settings() {
 
             $influencers[] = $saved;
             $new_codes[] = $code;
+            $new_ids[] = $id;
 
             if (isset($existing_by_id[$id])) {
                 $old = $existing_by_id[$id];
@@ -1623,8 +1625,8 @@ function asl_influencer_save_settings() {
     }
 
     foreach ($existing as $old_inf) {
-        if (!empty($old_inf['code']) && !in_array($old_inf['code'], $new_codes)) {
-            asl_influencer_log_activity('deleted', $old_inf['name'] ?? '', $old_inf['code'], 'Influencer removed via save');
+        if (!empty($old_inf['id']) && !in_array($old_inf['id'], $new_ids)) {
+            asl_influencer_log_activity('deleted', $old_inf['name'] ?? '', $old_inf['code'] ?? '', 'Influencer removed via save');
         }
     }
 
