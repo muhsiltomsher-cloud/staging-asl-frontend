@@ -132,12 +132,12 @@ function InfluencerRefCapture({ dispatch }: { dispatch: React.ActionDispatch<[ac
 
     if (!trackedWithin24h && hasTrackedVisitRef.current !== code) {
       hasTrackedVisitRef.current = code;
-      markTracked(code);
       fetch("/api/influencer/track-visit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, landing_page: pathname }),
-      }).catch(() => {});
+      }).then(res => { if (res.ok) markTracked(code); })
+        .catch(() => {});
     }
   }, [searchParams, pathname, dispatch]);
 
