@@ -1863,6 +1863,15 @@ function asl_influencer_api_get_stats($request) {
         }
         $visit_count = count($visit_list);
 
+        // Count unique visits by distinct IP addresses
+        $unique_ips = array();
+        foreach ($visit_list as $v) {
+            if (!empty($v['ip'])) {
+                $unique_ips[$v['ip']] = true;
+            }
+        }
+        $unique_visit_count = count($unique_ips);
+
         $orders = asl_influencer_get_orders_by_ref($code, $date_from, $date_to);
 
         $total_revenue = 0;
@@ -1904,7 +1913,7 @@ function asl_influencer_api_get_stats($request) {
         $fixed_amount = floatval($influencer['fixed_amount'] ?? 0);
         $total_commission = ($commission_rate / 100) * $total_revenue;
         $total_cost = $total_commission + $fixed_amount;
-        $conversion_rate = $visit_count > 0 ? round(($order_count / $visit_count) * 100, 1) : 0;
+        $conversion_rate = $unique_visit_count > 0 ? round(($order_count / $unique_visit_count) * 100, 1) : 0;
         $avg_order_value = $order_count > 0 ? round($total_revenue / $order_count, 2) : 0;
 
         $stats[] = array(
@@ -1914,6 +1923,7 @@ function asl_influencer_api_get_stats($request) {
             'email' => isset($influencer['email']) ? $influencer['email'] : '',
             'active' => !empty($influencer['active']),
             'visits' => $visit_count,
+            'unique_visits' => $unique_visit_count,
             'orders' => $order_count,
             'revenue' => round($total_revenue, 2),
             'free_gifts' => $free_gift_count,
