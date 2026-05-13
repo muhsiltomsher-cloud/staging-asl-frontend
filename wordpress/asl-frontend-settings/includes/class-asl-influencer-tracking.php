@@ -44,9 +44,9 @@ function asl_influencer_save_ref_to_order($order) {
         }
     }
     if ($ref) {
-        $ref = strtolower(preg_replace('/[^a-z0-9_-]/', '', $ref));
+        $ref = preg_replace('/[^a-z0-9_-]/', '', strtolower($ref));
         $ref = substr($ref, 0, 50);
-        $influencers = get_option('ep_influencers', array());
+        $influencers = get_option('asl_influencers', array());
         foreach ($influencers as $inf) {
             if (isset($inf['code']) && $inf['code'] === $ref) {
                 $order->update_meta_data('_influencer_ref', $ref);
