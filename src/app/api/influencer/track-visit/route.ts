@@ -13,11 +13,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const clientIp =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip") ||
+      request.headers.get("cf-connecting-ip") ||
+      "";
+
     const url = `${API_BASE}/wp-json/asl-influencer/v1/track-visit`;
 
     const response = await fetch(noCacheUrl(url), {
       method: "POST",
-      headers: backendPostHeaders(),
+      headers: backendPostHeaders({
+        ...(clientIp ? { "X-Forwarded-For": clientIp, "X-Real-IP": clientIp } : {}),
+      }),
       body: JSON.stringify({
         code: code.trim().toLowerCase(),
         landing_page: landing_page || "",
@@ -31,7 +39,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ success: true });
+    const data = await response.json().catch(() => ({}));
+    return NextResponse.json({ success: true, duplicate: data.duplicate ?? false });
   } catch (error) {
     return NextResponse.json(
       {
