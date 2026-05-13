@@ -311,6 +311,7 @@ function asl_influencer_render_admin_page() {
     $influencers = get_option('asl_influencers', array());
 
     ?>
+    <style><?php echo asl_influencer_get_admin_css(); ?></style>
     <div class="wrap asl-wrap">
         <h1>Influencer Tracking</h1>
         <p class="asl-subtitle">Manage influencer referral codes and track visits, orders, and revenue from each influencer campaign.</p>
