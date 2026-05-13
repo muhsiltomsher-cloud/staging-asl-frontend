@@ -102,10 +102,12 @@ function InfluencerRefCapture({ dispatch }: { dispatch: React.ActionDispatch<[ac
     const code = refParam.trim().toLowerCase().slice(0, MAX_CODE_LENGTH);
     if (!code || !CODE_PATTERN.test(code)) return;
 
+    const previousData = getStoredReferral();
+    const alreadyTracked = previousData && previousData.code === code;
     const stored = storeReferral(code, pathname);
     dispatch({ type: "SET_REFERRAL", code, landingPage: pathname, visitDate: stored.visitDate });
 
-    if (hasTrackedVisitRef.current !== code) {
+    if (!alreadyTracked && hasTrackedVisitRef.current !== code) {
       hasTrackedVisitRef.current = code;
       fetch("/api/influencer/track-visit", {
         method: "POST",
