@@ -52,11 +52,15 @@ function getStoredReferral(): InfluencerData | null {
 }
 
 function storeReferral(code: string, landingPage: string): InfluencerData {
+  const existing = getStoredReferral();
   const data: InfluencerData = {
     code,
     landingPage,
     visitDate: new Date().toISOString(),
     expiry: Date.now() + EXPIRY_DAYS * 24 * 60 * 60 * 1000,
+    ...(existing && existing.code === code && existing.lastTrackedAt
+      ? { lastTrackedAt: existing.lastTrackedAt }
+      : {}),
   };
   if (typeof window !== "undefined") {
     try {
