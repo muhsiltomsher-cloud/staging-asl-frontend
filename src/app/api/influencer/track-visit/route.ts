@@ -14,9 +14,9 @@ export async function POST(request: NextRequest) {
     }
 
     const clientIp =
+      request.headers.get("cf-connecting-ip") ||
       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       request.headers.get("x-real-ip") ||
-      request.headers.get("cf-connecting-ip") ||
       "";
 
     const url = `${API_BASE}/wp-json/asl-influencer/v1/track-visit`;
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const response = await fetch(noCacheUrl(url), {
       method: "POST",
       headers: backendPostHeaders({
-        ...(clientIp ? { "X-Forwarded-For": clientIp, "X-Real-IP": clientIp } : {}),
+        ...(clientIp ? { "X-Forwarded-For": clientIp, "X-Real-IP": clientIp, "CF-Connecting-IP": clientIp } : {}),
       }),
       body: JSON.stringify({
         code: code.trim().toLowerCase(),
