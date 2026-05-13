@@ -89,7 +89,6 @@ function asl_influencer_enqueue_scripts($hook) {
     if ($hook !== 'woocommerce_page_ep-influencer-tracking') return;
     wp_enqueue_script('jquery');
     wp_enqueue_style('woocommerce_admin_styles');
-    wp_add_inline_style('woocommerce_admin_styles', asl_influencer_get_admin_css());
 }
 
 /**

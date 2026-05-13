@@ -13,6 +13,7 @@ interface InfluencerData {
   landingPage: string;
   visitDate: string;
   expiry: number;
+  lastTrackedAt?: number;
 }
 
 interface InfluencerState {
@@ -67,6 +68,21 @@ function storeReferral(code: string, landingPage: string): InfluencerData {
   return data;
 }
 
+function markTracked(code: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return;
+    const data: InfluencerData = JSON.parse(stored);
+    if (data.code === code) {
+      data.lastTrackedAt = Date.now();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 function influencerReducer(state: InfluencerState, action: InfluencerAction): InfluencerState {
   switch (action.type) {
     case "SET_REFERRAL":
@@ -103,12 +119,16 @@ function InfluencerRefCapture({ dispatch }: { dispatch: React.ActionDispatch<[ac
     if (!code || !CODE_PATTERN.test(code)) return;
 
     const previousData = getStoredReferral();
-    const alreadyTracked = previousData && previousData.code === code;
+    const trackedWithin24h = previousData
+      && previousData.code === code
+      && previousData.lastTrackedAt
+      && (Date.now() - previousData.lastTrackedAt) < 24 * 60 * 60 * 1000;
     const stored = storeReferral(code, pathname);
     dispatch({ type: "SET_REFERRAL", code, landingPage: pathname, visitDate: stored.visitDate });
 
-    if (!alreadyTracked && hasTrackedVisitRef.current !== code) {
+    if (!trackedWithin24h && hasTrackedVisitRef.current !== code) {
       hasTrackedVisitRef.current = code;
+      markTracked(code);
       fetch("/api/influencer/track-visit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
