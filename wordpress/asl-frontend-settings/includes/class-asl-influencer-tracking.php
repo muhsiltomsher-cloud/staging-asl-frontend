@@ -19,6 +19,53 @@ function asl_influencer_tracking_init() {
     add_action('admin_enqueue_scripts', 'asl_influencer_enqueue_scripts');
     add_action('rest_api_init', 'asl_influencer_register_rest_routes');
     add_action('admin_init', 'asl_influencer_handle_csv_export');
+    add_action('woocommerce_checkout_order_created', 'asl_influencer_save_ref_to_order', 10, 1);
+    add_action('woocommerce_new_order', 'asl_influencer_save_ref_to_order_by_id', 10, 1);
+}
+
+/**
+ * Save influencer referral code from cookie to order meta during checkout.
+ * Fired by woocommerce_checkout_order_created (receives order object).
+ */
+function asl_influencer_save_ref_to_order($order) {
+    if (!$order instanceof WC_Order) return;
+    if ($order->get_meta('_influencer_ref')) return;
+
+    $ref = '';
+    if (!empty($_COOKIE['asl_ref'])) {
+        $ref = sanitize_text_field($_COOKIE['asl_ref']);
+    }
+    if (!$ref) {
+        $meta = $order->get_meta_data();
+        foreach ($meta as $m) {
+            if ($m->key === '_influencer_ref' && !empty($m->value)) {
+                return;
+            }
+        }
+    }
+    if ($ref) {
+        $ref = strtolower(preg_replace('/[^a-z0-9_-]/', '', $ref));
+        $ref = substr($ref, 0, 50);
+        $influencers = get_option('ep_influencers', array());
+        foreach ($influencers as $inf) {
+            if (isset($inf['code']) && $inf['code'] === $ref) {
+                $order->update_meta_data('_influencer_ref', $ref);
+                $order->save();
+                return;
+            }
+        }
+    }
+}
+
+/**
+ * Fallback: save influencer referral from cookie by order ID.
+ * Fired by woocommerce_new_order (receives order ID).
+ */
+function asl_influencer_save_ref_to_order_by_id($order_id) {
+    $order = wc_get_order($order_id);
+    if ($order) {
+        asl_influencer_save_ref_to_order($order);
+    }
 }
 
 /**
