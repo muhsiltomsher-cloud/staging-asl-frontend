@@ -8,6 +8,36 @@ const AUTH_REFRESH_TOKEN_COOKIE = "asl_refresh_token";
 const CURRENCY_COOKIE = "wcml_currency";
 const LOCALE_COOKIE = "NEXT_LOCALE";
 
+async function enrichCartItemsWithRegularPrices(cartData: Record<string, unknown>): Promise<void> {
+  const items = cartData.items as Array<Record<string, unknown>> | undefined;
+  if (!items || items.length === 0) return;
+  const productIds = [...new Set(items.map((item) => item.id as number).filter(Boolean))];
+  if (productIds.length === 0) return;
+  try {
+    const priceUrl = `${API_BASE}/wp-json/wc/store/v1/products?include=${productIds.join(",")}&per_page=${productIds.length}`;
+    const priceRes = await fetch(noCacheUrl(priceUrl), {
+      method: "GET",
+      headers: backendHeaders(),
+    });
+    if (priceRes.ok) {
+      const products = await priceRes.json() as Array<{ id: number; on_sale: boolean; prices: { regular_price: string; sale_price: string; price: string; currency_minor_unit: number } }>;
+      const priceMap = new Map<number, { regular_price: string; on_sale: boolean }>();
+      for (const p of products) {
+        priceMap.set(p.id, { regular_price: p.prices.regular_price, on_sale: p.on_sale });
+      }
+      for (const item of items) {
+        const info = priceMap.get(item.id as number);
+        if (info) {
+          item.regular_price = info.regular_price;
+          item.on_sale = info.on_sale;
+        }
+      }
+    }
+  } catch {
+    // Non-critical: continue without regular prices
+  }
+}
+
 async function getCartKey(): Promise<string | null> {
   const cookieStore = await cookies();
   return cookieStore.get(CART_KEY_COOKIE)?.value || null;
@@ -243,36 +273,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Enrich cart items with regular_price from Store API
-    const items = data.items as Array<Record<string, unknown>> | undefined;
-    if (items && items.length > 0) {
-      const productIds = [...new Set(items.map((item) => item.id as number).filter(Boolean))];
-      if (productIds.length > 0) {
-        try {
-          const priceUrl = `${API_BASE}/wp-json/wc/store/v1/products?include=${productIds.join(",")}&per_page=${productIds.length}`;
-          const priceRes = await fetch(noCacheUrl(priceUrl), {
-            method: "GET",
-            headers: backendHeaders(),
-          });
-          if (priceRes.ok) {
-            const products = await priceRes.json() as Array<{ id: number; on_sale: boolean; prices: { regular_price: string; sale_price: string; price: string; currency_minor_unit: number } }>;
-            const priceMap = new Map<number, { regular_price: string; on_sale: boolean }>();
-            for (const p of products) {
-              priceMap.set(p.id, { regular_price: p.prices.regular_price, on_sale: p.on_sale });
-            }
-            for (const item of items) {
-              const info = priceMap.get(item.id as number);
-              if (info) {
-                item.regular_price = info.regular_price;
-                item.on_sale = info.on_sale;
-              }
-            }
-          }
-        } catch {
-          // Non-critical: continue without regular prices
-        }
-      }
-    }
+    await enrichCartItemsWithRegularPrices(data);
 
     const newCartKey = data.cart_key ? (data.cart_key as string) : null;
     return createResponseWithCartKey({ success: true, cart: data }, newCartKey, refreshedToken);
@@ -404,6 +405,8 @@ export async function POST(request: NextRequest) {
           });
         }
         
+        await enrichCartItemsWithRegularPrices(coCartData);
+
         const newCartKey = coCartData.cart_key ? (coCartData.cart_key as string) : null;
         return createResponseWithCartKey({ success: true, cart: coCartData }, newCartKey);
       }
@@ -491,6 +494,8 @@ export async function POST(request: NextRequest) {
         { status: response.status }
       );
     }
+
+    await enrichCartItemsWithRegularPrices(data);
 
     const newCartKey = data.cart_key ? (data.cart_key as string) : null;
     return createResponseWithCartKey({ success: true, cart: data }, newCartKey, refreshedToken);

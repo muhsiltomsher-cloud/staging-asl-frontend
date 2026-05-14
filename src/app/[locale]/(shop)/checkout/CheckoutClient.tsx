@@ -20,6 +20,7 @@ import { BundleItemsList, getBundleItems, getBundleItemsTotal, getBoxPrice, getP
 import { PhoneInput } from "@/components/common/PhoneInput";
 import { useInfluencer } from "@/contexts/InfluencerContext";
 import { useKeyboardVisible } from "@/hooks/useKeyboardVisible";
+import { useFreeGift } from "@/contexts/FreeGiftContext";
 
 interface ShippingRate {
   rate_id: string;
@@ -199,8 +200,11 @@ export default function CheckoutClient() {
   const currencyMinorUnit= cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
 
+  const { isFreeGiftItem } = useFreeGift();
+
   // Calculate total regular (before-sale) price for showing cross prices in order summary
   const checkoutRegularSubtotal = cartItems.reduce((total, item) => {
+    if (isFreeGiftItem(item.item_key)) return total;
     const unitPrice = item.on_sale && item.regular_price && parseFloat(item.regular_price) > parseFloat(item.price)
       ? parseFloat(item.regular_price)
       : parseFloat(item.price);
