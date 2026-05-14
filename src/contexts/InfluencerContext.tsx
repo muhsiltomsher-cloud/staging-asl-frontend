@@ -13,6 +13,7 @@ interface InfluencerData {
   landingPage: string;
   visitDate: string;
   expiry: number;
+  lastTrackedAt?: number;
 }
 
 interface InfluencerState {
@@ -51,11 +52,15 @@ function getStoredReferral(): InfluencerData | null {
 }
 
 function storeReferral(code: string, landingPage: string): InfluencerData {
+  const existing = getStoredReferral();
   const data: InfluencerData = {
     code,
     landingPage,
     visitDate: new Date().toISOString(),
     expiry: Date.now() + EXPIRY_DAYS * 24 * 60 * 60 * 1000,
+    ...(existing && existing.code === code && existing.lastTrackedAt
+      ? { lastTrackedAt: existing.lastTrackedAt }
+      : {}),
   };
   if (typeof window !== "undefined") {
     try {
@@ -65,6 +70,21 @@ function storeReferral(code: string, landingPage: string): InfluencerData {
     }
   }
   return data;
+}
+
+function markTracked(code: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return;
+    const data: InfluencerData = JSON.parse(stored);
+    if (data.code === code) {
+      data.lastTrackedAt = Date.now();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+  } catch {
+    // Ignore storage errors
+  }
 }
 
 function influencerReducer(state: InfluencerState, action: InfluencerAction): InfluencerState {
@@ -102,16 +122,22 @@ function InfluencerRefCapture({ dispatch }: { dispatch: React.ActionDispatch<[ac
     const code = refParam.trim().toLowerCase().slice(0, MAX_CODE_LENGTH);
     if (!code || !CODE_PATTERN.test(code)) return;
 
+    const previousData = getStoredReferral();
+    const trackedWithin24h = previousData
+      && previousData.code === code
+      && previousData.lastTrackedAt
+      && (Date.now() - previousData.lastTrackedAt) < 24 * 60 * 60 * 1000;
     const stored = storeReferral(code, pathname);
     dispatch({ type: "SET_REFERRAL", code, landingPage: pathname, visitDate: stored.visitDate });
 
-    if (hasTrackedVisitRef.current !== code) {
+    if (!trackedWithin24h && hasTrackedVisitRef.current !== code) {
       hasTrackedVisitRef.current = code;
       fetch("/api/influencer/track-visit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, landing_page: pathname }),
-      }).catch(() => {});
+      }).then(res => { if (res.ok) markTracked(code); })
+        .catch(() => {});
     }
   }, [searchParams, pathname, dispatch]);
 

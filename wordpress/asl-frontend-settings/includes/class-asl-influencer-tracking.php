@@ -89,7 +89,6 @@ function asl_influencer_enqueue_scripts($hook) {
     if ($hook !== 'woocommerce_page_ep-influencer-tracking') return;
     wp_enqueue_script('jquery');
     wp_enqueue_style('woocommerce_admin_styles');
-    wp_add_inline_style('woocommerce_admin_styles', asl_influencer_get_admin_css());
 }
 
 /**
@@ -311,6 +310,7 @@ function asl_influencer_render_admin_page() {
     $influencers = get_option('asl_influencers', array());
 
     ?>
+    <style><?php echo asl_influencer_get_admin_css(); ?></style>
     <div class="wrap asl-wrap">
         <h1>Influencer Tracking</h1>
         <p class="asl-subtitle">Manage influencer referral codes and track visits, orders, and revenue from each influencer campaign.</p>
@@ -568,6 +568,7 @@ function asl_influencer_render_stats_tab() {
     <?php
 
     $grand_total_visits = 0;
+    $grand_unique_visits = 0;
     $grand_total_orders = 0;
     $grand_total_revenue = 0;
     $grand_total_gifts = 0;
@@ -587,6 +588,15 @@ function asl_influencer_render_stats_tab() {
             });
         }
         $visit_count = count($visit_list);
+
+        // Count unique visits by distinct IP addresses
+        $unique_ips = array();
+        foreach ($visit_list as $v) {
+            if (!empty($v['ip'])) {
+                $unique_ips[$v['ip']] = true;
+            }
+        }
+        $unique_visit_count = count($unique_ips);
 
         $commission_rate = isset($influencer['commission_rate']) ? floatval($influencer['commission_rate']) : 0;
         $fixed_amount = isset($influencer['fixed_amount']) ? floatval($influencer['fixed_amount']) : 0;
@@ -665,7 +675,7 @@ function asl_influencer_render_stats_tab() {
         arsort($countries);
         arsort($products_sold);
 
-        $conversion_rate = $visit_count > 0 ? round(($order_count / $visit_count) * 100, 1) : 0;
+        $conversion_rate = $unique_visit_count > 0 ? round(($order_count / $unique_visit_count) * 100, 1) : 0;
         $avg_order_value = $order_count > 0 ? round($total_revenue / $order_count, 2) : 0;
 
         $total_commission = ($commission_rate / 100) * $total_revenue;
@@ -674,6 +684,7 @@ function asl_influencer_render_stats_tab() {
         $roi = $total_cost > 0 ? round((($total_revenue - $total_cost) / $total_cost) * 100, 1) : ($total_revenue > 0 ? 999 : 0);
 
         $grand_total_visits += $visit_count;
+        $grand_unique_visits += $unique_visit_count;
         $grand_total_orders += $order_count;
         $grand_total_revenue += $total_revenue;
         $grand_total_gifts += $free_gift_count;
@@ -686,6 +697,7 @@ function asl_influencer_render_stats_tab() {
             'active' => !empty($influencer['active']),
             'email' => isset($influencer['email']) ? $influencer['email'] : '',
             'visits' => $visit_count,
+            'unique_visits' => $unique_visit_count,
             'orders' => $order_count,
             'revenue' => $total_revenue,
             'free_gifts' => $free_gift_count,
@@ -719,8 +731,11 @@ function asl_influencer_render_stats_tab() {
 
     <div class="asl-kpi-grid">
         <div class="asl-kpi-card asl-kpi-blue">
-            <div class="asl-kpi-value"><?php echo number_format($grand_total_visits); ?></div>
-            <div class="asl-kpi-label">Total Visits</div>
+            <div class="asl-kpi-value"><?php echo number_format($grand_unique_visits); ?></div>
+            <div class="asl-kpi-label">Unique Visits</div>
+            <?php if ($grand_total_visits !== $grand_unique_visits): ?>
+            <div style="font-size:10px;color:#787c82;margin-top:2px;"><?php echo number_format($grand_total_visits); ?> total</div>
+            <?php endif; ?>
         </div>
         <div class="asl-kpi-card asl-kpi-green">
             <div class="asl-kpi-value"><?php echo number_format($grand_total_orders); ?></div>
@@ -735,7 +750,7 @@ function asl_influencer_render_stats_tab() {
             <div class="asl-kpi-label">Free Gifts</div>
         </div>
         <div class="asl-kpi-card asl-kpi-purple">
-            <div class="asl-kpi-value"><?php echo $grand_total_visits > 0 ? round(($grand_total_orders / $grand_total_visits) * 100, 1) : 0; ?>%</div>
+            <div class="asl-kpi-value"><?php echo $grand_unique_visits > 0 ? round(($grand_total_orders / $grand_unique_visits) * 100, 1) : 0; ?>%</div>
             <div class="asl-kpi-label">Conversion Rate</div>
         </div>
         <div class="asl-kpi-card asl-kpi-red">
@@ -762,7 +777,7 @@ function asl_influencer_render_stats_tab() {
                 <th>Code</th>
                 <th>Platform</th>
                 <th>Status</th>
-                <th>Visits</th>
+                <th>Unique Visits</th>
                 <th>Orders</th>
                 <th>Revenue</th>
                 <th>Avg Order</th>
@@ -782,7 +797,7 @@ function asl_influencer_render_stats_tab() {
                 <td><code style="font-size:11px;background:#f0f0f1;padding:2px 6px;border-radius:3px;"><?php echo esc_html($stat['code']); ?></code></td>
                 <td><span class="asl-platform asl-platform-<?php echo esc_attr($stat['platform']); ?>"><?php echo esc_html(ucfirst($stat['platform'])); ?></span></td>
                 <td><?php echo $stat['active'] ? '<span class="asl-badge asl-badge-active">Active</span>' : '<span class="asl-badge asl-badge-inactive">Inactive</span>'; ?></td>
-                <td><?php echo number_format($stat['visits']); ?></td>
+                <td><?php echo number_format($stat['unique_visits']); ?><?php if ($stat['visits'] !== $stat['unique_visits']): ?> <span style="color:#787c82;font-size:11px;">(<?php echo number_format($stat['visits']); ?> total)</span><?php endif; ?></td>
                 <td><?php echo number_format($stat['orders']); ?></td>
                 <td><?php echo esc_html($currency_symbol); ?> <?php echo number_format($stat['revenue'], 2); ?></td>
                 <td><?php echo esc_html($currency_symbol); ?> <?php echo number_format($stat['avg_order_value'], 2); ?></td>
@@ -820,7 +835,7 @@ function asl_influencer_render_stats_tab() {
                 <?php echo $stat['active'] ? '<span class="asl-badge asl-badge-active">Active</span>' : '<span class="asl-badge asl-badge-inactive">Inactive</span>'; ?>
             </div>
             <div class="asl-accordion-right">
-                <span><strong><?php echo number_format($stat['visits']); ?></strong> visits</span>
+                <span><strong><?php echo number_format($stat['unique_visits']); ?></strong> visits</span>
                 <span><strong><?php echo number_format($stat['orders']); ?></strong> orders</span>
                 <span><strong><?php echo esc_html($currency_symbol); ?> <?php echo number_format($stat['revenue'], 2); ?></strong></span>
                 <span class="<?php echo $stat['profit'] >= 0 ? 'asl-positive' : 'asl-negative'; ?>">
@@ -840,8 +855,11 @@ function asl_influencer_render_stats_tab() {
 
             <div class="asl-detail-cards">
                 <div class="asl-detail-card">
-                    <div class="asl-detail-card-value"><?php echo number_format($stat['visits']); ?></div>
-                    <div class="asl-detail-card-label">Visits</div>
+                    <div class="asl-detail-card-value"><?php echo number_format($stat['unique_visits']); ?></div>
+                    <div class="asl-detail-card-label">Unique Visits</div>
+                    <?php if ($stat['visits'] !== $stat['unique_visits']): ?>
+                    <div style="font-size:10px;color:#787c82;margin-top:2px;"><?php echo number_format($stat['visits']); ?> total</div>
+                    <?php endif; ?>
                 </div>
                 <div class="asl-detail-card">
                     <div class="asl-detail-card-value"><?php echo number_format($stat['orders']); ?></div>
@@ -1506,7 +1524,7 @@ function asl_influencer_handle_csv_export() {
 
     $output = fopen('php://output', 'w');
     fputcsv($output, array(
-        'Influencer', 'Code', 'Platform', 'Email', 'Status', 'Visits', 'Orders',
+        'Influencer', 'Code', 'Platform', 'Email', 'Status', 'Unique Visits', 'Total Visits', 'Orders',
         'Revenue (' . $wc_currency . ')', 'Avg Order Value', 'Conversion Rate %',
         'Commission Rate %', 'Total Commission', 'Fixed Amount', 'Total Cost',
         'Profit', 'ROI %', 'Top Cities', 'Top Countries', 'Top Products'
@@ -1525,6 +1543,15 @@ function asl_influencer_handle_csv_export() {
             });
         }
         $visit_count = count($visit_list);
+
+        // Count unique visits by distinct IP addresses
+        $unique_ips = array();
+        foreach ($visit_list as $v) {
+            if (!empty($v['ip'])) {
+                $unique_ips[$v['ip']] = true;
+            }
+        }
+        $unique_visit_count = count($unique_ips);
 
         $commission_rate = floatval($influencer['commission_rate'] ?? 0);
         $fixed_amount = floatval($influencer['fixed_amount'] ?? 0);
@@ -1557,7 +1584,7 @@ function asl_influencer_handle_csv_export() {
         arsort($countries);
         arsort($products_sold);
 
-        $conversion_rate = $visit_count > 0 ? round(($order_count / $visit_count) * 100, 1) : 0;
+        $conversion_rate = $unique_visit_count > 0 ? round(($order_count / $unique_visit_count) * 100, 1) : 0;
         $avg_order = $order_count > 0 ? round($total_revenue / $order_count, 2) : 0;
         $total_commission = ($commission_rate / 100) * $total_revenue;
         $total_cost = $total_commission + $fixed_amount;
@@ -1574,6 +1601,7 @@ function asl_influencer_handle_csv_export() {
             ucfirst($influencer['platform']),
             isset($influencer['email']) ? $influencer['email'] : '',
             !empty($influencer['active']) ? 'Active' : 'Inactive',
+            $unique_visit_count,
             $visit_count,
             $order_count,
             round($total_revenue, 2),
@@ -1752,6 +1780,7 @@ function asl_influencer_api_get_influencers() {
 
 /**
  * API: Track a visit (public)
+ * Deduplicates by IP+code within a 24-hour window to count unique visits only.
  */
 function asl_influencer_api_track_visit($request) {
     $code = sanitize_text_field($request->get_param('code'));
@@ -1772,16 +1801,32 @@ function asl_influencer_api_track_visit($request) {
         return new WP_Error('unknown_code', 'Unknown referral code.', array('status' => 404));
     }
 
+    $visitor_ip = asl_influencer_get_client_ip();
     $visits = get_option('asl_influencer_visits', array());
 
     if (!isset($visits[$code])) {
         $visits[$code] = array();
     }
 
+    // Deduplicate: skip if same IP visited this code within the last 24 hours
+    $dedup_window = 24 * 60 * 60; // 24 hours in seconds
+    $now = current_time('timestamp');
+    foreach ($visits[$code] as $existing) {
+        if (isset($existing['ip']) && $existing['ip'] === $visitor_ip) {
+            $visit_time = strtotime($existing['timestamp']);
+            if ($visit_time && ($now - $visit_time) < $dedup_window) {
+                return rest_ensure_response(array(
+                    'success' => true,
+                    'duplicate' => true,
+                ));
+            }
+        }
+    }
+
     $visits[$code][] = array(
         'timestamp' => current_time('mysql'),
         'landing_page' => $landing_page,
-        'ip' => asl_influencer_get_client_ip(),
+        'ip' => $visitor_ip,
         'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(substr($_SERVER['HTTP_USER_AGENT'], 0, 500)) : '',
     );
 
@@ -1789,6 +1834,7 @@ function asl_influencer_api_track_visit($request) {
 
     return rest_ensure_response(array(
         'success' => true,
+        'duplicate' => false,
     ));
 }
 
@@ -1816,6 +1862,15 @@ function asl_influencer_api_get_stats($request) {
             });
         }
         $visit_count = count($visit_list);
+
+        // Count unique visits by distinct IP addresses
+        $unique_ips = array();
+        foreach ($visit_list as $v) {
+            if (!empty($v['ip'])) {
+                $unique_ips[$v['ip']] = true;
+            }
+        }
+        $unique_visit_count = count($unique_ips);
 
         $orders = asl_influencer_get_orders_by_ref($code, $date_from, $date_to);
 
@@ -1858,7 +1913,7 @@ function asl_influencer_api_get_stats($request) {
         $fixed_amount = floatval($influencer['fixed_amount'] ?? 0);
         $total_commission = ($commission_rate / 100) * $total_revenue;
         $total_cost = $total_commission + $fixed_amount;
-        $conversion_rate = $visit_count > 0 ? round(($order_count / $visit_count) * 100, 1) : 0;
+        $conversion_rate = $unique_visit_count > 0 ? round(($order_count / $unique_visit_count) * 100, 1) : 0;
         $avg_order_value = $order_count > 0 ? round($total_revenue / $order_count, 2) : 0;
 
         $stats[] = array(
@@ -1868,6 +1923,7 @@ function asl_influencer_api_get_stats($request) {
             'email' => isset($influencer['email']) ? $influencer['email'] : '',
             'active' => !empty($influencer['active']),
             'visits' => $visit_count,
+            'unique_visits' => $unique_visit_count,
             'orders' => $order_count,
             'revenue' => round($total_revenue, 2),
             'free_gifts' => $free_gift_count,
