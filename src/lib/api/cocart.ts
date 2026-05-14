@@ -33,6 +33,8 @@ export interface CoCartItem {
   cart_item_data: Record<string, unknown>;
   featured_image: string;
   variation_id?: number;
+  regular_price?: string;
+  on_sale?: boolean;
 }
 
 export interface CoCartTotals {

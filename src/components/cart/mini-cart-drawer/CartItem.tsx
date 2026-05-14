@@ -69,12 +69,23 @@ export function CartItem({
               {locale === "ar" ? "هدية مجانية" : "Free Gift"}
             </p>
           ) : (
-            <p className="mt-1 text-sm font-medium text-gray-900 inline-flex items-center gap-1">
-              <FormattedPrice
-                price={parseFloat(item.price) / divisor}
-                iconSize="xs"
-              /> x {item.quantity.value}
-            </p>
+            <div className="mt-1 text-sm font-medium text-gray-900">
+              <span className="inline-flex items-center gap-1">
+                {item.on_sale && item.regular_price && parseFloat(item.regular_price) > parseFloat(item.price) && (
+                  <span className="text-gray-400 line-through text-xs">
+                    <FormattedPrice
+                      price={parseFloat(item.regular_price) / divisor}
+                      iconSize="xs"
+                    />
+                  </span>
+                )}
+                <FormattedPrice
+                  price={parseFloat(item.price) / divisor}
+                  className={item.on_sale && item.regular_price && parseFloat(item.regular_price) > parseFloat(item.price) ? "text-red-600" : ""}
+                  iconSize="xs"
+                /> x {item.quantity.value}
+              </span>
+            </div>
           )}
 
           <BundleItemsList item={item} locale={locale} compact />

@@ -199,6 +199,16 @@ export default function CheckoutClient() {
   const currencyMinorUnit= cart?.currency?.currency_minor_unit ?? 2;
   const divisor = Math.pow(10, currencyMinorUnit);
 
+  // Calculate total regular (before-sale) price for showing cross prices in order summary
+  const checkoutRegularSubtotal = cartItems.reduce((total, item) => {
+    const unitPrice = item.on_sale && item.regular_price && parseFloat(item.regular_price) > parseFloat(item.price)
+      ? parseFloat(item.regular_price)
+      : parseFloat(item.price);
+    return total + unitPrice * item.quantity.value;
+  }, 0);
+  const checkoutHasSaleDiscount = checkoutRegularSubtotal > parseFloat(cartSubtotal);
+  const checkoutSaleDiscount = checkoutRegularSubtotal - parseFloat(cartSubtotal);
+
   const [formData, setFormData] = useState<CheckoutFormData>({
     shipping: { ...emptyAddress },
     billing: { ...emptyAddress },
@@ -2148,11 +2158,20 @@ export default function CheckoutClient() {
                                     <BundleItemsList item={item} locale={locale} compact />
                                   </div>
                                   {/* Price */}
-                                  <FormattedPrice
-                                    price={parseFloat(item.price) * item.quantity.value / divisor}
-                                    className="text-sm font-medium"
-                                    iconSize="xs"
-                                  />
+                                  <div className="text-right flex-shrink-0">
+                                    {item.on_sale && item.regular_price && parseFloat(item.regular_price) > parseFloat(item.price) && (
+                                      <FormattedPrice
+                                        price={parseFloat(item.regular_price) * item.quantity.value / divisor}
+                                        className="text-xs text-gray-400 line-through"
+                                        iconSize="xs"
+                                      />
+                                    )}
+                                    <FormattedPrice
+                                      price={parseFloat(item.price) * item.quantity.value / divisor}
+                                      className={`text-sm font-medium ${item.on_sale && item.regular_price && parseFloat(item.regular_price) > parseFloat(item.price) ? "text-red-600" : ""}`}
+                                      iconSize="xs"
+                                    />
+                                  </div>
                                 </div>
                               ))}
                             </div>
@@ -2253,14 +2272,35 @@ export default function CheckoutClient() {
                             <div className="space-y-3 border-b border-gray-100 py-4">
                               <div className="flex justify-between text-sm text-gray-600">
                                 <span>{isRTL ? "المجموع الفرعي" : "Subtotal"}</span>
-                                <FormattedPrice
-                                  price={parseFloat(cartSubtotal) / divisor}
-                                  iconSize="xs"
-                                />
+                                <div className="text-right">
+                                  {checkoutHasSaleDiscount && (
+                                    <FormattedPrice
+                                      price={checkoutRegularSubtotal / divisor}
+                                      className="text-gray-400 line-through text-xs"
+                                      iconSize="xs"
+                                    />
+                                  )}
+                                  <FormattedPrice
+                                    price={parseFloat(cartSubtotal) / divisor}
+                                    className={checkoutHasSaleDiscount ? "text-red-600 font-medium" : ""}
+                                    iconSize="xs"
+                                  />
+                                </div>
                               </div>
+                              {checkoutHasSaleDiscount && (
+                                <div className="flex justify-between text-sm text-green-600">
+                                  <span>{isRTL ? "خصم التخفيض" : "Sale Discount"}</span>
+                                  <span className="inline-flex items-center gap-1">
+                                    -<FormattedPrice
+                                      price={checkoutSaleDiscount / divisor}
+                                      iconSize="xs"
+                                    />
+                                  </span>
+                                </div>
+                              )}
                               {couponDiscount > 0 && (
                                 <div className="flex justify-between text-sm text-green-600">
-                                  <span>{isRTL ? "الخصم" : "Discount"}</span>
+                                  <span>{isRTL ? "الخصم" : "Discount"} {selectedCoupons.length > 0 && `(${selectedCoupons.map(c => c.code).join(", ")})`}</span>
                                   <span className="inline-flex items-center gap-1">
                                     -<FormattedPrice
                                       price={couponDiscount / divisor}
