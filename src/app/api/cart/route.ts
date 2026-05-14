@@ -8,6 +8,17 @@ const AUTH_REFRESH_TOKEN_COOKIE = "asl_refresh_token";
 const CURRENCY_COOKIE = "wcml_currency";
 const LOCALE_COOKIE = "NEXT_LOCALE";
 
+async function enrichCartItemsWithTimeout(cartData: Record<string, unknown>): Promise<void> {
+  try {
+    await Promise.race([
+      enrichCartItemsWithRegularPrices(cartData),
+      new Promise<void>((_, reject) => setTimeout(() => reject(new Error('enrichment timeout')), 6000)),
+    ]);
+  } catch {
+    // Timeout or error: continue without regular prices
+  }
+}
+
 async function enrichCartItemsWithRegularPrices(cartData: Record<string, unknown>): Promise<void> {
   const items = cartData.items as Array<Record<string, unknown>> | undefined;
   if (!items || items.length === 0) return;
@@ -38,7 +49,7 @@ async function enrichCartItemsWithRegularPrices(cartData: Record<string, unknown
       fetchPromises.push(
         (async () => {
           const priceUrl = `${API_BASE}/wp-json/wc/store/v1/products?include=${uniqueSimpleIds.join(",")}&per_page=${uniqueSimpleIds.length}`;
-          const priceRes = await fetch(noCacheUrl(priceUrl), { method: "GET", headers: backendHeaders() });
+          const priceRes = await fetch(noCacheUrl(priceUrl), { method: "GET", headers: backendHeaders(), signal: AbortSignal.timeout(5000) });
           if (priceRes.ok) {
             const products = await priceRes.json() as Array<{ id: number; on_sale: boolean; prices: { regular_price: string } }>;
             for (const p of products) {
@@ -60,7 +71,7 @@ async function enrichCartItemsWithRegularPrices(cartData: Record<string, unknown
       fetchPromises.push(
         (async () => {
           const varUrl = `${API_BASE}/wp-json/wc/store/v1/products/${parentId}/variations?include=${varIds.join(",")}&per_page=${varIds.length}`;
-          const varRes = await fetch(noCacheUrl(varUrl), { method: "GET", headers: backendHeaders() });
+          const varRes = await fetch(noCacheUrl(varUrl), { method: "GET", headers: backendHeaders(), signal: AbortSignal.timeout(5000) });
           if (varRes.ok) {
             const variations = await varRes.json() as Array<{ id: number; on_sale: boolean; prices: { regular_price: string } }>;
             for (const v of variations) {
@@ -322,7 +333,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    await enrichCartItemsWithRegularPrices(data);
+    await enrichCartItemsWithTimeout(data);
 
     const newCartKey = data.cart_key ? (data.cart_key as string) : null;
     return createResponseWithCartKey({ success: true, cart: data }, newCartKey, refreshedToken);
@@ -454,7 +465,7 @@ export async function POST(request: NextRequest) {
           });
         }
         
-        await enrichCartItemsWithRegularPrices(coCartData);
+        await enrichCartItemsWithTimeout(coCartData);
 
         const newCartKey = coCartData.cart_key ? (coCartData.cart_key as string) : null;
         return createResponseWithCartKey({ success: true, cart: coCartData }, newCartKey);
@@ -544,7 +555,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await enrichCartItemsWithRegularPrices(data);
+    await enrichCartItemsWithTimeout(data);
 
     const newCartKey = data.cart_key ? (data.cart_key as string) : null;
     return createResponseWithCartKey({ success: true, cart: data }, newCartKey, refreshedToken);
