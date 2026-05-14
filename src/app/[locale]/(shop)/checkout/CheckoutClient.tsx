@@ -202,6 +202,15 @@ export default function CheckoutClient() {
 
   const { isFreeGiftItem } = useFreeGift();
 
+  // Calculate gift items total to exclude from subtotal comparison
+  const checkoutGiftItemsTotal = cartItems.reduce((total, item) => {
+    if (isFreeGiftItem(item.item_key)) {
+      return total + (parseFloat(item.price) * item.quantity.value);
+    }
+    return total;
+  }, 0);
+  const checkoutDisplaySubtotal = parseFloat(cartSubtotal) - checkoutGiftItemsTotal;
+
   // Calculate total regular (before-sale) price for showing cross prices in order summary
   const checkoutRegularSubtotal = cartItems.reduce((total, item) => {
     if (isFreeGiftItem(item.item_key)) return total;
@@ -210,8 +219,8 @@ export default function CheckoutClient() {
       : parseFloat(item.price);
     return total + unitPrice * item.quantity.value;
   }, 0);
-  const checkoutHasSaleDiscount = checkoutRegularSubtotal > parseFloat(cartSubtotal);
-  const checkoutSaleDiscount = checkoutRegularSubtotal - parseFloat(cartSubtotal);
+  const checkoutHasSaleDiscount = checkoutRegularSubtotal > checkoutDisplaySubtotal;
+  const checkoutSaleDiscount = checkoutRegularSubtotal - checkoutDisplaySubtotal;
 
   const [formData, setFormData] = useState<CheckoutFormData>({
     shipping: { ...emptyAddress },

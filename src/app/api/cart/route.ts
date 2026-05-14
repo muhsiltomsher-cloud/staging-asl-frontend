@@ -11,26 +11,75 @@ const LOCALE_COOKIE = "NEXT_LOCALE";
 async function enrichCartItemsWithRegularPrices(cartData: Record<string, unknown>): Promise<void> {
   const items = cartData.items as Array<Record<string, unknown>> | undefined;
   if (!items || items.length === 0) return;
-  const productIds = [...new Set(items.map((item) => item.id as number).filter(Boolean))];
-  if (productIds.length === 0) return;
+
+  type PriceInfo = { regular_price: string; on_sale: boolean };
+  const priceMap = new Map<number, PriceInfo>();
+
+  // Collect simple product IDs and variation IDs separately
+  const simpleProductIds: number[] = [];
+  const variationItems: Array<{ parentId: number; variationId: number }> = [];
+  for (const item of items) {
+    const variationId = item.variation_id as number | undefined;
+    const productId = item.id as number;
+    if (!productId) continue;
+    if (variationId && variationId > 0) {
+      variationItems.push({ parentId: productId, variationId });
+    } else {
+      simpleProductIds.push(productId);
+    }
+  }
+
   try {
-    const priceUrl = `${API_BASE}/wp-json/wc/store/v1/products?include=${productIds.join(",")}&per_page=${productIds.length}`;
-    const priceRes = await fetch(noCacheUrl(priceUrl), {
-      method: "GET",
-      headers: backendHeaders(),
-    });
-    if (priceRes.ok) {
-      const products = await priceRes.json() as Array<{ id: number; on_sale: boolean; prices: { regular_price: string; sale_price: string; price: string; currency_minor_unit: number } }>;
-      const priceMap = new Map<number, { regular_price: string; on_sale: boolean }>();
-      for (const p of products) {
-        priceMap.set(p.id, { regular_price: p.prices.regular_price, on_sale: p.on_sale });
-      }
-      for (const item of items) {
-        const info = priceMap.get(item.id as number);
-        if (info) {
-          item.regular_price = info.regular_price;
-          item.on_sale = info.on_sale;
-        }
+    const fetchPromises: Promise<void>[] = [];
+
+    // Fetch simple/parent products
+    const uniqueSimpleIds = [...new Set(simpleProductIds)];
+    if (uniqueSimpleIds.length > 0) {
+      fetchPromises.push(
+        (async () => {
+          const priceUrl = `${API_BASE}/wp-json/wc/store/v1/products?include=${uniqueSimpleIds.join(",")}&per_page=${uniqueSimpleIds.length}`;
+          const priceRes = await fetch(noCacheUrl(priceUrl), { method: "GET", headers: backendHeaders() });
+          if (priceRes.ok) {
+            const products = await priceRes.json() as Array<{ id: number; on_sale: boolean; prices: { regular_price: string } }>;
+            for (const p of products) {
+              priceMap.set(p.id, { regular_price: p.prices.regular_price, on_sale: p.on_sale });
+            }
+          }
+        })()
+      );
+    }
+
+    // Fetch variation-specific prices (grouped by parent to reduce requests)
+    const variationsByParent = new Map<number, number[]>();
+    for (const v of variationItems) {
+      const existing = variationsByParent.get(v.parentId) || [];
+      if (!existing.includes(v.variationId)) existing.push(v.variationId);
+      variationsByParent.set(v.parentId, existing);
+    }
+    for (const [parentId, varIds] of variationsByParent) {
+      fetchPromises.push(
+        (async () => {
+          const varUrl = `${API_BASE}/wp-json/wc/store/v1/products/${parentId}/variations?include=${varIds.join(",")}&per_page=${varIds.length}`;
+          const varRes = await fetch(noCacheUrl(varUrl), { method: "GET", headers: backendHeaders() });
+          if (varRes.ok) {
+            const variations = await varRes.json() as Array<{ id: number; on_sale: boolean; prices: { regular_price: string } }>;
+            for (const v of variations) {
+              priceMap.set(v.id, { regular_price: v.prices.regular_price, on_sale: v.on_sale });
+            }
+          }
+        })()
+      );
+    }
+
+    await Promise.all(fetchPromises);
+
+    // Enrich items: look up by variation_id first, then by product id
+    for (const item of items) {
+      const variationId = item.variation_id as number | undefined;
+      const info = (variationId && variationId > 0 ? priceMap.get(variationId) : null) || priceMap.get(item.id as number);
+      if (info) {
+        item.regular_price = info.regular_price;
+        item.on_sale = info.on_sale;
       }
     }
   } catch {
