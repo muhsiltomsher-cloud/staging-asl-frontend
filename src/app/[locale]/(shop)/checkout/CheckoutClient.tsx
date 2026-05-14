@@ -2294,7 +2294,7 @@ export default function CheckoutClient() {
                                     />
                                   )}
                                   <FormattedPrice
-                                    price={parseFloat(cartSubtotal) / divisor}
+                                    price={checkoutDisplaySubtotal / divisor}
                                     className={checkoutHasSaleDiscount ? "text-red-600 font-medium" : ""}
                                     iconSize="xs"
                                   />
