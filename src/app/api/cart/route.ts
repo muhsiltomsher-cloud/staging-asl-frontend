@@ -8,6 +8,85 @@ const AUTH_REFRESH_TOKEN_COOKIE = "asl_refresh_token";
 const CURRENCY_COOKIE = "wcml_currency";
 const LOCALE_COOKIE = "NEXT_LOCALE";
 
+async function enrichCartItemsWithRegularPrices(cartData: Record<string, unknown>): Promise<void> {
+  const items = cartData.items as Array<Record<string, unknown>> | undefined;
+  if (!items || items.length === 0) return;
+
+  type PriceInfo = { regular_price: string; on_sale: boolean };
+  const priceMap = new Map<number, PriceInfo>();
+
+  // Collect simple product IDs and variation IDs separately
+  const simpleProductIds: number[] = [];
+  const variationItems: Array<{ parentId: number; variationId: number }> = [];
+  for (const item of items) {
+    const variationId = item.variation_id as number | undefined;
+    const productId = item.id as number;
+    if (!productId) continue;
+    if (variationId && variationId > 0) {
+      variationItems.push({ parentId: productId, variationId });
+    } else {
+      simpleProductIds.push(productId);
+    }
+  }
+
+  try {
+    const fetchPromises: Promise<void>[] = [];
+
+    // Fetch simple/parent products
+    const uniqueSimpleIds = [...new Set(simpleProductIds)];
+    if (uniqueSimpleIds.length > 0) {
+      fetchPromises.push(
+        (async () => {
+          const priceUrl = `${API_BASE}/wp-json/wc/store/v1/products?include=${uniqueSimpleIds.join(",")}&per_page=${uniqueSimpleIds.length}`;
+          const priceRes = await fetch(noCacheUrl(priceUrl), { method: "GET", headers: backendHeaders() });
+          if (priceRes.ok) {
+            const products = await priceRes.json() as Array<{ id: number; on_sale: boolean; prices: { regular_price: string } }>;
+            for (const p of products) {
+              priceMap.set(p.id, { regular_price: p.prices.regular_price, on_sale: p.on_sale });
+            }
+          }
+        })()
+      );
+    }
+
+    // Fetch variation-specific prices (grouped by parent to reduce requests)
+    const variationsByParent = new Map<number, number[]>();
+    for (const v of variationItems) {
+      const existing = variationsByParent.get(v.parentId) || [];
+      if (!existing.includes(v.variationId)) existing.push(v.variationId);
+      variationsByParent.set(v.parentId, existing);
+    }
+    for (const [parentId, varIds] of variationsByParent) {
+      fetchPromises.push(
+        (async () => {
+          const varUrl = `${API_BASE}/wp-json/wc/store/v1/products/${parentId}/variations?include=${varIds.join(",")}&per_page=${varIds.length}`;
+          const varRes = await fetch(noCacheUrl(varUrl), { method: "GET", headers: backendHeaders() });
+          if (varRes.ok) {
+            const variations = await varRes.json() as Array<{ id: number; on_sale: boolean; prices: { regular_price: string } }>;
+            for (const v of variations) {
+              priceMap.set(v.id, { regular_price: v.prices.regular_price, on_sale: v.on_sale });
+            }
+          }
+        })()
+      );
+    }
+
+    await Promise.all(fetchPromises);
+
+    // Enrich items: look up by variation_id first, then by product id
+    for (const item of items) {
+      const variationId = item.variation_id as number | undefined;
+      const info = (variationId && variationId > 0 ? priceMap.get(variationId) : null) || priceMap.get(item.id as number);
+      if (info) {
+        item.regular_price = info.regular_price;
+        item.on_sale = info.on_sale;
+      }
+    }
+  } catch {
+    // Non-critical: continue without regular prices
+  }
+}
+
 async function getCartKey(): Promise<string | null> {
   const cookieStore = await cookies();
   return cookieStore.get(CART_KEY_COOKIE)?.value || null;
@@ -243,6 +322,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    await enrichCartItemsWithRegularPrices(data);
+
     const newCartKey = data.cart_key ? (data.cart_key as string) : null;
     return createResponseWithCartKey({ success: true, cart: data }, newCartKey, refreshedToken);
   } catch (error) {
@@ -373,6 +454,8 @@ export async function POST(request: NextRequest) {
           });
         }
         
+        await enrichCartItemsWithRegularPrices(coCartData);
+
         const newCartKey = coCartData.cart_key ? (coCartData.cart_key as string) : null;
         return createResponseWithCartKey({ success: true, cart: coCartData }, newCartKey);
       }
@@ -460,6 +543,8 @@ export async function POST(request: NextRequest) {
         { status: response.status }
       );
     }
+
+    await enrichCartItemsWithRegularPrices(data);
 
     const newCartKey = data.cart_key ? (data.cart_key as string) : null;
     return createResponseWithCartKey({ success: true, cart: data }, newCartKey, refreshedToken);

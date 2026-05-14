@@ -65,6 +65,17 @@ export default function CartPage() {
   const displaySubtotal = parseFloat(cartSubtotal) - giftItemsTotal;
   const displayTotal = parseFloat(cartTotal) - giftItemsTotal;
 
+  // Calculate total regular (before-sale) price for all non-gift items
+  const regularSubtotal = cartItems.reduce((total, item) => {
+    if (isFreeGiftItem(item.item_key)) return total;
+    const unitPrice = item.on_sale && item.regular_price && parseFloat(item.regular_price) > parseFloat(item.price)
+      ? parseFloat(item.regular_price)
+      : parseFloat(item.price);
+    return total + unitPrice * item.quantity.value;
+  }, 0);
+  const hasSaleDiscount = regularSubtotal > displaySubtotal;
+  const saleDiscount = regularSubtotal - displaySubtotal;
+
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
@@ -455,11 +466,20 @@ export default function CartPage() {
                                       {isGiftItem ? (
                                         <span className="text-amber-600 font-medium">{isRTL ? "مجاني" : "FREE"}</span>
                                       ) : (
-                                        <FormattedPrice
-                                          price={parseFloat(item.price) / divisor}
-                                          className="font-medium"
-                                          iconSize="xs"
-                                        />
+                                        <div>
+                                          {item.on_sale && item.regular_price && parseFloat(item.regular_price) > parseFloat(item.price) && (
+                                            <FormattedPrice
+                                              price={parseFloat(item.regular_price) / divisor}
+                                              className="font-medium text-gray-400 line-through text-sm"
+                                              iconSize="xs"
+                                            />
+                                          )}
+                                          <FormattedPrice
+                                            price={parseFloat(item.price) / divisor}
+                                            className={`font-medium ${item.on_sale && item.regular_price && parseFloat(item.regular_price) > parseFloat(item.price) ? "text-red-600" : ""}`}
+                                            iconSize="xs"
+                                          />
+                                        </div>
                                       )}
                                     </div>
 
@@ -513,11 +533,20 @@ export default function CartPage() {
                                       {isGiftItem ? (
                                         <span className="text-amber-600 font-semibold">{isRTL ? "مجاني" : "FREE"}</span>
                                       ) : (
-                                        <FormattedPrice
-                                          price={parseFloat(item.price) * item.quantity.value / divisor}
-                                          className="font-semibold"
-                                          iconSize="xs"
-                                        />
+                                        <div className="text-right">
+                                          {item.on_sale && item.regular_price && parseFloat(item.regular_price) > parseFloat(item.price) && (
+                                            <FormattedPrice
+                                              price={parseFloat(item.regular_price) * item.quantity.value / divisor}
+                                              className="font-medium text-gray-400 line-through text-sm"
+                                              iconSize="xs"
+                                            />
+                                          )}
+                                          <FormattedPrice
+                                            price={parseFloat(item.price) * item.quantity.value / divisor}
+                                            className={`font-semibold ${item.on_sale && item.regular_price && parseFloat(item.regular_price) > parseFloat(item.price) ? "text-red-600" : ""}`}
+                                            iconSize="xs"
+                                          />
+                                        </div>
                                       )}
                                     </div>
 
@@ -641,14 +670,35 @@ export default function CartPage() {
               <div className="space-y-3 border-b border-black/10 pb-4">
                 <div className="flex justify-between text-gray-600">
                   <span>{texts.subtotal}</span>
-                  <FormattedPrice
-                    price={displaySubtotal / divisor}
-                    iconSize="xs"
-                  />
+                  <div className="text-right">
+                    {hasSaleDiscount && (
+                      <FormattedPrice
+                        price={regularSubtotal / divisor}
+                        className="text-gray-400 line-through text-sm"
+                        iconSize="xs"
+                      />
+                    )}
+                    <FormattedPrice
+                      price={displaySubtotal / divisor}
+                      className={hasSaleDiscount ? "text-red-600 font-medium" : ""}
+                      iconSize="xs"
+                    />
+                  </div>
                 </div>
+                {hasSaleDiscount && (
+                  <div className="flex justify-between text-green-600">
+                    <span>{isRTL ? "خصم التخفيض" : "Sale Discount"}</span>
+                    <span className="inline-flex items-center gap-1">
+                      -<FormattedPrice
+                        price={saleDiscount / divisor}
+                        iconSize="xs"
+                      />
+                    </span>
+                  </div>
+                )}
                 {couponDiscount > 0 && (
                     <div className="flex justify-between text-green-600">
-                      <span>{texts.discount}</span>
+                      <span>{texts.discount} {selectedCoupons.length > 0 && `(${selectedCoupons.map(c => c.code).join(", ")})`}</span>
                       <span className="inline-flex items-center gap-1">
                         -<FormattedPrice
                           price={couponDiscount / divisor}

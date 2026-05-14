@@ -101,15 +101,34 @@ export function MiniCartDrawer({ locale, dictionary }: MiniCartDrawerProps) {
     }
   };
 
+  // Calculate regular subtotal for mini cart cross price display
+  const miniCartRegularSubtotal = cartItems.reduce((total, item) => {
+    if (isFreeGiftItem(item.item_key)) return total;
+    const unitPrice = item.on_sale && item.regular_price && parseFloat(item.regular_price) > parseFloat(item.price)
+      ? parseFloat(item.regular_price)
+      : parseFloat(item.price);
+    return total + unitPrice * item.quantity.value;
+  }, 0);
+  const miniCartHasSaleDiscount = miniCartRegularSubtotal > subtotalWithoutGifts;
+
   const cartFooter = cartItems.length > 0 ? (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <span className="text-gray-600">{dictionary.subtotal}</span>
-        <FormattedPrice
-          price={subtotalWithoutGifts / divisor}
-          className="text-lg font-semibold"
-          iconSize="sm"
-        />
+        <div className="text-right">
+          {miniCartHasSaleDiscount && (
+            <FormattedPrice
+              price={miniCartRegularSubtotal / divisor}
+              className="text-gray-400 line-through text-sm"
+              iconSize="xs"
+            />
+          )}
+          <FormattedPrice
+            price={subtotalWithoutGifts / divisor}
+            className={`text-lg font-semibold ${miniCartHasSaleDiscount ? "text-red-600" : ""}`}
+            iconSize="sm"
+          />
+        </div>
       </div>
 
             <div className="flex flex-col gap-3">
