@@ -7,6 +7,23 @@ const AUTH_TOKEN_COOKIE = "asl_auth_token";
 const AUTH_REFRESH_TOKEN_COOKIE = "asl_refresh_token";
 const CURRENCY_COOKIE = "wcml_currency";
 const LOCALE_COOKIE = "NEXT_LOCALE";
+const FETCH_TIMEOUT_MS = 15000;
+
+function timedFetch(url: string | URL | Request, init?: RequestInit): Promise<Response> {
+  const signal = AbortSignal.timeout(FETCH_TIMEOUT_MS);
+  return fetch(url, { ...init, signal });
+}
+
+async function enrichCartItemsWithTimeout(cartData: Record<string, unknown>): Promise<void> {
+  try {
+    await Promise.race([
+      enrichCartItemsWithRegularPrices(cartData),
+      new Promise<void>((_, reject) => setTimeout(() => reject(new Error('enrichment timeout')), 6000)),
+    ]);
+  } catch {
+    // Timeout or error: continue without regular prices
+  }
+}
 
 async function enrichCartItemsWithTimeout(cartData: Record<string, unknown>): Promise<void> {
   try {
@@ -119,7 +136,7 @@ async function tryRefreshToken(): Promise<string | null> {
   if (!refreshTokenValue) return null;
 
   try {
-    const response = await fetch(noCacheUrl(`${API_BASE}/wp-json/cocart/jwt/refresh-token`), {
+    const response = await timedFetch(noCacheUrl(`${API_BASE}/wp-json/cocart/jwt/refresh-token`), {
       method: "POST",
       headers: backendPostHeaders(),
       body: JSON.stringify({ refresh_token: refreshTokenValue }),
@@ -218,7 +235,7 @@ function isAuthError(status: number, data: Record<string, unknown>): boolean {
 // Get Store API authentication tokens (cart-token and nonce) for coupon operations
 async function getStoreApiAuth(): Promise<{ cartToken: string | null; nonce: string | null }> {
   try {
-    const response = await fetch(noCacheUrl(`${API_BASE}/wp-json/wc/store/v1/cart`), {
+    const response = await timedFetch(noCacheUrl(`${API_BASE}/wp-json/wc/store/v1/cart`), {
       method: "GET",
       headers: backendHeaders(),
     });
@@ -282,7 +299,7 @@ export async function GET(request: NextRequest) {
 
     // First attempt: try with auth if token exists
     const url = authToken ? authUrl : guestUrl;
-    let response = await fetch(noCacheUrl(url), {
+    let response = await timedFetch(noCacheUrl(url), {
       method: "GET",
       headers: authToken ? getAuthHeaders(request, authToken) : getGuestHeaders(),
     });
@@ -294,7 +311,7 @@ export async function GET(request: NextRequest) {
       refreshedToken = await tryRefreshToken();
       
       if (refreshedToken) {
-        response = await fetch(noCacheUrl(authUrl), {
+        response = await timedFetch(noCacheUrl(authUrl), {
           method: "GET",
           headers: backendAuthHeaders(refreshedToken),
         });
@@ -303,7 +320,7 @@ export async function GET(request: NextRequest) {
       
       if (!refreshedToken || !response.ok) {
         refreshedToken = null;
-        response = await fetch(noCacheUrl(guestUrl), {
+        response = await timedFetch(noCacheUrl(guestUrl), {
           method: "GET",
           headers: getGuestHeaders(),
         });
@@ -313,7 +330,7 @@ export async function GET(request: NextRequest) {
 
     if (!response.ok && !authToken && response.status === 403 && cartKey) {
       const freshGuestUrl = appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, locale);
-      response = await fetch(noCacheUrl(freshGuestUrl), {
+      response = await timedFetch(noCacheUrl(freshGuestUrl), {
         method: "GET",
         headers: getGuestHeaders(),
       });
@@ -422,7 +439,7 @@ export async function POST(request: NextRequest) {
           ? `${API_BASE}/wp-json/wc/store/v1/cart/apply-coupon`
           : `${API_BASE}/wp-json/wc/store/v1/cart/remove-coupon`;
         
-        const storeApiResponse = await fetch(noCacheUrl(storeApiUrl), {
+        const storeApiResponse = await timedFetch(noCacheUrl(storeApiUrl), {
           method: "POST",
           headers: backendPostHeaders({
             "Cart-Token": cartToken,
@@ -450,7 +467,7 @@ export async function POST(request: NextRequest) {
           ? appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart?cart_key=${cartKey}`, currency, cartLocale)
           : appendParamsToUrl(`${API_BASE}/wp-json/cocart/v2/cart`, currency, cartLocale);
         
-        const coCartResponse = await fetch(noCacheUrl(coCartUrl), {
+        const coCartResponse = await timedFetch(noCacheUrl(coCartUrl), {
           method: "GET",
           headers: authToken ? getAuthHeaders(request, authToken) : getGuestHeaders(),
         });
@@ -493,7 +510,7 @@ export async function POST(request: NextRequest) {
       fetchOptions.headers = { ...(fetchOptions.headers as Record<string, string>), "Content-Type": "application/json" };
     }
 
-    let response = await fetch(noCacheUrl(url), fetchOptions);
+    let response = await timedFetch(noCacheUrl(url), fetchOptions);
     let data = await safeJsonResponse(response);
     let refreshedToken: string | null = null;
 
@@ -509,7 +526,7 @@ export async function POST(request: NextRequest) {
           refreshedFetchOptions.body = JSON.stringify(body);
           refreshedFetchOptions.headers = { ...(refreshedFetchOptions.headers as Record<string, string>), "Content-Type": "application/json" };
         }
-        response = await fetch(noCacheUrl(baseUrl), refreshedFetchOptions);
+        response = await timedFetch(noCacheUrl(baseUrl), refreshedFetchOptions);
         data = await safeJsonResponse(response);
       }
       
@@ -523,7 +540,7 @@ export async function POST(request: NextRequest) {
           guestFetchOptions.body = JSON.stringify(body);
           guestFetchOptions.headers = { ...(guestFetchOptions.headers as Record<string, string>), "Content-Type": "application/json" };
         }
-        response = await fetch(noCacheUrl(guestUrl), guestFetchOptions);
+        response = await timedFetch(noCacheUrl(guestUrl), guestFetchOptions);
         data = await safeJsonResponse(response);
       }
     }
@@ -538,7 +555,7 @@ export async function POST(request: NextRequest) {
         freshGuestFetchOptions.body = JSON.stringify(body);
         freshGuestFetchOptions.headers = { ...(freshGuestFetchOptions.headers as Record<string, string>), "Content-Type": "application/json" };
       }
-      response = await fetch(noCacheUrl(freshGuestUrl), freshGuestFetchOptions);
+      response = await timedFetch(noCacheUrl(freshGuestUrl), freshGuestFetchOptions);
       data = await safeJsonResponse(response);
     }
 
