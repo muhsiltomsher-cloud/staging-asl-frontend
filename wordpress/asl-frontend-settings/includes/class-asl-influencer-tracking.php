@@ -437,8 +437,21 @@ function asl_influencer_render_influencers_tab($influencers) {
             if (e.target && e.target.classList.contains('asl-remove-influencer')) {
                 if (confirm('Are you sure you want to remove this influencer?')) {
                     var row = e.target.closest('.asl-influencer-row');
-                    if (row) row.style.display = 'none';
-                    setTimeout(function() { if (row && row.parentNode) row.parentNode.removeChild(row); }, 200);
+                    if (row) {
+                        var idInput = row.querySelector('input[name*="[id]"]');
+                        if (idInput && idInput.value) {
+                            var form = document.getElementById('asl-influencer-form');
+                            if (form) {
+                                var hidden = document.createElement('input');
+                                hidden.type = 'hidden';
+                                hidden.name = 'asl_deleted_ids[]';
+                                hidden.value = idInput.value;
+                                form.appendChild(hidden);
+                            }
+                        }
+                        row.style.display = 'none';
+                        setTimeout(function() { if (row && row.parentNode) row.parentNode.removeChild(row); }, 200);
+                    }
                 }
             }
         });
@@ -1665,21 +1678,21 @@ function asl_influencer_handle_csv_export() {
  * Save influencer settings
  */
 function asl_influencer_save_settings() {
-    $influencers = array();
     $existing = get_option('asl_influencers', array());
     $existing_by_id = array();
-    $existing_by_code = array();
     foreach ($existing as $e) {
         if (!empty($e['id'])) {
             $existing_by_id[$e['id']] = $e;
         }
-        if (!empty($e['code'])) {
-            $existing_by_code[$e['code']] = $e;
-        }
     }
 
-    $new_codes = array();
-    $new_ids = array();
+    $deleted_ids = array();
+    if (isset($_POST['asl_deleted_ids']) && is_array($_POST['asl_deleted_ids'])) {
+        $deleted_ids = array_map('sanitize_text_field', $_POST['asl_deleted_ids']);
+    }
+
+    $result = array();
+    $processed_ids = array();
 
     if (isset($_POST['asl_influencers']) && is_array($_POST['asl_influencers'])) {
         foreach ($_POST['asl_influencers'] as $influencer) {
@@ -1712,9 +1725,8 @@ function asl_influencer_save_settings() {
                 'created_at' => $created_at,
             );
 
-            $influencers[] = $saved;
-            $new_codes[] = $code;
-            $new_ids[] = $id;
+            $result[] = $saved;
+            $processed_ids[] = $id;
 
             if (isset($existing_by_id[$id])) {
                 $old = $existing_by_id[$id];
@@ -1741,13 +1753,20 @@ function asl_influencer_save_settings() {
         }
     }
 
+    // Only delete influencers explicitly removed via the Remove button
     foreach ($existing as $old_inf) {
-        if (!empty($old_inf['id']) && !in_array($old_inf['id'], $new_ids)) {
-            asl_influencer_log_activity('deleted', $old_inf['name'] ?? '', $old_inf['code'] ?? '', 'Influencer removed via save');
+        $old_id = $old_inf['id'] ?? '';
+        if (empty($old_id)) continue;
+        if (in_array($old_id, $processed_ids)) continue;
+        if (in_array($old_id, $deleted_ids)) {
+            asl_influencer_log_activity('deleted', $old_inf['name'] ?? '', $old_inf['code'] ?? '', 'Influencer removed');
+            continue;
         }
+        // Preserve influencers not in submission and not explicitly deleted
+        $result[] = $old_inf;
     }
 
-    update_option('asl_influencers', $influencers);
+    update_option('asl_influencers', $result);
 }
 
 /**
