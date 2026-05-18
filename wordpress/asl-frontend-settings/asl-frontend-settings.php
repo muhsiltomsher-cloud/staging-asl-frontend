@@ -75,5 +75,8 @@ if (!class_exists('ASL_Security')) {
     require_once ASL_SETTINGS_PATH . 'includes/class-asl-security.php';
 }
 
+// Include Coupons REST API module (public endpoint for headless frontend)
+require_once ASL_SETTINGS_PATH . 'includes/class-asl-coupons.php';
+
 // Include Influencer Tracking module (referral tracking, visit logging, stats)
 require_once ASL_SETTINGS_PATH . 'includes/class-asl-influencer-tracking.php';
