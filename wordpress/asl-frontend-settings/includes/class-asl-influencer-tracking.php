@@ -377,21 +377,18 @@ function asl_influencer_render_influencers_tab($influencers) {
     </form>
 
     <script>
-    jQuery(document).ready(function($) {
+    (function() {
         var influencerIndex = <?php echo max(0, count($influencers) - 1); ?>;
         var siteUrl = <?php echo wp_json_encode($site_url); ?>;
         var platforms = ['instagram', 'tiktok', 'youtube', 'snapchat', 'facebook', 'twitter', 'other'];
         var platformLabels = {instagram:'Instagram', tiktok:'TikTok', youtube:'YouTube', snapchat:'Snapchat', facebook:'Facebook', twitter:'Twitter/X', other:'Other'};
 
-        $('#asl-add-influencer').on('click', function() {
-            influencerIndex++;
-            var idx = influencerIndex;
+        function buildInfluencerTemplate(idx) {
             var optionsHtml = platforms.map(function(p) {
                 return '<option value="' + p + '">' + platformLabels[p] + '</option>';
             }).join('');
-
-            var template = '<div class="asl-influencer-row" data-name="" data-code="">' +
-                '<h3>Influencer #' + (idx + 1) + ' <button type="button" class="button asl-btn-remove asl-remove-influencer">Remove</button></h3>' +
+            return '<div class="asl-influencer-row asl-new-row" data-name="" data-code="" style="border:2px solid #2271b1;animation:aslFlash 1.5s ease-out">' +
+                '<h3>Influencer #' + (idx + 1) + ' <span style="color:#2271b1;font-weight:normal;font-size:12px">(NEW)</span> <button type="button" class="button asl-btn-remove asl-remove-influencer">Remove</button></h3>' +
                 '<input type="hidden" name="asl_influencers[' + idx + '][id]" value="">' +
                 '<input type="hidden" name="asl_influencers[' + idx + '][created_at]" value="">' +
                 '<table class="form-table">' +
@@ -414,32 +411,72 @@ function asl_influencer_render_influencers_tab($influencers) {
                 '<tr><th>Notes</th><td><textarea name="asl_influencers[' + idx + '][notes]" class="large-text" rows="2" placeholder="Optional notes about this influencer"></textarea></td></tr>' +
                 '</table>' +
                 '</div>';
-            $('#asl-influencers-list').append(template);
-            $('html, body').animate({scrollTop: $('#asl-influencers-list .asl-influencer-row:last').offset().top - 100}, 300);
-        });
+        }
 
-        $(document).on('click', '.asl-remove-influencer', function() {
-            if (confirm('Are you sure you want to remove this influencer?')) {
-                $(this).closest('.asl-influencer-row').slideUp(200, function() { $(this).remove(); });
+        function addInfluencer() {
+            influencerIndex++;
+            var list = document.getElementById('asl-influencers-list');
+            if (!list) return;
+            var div = document.createElement('div');
+            div.innerHTML = buildInfluencerTemplate(influencerIndex);
+            var newRow = div.firstChild;
+            list.appendChild(newRow);
+            newRow.scrollIntoView({behavior: 'smooth', block: 'center'});
+            var nameInput = newRow.querySelector('input[name*="[name]"]');
+            if (nameInput) setTimeout(function() { nameInput.focus(); }, 400);
+        }
+
+        // Vanilla JS click handler (works even if jQuery fails)
+        var addBtn = document.getElementById('asl-add-influencer');
+        if (addBtn) {
+            addBtn.addEventListener('click', addInfluencer);
+        }
+
+        // Remove handler (delegated via vanilla JS)
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.classList.contains('asl-remove-influencer')) {
+                if (confirm('Are you sure you want to remove this influencer?')) {
+                    var row = e.target.closest('.asl-influencer-row');
+                    if (row) row.style.display = 'none';
+                    setTimeout(function() { if (row && row.parentNode) row.parentNode.removeChild(row); }, 200);
+                }
             }
         });
 
-        $(document).on('input', '.asl-code-input', function() {
-            var val = $(this).val().toLowerCase().replace(/[^a-z0-9_-]/g, '');
-            $(this).val(val);
-            $(this).closest('td').find('.asl-code-preview').text(val || 'code');
+        // Code input handler (delegated via vanilla JS)
+        document.addEventListener('input', function(e) {
+            if (e.target && e.target.classList.contains('asl-code-input')) {
+                var val = e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+                e.target.value = val;
+                var td = e.target.closest('td');
+                if (td) {
+                    var preview = td.querySelector('.asl-code-preview');
+                    if (preview) preview.textContent = val || 'code';
+                }
+            }
         });
 
-        $('#asl-influencer-search').on('input', function() {
-            var q = $(this).val().toLowerCase();
-            $('.asl-influencer-row').each(function() {
-                var name = ($(this).data('name') || '').toLowerCase();
-                var code = ($(this).data('code') || '').toLowerCase();
-                $(this).toggle(name.indexOf(q) !== -1 || code.indexOf(q) !== -1 || q === '');
+        // Search handler
+        var searchInput = document.getElementById('asl-influencer-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                var q = searchInput.value.toLowerCase();
+                var rows = document.querySelectorAll('.asl-influencer-row');
+                rows.forEach(function(row) {
+                    var name = (row.getAttribute('data-name') || '').toLowerCase();
+                    var code = (row.getAttribute('data-code') || '').toLowerCase();
+                    row.style.display = (name.indexOf(q) !== -1 || code.indexOf(q) !== -1 || q === '') ? '' : 'none';
+                });
             });
-        });
-    });
+        }
+    })();
     </script>
+    <style>
+    @keyframes aslFlash {
+        0% { background-color: #e8f4fd; }
+        100% { background-color: transparent; }
+    }
+    </style>
     <?php
 }
 
