@@ -426,6 +426,7 @@ function asl_influencer_render_influencers_tab($influencers) {
 
         $(document).on('input', '.asl-code-input', function() {
             var val = $(this).val().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+            $(this).val(val);
             $(this).closest('td').find('.asl-code-preview').text(val || 'code');
         });
 
@@ -1648,7 +1649,7 @@ function asl_influencer_save_settings() {
             $code = sanitize_text_field($influencer['code'] ?? '');
             if (empty($code)) continue;
 
-            $code = strtolower(preg_replace('/[^a-z0-9_-]/', '', $code));
+            $code = preg_replace('/[^a-z0-9_-]/', '', strtolower($code));
             $code = substr($code, 0, 50);
             if (empty($code)) continue;
 
