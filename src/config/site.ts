@@ -76,5 +76,5 @@ export const localeConfig = {
 } as const;
 
 export const featureFlags = {
-  enableCoupons: false,
+  enableCoupons: true,
 } as const;

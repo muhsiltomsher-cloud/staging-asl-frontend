@@ -17,6 +17,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "cms.aromaticscentslab.com",
+        pathname: "/wp-content/uploads/**",
+      },
+      {
+        protocol: "https",
         hostname: "flagcdn.com",
         pathname: "/**",
       },
