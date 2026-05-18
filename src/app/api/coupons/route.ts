@@ -36,7 +36,7 @@ export async function GET() {
             message: data.message || "Failed to get coupons.",
           },
         },
-        { status: response.status }
+        { status: response.ok ? 502 : response.status }
       );
     }
 
